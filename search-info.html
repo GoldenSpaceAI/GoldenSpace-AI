@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Search Information • GoldenSpaceAI</title>
+  <style>
+    :root{
+      --bg: #0b1020;
+      --panel: #121831;
+      --panel-2:#0f1530;
+      --accent:#f7c948;        /* gold */
+      --accent-2:#f0b429;      /* deeper gold */
+      --text:#fdf7e7;          /* warm text */
+      --subtle:#d9cfae;
+      --border:#262f55;
+      --chip:#151e3b;
+      --blue-ink:#a6b9ff;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; min-height:100svh; color:var(--text);
+      background:
+        radial-gradient(1200px 600px at 80% -10%, rgba(247,201,72,.08), transparent 60%),
+        radial-gradient(1200px 700px at -10% 10%, rgba(166,185,255,.08), transparent 55%),
+        var(--bg);
+      font-family: ui-sans-serif, system-ui, "Segoe UI", Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+    .top{
+      position:sticky; top:0; z-index:10;
+      background: linear-gradient(180deg, rgba(11,16,32,.95), rgba(11,16,32,.72) 60%, transparent);
+      backdrop-filter: blur(8px);
+      padding: clamp(16px, 2.5vh, 24px) 18px 10px;
+      display:flex; align-items:center; gap:12px;
+    }
+    .back{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 14px; border-radius:999px; text-decoration:none;
+      background:var(--accent); color:#2c2100; font-weight:800; font-size:14px;
+      border:1px solid rgba(0,0,0,.12);
+      box-shadow: 0 6px 22px rgba(247,201,72,.25);
+      transition: transform .2s ease, background .2s ease;
+    }
+    .back:hover{ background:var(--accent-2); transform:translateY(-1px); }
+    .title{
+      font-size:clamp(22px, 2.7vw, 28px); font-weight:900; letter-spacing:.35px;
+      color:var(--accent); text-shadow:0 0 18px rgba(247,201,72,.25);
+    }
+    .spacer{flex:1}
+    .wrap{ max-width:1000px; margin:0 auto; padding: 8px 16px 120px; }
+
+    .searchBox{
+      display:flex; gap:10px; align-items:center;
+      border:1px solid var(--border); border-radius:16px;
+      background: linear-gradient(180deg, var(--panel), var(--panel-2));
+      padding:10px; box-shadow:0 20px 60px rgba(0,0,0,.45);
+    }
+    .searchBox input{
+      flex:1; background:transparent; border:0; outline:0;
+      color:var(--text); font-size:16px; padding:12px 12px;
+    }
+    .btn{
+      background: var(--accent); color:#2c2100; font-weight:800;
+      border:0; border-radius:12px; padding:10px 16px; cursor:pointer;
+      box-shadow:0 10px 26px rgba(247,201,72,.3);
+      transition: transform .2s ease, background .2s ease;
+    }
+    .btn:hover{ background:var(--accent-2); transform:translateY(-1px); }
+    .btn:disabled{ opacity:.6; cursor:not-allowed; box-shadow:none; transform:none; }
+
+    .chips{ display:flex; flex-wrap:wrap; gap:8px; margin:14px 2px 18px; }
+    .chip{
+      padding:8px 12px; background:var(--chip); border:1px solid var(--border);
+      color:var(--blue-ink); border-radius:999px; font-size:13px; cursor:pointer;
+      transition: background .2s ease, transform .15s ease;
+    }
+    .chip:hover{ background:#1a264d; transform: translateY(-1px); }
+
+    .panel{
+      border:1px solid var(--border);
+      background:linear-gradient(180deg, var(--panel), var(--panel-2));
+      border-radius:16px; overflow:hidden;
+      box-shadow:0 20px 80px rgba(0,0,0,.45);
+    }
+    .resultsHead{
+      display:flex; align-items:center; justify-content:space-between;
+      padding:14px 16px; border-bottom:1px solid var(--border);
+    }
+    .muted{ color:var(--subtle); font-size:13px; }
+
+    .results{ padding:10px; }
+    .card{
+      border:1px solid var(--border);
+      background:#101a37; border-radius:14px; padding:14px;
+      margin:10px 0; box-shadow:0 10px 28px rgba(0,0,0,.35);
+    }
+    .card h3{
+      margin:0 0 6px; font-size:18px; letter-spacing:.2px; color:var(--accent);
+    }
+    .card p{ margin:0; color:#f6edd3; line-height:1.55; }
+    .badges{ display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+    .badge{
+      font-size:11px; padding:4px 8px; border-radius:999px; letter-spacing:.3px;
+      border:1px solid var(--border); color:#ffe9a6; background:#1b254b;
+    }
+
+    .skeleton{ display:flex; flex-direction:column; gap:12px; padding:14px; }
+    .sk-row{ height:14px; border-radius:8px; background: linear-gradient(90deg, #1b254b, #283a72, #1b254b);
+      background-size:200% 100%; animation: shimmer 1.2s infinite; }
+    .sk-row.w60{ width:60% } .sk-row.w80{ width:80% } .sk-row.w40{ width:40% }
+    @keyframes shimmer{ 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+    .footnote{ text-align:center; margin-top:16px; color:var(--subtle); font-size:12px; }
+
+    @media (max-width:640px){
+      .title{ font-size:22px }
+      .searchBox{ padding:8px }
+      .btn{ padding:10px 14px }
+    }
+  </style>
+</head>
+<body>
+  <div class="top">
+    <a class="back" href="/"><span>←</span> Home</a>
+    <div class="title">Search Information</div>
+    <div class="spacer"></div>
+  </div>
+
+  <div class="wrap">
+    <div class="searchBox" aria-label="Search form">
+      <input id="q" type="text" placeholder="Search GoldenSpaceAI… missions, physics, planets, more" autofocus />
+      <button id="go" class="btn">Search</button>
+    </div>
+
+    <div class="chips" id="chips">
+      <button class="chip">Planets</button>
+      <button class="chip">Black holes</button>
+      <button class="chip">Exoplanets</button>
+      <button class="chip">James Webb discoveries</button>
+      <button class="chip">Rocket equation</button>
+      <button class="chip">Orbit types</button>
+      <button class="chip">Cosmic microwave background</button>
+      <button class="chip">Mars missions</button>
+      <button class="chip">International Space Station</button>
+      <button class="chip">Galaxy formation</button>
+      <button class="chip">Dark matter</button>
+      <button class="chip">Astrobiology</button>
+      <button class="chip">Gravity assist</button>
+      <button class="chip">Relativity vs Newton</button>
+      <button class="chip">Telescope resolution</button>
+    </div>
+
+    <div class="panel">
+      <div class="resultsHead">
+        <div class="muted" id="status">Type a query or pick a topic.</div>
+        <div class="muted" id="count"></div>
+      </div>
+      <div id="results" class="results"></div>
+    </div>
+
+    <div class="footnote">Results are AI‑generated summaries. Double‑check important facts.</div>
+  </div>
+
+  <script>
+    const qEl = document.getElementById('q');
+    const goEl = document.getElementById('go');
+    const resultsEl = document.getElementById('results');
+    const statusEl = document.getElementById('status');
+    const countEl = document.getElementById('count');
+
+    goEl.addEventListener('click', runSearch);
+    qEl.addEventListener('keydown', (e)=>{ if(e.key === 'Enter'){ runSearch(); } });
+    document.getElementById('chips').addEventListener('click', (e)=>{
+      if(e.target.classList.contains('chip')){
+        qEl.value = e.target.textContent;
+        runSearch();
+      }
+    });
+
+    function setLoading(){
+      resultsEl.innerHTML = `
+        <div class="card"><div class="skeleton">
+          <div class="sk-row w60"></div><div class="sk-row w80"></div>
+          <div class="sk-row w80"></div><div class="sk-row w40"></div>
+        </div></div>
+        <div class="card"><div class="skeleton">
+          <div class="sk-row w60"></div><div class="sk-row w80"></div>
+          <div class="sk-row w80"></div><div class="sk-row w40"></div>
+        </div></div>`;
+      statusEl.textContent = 'Searching…';
+      countEl.textContent = '';
+    }
+
+    function renderCards(paragraphs){
+      if(!paragraphs || !paragraphs.length){
+        resultsEl.innerHTML = `<div class="card"><p>No results. Try another query.</p></div>`;
+        statusEl.textContent = 'No matches.';
+        countEl.textContent = '';
+        return;
+      }
+      resultsEl.innerHTML = paragraphs.map((p,i)=>`
+        <div class="card">
+          <h3>${i===0 ? 'Overview' : 'Detail ' + i}</h3>
+          <p>${p}</p>
+          <div class="badges">
+            <span class="badge">AI summary</span>
+            <span class="badge">GoldenSpaceAI</span>
+          </div>
+        </div>
+      `).join('');
+      statusEl.textContent = 'Completed';
+      countEl.textContent = paragraphs.length + ' sections';
+    }
+
+    function escapeHTML(str){ return (str||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m])); }
+
+    async function runSearch(){
+      const query = (qEl.value || '').trim();
+      if(!query) return;
+      setLoading();
+      goEl.disabled = true;
+
+      try{
+        // IMPORTANT: your backend /ask must read req.body.question
+        // and respond with either { answer: "..."} or { reply: "..."}
+        const res = await fetch('/ask', {
+          method:'POST',
+          headers:{ 'Content-Type':'application/json' },
+          body: JSON.stringify({
+            question: `Give a concise, structured overview of: ${query}. Use 3–6 short paragraphs.`
+          })
+        });
+
+        if(!res.ok){
+          const t = await res.text().catch(()=> '');
+          throw new Error(`Server ${res.status}: ${t.slice(0,120) || 'Unknown error'}`);
+        }
+
+        const data = await res.json().catch(()=> ({}));
+        const textRaw = (data.answer ?? data.reply ?? '').toString().trim();
+
+        if(!textRaw){
+          // show why it’s empty to help debugging
+          throw new Error('Empty response from /ask. Check that your route sends { answer: text } or { reply: text }.');
+        }
+
+        const parts = textRaw
+          .split(/\n{2,}|(?:\r?\n- )/g)
+          .map(s => s.replace(/^\s*[-•]\s*/,'').trim())
+          .filter(Boolean)
+          .slice(0,6);
+
+        renderCards(parts.length ? parts : [escapeHTML(textRaw)]);
+      }catch(err){
+        resultsEl.innerHTML =
+          `<div class="card"><p style="color:#ffd27a">Error: ${escapeHTML(err.message || 'Something went wrong.')}</p></div>`;
+        statusEl.textContent = 'Failed';
+        countEl.textContent = '';
+      }finally{
+        goEl.disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>

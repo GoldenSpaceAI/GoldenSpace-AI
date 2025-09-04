@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Space AI Plans</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body
+    class="bg-gray-900 text-white min-h-screen flex flex-col items-center justify-center p-6"
+  >
+    <h1 class="text-4xl font-bold mb-10">Choose Your Space AI Plan</h1>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl">
+      <!-- Moon Pack -->
+      <div
+        class="bg-gray-800 p-6 rounded-2xl shadow-lg border border-blue-500 hover:shadow-xl transition"
+      >
+        <h2 class="text-2xl font-semibold text-blue-400 mb-4">
+          🌙 Moon Pack (Free)
+        </h2>
+        <ul class="space-y-2 mb-6">
+          <li>✅ 20 Advanced AI question/day</li>
+          <li>✅ 5 Info search/day</li>
+          <li>❌ Physics learning access</li>
+          <li>❌ Creat your own planet</li>
+        </ul>
+        <a
+          href="/moon-plan"
+          class="block text-center bg-blue-600 hover:bg-blue-700 rounded-xl py-2"
+          >Select Free Plan</a
+        >
+      </div>
+
+      <!-- Earth Pack -->
+      <div
+        class="bg-gray-800 p-6 rounded-2xl shadow-lg border border-green-500 hover:shadow-xl transition"
+      >
+        <h2 class="text-2xl font-semibold text-green-400 mb-4">
+          🌍 Earth Pack ($2/mo or $20/yr)
+        </h2>
+        <ul class="space-y-2 mb-6">
+          <li>✅ 50 Advanced AI questions/day</li>
+          <li>✅ 20 Info searches/day</li>
+          <li>✅ 5 Physics learnings/day</li>
+          <li>❌ Creat your own planet</li>
+        </ul>
+        <a
+          href="/earth-plan"
+          class="block text-center bg-green-600 hover:bg-green-700 rounded-xl py-2"
+          >Choose Earth Pack</a
+        >
+      </div>
+
+      <!-- Sun Pack -->
+      <div
+        class="bg-gray-800 p-6 rounded-2xl shadow-lg border border-yellow-400 hover:shadow-xl transition"
+      >
+        <h2 class="text-2xl font-semibold text-yellow-300 mb-4">
+          ☀️ Sun Pack ($3/mo or $30/yr)
+        </h2>
+        <ul class="space-y-2 mb-6">
+          <li>✅ Unlimited Advanced AI</li>
+          <li>✅ Unlimited Info searches</li>
+          <li>✅ Unlimited Physics learning</li>
+          <li>✅ Access to creat your own planet</li>
+        </ul>
+        <a
+          href="/sun-plan"
+          class="block text-center bg-yellow-500 hover:bg-yellow-600 rounded-xl py-2 text-black font-bold"
+          >Go Unlimited</a
+        >
+      </div>
+    </div>
+  </body>
+</html>

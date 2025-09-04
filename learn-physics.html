@@ -1,0 +1,723 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>GoldenSpaceAI • Learn Physics</title>
+
+    <style>
+      :root {
+        --bg: #0b0f14;
+        --panel: #131a25;
+        --panel2: #0f1520;
+        --border: #1f2a40;
+        --gold: #f6c64a;
+        --gold2: #eb8b36;
+        --text: #e7f4e9;
+        --muted: #cfc6a5;
+        --shadow: 0 18px 60px rgba(0, 0, 0, 0.45);
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        color: var(--text);
+        font:
+          15px/1.5 ui-sans-serif,
+          system-ui,
+          -apple-system,
+          Segoe UI,
+          Roboto,
+          Inter,
+          Arial,
+          sans-serif;
+        background:
+          radial-gradient(
+            1100px 520px at 85% -10%,
+            rgba(246, 198, 74, 0.12),
+            transparent 60%
+          ),
+          radial-gradient(
+            900px 480px at -10% 0%,
+            rgba(246, 198, 74, 0.08),
+            transparent 60%
+          ),
+          #0a0e15;
+        min-height: 100svh;
+      }
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      /* Top */
+      .top {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        padding: clamp(14px, 2.2vh, 22px) 18px 10px;
+        background: linear-gradient(
+          180deg,
+          rgba(10, 14, 21, 0.92),
+          rgba(10, 14, 21, 0.65) 60%,
+          transparent
+        );
+        border-bottom: 1px solid var(--border);
+        backdrop-filter: blur(8px);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .back {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 14px;
+        border-radius: 999px;
+        font-weight: 900;
+        font-size: 14px;
+        background: linear-gradient(180deg, var(--gold), var(--gold2));
+        color: #1b1300;
+        border: 1px solid rgba(0, 0, 0, 0.18);
+        box-shadow: 0 10px 26px rgba(246, 198, 74, 0.25);
+        transition:
+          transform 0.2s ease,
+          filter 0.2s ease;
+      }
+      .back:hover {
+        transform: translateY(-1px);
+        filter: saturate(1.05);
+      }
+      .title {
+        font-weight: 900;
+        letter-spacing: 0.4px;
+        color: var(--gold);
+        font-size: clamp(22px, 2.6vw, 28px);
+        text-shadow: 0 0 18px rgba(246, 198, 74, 0.25);
+      }
+      .spacer {
+        flex: 1;
+      }
+
+      /* Layout */
+      .wrap {
+        max-width: 1200px;
+        margin: 26px auto;
+        padding: 0 18px;
+        display: grid;
+        gap: 18px;
+        grid-template-columns: 1.4fr 0.9fr;
+      }
+      @media (max-width: 1100px) {
+        .wrap {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .panel {
+        background: linear-gradient(180deg, var(--panel), var(--panel2));
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 18px;
+        box-shadow: var(--shadow);
+      }
+      .panel h2 {
+        margin: 0 0 10px;
+        font-size: 18px;
+        color: var(--gold);
+        font-weight: 900;
+      }
+      .sub {
+        margin: 6px 0 14px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      /* Cards grid: 20 topics */
+      .topics {
+        display: grid;
+        gap: 14px;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      }
+
+      .card {
+        background: #0d1420;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 14px;
+        transition:
+          transform 0.12s ease,
+          box-shadow 0.12s ease;
+      }
+      .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 14px 30px rgba(0, 0, 0, 0.25);
+      }
+
+      .card h3 {
+        margin: 0 0 6px;
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .pill {
+        display: inline-block;
+        padding: 3px 8px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 800;
+        color: #1b1300;
+        background: linear-gradient(180deg, #f8d772, #e7b72f);
+      }
+      .tiny {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .formula {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        color: #ffe08a;
+      }
+
+      /* Accordions inside cards */
+      details {
+        margin-top: 8px;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+      }
+      summary {
+        cursor: pointer;
+        padding: 10px 12px;
+        background: #0f1725;
+        list-style: none;
+        font-weight: 800;
+      }
+      summary::-webkit-details-marker {
+        display: none;
+      }
+      details .content {
+        padding: 12px;
+        background: #0b111c;
+      }
+
+      /* Right: Tools + Gemini helper */
+      .box {
+        background: #0d1420;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 12px;
+      }
+      label {
+        display: block;
+        font-size: 12px;
+        color: var(--muted);
+        margin-top: 6px;
+      }
+      input[type="number"],
+      input[type="text"] {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: #0b1219;
+        color: var(--text);
+        margin-top: 6px;
+      }
+      .btn {
+        margin-top: 10px;
+        border-radius: 12px;
+        padding: 10px 14px;
+        font-weight: 900;
+        cursor: pointer;
+        background: linear-gradient(180deg, var(--gold), var(--gold2));
+        color: #1b1300;
+        border: 1px solid rgba(0, 0, 0, 0.18);
+        box-shadow: 0 10px 26px rgba(246, 198, 74, 0.28);
+        transition:
+          transform 0.2s ease,
+          filter 0.2s ease;
+      }
+      .btn:hover {
+        transform: translateY(-1px);
+        filter: saturate(1.05);
+      }
+      .out {
+        margin-top: 8px;
+        font-weight: 900;
+        color: var(--gold);
+      }
+
+      .ai-wrap {
+        margin-top: 14px;
+      }
+      .ai {
+        display: flex;
+        gap: 10px;
+      }
+      .ai input {
+        flex: 1;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="top">
+      <a class="back" href="/">Home</a>
+      <div class="title">Learn Physics</div>
+      <div class="spacer"></div>
+    </div>
+
+    <main class="wrap">
+      <!-- LEFT: the 20 topic cards -->
+      <section class="panel">
+        <h2>Core Topics</h2>
+        <p class="sub">Premium notes with worked examples. Tap to expand.</p>
+
+        <div class="topics">
+          <!-- 1 Mechanics -->
+          <div class="card">
+            <h3>Mechanics <span class="pill">Kinematics & Dynamics</span></h3>
+            <div class="tiny">
+              Motion with constant/variable acceleration; forces.
+            </div>
+            <details>
+              <summary>Key formulas</summary>
+              <div class="content">
+                <p>
+                  <span class="formula">v = u + at</span> &nbsp;
+                  <span class="formula">s = ut + ½at²</span> &nbsp;
+                  <span class="formula">v² = u² + 2as</span>
+                </p>
+                <p>
+                  <span class="formula">F = ma</span>, work
+                  <span class="formula">W = Fs</span>, power
+                  <span class="formula">P = W/t</span>
+                </p>
+              </div>
+            </details>
+          </div>
+
+          <!-- 2 Rotational Dynamics -->
+          <div class="card">
+            <h3>Rotational Dynamics <span class="pill">Torque</span></h3>
+            <div class="tiny">Angular motion, moment of inertia, rolling.</div>
+            <details>
+              <summary>Key formulas</summary>
+              <div class="content">
+                <p>
+                  <span class="formula">τ = Iα</span>, &nbsp;
+                  <span class="formula">L = Iω</span>, &nbsp;
+                  <span class="formula">K<sub>rot</sub> = ½Iω²</span>
+                </p>
+                <p>
+                  Rolling: <span class="formula">v = ωr</span>, energy =
+                  translational + rotational.
+                </p>
+              </div>
+            </details>
+          </div>
+
+          <!-- 3 SHM -->
+          <div class="card">
+            <h3>SHM & Oscillations <span class="pill">Periodic</span></h3>
+            <div class="tiny">Mass–spring, pendulum, resonance.</div>
+            <details>
+              <summary>Key formulas</summary>
+              <div class="content">
+                <p>
+                  <span class="formula">x = A cos(ωt+φ)</span>, &nbsp;
+                  <span class="formula">ω = √(k/m)</span>, &nbsp;
+                  <span class="formula">T = 2π/ω</span>
+                </p>
+                <p>
+                  Pendulum small-angle:
+                  <span class="formula">T = 2π√(L/g)</span>
+                </p>
+              </div>
+            </details>
+          </div>
+
+          <!-- 4 Gravitation -->
+          <div class="card">
+            <h3>Gravitation & Orbits <span class="pill">Kepler</span></h3>
+            <div class="tiny">
+              Inverse-square law; circular & elliptical orbits.
+            </div>
+            <details>
+              <summary>Key formulas</summary>
+              <div class="content">
+                <p>
+                  <span class="formula">F = GmM/r²</span>, &nbsp;
+                  <span class="formula">U = -GmM/r</span>, &nbsp;
+                  <span class="formula">v<sub>orb</sub> = √(GM/r)</span>
+                </p>
+                <p>
+                  Escape:
+                  <span class="formula">v<sub>esc</sub> = √(2GM/r)</span>
+                </p>
+              </div>
+            </details>
+          </div>
+
+          <!-- 5 Energy & Momentum -->
+          <div class="card">
+            <h3>Energy & Momentum <span class="pill">Conservation</span></h3>
+            <div class="tiny">
+              Work–energy theorem; elastic/inelastic collisions.
+            </div>
+            <details>
+              <summary>Key formulas</summary>
+              <div class="content">
+                <p>
+                  <span class="formula">K = ½mv²</span>, &nbsp;
+                  <span class="formula">W = ΔK</span>, &nbsp;
+                  <span class="formula">p = mv</span>
+                </p>
+                <p>
+                  Elastic collision conserves both
+                  <span class="formula">p</span> &
+                  <span class="formula">K</span>.
+                </p>
+              </div>
+            </details>
+          </div>
+
+          <!-- 6 Fluids -->
+          <div class="card">
+            <h3>Fluid Mechanics <span class="pill">Pressure</span></h3>
+            <div class="tiny">Buoyancy, continuity, Bernoulli.</div>
+            <details>
+              <summary>Key formulas</summary>
+              <div class="content">
+                <p>
+                  Hydrostatic: <span class="formula">P = P₀ + ρgh</span>;
+                  Buoyant: <span class="formula">F<sub>b</sub>=ρgV</span>
+                </p>
+                <p>
+                  Continuity: <span class="formula">A₁v₁ = A₂v₂</span>;
+                  Bernoulli: <span class="formula">P + ½ρv² + ρgh = const</span>
+                </p>
+              </div>
+            </details>
+          </div>
+
+          <!-- 7 Waves & Optics -->
+          <div class="card">
+            <h3>Waves & Optics <span class="pill">Interference</span></h3>
+            <div class="tiny">Wave equation, diffraction, lenses.</div>
+            <details>
+              <summary>Key formulas</summary>
+              <div class="content">
+                <p>
+                  <span class="formula">v = fλ</span>, &nbsp;
+                  <span class="formula">I ∝ A²</span>, &nbsp;
+                  <span class="formula">Δy = λL/d</span>
+                </p>
+                <p>Thin lens: <span class="formula">1/f = 1/u + 1/v</span></p>
+              </div>
+            </details>
+          </div>
+
+          <!-- 8 Thermodynamics -->
+          <div class="card">
+            <h3>Thermodynamics <span class="pill">Laws</span></h3>
+            <div class="tiny">First/second law; PV diagrams; engines.</div>
+            <details>
+              <summary>Key formulas</summary>
+              <div class="content">
+                <p>
+                  <span class="formula">ΔU = Q - W</span>, &nbsp;
+                  <span class="formula">PV = nRT</span>, &nbsp; Carnot:
+                  <span class="formula"
+                    >η = 1 - T<sub>c</sub>/T<sub>h</sub></span
+                  >
+                </p>
+              </div>
+            </details>
+          </div>
+
+          <!-- 9 Heat Transfer -->
+          <div class="card">
+            <h3>Thermal Physics <span class="pill">Heat Transfer</span></h3>
+            <div class="tiny">Conduction, convection, radiation.</div>
+            <details>
+              <summary>Key formulas</summary>
+              <div class="content">
+                <p>
+                  Conduction: <span class="formula">Q/t = kAΔT/L</span>;
+                  Radiation: <span class="formula">P = σεAT⁴</span>
+                </p>
+              </div>
+            </details>
+          </div>
+
+          <!-- 10 Electricity -->
+          <div class="card">
+            <h3>Electricity <span class="pill">DC Circuits</span></h3>
+            <div class="tiny">Ohm’s law; series/parallel; power.</div>
+            <details>
+              <summary>Key formulas</summary>
+              <div class="content">
+                <p>
+                  <span class="formula">V = IR</span>, &nbsp;
+                  <span class="formula">P = VI = I²R = V²/R</span>
+                </p>
+                <p>
+                  Series: <span class="formula">R<sub>eq</sub>=ΣR</span>;
+                  Parallel: <span class="formula">1/R<sub>eq</sub>=Σ1/R</span>
+                </p>
+              </div>
+            </details>
+          </div>
+
+          <!-- 11 Magnetism -->
+          <div class="card">
+            <h3>Magnetism <span class="pill">Fields & Induction</span></h3>
+            <div class="tiny">Lorentz force; Faraday’s law.</div>
+            <details>
+              <summary>Key formulas</summary>
+              <div class="content">
+                <p>
+                  Force: <span class="formula">F = qvB sinθ</span>, wire:
+                  <span class="formula">F = BIL sinθ</span>
+                </p>
+                <p>Induction: <span class="formula">ε = -dΦ/dt</span></p>
+              </div>
+            </details>
+          </div>
+
+          <!-- 12 Electromagnetism -->
+          <div class="card">
+            <h3>Electromagnetism <span class="pill">Maxwell</span></h3>
+            <div class="tiny">Unified E & B; waves in vacuum.</div>
+            <details>
+              <summary>Key formulas</summary>
+              <div class="content">
+                <p>
+                  Maxwell: <span class="formula">∇·E=ρ/ε₀</span>,
+                  <span class="formula">∇·B=0</span>,
+                  <span class="formula">∇×E=-∂B/∂t</span>,
+                  <span class="formula">∇×B=μ₀J+μ₀ε₀∂E/∂t</span>
+                </p>
+                <p>Light speed: <span class="formula">c = 1/√(μ₀ε₀)</span></p>
+              </div>
+            </details>
+          </div>
+
+          <!-- 13 Modern Physics -->
+          <div class="card">
+            <h3>Modern Physics <span class="pill">Photoelectric</span></h3>
+            <div class="tiny">Photons, Bohr model, Compton.</div>
+            <details>
+              <summary>Key formulas</summary>
+              <div class="content">
+                <p>
+                  Photon: <span class="formula">E = hf = hc/λ</span>; PE effect:
+                  <span class="formula">K<sub>max</sub> = hf - Φ</span>
+                </p>
+              </div>
+            </details>
+          </div>
+
+          <!-- 14 Relativity -->
+          <div class="card">
+            <h3>Relativity <span class="pill">SR/GR</span></h3>
+            <div class="tiny">
+              Time dilation, length contraction; gravity as curvature.
+            </div>
+            <details>
+              <summary>Key formulas</summary>
+              <div class="content">
+                <p>
+                  <span class="formula">γ = 1/√(1 - v²/c²)</span>, &nbsp;
+                  <span class="formula">Δt' = γΔt</span>, &nbsp;
+                  <span class="formula">L' = L/γ</span>
+                </p>
+                <p>Energy: <span class="formula">E = γmc²</span></p>
+              </div>
+            </details>
+          </div>
+
+          <!-- 15 Quantum -->
+          <div class="card">
+            <h3>Quantum Mechanics <span class="pill">Basics</span></h3>
+            <div class="tiny">Wavefunctions, uncertainty, wells.</div>
+            <details>
+              <summary>Key formulas</summary>
+              <div class="content">
+                <p>
+                  de Broglie: <span class="formula">λ = h/p</span>; Heisenberg:
+                  <span class="formula">ΔxΔp ≥ ħ/2</span>
+                </p>
+              </div>
+            </details>
+          </div>
+
+          <!-- 16 Nuclear -->
+          <div class="card">
+            <h3>Nuclear Physics <span class="pill">Decay</span></h3>
+            <div class="tiny">Radioactivity; binding energy.</div>
+            <details>
+              <summary>Key formulas</summary>
+              <div class="content">
+                <p>
+                  Decay: <span class="formula">N = N₀ e^{-λt}</span>, &nbsp;
+                  <span class="formula">T½ = ln2/λ</span>
+                </p>
+                <p>Mass–energy: <span class="formula">E = Δmc²</span></p>
+              </div>
+            </details>
+          </div>
+
+          <!-- 17 Materials -->
+          <div class="card">
+            <h3>
+              Materials & Solid State <span class="pill">Stress–Strain</span>
+            </h3>
+            <div class="tiny">Elasticity; band theory; semiconductors.</div>
+            <details>
+              <summary>Key formulas</summary>
+              <div class="content">
+                <p>
+                  <span class="formula">σ = F/A</span>,
+                  <span class="formula">ε = ΔL/L</span>, Young’s:
+                  <span class="formula">E = σ/ε</span>
+                </p>
+              </div>
+            </details>
+          </div>
+
+          <!-- 18 Error Analysis -->
+          <div class="card">
+            <h3>
+              Units & Error Analysis <span class="pill">Significant</span>
+            </h3>
+            <div class="tiny">Uncertainty, propagation, SI.</div>
+            <details>
+              <summary>Key formulas</summary>
+              <div class="content">
+                <p>
+                  Add/Sub: <span class="formula">Δz = √(Δx²+Δy²)</span>;
+                  Mult/Div: relative errors add.
+                </p>
+              </div>
+            </details>
+          </div>
+
+          <!-- 19 Astrophysics -->
+          <div class="card">
+            <h3>Astronomy & Astrophysics <span class="pill">Cosmic</span></h3>
+            <div class="tiny">Stars, H–R diagram, cosmology basics.</div>
+            <details>
+              <summary>Key formulas</summary>
+              <div class="content">
+                <p>
+                  Luminosity: <span class="formula">L = 4πR²σT⁴</span>; Hubble:
+                  <span class="formula">v = H₀ d</span>
+                </p>
+              </div>
+            </details>
+          </div>
+
+          <!-- 20 Rocketry -->
+          <div class="card">
+            <h3>
+              Rocketry & Spaceflight <span class="pill">Tsiolkovsky</span>
+            </h3>
+            <div class="tiny">Delta-v, staging, orbits.</div>
+            <details>
+              <summary>Key formulas</summary>
+              <div class="content">
+                <p>
+                  Rocket eq.:
+                  <span class="formula"
+                    >Δv = v<sub>e</sub> ln(m₀/m<sub>f</sub>)</span
+                  >, &nbsp; Isp relation:
+                  <span class="formula">v<sub>e</sub>=g₀ I<sub>sp</sub></span>
+                </p>
+              </div>
+            </details>
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT: Tools + Gemini helper -->
+      <aside class="panel">
+        <h2>Tools</h2>
+
+        <div class="box">
+          <h3 style="margin: 0 0 6px">Kinematics (quick)</h3>
+          <label>u (m/s)</label><input id="u" type="number" step="any" />
+          <label>a (m/s²)</label><input id="a" type="number" step="any" />
+          <label>t (s)</label><input id="t" type="number" step="any" />
+          <button
+            class="btn"
+            onclick="
+          const u=+document.getElementById('u').value||0;
+          const a=+document.getElementById('a').value||0;
+          const t=+document.getElementById('t').value||0;
+          const v=u+a*t; const s=u*t+0.5*a*t*t;
+          document.getElementById('calcOut').innerText = `v=${v.toFixed(2)} m/s, s=${s.toFixed(2)} m`;
+        "
+          >
+            Compute
+          </button>
+          <div id="calcOut" class="out"></div>
+        </div>
+
+        <!-- Gemini Physics Helper -->
+        <div class="panel ai-wrap">
+          <h2>Gemini Helper (Physics)</h2>
+          <p class="tiny">
+            Ask a concept or calculation. Use numbers & units when possible.
+          </p>
+          <div class="ai">
+            <input
+              id="aiQ"
+              type="text"
+              placeholder="e.g., Why doesn’t escape velocity depend on mass?"
+            />
+            <button id="aiBtn" class="btn">Ask Gemini</button>
+          </div>
+          <div id="aiOut" class="out"></div>
+        </div>
+      </aside>
+    </main>
+
+    <script>
+      // Physics Gemini helper
+      const aiInput = document.getElementById("aiQ");
+      const aiBtn = document.getElementById("aiBtn");
+      const aiOut = document.getElementById("aiOut");
+
+      async function askPhysics() {
+        const question = (aiInput.value || "").trim();
+        if (!question) return;
+        aiBtn.disabled = true;
+        aiOut.innerHTML = "Thinking… ✨";
+        try {
+          const res = await fetch("/ai/physics-explain", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ question }),
+          });
+          const data = await res.json();
+          aiOut.innerHTML = (data.reply || "No reply.").replace(/\n/g, "<br>");
+        } catch (e) {
+          aiOut.innerHTML = "Error: " + (e.message || "Something went wrong.");
+        } finally {
+          aiBtn.disabled = false;
+        }
+      }
+      aiBtn.addEventListener("click", askPhysics);
+      aiInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") askPhysics();
+      });
+    </script>
+  </body>
+</html>

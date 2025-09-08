@@ -1,24 +1,24 @@
-const plans = {
+// ---------- Plan definitions ----------
+const PLAN_LIMITS = {
   moon: {
-    advancedAI: 20,
-    infoSearch: 1,
-    physicsLearn: 0,
-    creatplanet: 0,
+    ask: 10,
+    search: 5,
+    physics: 0,
+    learnPhysics: false,
+    createPlanet: false,
   },
   earth: {
-    advancedAI: 50,
-    assistant: Infinity,
-    infoSearch: 20,
-    physicsLearn: 5,
-    CreatPlanet: 0,
+    ask: 30,
+    search: 20,
+    physics: 5,
+    learnPhysics: true,
+    createPlanet: false,
   },
   sun: {
-    advancedAI: Infinity,
-    assistant: Infinity,
-    infoSearch: Infinity,
-    physicsLearn: Infinity,
-    CreatPlanet: Infinity,
+    ask: Infinity,
+    search: Infinity,
+    physics: Infinity,
+    learnPhysics: true,
+    createPlanet: true,
   },
 };
-
-module.exports = plans;

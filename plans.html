@@ -5,44 +5,43 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>GoldenSpaceAI • Plans</title>
 
-  <!-- Tailwind (same CDN version you used) -->
+  <!-- Tailwind -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"/>
 
   <link rel="icon" href="/favicon.ico"/>
   <style>
-    /* Space background + golden glow overlay */
     body {
       min-height: 100vh;
       background:
-        linear-gradient(180deg, rgba(10,14,21,0.80), rgba(10,14,21,0.80)),
-        radial-gradient(1200px 600px at 80% -10%, rgba(246,198,74,0.15), transparent 60%),
-        url("https://images.unsplash.com/photo-1457369804613-52c61a468e7d?q=80&w=2000&auto=format&fit=crop")
-          center/cover no-repeat fixed;
+        linear-gradient(180deg, rgba(10,14,21,0.80), rgba(10,14,21,0.90)),
+        url("https://images.unsplash.com/photo-1444703686981-a3abbc4d4fe3?q=80&w=2000&auto=format&fit=crop")
+          center/cover no-repeat fixed; /* 🌌 Starry galaxy background */
+      color: white;
     }
     .glass {
       background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
       border: 1px solid rgba(255,255,255,0.12);
       backdrop-filter: blur(6px);
     }
-    .glow-gold { box-shadow: 0 20px 60px rgba(246,198,74,0.28); }
-    .badge {
-      display:inline-flex; align-items:center; gap:.5rem;
-      padding:.25rem .6rem; border-radius:9999px; font-weight:800; font-size:.78rem;
-      background: rgba(246,198,74,.10); border:1px solid rgba(246,198,74,.35); color:#f6c64a;
-    }
     .gold-btn {
       background: linear-gradient(180deg, #f6c64a, #eb8b36);
       color: #1b1300; font-weight: 900;
+      box-shadow: 0 8px 24px rgba(246,198,74,0.35);
     }
-    .gold-btn:hover { filter: brightness(1.02); }
+    .gold-btn:hover { filter: brightness(1.05); }
     .link-ghost {
       border: 1px solid rgba(255,255,255,.15);
       background: rgba(255,255,255,.04);
     }
+    .badge {
+      display:inline-flex; align-items:center;
+      padding:.25rem .6rem; border-radius:9999px; font-weight:800; font-size:.8rem;
+      background: rgba(246,198,74,.12); border:1px solid rgba(246,198,74,.35); color:#f6c64a;
+    }
   </style>
 </head>
-<body class="text-white">
-  <!-- Top bar -->
+<body>
+  <!-- Header -->
   <header class="w-full sticky top-0 z-30 glass">
     <div class="max-w-6xl mx-auto px-4 py-3 flex items-center">
       <div class="flex items-center space-x-2 font-extrabold text-yellow-300">
@@ -58,21 +57,20 @@
     </div>
   </header>
 
-  <!-- Page title -->
+  <!-- Title -->
   <main class="max-w-6xl mx-auto px-4 pt-10 pb-16">
     <div class="text-center mb-10">
-      <div class="inline-block badge mb-3">Choose Your Space AI Plan</div>
       <h1 class="text-4xl md:text-5xl font-black mb-3">Plans & Pricing</h1>
       <p class="text-gray-300 max-w-2xl mx-auto">
-        Start free with Moon, or go farther with Earth, Sun, or the Universe Pack for building your own space world.
+        Start free with Moon, or go farther with Earth, Sun, or the Your Space Pack.
       </p>
     </div>
 
-    <!-- 3-column cards -->
+    <!-- 3 packs -->
     <section class="grid grid-cols-1 md:grid-cols-3 gap-8">
       <!-- Moon Pack -->
       <div class="glass rounded-2xl p-6 hover:shadow-xl transition">
-        <h2 class="text-2xl font-extrabold text-blue-300 mb-1">🌙 Moon Pack</h2>
+        <h2 class="text-2xl font-extrabold text-blue-300">🌙 Moon Pack</h2>
         <p class="text-sm text-gray-300 mb-4">Free forever</p>
         <ul class="space-y-2 mb-6 text-gray-100">
           <li>✅ 20 Advanced AI questions/day</li>
@@ -80,12 +78,12 @@
           <li>❌ Learn Physics</li>
           <li>❌ Create your own planet</li>
         </ul>
-        <button id="btn-moon" class="w-full py-2 rounded-xl link-ghost">Select Free Plan</button>
+        <button class="w-full py-2 rounded-xl link-ghost">Select Free Plan</button>
       </div>
 
       <!-- Earth Pack -->
       <div class="glass rounded-2xl p-6 hover:shadow-xl transition border border-green-500/40">
-        <h2 class="text-2xl font-extrabold text-green-300 mb-1">🌍 Earth Pack</h2>
+        <h2 class="text-2xl font-extrabold text-green-300">🌍 Earth Pack</h2>
         <p class="text-sm text-gray-300 mb-4">$2 / month or $20 / year</p>
         <ul class="space-y-2 mb-6 text-gray-100">
           <li>✅ 50 Advanced AI questions/day</li>
@@ -93,12 +91,12 @@
           <li>✅ 5 Physics learnings/day</li>
           <li>❌ Create your own planet</li>
         </ul>
-        <button id="btn-earth" class="w-full py-2 rounded-xl gold-btn glow-gold">Choose Earth Pack</button>
+        <button class="w-full py-2 rounded-xl gold-btn">Choose Earth Pack</button>
       </div>
 
       <!-- Sun Pack -->
       <div class="glass rounded-2xl p-6 hover:shadow-xl transition border border-yellow-500/40">
-        <h2 class="text-2xl font-extrabold text-yellow-300 mb-1">☀️ Sun Pack</h2>
+        <h2 class="text-2xl font-extrabold text-yellow-300">☀️ Sun Pack</h2>
         <p class="text-sm text-gray-300 mb-4">$3 / month or $30 / year</p>
         <ul class="space-y-2 mb-6 text-gray-100">
           <li>✅ Unlimited Advanced AI</li>
@@ -106,59 +104,50 @@
           <li>✅ Unlimited Physics learning</li>
           <li>✅ Access to Create Planet</li>
         </ul>
-        <button id="btn-sun" class="w-full py-2 rounded-xl gold-btn glow-gold font-bold text-black">Go Unlimited</button>
+        <button class="w-full py-2 rounded-xl gold-btn text-black">Go Unlimited</button>
       </div>
     </section>
 
-    <!-- Large Universe card -->
-    <section id="universe" class="mt-10">
+    <!-- Your Space Pack -->
+    <section id="universe" class="mt-12">
       <div class="glass rounded-3xl p-7 md:p-9 border border-purple-500/40 hover:shadow-2xl transition">
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
           <div>
-            <h2 class="text-3xl font-extrabold text-purple-200">🌌 Universe Pack (Your Space)</h2>
+            <h2 class="text-3xl font-extrabold text-purple-200">🌌 Your Space Pack</h2>
             <p class="text-gray-200 mt-1">
-              Unlock Your Space World: up to <b>3 galaxies</b>, <b>10 planets</b>, <b>2 rockets</b>, and <b>2 satellites</b>.
-              Place planets you create into your Universe. (No Learn Physics)
+              Unlock Your Space World: up to <b>3 galaxies</b>, <b>10 planets</b>, 
+              <b>2 rockets</b>, and <b>2 satellites</b>.  
+              Place planets you create into your own Universe. (No Learn Physics)
             </p>
           </div>
-          <div class="flex items-center gap-2">
-            <span class="badge">Your Space Pack</span>
-          </div>
+          <div><span class="badge">New</span></div>
         </div>
 
-        <!-- Inner boxes -->
+        <p class="text-lg font-semibold text-purple-200 mb-4">$2.50 / month</p>
+
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
           <div class="glass rounded-2xl p-4 border border-purple-600/40">
             <h3 class="text-lg font-bold text-purple-200">Advanced Planet</h3>
-            <p class="text-gray-300 text-sm">Oceans, atmospheres, rings, biomes — then place it in your Universe.</p>
+            <p class="text-gray-300 text-sm">Build oceans, atmospheres, and rings for planets.</p>
           </div>
           <div class="glass rounded-2xl p-4 border border-purple-600/40">
-            <h3 class="text-lg font-bold text-purple-200">Create a Rocket</h3>
-            <p class="text-gray-300 text-sm">Stages, engines, payloads — launch to your planets.</p>
+            <h3 class="text-lg font-bold text-purple-200">Rocket</h3>
+            <p class="text-gray-300 text-sm">Create rockets to transport people across your space.</p>
           </div>
           <div class="glass rounded-2xl p-4 border border-purple-600/40">
-            <h3 class="text-lg font-bold text-purple-200">Create a Satellite</h3>
-            <p class="text-gray-300 text-sm">Orbits, instruments, relays — attach to any of your planets.</p>
+            <h3 class="text-lg font-bold text-purple-200">Satellite</h3>
+            <p class="text-gray-300 text-sm">Design satellites to orbit planets and gather data.</p>
           </div>
         </div>
 
         <div class="flex flex-col sm:flex-row gap-3">
-          <button id="btn-universe" class="px-5 py-2 rounded-xl gold-btn glow-gold w-full sm:w-auto">
-            Unlock Universe Pack
-          </button>
-          <a href="/your-space.html" class="px-5 py-2 rounded-xl link-ghost text-center w-full sm:w-auto"
-             title="Opens if your plan is Universe/Your Space">
+          <button class="px-5 py-2 rounded-xl gold-btn w-full sm:w-auto">Unlock Your Space Pack</button>
+          <a href="/your-space.html" class="px-5 py-2 rounded-xl link-ghost text-center w-full sm:w-auto">
             Open Your Space World
           </a>
         </div>
       </div>
     </section>
-
-    <!-- Fine print -->
-    <p class="text-center text-gray-300 mt-10 text-sm">
-      By choosing a plan you agree to our <a class="underline" href="/terms.html">Terms</a> and
-      <a class="underline" href="/privacy.html">Privacy</a>.
-    </p>
   </main>
 
   <!-- Footer -->
@@ -172,61 +161,6 @@
     </div>
   </footer>
 
-  <!-- Footer year -->
   <script>document.getElementById('yr').textContent = new Date().getFullYear();</script>
-
-  <!-- Optional: Moon free-plan selection (your backend route) -->
-  <script>
-    // If your backend exposes /api/select-free (as in your server), use this:
-    const moonBtn = document.getElementById('btn-moon');
-    if (moonBtn) {
-      moonBtn.addEventListener('click', async () => {
-        try {
-          const r = await fetch('/api/select-free', { method: 'POST', credentials: 'include' });
-          if (r.ok) {
-            alert('Moon plan selected! Enjoy 🚀');
-            location.href = '/';
-          } else {
-            alert('Please sign in first (Google button on home page).');
-          }
-        } catch (e) {
-          alert('Unable to set free plan right now.');
-        }
-      });
-    }
-  </script>
-
-  <!-- Paddle Checkout wiring (LIVE). If you use Pay Links instead, just set the buttons to href=YOUR_PAY_LINK -->
-  <script src="https://cdn.paddle.com/paddle/paddle.js"></script>
-  <script>
-    // 1) Set your LIVE vendor here (replace 0 with your real vendor ID)
-    try { Paddle.Setup({ vendor: 0 }); } catch(e) {}
-
-    // 2) If you use Paddle Prices (recommended), set your price IDs here (copy/paste exactly as shown in Paddle).
-    //    If you use Pay Links instead, SKIP this block and simply link buttons to those URLs in the HTML.
-    const PADDLE_PRICE_EARTH     = "pri_01k4s8rgg2f792z6sr4fc14bd1";     // <-- replace with your real price id
-    const PADDLE_PRICE_SUN       = "pri_01k4s8mffj4997m22n09mck6er";       // <-- replace with your real price id
-    const PADDLE_PRICE_UNIVERSE  = "pri_01k4t32tcsbkbtc4w1p5d7vfqk";  // <-- replace with your real price id
-
-    function openCheckout(priceId) {
-      if (!priceId || priceId.includes("XXXX")) {
-        alert("Checkout not configured yet. Ask the admin to set Paddle price IDs.");
-        return;
-      }
-      try {
-        Paddle.Checkout.open({
-          items: [{ price: priceId, quantity: 1 }],
-          success: `${location.origin}/success.html`,
-          closeCallback: function () {}
-        });
-      } catch(e) {
-        alert("Could not open checkout. Please try again.");
-      }
-    }
-
-    document.getElementById('btn-earth')?.addEventListener('click', () => openCheckout(PADDLE_PRICE_EARTH));
-    document.getElementById('btn-sun')?.addEventListener('click',   () => openCheckout(PADDLE_PRICE_SUN));
-    document.getElementById('btn-universe')?.addEventListener('click', () => openCheckout(PADDLE_PRICE_UNIVERSE));
-  </script>
 </body>
 </html>

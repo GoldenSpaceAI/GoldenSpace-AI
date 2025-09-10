@@ -399,5 +399,5 @@ app.use(express.static(__dirname));
 app.get("/health", (_req, res) => res.json({ ok: true }));
 
 // ---------- Start ----------
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 1000;
 app.listen(PORT, () => console.log(`🚀 GoldenSpaceAI running on ${PORT}`));

@@ -1,192 +1,343 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>GoldenSpaceAI Assistant</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GoldenSpaceAI — Assistant</title>
+  <link rel="icon" href="/generated-icon.png" />
+  <!-- Tailwind (CDN) for quick pro styling -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
   <style>
-    body {
-      margin: 0;
-      font-family: "Inter", Arial, sans-serif;
-      background: radial-gradient(circle at top right, #1a2340, #0b0f1a 70%);
-      color: #e6ecff;
-      height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+    :root{
+      --bg:#050814;
+      --panel:#0b1020;
+      --panel-2:#0e1630;
+      --ink:#eaf1ff;
+      --muted:#9fb2d7;
+      --brand:#ffd24f;
+      --accent:#7aa2ff;
+      --red:#ff6b6b;
+      --green:#36d399;
     }
-
-    /* Floating Assistant Button */
-    #assistant-btn {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background: gold;
-      color: black;
-      font-size: 26px;
-      width: 65px;
-      height: 65px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      box-shadow: 0 6px 20px rgba(0,0,0,0.4);
-      transition: transform 0.15s ease;
+    html,body{height:100%}
+    body{
+      background:
+        radial-gradient(1200px 800px at 80% -10%, #161f44 0%, #0c122a 50%, #050814 100%),
+        linear-gradient(160deg, rgba(255,255,255,.03), rgba(255,255,255,.0));
+      color:var(--ink);
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Inter, Roboto, Arial;
     }
-    #assistant-btn:hover {
-      transform: scale(1.1);
-    }
-
-    /* Popup */
-    #assistant-popup {
-      position: fixed;
-      bottom: 100px;
-      right: 20px;
-      width: 340px;
-      background: rgba(18,24,42,0.95);
+    .glass {
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border: 1px solid rgba(255,255,255,.08);
       backdrop-filter: blur(8px);
-      color: white;
-      padding: 16px;
-      border-radius: 16px;
-      box-shadow: 0 12px 32px rgba(0,0,0,0.5);
-      display: none;
-      flex-direction: column;
-      gap: 12px;
     }
+    /* Animated circular voice button (sound-wave look) */
+    .voice-btn{
+      width:84px;height:84px;border-radius:9999px;
+      display:grid;place-items:center;position:relative;
+      background:#0f1a3a;border:1px solid rgba(255,255,255,.15);
+      transition:transform .08s ease, box-shadow .25s ease, background .25s;
+      cursor:pointer;
+    }
+    .voice-btn:hover{transform:translateY(-1px);box-shadow:0 12px 32px rgba(0,0,0,.35)}
+    .voice-btn .pulse, .voice-btn .pulse:before, .voice-btn .pulse:after{
+      content:""; position:absolute; inset:-3px; border-radius:inherit;
+      border:2px solid rgba(122,162,255,.35);
+      animation:pulse 2.2s linear infinite;
+    }
+    .voice-btn .pulse:before{animation-delay:.5s}
+    .voice-btn .pulse:after{animation-delay:1s}
+    @keyframes pulse { 0%{ transform:scale(1); opacity:.9 } 70%{ opacity:.05 } 100%{ transform:scale(1.45); opacity:0 } }
+    .voice-btn.active{
+      background:linear-gradient(0deg, rgba(122,162,255,.2), rgba(122,162,255,.05));
+      border-color:rgba(122,162,255,.7);
+      box-shadow:0 0 0 2px rgba(122,162,255,.35);
+    }
+    .icon-mic{
+      width:30px;height:30px;border-radius:8px;display:grid;place-items:center;
+      background:linear-gradient(180deg, #a7bfff, #7aa2ff);
+      color:#0c142a;font-weight:900
+    }
+    .btn{
+      display:inline-flex;align-items:center;gap:.6rem;
+      padding:.7rem 1rem;border-radius:.8rem;border:1px solid rgba(255,255,255,.1);
+      background:rgba(255,255,255,.04); color:var(--ink);
+      transition:transform .05s ease, background .2s ease, border-color .2s ease;
+    }
+    .btn:hover{transform:translateY(-1px); background:rgba(255,255,255,.06)}
+    .btn-green{background:rgba(54,211,153,.12); border-color:rgba(54,211,153,.35)}
+    .btn-red{background:rgba(255,107,107,.12); border-color:rgba(255,107,107,.35)}
+    .badge{font-size:.72rem;color:var(--muted);border:1px dashed rgba(255,255,255,.12);padding:.25rem .5rem;border-radius:9999px}
 
-    #assistant-popup video {
-      width: 100%;
-      border-radius: 12px;
-      background: black;
-    }
-
-    .controls {
-      display: flex;
-      gap: 8px;
-      justify-content: center;
-    }
-    .controls button {
-      flex: 1;
-      padding: 10px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: 600;
-    }
-    .mic { background: #f0c419; color: #12182a; }
-    .camera { background: #2d6cdf; color: white; }
-    .close { background: #e63946; color: white; }
-
-    #chat {
-      max-height: 150px;
-      overflow-y: auto;
-      background: rgba(255,255,255,0.05);
-      border-radius: 10px;
-      padding: 8px;
-      font-size: 14px;
-    }
-    .user-msg { color: #f0c419; margin: 5px 0; }
-    .ai-msg { color: #9fd6ff; margin: 5px 0; }
-    #status { font-size: 12px; color: #9fb0d1; margin-top: 5px; }
+    /* Chat area */
+    .msg{max-width:80ch;white-space:pre-wrap}
+    .msg.ai{background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.08)}
+    .msg.you{background:rgba(255,210,79,.07);border:1px solid rgba(255,210,79,.25)}
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace}
+    .video-thumb{width:220px;height:124px;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.12)}
   </style>
 </head>
 <body>
-  <!-- Floating Button -->
-  <div id="assistant-btn">🤖</div>
-
-  <!-- Popup -->
-  <div id="assistant-popup">
-    <h3>GoldenSpaceAI Assistant</h3>
-    <video id="camera" autoplay playsinline></video>
-    <div id="chat"></div>
-    <div class="controls">
-      <button id="toggle-mic" class="mic">🎤 Mic</button>
-      <button id="toggle-camera" class="camera">📷 Camera</button>
-      <button id="close-assistant" class="close">❌</button>
+  <header class="px-5 md:px-10 py-5 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <img src="/generated-icon.png" width="32" height="32" class="rounded-lg" alt="">
+      <div>
+        <div class="text-lg font-bold">GoldenSpaceAI Assistant</div>
+        <div class="text-xs text-gray-300">Ask by text • Speak by voice • Optional mic & camera</div>
+      </div>
     </div>
-    <p id="status">Mic & Camera ready.</p>
-  </div>
+    <div class="flex items-center gap-3">
+      <span id="planBadge" class="badge">Plan: …</span>
+      <a class="btn" href="/plans.html">Upgrade</a>
+      <button id="logoutBtn" class="btn">Log out</button>
+    </div>
+  </header>
+
+  <main class="px-5 md:px-10 pb-28">
+    <div class="grid lg:grid-cols-3 gap-6 items-start">
+      <!-- Left: chat -->
+      <section class="lg:col-span-2 glass rounded-2xl p-4 md:p-6">
+        <div id="feed" class="space-y-4">
+          <div class="msg ai rounded-2xl p-4">
+            <div class="text-sm text-gray-300 mb-1">GoldenSpaceAI</div>
+            <div>Hey Faris! I’m ready. Type your question — or press the voice button to talk.</div>
+          </div>
+        </div>
+
+        <!-- Compose -->
+        <div class="mt-4 grid md:grid-cols-[1fr_auto] gap-3 items-center">
+          <div class="flex gap-3">
+            <input id="input" class="flex-1 w-full bg-transparent border border-white border-opacity-10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="Type your message…" />
+            <button id="sendBtn" class="btn">Send</button>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <!-- Circular voice button -->
+            <button id="voiceBtn" class="voice-btn" title="Hold to talk / tap to toggle">
+              <span class="pulse" aria-hidden="true"></span>
+              <span class="icon-mic">🎤</span>
+            </button>
+            <div class="text-sm text-gray-300">
+              <div class="font-semibold">Voice</div>
+              <div class="opacity-70" id="voiceHint">Tap to speak. I’ll answer out loud.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right: devices & options -->
+      <aside class="glass rounded-2xl p-4 md:p-6 space-y-4">
+        <div class="text-sm text-gray-300">Devices</div>
+        <div class="flex gap-3">
+          <button id="micToggle" class="btn btn-green">Enable Mic</button>
+          <button id="camToggle" class="btn">Enable Camera</button>
+        </div>
+
+        <div id="videoWrap" class="hidden">
+          <div class="text-xs text-gray-400">Camera preview (optional)</div>
+          <div class="video-thumb mt-2">
+            <video id="cam" autoplay playsinline muted></video>
+          </div>
+        </div>
+
+        <div class="pt-2">
+          <div class="text-sm text-gray-300 mb-1">Reply voice</div>
+          <label class="inline-flex items-center gap-2">
+            <input id="ttsToggle" type="checkbox" class="form-checkbox" checked />
+            <span class="text-sm text-gray-300">Speak AI replies</span>
+          </label>
+        </div>
+
+        <div class="pt-2">
+          <div class="text-sm text-gray-300 mb-1">Tips</div>
+          <ul class="text-sm text-gray-400 space-y-1 list-disc list-inside">
+            <li>You can block mic/camera anytime; the page works without them.</li>
+            <li>If speech-to-text isn’t supported, the voice button fills after you stop talking.</li>
+            <li>Go to <a href="/learn-physics.html" class="text-blue-300 underline">Learn Physics</a> or <a href="/create-planet.html" class="text-blue-300 underline">Create Planet</a> from the top menu.</li>
+          </ul>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <!-- Floating footer -->
+  <footer class="fixed bottom-0 left-0 right-0 py-3 px-5 md:px-10">
+    <div class="glass rounded-2xl px-4 py-3 flex items-center justify-between text-xs text-gray-300">
+      <div>©️ GoldenSpaceAI · <a class="underline" href="/privacy.html">Privacy</a> · <a class="underline" href="/terms.html">Terms</a></div>
+      <div id="usage" class="mono opacity-80"></div>
+    </div>
+  </footer>
 
   <script>
-    const btn = document.getElementById("assistant-btn");
-    const popup = document.getElementById("assistant-popup");
-    const video = document.getElementById("camera");
-    const chat = document.getElementById("chat");
-    const status = document.getElementById("status");
-    let stream;
-    let recognition;
+    // ---------- Simple helpers ----------
+    const $ = sel => document.querySelector(sel);
+    const feed = $('#feed');
+    const input = $('#input');
+    const sendBtn = $('#sendBtn');
+    const voiceBtn = $('#voiceBtn');
+    const voiceHint = $('#voiceHint');
+    const micToggle = $('#micToggle');
+    const camToggle = $('#camToggle');
+    const videoWrap = $('#videoWrap');
+    const camEl = $('#cam');
+    const ttsToggle = $('#ttsToggle');
+    const usage = $('#usage');
+    const planBadge = $('#planBadge');
+    const logoutBtn = $('#logoutBtn');
 
-    // Open assistant
-    btn.onclick = async () => {
-      popup.style.display = "flex";
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-        video.srcObject = stream;
-        status.textContent = "Mic & Camera active.";
-      } catch (err) {
-        status.textContent = "Mic/Camera blocked. Please allow access.";
+    const addMsg = (who, text) => {
+      const el = document.createElement('div');
+      el.className = 'msg ' + (who === 'you' ? 'you' : 'ai') + ' rounded-2xl p-4';
+      el.innerHTML = \`<div class="text-sm text-gray-300 mb-1">\${who === 'you' ? 'You' : 'GoldenSpaceAI'}</div>\` +
+                     '<div>' + (text || '').replace(/</g,'&lt;') + '</div>';
+      feed.appendChild(el);
+      el.scrollIntoView({behavior:'smooth',block:'end'});
+    };
+
+    // ---------- Session / limits ----------
+    async function refreshMe(){
+      try{
+        const r = await fetch('/api/me');
+        const j = await r.json();
+        planBadge.textContent = 'Plan: ' + j.plan.toUpperCase();
+        usage.textContent = \`Ask: \${j.remaining?.ask ?? '∞'} · Search: \${j.remaining?.search ?? '∞'} · Physics: \${j.remaining?.physics ?? '∞'}\`;
+      }catch(e){}
+    }
+    refreshMe();
+
+    logoutBtn.onclick = async ()=>{
+      await fetch('/logout',{method:'POST'});
+      window.location.href = '/login.html';
+    };
+
+    // ---------- Send text to backend ----------
+    async function ask(q){
+      addMsg('you', q);
+      input.value = '';
+      try{
+        const r = await fetch('/ask', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({question: q})
+        });
+        const j = await r.json();
+        const answer = j.answer || 'No response.';
+        addMsg('ai', answer);
+        refreshMe();
+        if(ttsToggle.checked){ speak(answer); }
+      }catch(err){
+        addMsg('ai', 'Error contacting the AI.');
+      }
+    }
+    sendBtn.onclick = ()=>{ const q = input.value.trim(); if(q) ask(q); };
+    input.addEventListener('keydown', e => { if(e.key === 'Enter'){ const q = input.value.trim(); if(q) ask(q); } });
+
+    // ---------- Speech Synthesis (AI speaks) ----------
+    function speak(text){
+      try{
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(text);
+        u.rate = 1; u.pitch = 1; u.volume = 1;
+        const voice = speechSynthesis.getVoices().find(v=>/en|US|GB/i.test(v.lang));
+        if(voice) u.voice = voice;
+        speechSynthesis.speak(u);
+      }catch(e){}
+    }
+
+    // ---------- Mic (and optional speech-to-text) ----------
+    let stream = null;
+    let isListening = false;
+    let rec = null; // Web Speech Recognition
+
+    function initRecognition(){
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if(!SR) return null;
+      const r = new SR();
+      r.lang = 'en-US';
+      r.interimResults = true;
+      r.continuous = false;
+      r.onstart = ()=>{ voiceHint.textContent = 'Listening… speak now'; };
+      r.onresult = (ev)=>{
+        let finalText = '';
+        for (const res of ev.results){
+          if(res.isFinal) finalText += res[0].transcript + ' ';
+        }
+        if(finalText.trim()) ask(finalText.trim());
+      };
+      r.onend = ()=>{
+        isListening = false;
+        voiceBtn.classList.remove('active');
+        voiceHint.textContent = 'Tap to speak. I’ll answer out loud.';
+      };
+      return r;
+    }
+
+    async function enableMic(){
+      try{
+        stream = await navigator.mediaDevices.getUserMedia({audio:true});
+        micToggle.classList.add('btn-green');
+        micToggle.textContent = 'Mic Enabled';
+        return true;
+      }catch(e){
+        micToggle.classList.remove('btn-green');
+        micToggle.classList.add('btn-red');
+        micToggle.textContent = 'Mic Blocked';
+        return false;
+      }
+    }
+    micToggle.onclick = enableMic;
+
+    // Voice button toggles recognition if available, else just records permission and shows hint
+    voiceBtn.onclick = async ()=>{
+      // ensure mic permission
+      if(!stream){
+        const ok = await enableMic();
+        if(!ok) return;
+      }
+      if(!rec) rec = initRecognition();
+
+      if(rec){
+        if(!isListening){ // start
+          isListening = true;
+          voiceBtn.classList.add('active');
+          voiceHint.textContent = 'Listening…';
+          rec.start();
+        }else{ // stop early
+          rec.stop();
+        }
+      }else{
+        // No Web Speech API: show a small info & let user type
+        voiceHint.textContent = 'Speech-to-text not supported in this browser. Type your question.';
+        voiceBtn.classList.add('active');
+        setTimeout(()=>voiceBtn.classList.remove('active'),800);
       }
     };
 
-    // Toggle mic with Speech Recognition
-    document.getElementById("toggle-mic").onclick = () => {
-      if (!("webkitSpeechRecognition" in window || "SpeechRecognition" in window)) {
-        status.textContent = "Speech recognition not supported in this browser.";
-        return;
-      }
-
-      if (!recognition) {
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        recognition = new SpeechRecognition();
-        recognition.continuous = false;
-        recognition.interimResults = false;
-        recognition.lang = "en-US";
-
-        recognition.onresult = async (event) => {
-          const transcript = event.results[0][0].transcript;
-          chat.innerHTML += `<div class="user-msg">You: ${transcript}</div>`;
-          status.textContent = "Sending to AI...";
-
-          // Send to backend
-          try {
-            const res = await fetch("/ask", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ question: transcript })
-            });
-            const data = await res.json();
-            chat.innerHTML += `<div class="ai-msg">AI: ${data.answer}</div>`;
-            chat.scrollTop = chat.scrollHeight;
-            status.textContent = "AI replied.";
-          } catch (err) {
-            chat.innerHTML += `<div class="ai-msg">Error talking to AI.</div>`;
-            status.textContent = "Error sending to AI.";
-          }
-        };
-        recognition.onerror = () => { status.textContent = "Mic error."; };
-      }
-
-      if (recognition) {
-        recognition.start();
-        status.textContent = "Listening... speak now!";
-      }
-    };
-
-    // Toggle camera
-    document.getElementById("toggle-camera").onclick = () => {
-      if (stream) {
-        let camTrack = stream.getVideoTracks()[0];
-        camTrack.enabled = !camTrack.enabled;
-        status.textContent = camTrack.enabled ? "Camera on." : "Camera off.";
-      }
-    };
-
-    // Close assistant
-    document.getElementById("close-assistant").onclick = () => {
-      popup.style.display = "none";
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
+    // ---------- Camera (optional preview only) ----------
+    let camOn = false;
+    camToggle.onclick = async ()=>{
+      if(!camOn){
+        try{
+          const s = await navigator.mediaDevices.getUserMedia({video:true});
+          camEl.srcObject = s;
+          videoWrap.classList.remove('hidden');
+          camToggle.classList.add('btn-green');
+          camToggle.textContent = 'Camera On';
+          camOn = true;
+        }catch(e){
+          camToggle.classList.add('btn-red');
+          camToggle.textContent = 'Camera Blocked';
+        }
+      }else{
+        const s = camEl.srcObject;
+        if(s) s.getTracks().forEach(t=>t.stop());
+        camEl.srcObject = null;
+        videoWrap.classList.add('hidden');
+        camToggle.classList.remove('btn-green','btn-red');
+        camToggle.textContent = 'Enable Camera';
+        camOn = false;
       }
     };
   </script>

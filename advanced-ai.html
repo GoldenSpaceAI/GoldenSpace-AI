@@ -1,785 +1,194 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1, viewport-fit=cover"
-    />
-    <meta name="theme-color" content="#0a0e15" />
-    <title>GoldenSpaceAI • Advanced AI Assistant</title>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GoldenSpaceAI Assistant</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: "Inter", Arial, sans-serif;
+      background: radial-gradient(circle at top right, #1a2340, #0b0f1a 70%);
+      color: #e6ecff;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
 
-    <style>
-      :root {
-        --bg: #0a0e15;
-        --panel: #101726;
-        --panel2: #0c1320;
-        --panel3: #0b111c;
-        --border: #1f2a40;
-        --gold: #f6c64a;
-        --gold2: #eb8b36;
-        --text: #e7f4e9;
-        --muted: #cfc6a5;
-        --ai: #0f2134;
-        --blue: #1f5fff;
-        --blue2: #1876ff;
-        --shadow: 0 18px 60px rgba(0, 0, 0, 0.45);
-        --radius: 16px;
-        --danger: #ef4444;
-      }
+    /* Floating Assistant Button */
+    #assistant-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: gold;
+      color: black;
+      font-size: 26px;
+      width: 65px;
+      height: 65px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+      transition: transform 0.15s ease;
+    }
+    #assistant-btn:hover {
+      transform: scale(1.1);
+    }
 
-      * {
-        box-sizing: border-box;
-      }
-      html,
-      body {
-        height: 100%;
-      }
-      body {
-        margin: 0;
-        color: var(--text);
-        font:
-          16px/1.55 Inter,
-          ui-sans-serif,
-          system-ui,
-          -apple-system,
-          Segoe UI,
-          Roboto,
-          Arial,
-          sans-serif;
-        background:
-          radial-gradient(
-            1400px 620px at 85% -10%,
-            rgba(246, 198, 74, 0.1),
-            transparent 60%
-          ),
-          radial-gradient(
-            1000px 520px at -10% 0%,
-            rgba(246, 198, 74, 0.07),
-            transparent 60%
-          ),
-          var(--bg);
-        min-height: 100svh;
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-      }
-      a {
-        color: inherit;
-        text-decoration: none;
-      }
+    /* Popup */
+    #assistant-popup {
+      position: fixed;
+      bottom: 100px;
+      right: 20px;
+      width: 340px;
+      background: rgba(18,24,42,0.95);
+      backdrop-filter: blur(8px);
+      color: white;
+      padding: 16px;
+      border-radius: 16px;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.5);
+      display: none;
+      flex-direction: column;
+      gap: 12px;
+    }
 
-      /* Top bar */
-      .top {
-        position: sticky;
-        top: 0;
-        z-index: 30;
-        padding: max(12px, env(safe-area-inset-top)) 16px 10px;
-        background: linear-gradient(
-          180deg,
-          rgba(10, 14, 21, 0.95),
-          rgba(10, 14, 21, 0.6) 55%,
-          transparent
-        );
-        border-bottom: 1px solid var(--border);
-        backdrop-filter: blur(10px);
-        display: flex;
-        align-items: center;
-        gap: 12px;
-      }
-      .back {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 10px 14px;
-        border-radius: 999px;
-        font-weight: 900;
-        font-size: 14px;
-        background: linear-gradient(180deg, var(--gold), var(--gold2));
-        color: #1b1300;
-        border: 1px solid rgba(0, 0, 0, 0.18);
-        box-shadow: 0 10px 26px rgba(246, 198, 74, 0.25);
-        transition:
-          transform 0.2s ease,
-          filter 0.2s ease;
-        touch-action: manipulation;
-        text-decoration: none;
-      }
-      .back:hover {
-        transform: translateY(-1px);
-        filter: saturate(1.05);
-      }
+    #assistant-popup video {
+      width: 100%;
+      border-radius: 12px;
+      background: black;
+    }
 
-      .title {
-        font-weight: 900;
-        letter-spacing: 0.4px;
-        color: var(--gold);
-        font-size: clamp(20px, 2.6vw, 28px);
-        text-shadow: 0 0 18px rgba(246, 198, 74, 0.25);
-      }
-      .spacer {
-        flex: 1;
-      }
+    .controls {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+    }
+    .controls button {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .mic { background: #f0c419; color: #12182a; }
+    .camera { background: #2d6cdf; color: white; }
+    .close { background: #e63946; color: white; }
 
-      /* Optional browser hint banner (shown for Safari) */
-      .hint {
-        display: none;
-        place-items: center;
-        background: #2a1d00;
-        color: #ffd88a;
-        border-top: 1px solid #3e2a01;
-        border-bottom: 1px solid #3e2a01;
-        padding: 8px 12px;
-        font-size: 13px;
-      }
+    #chat {
+      max-height: 150px;
+      overflow-y: auto;
+      background: rgba(255,255,255,0.05);
+      border-radius: 10px;
+      padding: 8px;
+      font-size: 14px;
+    }
+    .user-msg { color: #f0c419; margin: 5px 0; }
+    .ai-msg { color: #9fd6ff; margin: 5px 0; }
+    #status { font-size: 12px; color: #9fb0d1; margin-top: 5px; }
+  </style>
+</head>
+<body>
+  <!-- Floating Button -->
+  <div id="assistant-btn">🤖</div>
 
-      /* Chat container */
-      .wrap {
-        max-width: 980px;
-        margin: 18px auto 130px;
-        padding: 0 14px;
-      }
-      .panel {
-        background: linear-gradient(180deg, var(--panel), var(--panel2));
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: 14px;
-        box-shadow: var(--shadow);
-        overflow: hidden;
-      }
-      .messages {
-        max-height: min(72vh, 70svh);
-        overflow: auto;
-        padding: 8px 6px 2px 6px;
-        scroll-behavior: smooth;
-        overscroll-behavior: contain;
-      }
-      .messages::-webkit-scrollbar {
-        width: 10px;
-      }
-      .messages::-webkit-scrollbar-thumb {
-        background: #223351;
-        border-radius: 10px;
-      }
-
-      .msg {
-        display: flex;
-        gap: 10px;
-        margin: 10px 0;
-        align-items: flex-start;
-      }
-      .bubble {
-        max-width: 88%;
-        padding: 12px 14px;
-        border-radius: 14px;
-        line-height: 1.55;
-        font-size: 16px;
-        word-wrap: break-word;
-        white-space: pre-wrap;
-        border: 1px solid var(--border);
-        box-shadow: 0 6px 22px rgba(0, 0, 0, 0.25);
-      }
-      .ai .bubble {
-        background: var(--ai);
-      }
-      .user {
-        justify-content: flex-end;
-      }
-      .user .bubble {
-        background: linear-gradient(180deg, var(--blue), var(--blue2));
-        color: #e4f1ff;
-        border: 1px solid rgba(255, 255, 255, 0.15);
-      }
-
-      .avatar {
-        width: 28px;
-        height: 28px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: #112a3f;
-        color: #8ee7ff;
-        font-weight: 900;
-        border: 1px solid var(--border);
-        flex: none;
-      }
-      .user .avatar {
-        display: none;
-      }
-
-      .muted {
-        color: var(--muted);
-        font-size: 13px;
-      }
-      .error {
-        color: var(--danger);
-      }
-
-      /* Input Bar */
-      .inputBar {
-        position: fixed;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        z-index: 40;
-        padding: 12px 14px calc(12px + env(safe-area-inset-bottom));
-        background: linear-gradient(
-          180deg,
-          transparent,
-          rgba(11, 18, 32, 0.92) 30%
-        );
-        backdrop-filter: blur(8px);
-        border-top: 1px solid var(--border);
-      }
-      .inputRow {
-        max-width: 980px;
-        margin: 0 auto;
-        display: flex;
-        gap: 10px;
-        align-items: center;
-        flex-wrap: wrap;
-        background: var(--panel3);
-        border: 1px solid var(--border);
-        border-radius: 14px;
-        padding: 8px;
-        box-shadow: 0 12px 34px rgba(0, 0, 0, 0.35);
-      }
-      .inputRow input[type="text"] {
-        flex: 1;
-        min-width: 180px;
-        background: transparent;
-        border: 0;
-        outline: 0;
-        color: var(--text);
-        font-size: 16px;
-        padding: 12px 12px;
-      }
-      .btn {
-        background: linear-gradient(180deg, var(--gold), var(--gold2));
-        color: #1b1300;
-        font-weight: 900;
-        border: 1px solid rgba(0, 0, 0, 0.18);
-        padding: 12px 16px;
-        border-radius: 12px;
-        cursor: pointer;
-        transition: transform 0.2s ease;
-        box-shadow: 0 10px 26px rgba(246, 198, 74, 0.28);
-        touch-action: manipulation;
-        min-width: 84px;
-      }
-      .btn:hover {
-        transform: translateY(-1px);
-      }
-      .btn.ghost {
-        background: transparent;
-        color: var(--muted);
-        border: 1px solid var(--border);
-        box-shadow: none;
-        min-width: auto;
-      }
-      .btn:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-        box-shadow: none;
-      }
-
-      /* Picker group */
-      .controls {
-        display: flex;
-        gap: 8px;
-        align-items: center;
-        flex-wrap: wrap;
-      }
-      select {
-        appearance: none;
-        background: #0c1524;
-        color: var(--text);
-        border: 1px solid var(--border);
-        border-radius: 10px;
-        padding: 10px 12px;
-        font-weight: 700;
-      }
-      #micStatus {
-        min-width: 120px;
-        font-size: 12px;
-        color: var(--muted);
-      }
-
-      /* Camera panel */
-      .camWrap {
-        position: fixed;
-        right: 12px;
-        bottom: 86px;
-        z-index: 35;
-        width: min(320px, 38vw);
-        background: #0b111c;
-        border: 1px solid var(--border);
-        border-radius: 14px;
-        padding: 10px;
-        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
-        display: none; /* toggled on demand */
-      }
-      .camTop {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 8px;
-        margin-bottom: 8px;
-      }
-      .camTop h3 {
-        margin: 0;
-        font-size: 14px;
-        color: var(--gold);
-      }
-      .camBtns {
-        display: flex;
-        gap: 8px;
-      }
-      video {
-        width: 100%;
-        border-radius: 10px;
-        background: #000;
-        aspect-ratio: 16/9;
-        border: 1px solid var(--border);
-      }
-
-      /* Small screens */
-      @media (max-width: 560px) {
-        body {
-          font-size: 15px;
-        }
-        .bubble {
-          max-width: 92%;
-        }
-        .btn {
-          padding: 12px 14px;
-          min-width: auto;
-        }
-        .inputRow {
-          gap: 8px;
-        }
-        .camWrap {
-          width: calc(100vw - 24px);
-          left: 12px;
-          right: 12px;
-        }
-      }
-
-      @media (prefers-reduced-motion: reduce) {
-        * {
-          animation: none !important;
-          transition: none !important;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <!-- Header -->
-    <header class="top" role="banner">
-      <a class="back" href="/" aria-label="Go to Home">Home</a>
-      <h1 class="title">Advanced AI Assistant</h1>
-      <div class="spacer" aria-hidden="true"></div>
-    </header>
-
-    <!-- Safari / unsupported hint -->
-    <div id="hint" class="hint">
-      Voice input not supported in this browser. For mic, use Chrome or
-      Microsoft Edge.
+  <!-- Popup -->
+  <div id="assistant-popup">
+    <h3>GoldenSpaceAI Assistant</h3>
+    <video id="camera" autoplay playsinline></video>
+    <div id="chat"></div>
+    <div class="controls">
+      <button id="toggle-mic" class="mic">🎤 Mic</button>
+      <button id="toggle-camera" class="camera">📷 Camera</button>
+      <button id="close-assistant" class="close">❌</button>
     </div>
+    <p id="status">Mic & Camera ready.</p>
+  </div>
 
-    <!-- Chat -->
-    <main class="wrap" role="main">
-      <section class="panel" aria-label="Chat messages">
-        <div id="messages" class="messages" tabindex="0" aria-live="polite">
-          <div class="msg ai">
-            <div class="avatar">AI</div>
-            <div class="bubble">
-              Welcome to <b>GoldenSpace Advanced AI</b> ✨<br />
-              Ask me anything — space, science, code, or your next big idea.
-              <div class="muted" style="margin-top: 6px">
-                Tip: Press <b>Enter</b> to send • Tap <b>🎙️ Speak</b> for voice
-                • Open the camera from the toolbar
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-    </main>
+  <script>
+    const btn = document.getElementById("assistant-btn");
+    const popup = document.getElementById("assistant-popup");
+    const video = document.getElementById("camera");
+    const chat = document.getElementById("chat");
+    const status = document.getElementById("status");
+    let stream;
+    let recognition;
 
-    <!-- Camera mini-panel -->
-    <aside id="camWrap" class="camWrap" aria-label="Camera preview">
-      <div class="camTop">
-        <h3>Camera Preview</h3>
-        <div class="camBtns">
-          <button id="camStart" class="btn" aria-label="Start camera">
-            Start
-          </button>
-          <button id="camStop" class="btn ghost" aria-label="Stop camera">
-            Stop
-          </button>
-          <button id="camClose" class="btn ghost" aria-label="Close camera">
-            ✕
-          </button>
-        </div>
-      </div>
-      <video id="camVideo" autoplay playsinline muted></video>
-    </aside>
-
-    <!-- Input -->
-    <div class="inputBar" role="region" aria-label="Message input">
-      <div class="inputRow">
-        <input
-          id="input"
-          type="text"
-          placeholder="Ask your question…"
-          autocomplete="off"
-          aria-label="Your message"
-        />
-        <div class="controls">
-          <select id="lang" aria-label="Recognition language">
-            <option value="auto">Auto</option>
-            <option value="en-US">English (US)</option>
-            <option value="en-GB">English (UK)</option>
-            <option value="ar">العربية</option>
-            <option value="ar-LB">Arabic (Lebanon)</option>
-            <option value="fr-FR">Français (FR)</option>
-          </select>
-          <button id="sendBtn" class="btn" aria-label="Send message">
-            Ask
-          </button>
-          <button id="micBtn" class="btn" aria-label="Speak your question">
-            🎙️ Speak
-          </button>
-          <button id="stopTTS" class="btn ghost" aria-label="Stop speaking">
-            ⏹ Stop
-          </button>
-          <span id="micStatus" aria-live="polite"> Ready</span>
-          <button id="cameraToggle" class="btn ghost" aria-label="Open camera">
-            📷 Camera
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <script>
-      // ---------- DOM helpers ----------
-      const messagesEl = document.getElementById("messages");
-      const inputEl = document.getElementById("input");
-      const sendBtn = document.getElementById("sendBtn");
-      const micBtn = document.getElementById("micBtn");
-      const stopTTSBtn = document.getElementById("stopTTS");
-      const micStatus = document.getElementById("micStatus");
-      const hintBar = document.getElementById("hint");
-      const langSel = document.getElementById("lang");
-
-      const camWrap = document.getElementById("camWrap");
-      const camToggle = document.getElementById("cameraToggle");
-      const camStart = document.getElementById("camStart");
-      const camStop = document.getElementById("camStop");
-      const camClose = document.getElementById("camClose");
-      const camVideo = document.getElementById("camVideo");
-      let camStream = null;
-
-      function scrollToBottom() {
-        messagesEl.scrollTop = messagesEl.scrollHeight;
+    // Open assistant
+    btn.onclick = async () => {
+      popup.style.display = "flex";
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        video.srcObject = stream;
+        status.textContent = "Mic & Camera active.";
+      } catch (err) {
+        status.textContent = "Mic/Camera blocked. Please allow access.";
       }
-      function setMicStatus(t) {
-        if (micStatus) micStatus.textContent = " " + t;
-      }
-      function escapeHTML(str) {
-        return (str || "").replace(
-          /[&<>"]/g,
-          (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[m],
-        );
-      }
-      function bubbleHTML(role, text) {
-        if (role === "user") {
-          return `<div class="msg user"><div class="bubble">${text}</div></div>`;
-        }
-        return `<div class="msg ai"><div class="avatar">AI</div><div class="bubble">${text}</div></div>`;
-      }
-      function typingHTML() {
-        return `<div class="msg ai" id="typing"><div class="avatar">AI</div><div class="bubble"><div class="typing"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div></div>`;
-      }
-      function sysNote(text) {
-        messagesEl.insertAdjacentHTML(
-          "beforeend",
-          bubbleHTML("ai", `<span class="muted">${escapeHTML(text)}</span>`),
-        );
-        scrollToBottom();
+    };
+
+    // Toggle mic with Speech Recognition
+    document.getElementById("toggle-mic").onclick = () => {
+      if (!("webkitSpeechRecognition" in window || "SpeechRecognition" in window)) {
+        status.textContent = "Speech recognition not supported in this browser.";
+        return;
       }
 
-      // ---------- Text-to-Speech (reply) ----------
-      const synth = window.speechSynthesis;
-      function speak(text) {
-        try {
-          if (!synth) return;
-          const u = new SpeechSynthesisUtterance(text);
-          u.rate = 1.0;
-          u.pitch = 1.0;
-          u.volume = 1.0;
-          synth.cancel();
-          synth.speak(u);
-        } catch (e) {}
-      }
-      function stopSpeaking() {
-        try {
-          synth && synth.cancel();
-        } catch (e) {}
-      }
-      stopTTSBtn.addEventListener("click", stopSpeaking);
+      if (!recognition) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = "en-US";
 
-      // ---------- Send (text) ----------
-      async function sendMessage() {
-        const text = (inputEl.value || "").trim();
-        if (!text) return;
+        recognition.onresult = async (event) => {
+          const transcript = event.results[0][0].transcript;
+          chat.innerHTML += `<div class="user-msg">You: ${transcript}</div>`;
+          status.textContent = "Sending to AI...";
 
-        messagesEl.insertAdjacentHTML(
-          "beforeend",
-          bubbleHTML("user", escapeHTML(text)),
-        );
-        scrollToBottom();
-        inputEl.value = "";
-        inputEl.focus();
-
-        messagesEl.insertAdjacentHTML("beforeend", typingHTML());
-        scrollToBottom();
-        sendBtn.disabled = true;
-
-        try {
-          const res = await fetch("/ask", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ question: text }),
-          });
-          const data = await res.json().catch(() => ({}));
-          const reply = data && data.answer ? data.answer : "No response.";
-          document.getElementById("typing")?.remove();
-          messagesEl.insertAdjacentHTML(
-            "beforeend",
-            bubbleHTML("ai", escapeHTML(reply)),
-          );
-          speak(reply);
-        } catch (err) {
-          document.getElementById("typing")?.remove();
-          messagesEl.insertAdjacentHTML(
-            "beforeend",
-            bubbleHTML(
-              "ai",
-              `<span class="error">Error:</span> ${escapeHTML(err.message || "Something went wrong.")}`,
-            ),
-          );
-        } finally {
-          sendBtn.disabled = false;
-          scrollToBottom();
-        }
-      }
-      sendBtn.addEventListener("click", sendMessage);
-      inputEl.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" && !e.shiftKey) {
-          e.preventDefault();
-          sendMessage();
-        }
-      });
-
-      // ---------- Voice Input (robust) ----------
-      const SpeechRecognition =
-        window.webkitSpeechRecognition || window.SpeechRecognition || null;
-      const isSafari = /^((?!chrome|android).)*safari/i.test(
-        navigator.userAgent,
-      );
-      const isAppleDevice =
-        /Mac|iPhone|iPad|iPod/.test(navigator.platform) ||
-        /iPhone|iPad|Macintosh/.test(navigator.userAgent);
-
-      // Show hint + hide mic if unsupported
-      if (!SpeechRecognition) {
-        micBtn.style.display = "none";
-        setMicStatus(
-          isSafari || isAppleDevice
-            ? "Use Chrome/Edge (Safari not supported)"
-            : "Voice not supported here",
-        );
-        hintBar.style.display = "grid";
-      } else {
-        hintBar.style.display = "none";
-        // Auto language default from device
-        const deviceLang =
-          navigator.language || navigator.userLanguage || "en-US";
-        // If picker is "Auto", use deviceLang
-        function currentLang() {
-          const pick = langSel.value;
-          return pick === "auto" ? deviceLang : pick;
-        }
-
-        let recognition = null;
-        let recognizing = false;
-        let silenceTimer = null;
-        let warnedOnce = false;
-
-        async function ensureMicPermission() {
+          // Send to backend
           try {
-            const stream = await navigator.mediaDevices.getUserMedia({
-              audio: true,
+            const res = await fetch("/ask", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ question: transcript })
             });
-            stream.getTracks().forEach((t) => t.stop());
-            return true;
-          } catch (e) {
-            console.warn("Mic permission denied:", e);
-            setMicStatus("Mic blocked");
-            sysNote(
-              "Microphone is blocked. Click the lock icon in the address bar → allow Microphone → reload.",
-            );
-            return false;
+            const data = await res.json();
+            chat.innerHTML += `<div class="ai-msg">AI: ${data.answer}</div>`;
+            chat.scrollTop = chat.scrollHeight;
+            status.textContent = "AI replied.";
+          } catch (err) {
+            chat.innerHTML += `<div class="ai-msg">Error talking to AI.</div>`;
+            status.textContent = "Error sending to AI.";
           }
-        }
-        function startSilenceGuard(ms = 8000) {
-          clearSilenceGuard();
-          silenceTimer = setTimeout(() => {
-            try {
-              recognition && recognition.stop();
-            } catch {}
-          }, ms);
-        }
-        function clearSilenceGuard() {
-          if (silenceTimer) {
-            clearTimeout(silenceTimer);
-            silenceTimer = null;
-          }
-        }
-
-        async function startListening() {
-          if (recognizing) return;
-          setMicStatus("Preparing mic…");
-          const ok = await ensureMicPermission();
-          if (!ok) return;
-          await new Promise((r) => setTimeout(r, 200)); // helps Chrome after permission
-
-          recognition = new SpeechRecognition();
-          recognition.lang = currentLang();
-          recognition.interimResults = true;
-          recognition.continuous = false;
-          recognition.maxAlternatives = 1;
-
-          let finalText = "";
-
-          recognition.onstart = () => {
-            recognizing = true;
-            micBtn.textContent = "🛑 Stop";
-            setMicStatus("Listening…");
-            sysNote("Listening… speak now.");
-            startSilenceGuard();
-          };
-          recognition.onresult = (e) => {
-            startSilenceGuard();
-            let interim = "";
-            for (let i = e.resultIndex; i < e.results.length; i++) {
-              const t = e.results[i][0].transcript;
-              if (e.results[i].isFinal) finalText += t;
-              else interim += t;
-            }
-            inputEl.value = finalText || interim;
-          };
-          recognition.onerror = (ev) => {
-            clearSilenceGuard();
-            let msg = "Speech error.";
-            if (ev.error === "no-speech")
-              msg = "No speech detected. Try again a bit louder/closer.";
-            if (ev.error === "audio-capture")
-              msg = "No microphone found or it’s used by another app.";
-            if (ev.error === "not-allowed")
-              msg = "Microphone permission denied in site settings.";
-            setMicStatus("Error");
-            sysNote(msg);
-            if (ev.error === "no-speech" && !warnedOnce) {
-              warnedOnce = true;
-              setTimeout(() => startListening(), 600);
-            }
-          };
-          recognition.onend = async () => {
-            clearSilenceGuard();
-            recognizing = false;
-            micBtn.textContent = "🎙️ Speak";
-            const text = (inputEl.value || "").trim();
-            if (text) {
-              setMicStatus("Processing…");
-              await sendMessage();
-              setMicStatus("Ready");
-            } else {
-              setMicStatus("Ready");
-              if (!warnedOnce)
-                sysNote("Didn’t catch anything. Tap 🎙️ and try again.");
-            }
-          };
-
-          try {
-            recognition.start();
-          } catch (e) {
-            console.warn("recognition.start() failed:", e);
-            setMicStatus("Error");
-            sysNote(
-              "Could not start mic. Close other tabs using the microphone and try again.",
-            );
-          }
-        }
-        function stopListening() {
-          try {
-            recognition && recognition.stop();
-          } catch {}
-        }
-
-        micBtn.addEventListener("click", () => {
-          if (recognizing) stopListening();
-          else startListening();
-        });
-
-        // If language picker changes while listening, restart with new lang
-        langSel.addEventListener("change", () => {
-          if (recognizing) {
-            stopListening();
-            setTimeout(() => startListening(), 200);
-          }
-        });
-
-        document.addEventListener("visibilitychange", () => {
-          if (document.hidden && recognizing) stopListening();
-        });
+        };
+        recognition.onerror = () => { status.textContent = "Mic error."; };
       }
 
-      // ---------- Camera preview (no upload, just local) ----------
-      function showCamPanel(show) {
-        camWrap.style.display = show ? "block" : "none";
+      if (recognition) {
+        recognition.start();
+        status.textContent = "Listening... speak now!";
       }
-      async function startCamera() {
-        try {
-          camStream = await navigator.mediaDevices.getUserMedia({
-            video: true,
-            audio: false,
-          });
-          camVideo.srcObject = camStream;
-        } catch (e) {
-          sysNote(
-            "Camera error: " +
-              (e.message || "permission denied or not available"),
-          );
-        }
+    };
+
+    // Toggle camera
+    document.getElementById("toggle-camera").onclick = () => {
+      if (stream) {
+        let camTrack = stream.getVideoTracks()[0];
+        camTrack.enabled = !camTrack.enabled;
+        status.textContent = camTrack.enabled ? "Camera on." : "Camera off.";
       }
-      function stopCamera() {
-        if (camStream) {
-          camStream.getTracks().forEach((t) => t.stop());
-          camStream = null;
-          camVideo.srcObject = null;
-        }
+    };
+
+    // Close assistant
+    document.getElementById("close-assistant").onclick = () => {
+      popup.style.display = "none";
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
       }
-      camToggle.addEventListener("click", () =>
-        showCamPanel(camWrap.style.display !== "block"),
-      );
-      camStart.addEventListener("click", startCamera);
-      camStop.addEventListener("click", stopCamera);
-      camClose.addEventListener("click", () => {
-        stopCamera();
-        showCamPanel(false);
-      });
-    </script>
-  </body>
+    };
+  </script>
+</body>
 </html>

@@ -76,7 +76,7 @@ function getUserKey(req, res) {
   return `g:${req.cookies.gs_uid}`;
 }
 function getPlan(req) {
-  return (req.user && req.user.plan) || req.session?.plan || "sun";
+  return (req.user && req.user.plan) || req.session?.plan || "moon";
 }
 function getUsage(req, res) {
   const key = getUserKey(req, res);

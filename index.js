@@ -1,5 +1,3 @@
-// index.js — GoldenSpaceAI (Login/Signup + Google OAuth + Plan Limits + Paddle Webhook)
-
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -18,9 +16,16 @@ dotenv.config();
 const app = express();
 app.set("trust proxy", 1);
 
+// ---------- CORS / Cookies ----------
 app.use(cors({ origin: true, credentials: true }));
-app.use(express.json());
 app.use(cookieParser());
+
+// ---------- IMPORTANT: avoid JSON parsing for Paddle webhook ----------
+// If we parse JSON globally, Paddle signature fails. So we skip it only for that path.
+app.use((req, res, next) => {
+  if (req.path === "/webhooks/paddle") return next();
+  return express.json()(req, res, next);
+});
 
 // ---------- Sessions ----------
 app.use(
@@ -31,10 +36,12 @@ app.use(
     cookie: {
       httpOnly: true,
       sameSite: "lax",
+      // Render runs HTTPS behind a proxy; NODE_ENV is "production" there.
+      // Secure cookie is required for Google OAuth session.
       secure: process.env.NODE_ENV === "production",
       maxAge: 1000 * 60 * 60 * 24 * 7,
     },
-  }),
+  })
 );
 
 app.use(passport.initialize());
@@ -46,27 +53,9 @@ const __dirname = path.dirname(__filename);
 
 // ---------- Plan definitions ----------
 const PLAN_LIMITS = {
-  moon: {
-    ask: 10,
-    search: 5,
-    physics: 0,
-    learnPhysics: false,
-    createPlanet: false,
-  },
-  earth: {
-    ask: 30,
-    search: 20,
-    physics: 5,
-    learnPhysics: true,
-    createPlanet: false,
-  },
-  sun: {
-    ask: Infinity,
-    search: Infinity,
-    physics: Infinity,
-    learnPhysics: true,
-    createPlanet: true,
-  },
+  moon: { ask: 10, search: 5, physics: 0, learnPhysics: false, createPlanet: false },
+  earth: { ask: 30, search: 20, physics: 5, learnPhysics: true, createPlanet: false },
+  sun: { ask: Infinity, search: Infinity, physics: Infinity, learnPhysics: true, createPlanet: true },
 };
 
 // ---------- Usage tracking (memory, resets daily) ----------
@@ -103,13 +92,9 @@ function enforceLimit(kind) {
     const u = getUsage(req, res);
     const allowed = limits[kind];
     if (allowed === 0)
-      return res
-        .status(403)
-        .json({ error: `Your plan does not allow ${kind}.` });
+      return res.status(403).json({ error: `Your plan does not allow ${kind}.` });
     if (Number.isFinite(allowed) && u[kind] >= allowed)
-      return res
-        .status(429)
-        .json({ error: `Daily ${kind} limit reached for ${plan} plan.` });
+      return res.status(429).json({ error: `Daily ${kind} limit reached for ${plan} plan.` });
     if (Number.isFinite(allowed)) u[kind]++;
     next();
   };
@@ -129,43 +114,47 @@ function getBaseUrl(req) {
 
 // ---------- Google OAuth ----------
 const DEFAULT_CALLBACK_PATH = "/auth/google/callback";
+const OWNER_EMAIL = (process.env.OWNER_EMAIL || "").toLowerCase().trim(); // optional owner auto-Sun
+
 passport.use(
   new GoogleStrategy(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: DEFAULT_CALLBACK_PATH,
+      callbackURL: DEFAULT_CALLBACK_PATH, // we override per-request using getBaseUrl
       proxy: true,
     },
     (accessToken, refreshToken, profile, done) => {
+      const email = (profile.emails?.[0]?.value || "").toLowerCase();
       const user = {
         id: profile.id,
         name: profile.displayName,
-        email: profile.emails?.[0]?.value || "",
+        email,
         photo: profile.photos?.[0]?.value || "",
         plan: "moon",
       };
+      // Optional: auto-upgrade owner to Sun on login
+      if (OWNER_EMAIL && email === OWNER_EMAIL) {
+        user.plan = "sun";
+      }
       return done(null, user);
-    },
-  ),
+    }
+  )
 );
 passport.serializeUser((user, done) => done(null, user));
 passport.deserializeUser((obj, done) => done(null, obj));
 
 app.get("/auth/google", (req, res, next) => {
   const callbackURL = `${getBaseUrl(req)}${DEFAULT_CALLBACK_PATH}`;
-  passport.authenticate("google", { scope: ["profile", "email"], callbackURL })(
-    req,
-    res,
-    next,
-  );
+  passport.authenticate("google", { scope: ["profile", "email"], callbackURL })(req, res, next);
 });
 app.get(DEFAULT_CALLBACK_PATH, (req, res, next) => {
   const callbackURL = `${getBaseUrl(req)}${DEFAULT_CALLBACK_PATH}`;
-  passport.authenticate("google", {
-    failureRedirect: "/login.html",
-    callbackURL,
-  })(req, res, () => res.redirect("/"));
+  passport.authenticate("google", { failureRedirect: "/login.html", callbackURL })(
+    req,
+    res,
+    () => res.redirect("/")
+  );
 });
 app.post("/logout", (req, res, next) => {
   req.logout((err) => {
@@ -213,8 +202,7 @@ h1{margin:0 0 6px;font-size:28px}.sub{margin:0 0 18px;font-size:14px;color:var(-
 });
 
 // ---------- PUBLIC / AUTH GATE ----------
-const PUBLIC_FILE_EXT =
-  /\.(css|js|mjs|map|png|jpg|jpeg|gif|svg|ico|txt|woff2?)$/i;
+const PUBLIC_FILE_EXT = /\.(css|js|mjs|map|png|jpg|jpeg|gif|svg|ico|txt|woff2?)$/i;
 function isPublicPath(req) {
   const p = req.path;
   if (p === "/login.html") return true;
@@ -244,13 +232,9 @@ app.post(
       const signature =
         req.header("Paddle-Signature") || req.header("paddle-signature");
       const secret = process.env.PADDLE_WEBHOOK_SECRET;
-      if (!signature || !secret)
-        return res.status(400).send("Missing signature or secret");
+      if (!signature || !secret) return res.status(400).send("Missing signature or secret");
 
-      const computed = crypto
-        .createHmac("sha256", secret)
-        .update(req.body)
-        .digest("hex");
+      const computed = crypto.createHmac("sha256", secret).update(req.body).digest("hex");
       if (signature !== computed && !signature.includes(computed)) {
         return res.status(401).send("Invalid signature");
       }
@@ -261,8 +245,7 @@ app.post(
       // identify plan
       const item = evt?.data?.items?.[0];
       const priceId = item?.price?.id || evt?.data?.price_id || null;
-      const customPlan =
-        item?.custom_data?.plan || evt?.data?.custom_data?.plan || null;
+      const customPlan = item?.custom_data?.plan || evt?.data?.custom_data?.plan || null;
 
       let plan = null;
       if (customPlan === "earth" || customPlan === "sun") plan = customPlan;
@@ -290,7 +273,7 @@ app.post(
       console.error("Paddle webhook error", err);
       return res.status(200).send("ok");
     }
-  },
+  }
 );
 
 // mount the guard AFTER webhook so the webhook stays public
@@ -298,10 +281,10 @@ app.use(authRequired);
 
 // ---------- Alias/redirects for Terms & Privacy ----------
 app.get("/terms.html", (_req, res) =>
-  res.redirect("https://www.goldenspaceai.space/terms-of-service"),
+  res.redirect("https://www.goldenspaceai.space/terms-of-service")
 );
 app.get("/privacy.html", (_req, res) =>
-  res.redirect("https://www.goldenspaceai.space/privacy"),
+  res.redirect("https://www.goldenspaceai.space/privacy")
 );
 
 // ---------- Gemini ----------
@@ -350,6 +333,7 @@ app.post("/ai/physics-explain", enforceLimit("physics"), async (req, res) => {
 
 // ---------- Apply Paddle upgrades when user hits API ----------
 app.get("/api/me", (req, res) => {
+  // Apply Paddle upgrade
   if (req.user?.email) {
     const up = upgradesByEmail[req.user.email.toLowerCase()];
     if (up && (req.user.plan !== up || req.session?.plan !== up)) {
@@ -357,19 +341,21 @@ app.get("/api/me", (req, res) => {
       if (req.session) req.session.plan = up;
     }
   }
+  // Apply owner auto-Sun (if configured)
+  if (OWNER_EMAIL && req.user?.email?.toLowerCase() === OWNER_EMAIL) {
+    if (req.user.plan !== "sun" || req.session?.plan !== "sun") {
+      req.user.plan = "sun";
+      if (req.session) req.session.plan = "sun";
+    }
+  }
+
   const plan = getPlan(req);
   const limits = PLAN_LIMITS[plan];
   const u = getUsage(req, res);
   const remaining = {
     ask: limits.ask === Infinity ? Infinity : Math.max(0, limits.ask - u.ask),
-    search:
-      limits.search === Infinity
-        ? Infinity
-        : Math.max(0, limits.search - u.search),
-    physics:
-      limits.physics === Infinity
-        ? Infinity
-        : Math.max(0, limits.physics - u.physics),
+    search: limits.search === Infinity ? Infinity : Math.max(0, limits.search - u.search),
+    physics: limits.physics === Infinity ? Infinity : Math.max(0, limits.physics - u.physics),
   };
   res.json({
     loggedIn: !!req.user,

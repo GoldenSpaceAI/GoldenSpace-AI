@@ -1,10 +1,11 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>GoldenSpaceAI — Assistant</title>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>GoldenSpaceAI — Advanced AI</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
   <style>
     :root{--bg:#050814;--ink:#eaf1ff;--muted:#9fb2d7;--accent:#7aa2ff;--gold:#ffd24f}
     html,body{height:100%}
@@ -18,103 +19,105 @@
            border:1px solid rgba(255,255,255,.08); backdrop-filter: blur(8px)}
     .badge{font-size:.72rem;color:var(--muted);border:1px dashed rgba(255,255,255,.12);
            padding:.25rem .5rem;border-radius:9999px}
-    .btn{display:inline-flex;align-items:center;gap:.6rem;padding:.7rem 1rem;border-radius:.8rem;
-         border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:var(--ink)}
-    .btn:hover{transform:translateY(-1px); background:rgba(255,255,255,.06)}
-    .btn-green{background:rgba(54,211,153,.12); border-color:rgba(54,211,153,.35)}
-    .btn-red{background:rgba(255,107,107,.12); border-color:rgba(255,107,107,.35)}
+
+    /* Circular voice/camera button with pulse */
+    .vc-btn{
+      width:86px;height:86px;border-radius:9999px;display:grid;place-items:center;position:relative;
+      background:#0f1a3a;border:1px solid rgba(255,255,255,.15);cursor:pointer;
+      transition:transform .08s ease, box-shadow .25s ease, background .25s, border-color .25s;
+    }
+    .vc-btn:hover{transform:translateY(-1px);box-shadow:0 12px 32px rgba(0,0,0,.35)}
+    .vc-btn .pulse,.vc-btn .pulse:before,.vc-btn .pulse:after{
+      content:"";position:absolute;inset:-4px;border-radius:inherit;border:2px solid rgba(122,162,255,.35);
+      animation:pulse 2.2s linear infinite}
+    .vc-btn .pulse:before{animation-delay:.5s} .vc-btn .pulse:after{animation-delay:1s}
+    @keyframes pulse{0%{transform:scale(1);opacity:.9}70%{opacity:.05}100%{transform:scale(1.5);opacity:0}}
+    .vc-btn.active{
+      background:linear-gradient(0deg, rgba(122,162,255,.24), rgba(122,162,255,.08));
+      border-color:rgba(122,162,255,.7); box-shadow:0 0 0 2px rgba(122,162,255,.35)
+    }
+    .icon{
+      width:34px;height:34px;border-radius:10px;display:grid;place-items:center;
+      background:linear-gradient(180deg,#a7bfff,#7aa2ff); color:#0c142a; font-weight:900; font-size:20px
+    }
+
     .msg{max-width:80ch;white-space:pre-wrap}
     .msg.ai{background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.08)}
-    .msg.you{background:rgba(255,210,79,.07);border:1px solid rgba(255,210,79,.25)}
-    .video-thumb{width:220px;height:124px;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.12)}
-    /* Voice button */
-    .voice-btn{width:84px;height:84px;border-radius:9999px;display:grid;place-items:center;position:relative;
-               background:#0f1a3a;border:1px solid rgba(255,255,255,.15);cursor:pointer;
-               transition:transform .08s ease, box-shadow .25s ease, background .25s}
-    .voice-btn:hover{transform:translateY(-1px);box-shadow:0 12px 32px rgba(0,0,0,.35)}
-    .voice-btn .pulse,.voice-btn .pulse:before,.voice-btn .pulse:after{
-      content:"";position:absolute;inset:-3px;border-radius:inherit;border:2px solid rgba(122,162,255,.35);
-      animation:pulse 2.2s linear infinite}
-    .voice-btn .pulse:before{animation-delay:.5s} .voice-btn .pulse:after{animation-delay:1s}
-    @keyframes pulse{0%{transform:scale(1);opacity:.9}70%{opacity:.05}100%{transform:scale(1.45);opacity:0}}
-    .voice-btn.active{background:linear-gradient(0deg,rgba(122,162,255,.2),rgba(122,162,255,.05));
-                      border-color:rgba(122,162,255,.7);box-shadow:0 0 0 2px rgba(122,162,255,.35)}
-    .icon-mic{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;
-              background:linear-gradient(180deg,#a7bfff,#7aa2ff);color:#0c142a;font-weight:900}
-    .thinking{opacity:.75; font-style:italic}
+    .msg.you{background:rgba(255,210,79,.08);border:1px solid rgba(255,210,79,.25)}
+    .thinking{opacity:.75;font-style:italic}
+
+    .video-thumb{width:240px;height:136px;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.12)}
   </style>
 </head>
 <body>
-  <!-- Minimal header (no logo) -->
+  <!-- Header -->
   <header class="px-5 md:px-10 py-4 flex items-center justify-between">
-    <div class="text-lg font-bold">GoldenSpaceAI Assistant</div>
+    <div class="text-lg font-bold">GoldenSpaceAI — Advanced AI</div>
     <div class="flex items-center gap-3">
       <span id="planBadge" class="badge">Plan: …</span>
-      <a class="btn" href="/plans.html">Upgrade</a>
-      <button id="logoutBtn" class="btn">Log out</button>
+      <a class="px-3 py-2 rounded-lg border border-white border-opacity-10 bg-white bg-opacity-5 hover:bg-opacity-10" href="/plans.html">Upgrade</a>
+      <button id="logoutBtn" class="px-3 py-2 rounded-lg border border-white border-opacity-10 bg-white bg-opacity-5 hover:bg-opacity-10">Log out</button>
     </div>
   </header>
 
   <main class="px-5 md:px-10 pb-28">
     <div class="grid lg:grid-cols-3 gap-6 items-start">
-      <!-- Chat -->
-      <section class="lg:col-span-2 glass rounded-2xl p-4 md:p-6">
-        <div id="feed" class="space-y-4">
+
+      <!-- Left: Chat with Gemini (/ask) -->
+      <section class="lg:col-span-2 glass rounded-2xl p-5 md:p-6">
+        <div class="flex items-center justify-between gap-4">
+          <h2 class="text-xl font-semibold">Chat</h2>
+          <!-- Voice/Camera master toggle -->
+          <div class="flex items-center gap-3">
+            <button id="vcBtn" class="vc-btn" title="Toggle Voice Replies & Enable Mic/Camera">
+              <span class="pulse" aria-hidden="true"></span>
+              <span class="icon">🎤</span>
+            </button>
+            <div class="text-sm text-gray-300">
+              <div class="font-semibold">Voice & Camera</div>
+              <div id="vcHint" class="opacity-70">Off · Replies are silent</div>
+            </div>
+          </div>
+        </div>
+
+        <div id="feed" class="space-y-4 mt-4">
           <div class="msg ai rounded-2xl p-4">
             <div class="text-sm text-gray-300 mb-1">GoldenSpaceAI</div>
-            <div>Ready when you are. Type your question or tap the voice circle to speak.</div>
+            <div>Welcome! Type your question below. Turn on the circular button to speak and get spoken replies.</div>
           </div>
         </div>
 
-        <!-- Input row -->
+        <!-- Compose -->
         <div class="mt-4 grid md:grid-cols-[1fr_auto] gap-3 items-center">
-          <div class="flex gap-3">
-            <input id="input" class="flex-1 w-full bg-transparent border border-white border-opacity-10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="Type your message…" />
-            <button id="sendBtn" class="btn">Send</button>
-          </div>
-
-          <!-- Voice control -->
-          <div class="flex items-center gap-3">
-            <button id="voiceBtn" class="voice-btn" title="Tap to talk">
-              <span class="pulse" aria-hidden="true"></span>
-              <span class="icon-mic">🎤</span>
-            </button>
-          </div>
+          <input id="input" class="flex-1 w-full bg-transparent border border-white border-opacity-10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="Type your message…" />
+          <button id="sendBtn" class="px-4 py-3 rounded-xl border border-white border-opacity-10 bg-white bg-opacity-5 hover:bg-opacity-10">Send</button>
         </div>
+        <p class="text-sm text-gray-300 mt-3">Tip: If the circular button is <span class="text-blue-300">ON</span>, I’ll speak my replies. If it’s OFF, I’ll stay quiet.</p>
 
-        <!-- Hint text placed under controls -->
-        <p id="voiceHint" class="mt-3 text-sm text-gray-300">
-          Tap the circle to speak and I’ll answer out loud. Prefer silent mode? Just type and press Send.
-        </p>
-      </section>
-
-      <!-- Devices / options -->
-      <aside class="glass rounded-2xl p-4 md:p-6 space-y-4">
-        <div class="text-sm text-gray-300">Devices</div>
-        <div class="flex gap-3">
-          <button id="micToggle" class="btn btn-green">Enable Mic</button>
-          <button id="camToggle" class="btn">Enable Camera</button>
-        </div>
-
-        <div id="videoWrap" class="hidden">
-          <div class="text-xs text-gray-400">Camera preview (optional)</div>
+        <!-- Camera preview (local only) -->
+        <div id="videoWrap" class="hidden mt-5">
+          <div class="text-xs text-gray-400">Camera preview (optional, stays on your device)</div>
           <div class="video-thumb mt-2">
             <video id="cam" autoplay playsinline muted></video>
           </div>
         </div>
+      </section>
 
-        <div class="pt-2">
-          <div class="text-sm text-gray-300 mb-1">Reply voice</div>
-          <label class="inline-flex items-center gap-2">
-            <input id="ttsToggle" type="checkbox" class="form-checkbox" checked />
-            <span class="text-sm text-gray-300">Speak AI replies</span>
-          </label>
+      <!-- Right: Search Info (/search-info) -->
+      <aside class="glass rounded-2xl p-5 md:p-6 space-y-4">
+        <h2 class="text-xl font-semibold">Search Info</h2>
+        <p class="text-sm text-gray-300">Get a short overview + 3 bullet facts from Gemini.</p>
+        <div class="flex gap-2 mt-2">
+          <input id="searchInput" class="flex-1 bg-transparent border border-white border-opacity-10 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="Search topic…"/>
+          <button id="searchBtn" class="px-3 py-2 rounded-xl border border-white border-opacity-10 bg-white bg-opacity-5 hover:bg-opacity-10">Search</button>
         </div>
+        <div id="searchOut" class="mt-3 text-sm text-gray-100 whitespace-pre-wrap"></div>
 
-        <div class="pt-2 text-sm text-gray-400">
-          Works with or without mic/camera. Your audio/video stays on your device.
-        </div>
+        <hr class="border-white border-opacity-10 my-4">
+        <!-- If you keep a separate page/file for search information, link to it here -->
+        <a href="/search-information.html" class="underline text-blue-300 text-sm">Open full Search Information page</a>
       </aside>
+
     </div>
   </main>
 
@@ -126,19 +129,21 @@
   </footer>
 
   <script>
-    // Elements
     const $ = s => document.querySelector(s);
     const feed = $('#feed'), input = $('#input'), sendBtn = $('#sendBtn');
-    const voiceBtn = $('#voiceBtn'), voiceHint = $('#voiceHint');
-    const micToggle = $('#micToggle'), camToggle = $('#camToggle');
+    const vcBtn = $('#vcBtn'), vcHint = $('#vcHint');
     const videoWrap = $('#videoWrap'), camEl = $('#cam');
-    const ttsToggle = $('#ttsToggle'), usage = $('#usage'), planBadge = $('#planBadge');
+    const usage = $('#usage'), planBadge = $('#planBadge');
     const logoutBtn = $('#logoutBtn');
+    const searchInput = $('#searchInput'), searchBtn = $('#searchBtn'), searchOut = $('#searchOut');
 
-    // Helpers
-    const addMsg = (who, text, extraClass='') => {
+    let voiceMode = false;      // <— When true, speak replies
+    let micStream = null;
+    let camStream = null;
+
+    const addMsg = (who, text, extra='')=>{
       const el = document.createElement('div');
-      el.className = 'msg ' + (who==='you'?'you':'ai') + ' rounded-2xl p-4 ' + extraClass;
+      el.className = 'msg ' + (who==='you'?'you':'ai') + ' rounded-2xl p-4 ' + extra;
       el.innerHTML = \`<div class="text-sm text-gray-300 mb-1">\${who==='you'?'You':'GoldenSpaceAI'}</div>\` +
                      '<div>' + (text||'').replace(/</g,'&lt;') + '</div>';
       feed.appendChild(el); el.scrollIntoView({behavior:'smooth',block:'end'});
@@ -148,106 +153,119 @@
     async function refreshMe(){
       try{
         const r = await fetch('/api/me'); const j = await r.json();
-        planBadge.textContent = 'Plan: ' + j.plan.toUpperCase();
-        usage.textContent = \`Ask \${j.remaining?.ask ?? '∞'} • Search \${j.remaining?.search ?? '∞'} • Physics \${j.remaining?.physics ?? '∞'}\`;
+        planBadge.textContent = 'Plan: ' + j.plan?.toUpperCase();
+        const ask = j.remaining?.ask ?? '∞', se = j.remaining?.search ?? '∞', ph = j.remaining?.physics ?? '∞';
+        usage.textContent = \`Ask \${ask} • Search \${se} • Physics \${ph}\`;
       }catch{}
     }
     refreshMe();
 
     logoutBtn.onclick = async ()=>{ await fetch('/logout',{method:'POST'}); location.href='/login.html'; };
 
-    // === CORE: Send to your backend /ask (Gemini runs on server using .env key) ===
-    async function ask(q){
-      const me = addMsg('you', q);
-      input.value = '';
-
-      // show a "thinking..." placeholder
-      const thinking = addMsg('ai', 'Thinking…', 'thinking');
-
+    // ---------- Chat: /ask ----------
+    async function askGemini(q){
+      const thinking = addMsg('ai','Thinking…','thinking');
       try{
-        const res = await fetch('/ask', {
-          method: 'POST',
-          headers: {'Content-Type':'application/json'},
+        const res = await fetch('/ask',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
           body: JSON.stringify({ question: q })
         });
         const data = await res.json();
         const answer = data.answer || 'No response.';
         thinking.remove();
         addMsg('ai', answer);
+        if(voiceMode) speak(answer);
         refreshMe();
-        if(ttsToggle.checked){ speak(answer); }
-      }catch(err){
+      }catch(e){
         thinking.remove();
-        addMsg('ai','Error contacting the AI.');
+        addMsg('ai','Error contacting AI.');
       }
     }
 
-    sendBtn.onclick = ()=>{ const q = input.value.trim(); if(q) ask(q); };
-    input.addEventListener('keydown', e=>{ if(e.key==='Enter'){ const q=input.value.trim(); if(q) ask(q); } });
+    sendBtn.onclick = ()=>{
+      const q = input.value.trim();
+      if(!q) return;
+      addMsg('you', q);
+      input.value='';
+      askGemini(q);
+    };
+    input.addEventListener('keydown', e=>{
+      if(e.key==='Enter'){
+        const q = input.value.trim(); if(!q) return;
+        addMsg('you', q); input.value=''; askGemini(q);
+      }
+    });
 
-    // Speech Synthesis (AI speaks)
+    // ---------- Search Info: /search-info ----------
+    async function doSearch(topic){
+      searchOut.textContent = 'Searching…';
+      try{
+        const res = await fetch('/search-info',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ query: topic })
+        });
+        const data = await res.json();
+        searchOut.textContent = data.answer || 'No info found.';
+        refreshMe();
+      }catch(e){
+        searchOut.textContent = 'Error performing search.';
+      }
+    }
+    searchBtn.onclick = ()=>{
+      const t = searchInput.value.trim(); if(!t) return;
+      doSearch(t);
+    };
+    searchInput.addEventListener('keydown', e=>{
+      if(e.key==='Enter'){ const t=searchInput.value.trim(); if(t) doSearch(t); }
+    });
+
+    // ---------- Voice replies & Camera toggle ----------
     function speak(text){
       try{
         speechSynthesis.cancel();
         const u = new SpeechSynthesisUtterance(text);
-        const voice = speechSynthesis.getVoices().find(v=>/en/i.test(v.lang));
-        if(voice) u.voice = voice;
+        const v = speechSynthesis.getVoices().find(v=>/en/i.test(v.lang));
+        if(v) u.voice = v;
         speechSynthesis.speak(u);
       }catch{}
     }
 
-    // Mic (and optional speech-to-text)
-    let stream=null, isListening=false, rec=null;
-    function initRecognition(){
-      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if(!SR) return null;
-      const r = new SR(); r.lang='en-US'; r.interimResults=true; r.continuous=false;
-      r.onstart = ()=>{ voiceHint.textContent='Listening… speak now'; };
-      r.onresult = ev => {
-        let final=''; for(const res of ev.results){ if(res.isFinal) final += res[0].transcript+' '; }
-        if(final.trim()) ask(final.trim());
-      };
-      r.onend = ()=>{ isListening=false; voiceBtn.classList.remove('active');
-        voiceHint.textContent='Tap the circle to speak and I’ll answer out loud. Prefer silent mode? Just type and press Send.'; };
-      return r;
-    }
-
     async function enableMic(){
+      if(micStream) return true;
       try{
-        stream = await navigator.mediaDevices.getUserMedia({audio:true});
-        micToggle.classList.add('btn-green'); micToggle.textContent='Mic Enabled'; return true;
-      }catch{
-        micToggle.classList.remove('btn-green'); micToggle.classList.add('btn-red');
-        micToggle.textContent='Mic Blocked'; return false;
-      }
+        micStream = await navigator.mediaDevices.getUserMedia({audio:true});
+        return true;
+      }catch{ return false; }
     }
-    micToggle.onclick = enableMic;
 
-    voiceBtn.onclick = async ()=>{
-      if(!stream){ const ok = await enableMic(); if(!ok) return; }
-      if(!rec) rec = initRecognition();
-      if(rec){
-        if(!isListening){ isListening=true; voiceBtn.classList.add('active'); rec.start(); }
-        else{ rec.stop(); }
-      }else{
-        voiceHint.textContent='Speech-to-text not supported in this browser. Type your question.';
-        voiceBtn.classList.add('active'); setTimeout(()=>voiceBtn.classList.remove('active'),800);
-      }
-    };
+    async function enableCam(){
+      if(camStream){ camEl.srcObject = camStream; return true; }
+      try{
+        camStream = await navigator.mediaDevices.getUserMedia({video:true});
+        camEl.srcObject = camStream;
+        return true;
+      }catch{ return false; }
+    }
 
-    // Camera preview (local only)
-    let camOn=false;
-    camToggle.onclick = async ()=>{
-      if(!camOn){
-        try{
-          const s = await navigator.mediaDevices.getUserMedia({video:true});
-          camEl.srcObject = s; $('#videoWrap').classList.remove('hidden');
-          camToggle.classList.add('btn-green'); camToggle.textContent='Camera On'; camOn=true;
-        }catch{ camToggle.classList.add('btn-red'); camToggle.textContent='Camera Blocked'; }
+    vcBtn.onclick = async ()=>{
+      if(!voiceMode){
+        // Turning ON: ask for mic + camera
+        const micOK = await enableMic();
+        const camOK = await enableCam();
+        if(camOK) videoWrap.classList.remove('hidden');
+        vcBtn.classList.add('active');
+        voiceMode = true;
+        vcHint.textContent = 'On · I will speak replies';
+        if(!micOK) vcHint.textContent += ' (Mic blocked)';
       }else{
-        const s = camEl.srcObject; if(s) s.getTracks().forEach(t=>t.stop());
-        camEl.srcObject=null; $('#videoWrap').classList.add('hidden');
-        camToggle.classList.remove('btn-green','btn-red'); camToggle.textContent='Enable Camera'; camOn=false;
+        // Turning OFF: stop camera (keep mic permission optional)
+        if(camStream){ camStream.getTracks().forEach(t=>t.stop()); camStream = null; }
+        camEl.srcObject = null; videoWrap.classList.add('hidden');
+        vcBtn.classList.remove('active');
+        voiceMode = false;
+        vcHint.textContent = 'Off · Replies are silent';
       }
     };
   </script>

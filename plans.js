@@ -21,4 +21,22 @@ const PLAN_LIMITS = {
     learnPhysics: true,
     createPlanet: true,
   },
+
+  // NEW: Your Space (Universe) — focused on building; no physics learning
+  yourspace: {
+    ask: 50,
+    search: 20,
+    physics: 0,
+    learnPhysics: false,
+    createPlanet: true,   // can create planets & place them in Your Space
+  },
+
+  // NEW: Chat AI — study-focused features; no planet builder/physics learning
+  chatai: {
+    ask: Infinity,
+    search: Infinity,
+    physics: 0,
+    learnPhysics: false,
+    createPlanet: false,
+  },
 };

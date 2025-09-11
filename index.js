@@ -1,3 +1,6 @@
+// index.js — GoldenSpaceAI (Gemini + Google OAuth + Plan Limits + Your Space + ChatAI)
+// Keep existing env vars and add: PADDLE_PRICE_YOURSPACE
+
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -7,25 +10,18 @@ import session from "express-session";
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import cookieParser from "cookie-parser";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import bodyParser from "body-parser";
 import crypto from "crypto";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 dotenv.config();
 
 const app = express();
 app.set("trust proxy", 1);
 
-// ---------- CORS / Cookies ----------
 app.use(cors({ origin: true, credentials: true }));
+app.use(express.json());
 app.use(cookieParser());
-
-// ---------- IMPORTANT: avoid JSON parsing for Paddle webhook ----------
-// If we parse JSON globally, Paddle signature fails. So we skip it only for that path.
-app.use((req, res, next) => {
-  if (req.path === "/webhooks/paddle") return next();
-  return express.json()(req, res, next);
-});
 
 // ---------- Sessions ----------
 app.use(
@@ -36,8 +32,6 @@ app.use(
     cookie: {
       httpOnly: true,
       sameSite: "lax",
-      // Render runs HTTPS behind a proxy; NODE_ENV is "production" there.
-      // Secure cookie is required for Google OAuth session.
       secure: process.env.NODE_ENV === "production",
       maxAge: 1000 * 60 * 60 * 24 * 7,
     },
@@ -53,13 +47,46 @@ const __dirname = path.dirname(__filename);
 
 // ---------- Plan definitions ----------
 const PLAN_LIMITS = {
-  moon: { ask: 10, search: 5, physics: 0, learnPhysics: false, createPlanet: false },
-  earth: { ask: 30, search: 20, physics: 5, learnPhysics: true, createPlanet: false },
-  sun: { ask: Infinity, search: Infinity, physics: Infinity, learnPhysics: true, createPlanet: true },
+  moon: {
+    ask: 10,
+    search: 5,
+    physics: 0,
+    homework: 0,             // ChatAI "Solve Homework" pages/day
+    learnPhysics: false,
+    createPlanet: false,
+    yourSpace: false,        // Universe hub/builders
+  },
+  earth: {
+    ask: 30,
+    search: 20,
+    physics: 5,
+    homework: 2,             // 2 pages/day example
+    learnPhysics: true,
+    createPlanet: false,
+    yourSpace: false,
+  },
+  sun: {
+    ask: Infinity,
+    search: Infinity,
+    physics: Infinity,
+    homework: 10,            // generous example
+    learnPhysics: true,
+    createPlanet: true,      // Can design planets, but NOT Universe hub
+    yourSpace: false,
+  },
+  yourspace: {
+    ask: 50,
+    search: 20,
+    physics: 0,
+    homework: 2,             // you can tune
+    learnPhysics: false,
+    createPlanet: true,
+    yourSpace: true,         // Universe hub + builders
+  },
 };
 
-// ---------- Usage tracking (memory, resets daily) ----------
-const usage = {}; // { userKey: { date, ask, search, physics } }
+// ---------- Usage tracking (resets daily in-memory) ----------
+const usage = {}; // { userKey: { date, ask, search, physics, homework } }
 const today = () => new Date().toISOString().slice(0, 10);
 
 function getUserKey(req, res) {
@@ -75,16 +102,21 @@ function getUserKey(req, res) {
   }
   return `g:${req.cookies.gs_uid}`;
 }
+
 function getPlan(req) {
+  // prefer authenticated user; fall back to session (just in case)
   return (req.user && req.user.plan) || req.session?.plan || "moon";
 }
+
 function getUsage(req, res) {
   const key = getUserKey(req, res);
   const d = today();
-  if (!usage[key] || usage[key].date !== d)
-    usage[key] = { date: d, ask: 0, search: 0, physics: 0 };
+  if (!usage[key] || usage[key].date !== d) {
+    usage[key] = { date: d, ask: 0, search: 0, physics: 0, homework: 0 };
+  }
   return usage[key];
 }
+
 function enforceLimit(kind) {
   return (req, res, next) => {
     const plan = getPlan(req);
@@ -92,10 +124,35 @@ function enforceLimit(kind) {
     const u = getUsage(req, res);
     const allowed = limits[kind];
     if (allowed === 0)
-      return res.status(403).json({ error: `Your plan does not allow ${kind}.` });
+      return res
+        .status(403)
+        .json({ error: `Your plan does not allow ${kind}.` });
     if (Number.isFinite(allowed) && u[kind] >= allowed)
-      return res.status(429).json({ error: `Daily ${kind} limit reached for ${plan} plan.` });
-    if (Number.isFinite(allowed)) u[kind]++;
+      return res
+        .status(429)
+        .json({ error: `Daily ${kind} limit reached for ${plan} plan.` });
+    if (Number.isFinite(allowed)) u[kind]++; // count now
+    next();
+  };
+}
+
+function enforceFeature(featureKey) {
+  return (req, res, next) => {
+    const plan = getPlan(req);
+    const allowed = !!PLAN_LIMITS[plan]?.[featureKey];
+    if (!allowed) {
+      // HTML upsell
+      if (req.accepts("html")) {
+        return res.send(`
+          <html><body style="font-family:sans-serif; text-align:center; margin-top:50px; color:#fff; background:#0a0e15;">
+            <h2>🔒 Feature locked</h2>
+            <p>This feature requires: <b>${featureKey}</b></p>
+            <p><a href="/plans.html" style="color:#f6c64a; font-weight:800;">See Plans</a></p>
+          </body></html>
+        `);
+      }
+      return res.status(403).json({ error: `Feature requires ${featureKey}` });
+    }
     next();
   };
 }
@@ -114,29 +171,23 @@ function getBaseUrl(req) {
 
 // ---------- Google OAuth ----------
 const DEFAULT_CALLBACK_PATH = "/auth/google/callback";
-const OWNER_EMAIL = (process.env.OWNER_EMAIL || "").toLowerCase().trim(); // optional owner auto-Sun
 
 passport.use(
   new GoogleStrategy(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: DEFAULT_CALLBACK_PATH, // we override per-request using getBaseUrl
+      callbackURL: DEFAULT_CALLBACK_PATH,
       proxy: true,
     },
     (accessToken, refreshToken, profile, done) => {
-      const email = (profile.emails?.[0]?.value || "").toLowerCase();
       const user = {
         id: profile.id,
         name: profile.displayName,
-        email,
+        email: profile.emails?.[0]?.value || "",
         photo: profile.photos?.[0]?.value || "",
         plan: "moon",
       };
-      // Optional: auto-upgrade owner to Sun on login
-      if (OWNER_EMAIL && email === OWNER_EMAIL) {
-        user.plan = "sun";
-      }
       return done(null, user);
     }
   )
@@ -146,16 +197,21 @@ passport.deserializeUser((obj, done) => done(null, obj));
 
 app.get("/auth/google", (req, res, next) => {
   const callbackURL = `${getBaseUrl(req)}${DEFAULT_CALLBACK_PATH}`;
-  passport.authenticate("google", { scope: ["profile", "email"], callbackURL })(req, res, next);
-});
-app.get(DEFAULT_CALLBACK_PATH, (req, res, next) => {
-  const callbackURL = `${getBaseUrl(req)}${DEFAULT_CALLBACK_PATH}`;
-  passport.authenticate("google", { failureRedirect: "/login.html", callbackURL })(
+  passport.authenticate("google", { scope: ["profile", "email"], callbackURL })(
     req,
     res,
-    () => res.redirect("/")
+    next
   );
 });
+
+app.get(DEFAULT_CALLBACK_PATH, (req, res, next) => {
+  const callbackURL = `${getBaseUrl(req)}${DEFAULT_CALLBACK_PATH}`;
+  passport.authenticate("google", {
+    failureRedirect: "/login.html",
+    callbackURL,
+  })(req, res, () => res.redirect("/"));
+});
+
 app.post("/logout", (req, res, next) => {
   req.logout((err) => {
     if (err) return next(err);
@@ -163,51 +219,16 @@ app.post("/logout", (req, res, next) => {
   });
 });
 
-// ---------- Public Login/Signup Page ----------
-app.get("/login.html", (req, res) => {
-  const appName = "GoldenSpaceAI";
-  const base = getBaseUrl(req);
-  res.send(`<!doctype html><html lang="en"><head>
-<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>${appName} — Log in or Sign up</title><link rel="icon" href="/favicon.ico"/>
-<style>
-:root{--bg:#0b0f1a;--card:#12182a;--gold:#f0c419;--text:#e6ecff;--muted:#9fb0d1}
-*{box-sizing:border-box}body{margin:0;font-family:ui-sans-serif,system-ui,Segoe UI,Inter,Arial;background:radial-gradient(1200px 800px at 80% -10%,#1a2340 0%,#0b0f1a 60%,#070a12 100%);color:var(--text)}
-.wrap{min-height:100dvh;display:grid;place-items:center;padding:24px}
-.card{width:100%;max-width:520px;background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.01));border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:28px 24px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
-h1{margin:0 0 6px;font-size:28px}.sub{margin:0 0 18px;font-size:14px;color:var(--muted)}
-.features{margin:12px 0 22px;padding:0;list-style:none;display:grid;gap:10px}
-.badge{display:inline-flex;gap:8px;background:rgba(240,196,25,.1);border:1px solid rgba(240,196,25,.35);padding:6px 10px;border-radius:999px;color:var(--gold);font-weight:600;font-size:12px;margin-bottom:10px}
-.btn{display:flex;align-items:center;gap:10px;justify-content:center;width:100%;padding:12px 16px;border-radius:12px;border:none;font-size:16px;font-weight:700;cursor:pointer;background:var(--gold);color:#1a1a1a;transition:transform .06s ease, box-shadow .2s ease}
-.btn:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(240,196,25,.35)}
-.google{background:#fff;color:#1f2937;border:1px solid rgba(0,0,0,.08)}
-.or{display:flex;align-items:center;gap:12px;color:var(--muted);font-size:12px;margin:12px 0}
-.or:before,.or:after{content:"";flex:1;height:1px;background:rgba(255,255,255,.12)}
-.fine{margin-top:14px;color:var(--muted);font-size:12px}
-.links{display:flex;gap:16px;margin-top:10px}a{color:var(--text)}
-</style></head><body><div class="wrap"><div class="card">
-<div class="badge">✨ Welcome, explorer</div>
-<h1>Log in or Sign up</h1>
-<p class="sub">Access ${appName}: ask AI about space, learn physics, and create your own planets.</p>
-<ul class="features"><li>🚀 Ask Advanced AI (daily limits based on your plan)</li><li>📚 Learn Physics</li><li>🪐 Create custom planets (Sun Pack)</li></ul>
-<div class="or">continue</div>
-<button class="btn google" onclick="window.location='${base}/auth/google'">
-<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18" height="18" style="display:inline-block"/> Continue with Google
-</button>
-<p class="fine">By continuing, you agree to our
-<a href="https://www.goldenspaceai.space/terms-of-service" target="_blank" rel="noopener">Terms</a> and
-<a href="https://www.goldenspaceai.space/privacy" target="_blank" rel="noopener">Privacy</a>.</p>
-<div class="links"><a href="/">Back to home</a><a href="/plans.html">See plans</a></div>
-</div></div></body></html>`);
-});
-
 // ---------- PUBLIC / AUTH GATE ----------
-const PUBLIC_FILE_EXT = /\.(css|js|mjs|map|png|jpg|jpeg|gif|svg|ico|txt|woff2?)$/i;
+const PUBLIC_FILE_EXT =
+  /\.(css|js|mjs|map|png|jpg|jpeg|gif|svg|ico|txt|woff2?)$/i;
+
 function isPublicPath(req) {
   const p = req.path;
   if (p === "/login.html") return true;
-  if (p === "/terms.html") return true;
   if (p === "/privacy.html") return true;
+  if (p === "/terms.html") return true;
+  if (p === "/refund.html") return true;
   if (p === "/health") return true;
   if (p === "/webhooks/paddle") return true; // Paddle must reach this without auth
   if (p.startsWith("/auth/google")) return true;
@@ -215,6 +236,7 @@ function isPublicPath(req) {
   if (p === "/favicon.ico") return true;
   return false;
 }
+
 function authRequired(req, res, next) {
   if (isPublicPath(req)) return next();
   if (req.isAuthenticated && req.isAuthenticated()) return next();
@@ -223,18 +245,22 @@ function authRequired(req, res, next) {
 }
 
 // ---------- Paddle Webhook (PUBLIC) ----------
-const upgradesByEmail = {}; // { "email": "earth" | "sun" }
+const upgradesByEmail = {}; // { "email": "earth" | "sun" | "yourspace" }
 app.post(
   "/webhooks/paddle",
-  bodyParser.raw({ type: "*/*" }), // keep raw for signature
+  bodyParser.raw({ type: "*/*" }), // keep raw for signature validation
   (req, res) => {
     try {
       const signature =
         req.header("Paddle-Signature") || req.header("paddle-signature");
       const secret = process.env.PADDLE_WEBHOOK_SECRET;
-      if (!signature || !secret) return res.status(400).send("Missing signature or secret");
+      if (!signature || !secret)
+        return res.status(400).send("Missing signature or secret");
 
-      const computed = crypto.createHmac("sha256", secret).update(req.body).digest("hex");
+      const computed = crypto
+        .createHmac("sha256", secret)
+        .update(req.body)
+        .digest("hex");
       if (signature !== computed && !signature.includes(computed)) {
         return res.status(401).send("Invalid signature");
       }
@@ -242,15 +268,17 @@ app.post(
       const evt = JSON.parse(req.body.toString("utf8"));
       const type = evt?.event_type || evt?.type || "";
 
-      // identify plan
       const item = evt?.data?.items?.[0];
       const priceId = item?.price?.id || evt?.data?.price_id || null;
-      const customPlan = item?.custom_data?.plan || evt?.data?.custom_data?.plan || null;
+      const customPlan =
+        item?.custom_data?.plan || evt?.data?.custom_data?.plan || null;
 
       let plan = null;
-      if (customPlan === "earth" || customPlan === "sun") plan = customPlan;
-      else if (priceId === process.env.PADDLE_PRICE_EARTH) plan = "earth";
+      if (["earth", "sun", "yourspace"].includes(String(customPlan))) {
+        plan = String(customPlan);
+      } else if (priceId === process.env.PADDLE_PRICE_EARTH) plan = "earth";
       else if (priceId === process.env.PADDLE_PRICE_SUN) plan = "sun";
+      else if (priceId === process.env.PADDLE_PRICE_YOURSPACE) plan = "yourspace";
 
       const okEvent =
         type.includes("subscription.created") ||
@@ -279,13 +307,8 @@ app.post(
 // mount the guard AFTER webhook so the webhook stays public
 app.use(authRequired);
 
-// ---------- Alias/redirects for Terms & Privacy ----------
-app.get("/terms.html", (_req, res) =>
-  res.redirect("https://www.goldenspaceai.space/terms-of-service")
-);
-app.get("/privacy.html", (_req, res) =>
-  res.redirect("https://www.goldenspaceai.space/privacy")
-);
+// ---------- Alias redirects no longer needed (legal now local) ----------
+// (kept empty section intentionally)
 
 // ---------- Gemini ----------
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -304,6 +327,7 @@ app.post("/ask", enforceLimit("ask"), async (req, res) => {
     res.status(500).json({ answer: "Gemini error" });
   }
 });
+
 app.post("/search-info", enforceLimit("search"), async (req, res) => {
   try {
     const q = (req.body?.query || "").trim();
@@ -317,6 +341,7 @@ app.post("/search-info", enforceLimit("search"), async (req, res) => {
     res.status(500).json({ answer: "Search error" });
   }
 });
+
 app.post("/ai/physics-explain", enforceLimit("physics"), async (req, res) => {
   try {
     const q = (req.body?.question || "").trim();
@@ -331,9 +356,23 @@ app.post("/ai/physics-explain", enforceLimit("physics"), async (req, res) => {
   }
 });
 
+// Example ChatAI endpoint count (for "Solve Homework")
+app.post("/chatai/homework", enforceLimit("homework"), async (req, res) => {
+  try {
+    const text = (req.body?.text || "").trim();
+    if (!text) return res.json({ result: "Upload or paste a homework page." });
+    const prompt = `Solve step by step, explain clearly:\n${text}`;
+    const result = await model.generateContent([{ text: prompt }]);
+    const out = result.response.text() || "No result.";
+    res.json({ result: out });
+  } catch (e) {
+    console.error("homework error", e);
+    res.status(500).json({ result: "Homework error" });
+  }
+});
+
 // ---------- Apply Paddle upgrades when user hits API ----------
 app.get("/api/me", (req, res) => {
-  // Apply Paddle upgrade
   if (req.user?.email) {
     const up = upgradesByEmail[req.user.email.toLowerCase()];
     if (up && (req.user.plan !== up || req.session?.plan !== up)) {
@@ -341,21 +380,25 @@ app.get("/api/me", (req, res) => {
       if (req.session) req.session.plan = up;
     }
   }
-  // Apply owner auto-Sun (if configured)
-  if (OWNER_EMAIL && req.user?.email?.toLowerCase() === OWNER_EMAIL) {
-    if (req.user.plan !== "sun" || req.session?.plan !== "sun") {
-      req.user.plan = "sun";
-      if (req.session) req.session.plan = "sun";
-    }
-  }
-
   const plan = getPlan(req);
   const limits = PLAN_LIMITS[plan];
   const u = getUsage(req, res);
   const remaining = {
     ask: limits.ask === Infinity ? Infinity : Math.max(0, limits.ask - u.ask),
-    search: limits.search === Infinity ? Infinity : Math.max(0, limits.search - u.search),
-    physics: limits.physics === Infinity ? Infinity : Math.max(0, limits.physics - u.physics),
+    search:
+      limits.search === Infinity
+        ? Infinity
+        : Math.max(0, limits.search - u.search),
+    physics:
+      limits.physics === Infinity
+        ? Infinity
+        : Math.max(0, limits.physics - u.physics),
+    homework:
+      limits.homework === undefined
+        ? undefined
+        : limits.homework === Infinity
+        ? Infinity
+        : Math.max(0, limits.homework - u.homework),
   };
   res.json({
     loggedIn: !!req.user,
@@ -364,27 +407,117 @@ app.get("/api/me", (req, res) => {
     limits,
     used: u,
     remaining,
+    features: {
+      learnPhysics: !!limits.learnPhysics,
+      createPlanet: !!limits.createPlanet,
+      yourSpace: !!limits.yourSpace,
+    },
   });
 });
 
-// ---------- Gated pages ----------
+// ---------- Gated pages (feature-aware) ----------
 app.get("/learn-physics.html", (req, res) => {
   const plan = getPlan(req);
   if (!PLAN_LIMITS[plan].learnPhysics) {
-    return res.send(`<html><body style="font-family:sans-serif;text-align:center;margin-top:50px;">
-      <h2>🚀 Upgrade to the <span style="color:gold">Earth Pack</span> to unlock Learn Physics!</h2>
-      <p><a href="/plans.html">See Plans</a></p></body></html>`);
+    return res.send(`
+      <html><body style="font-family:sans-serif; text-align:center; margin-top:50px;">
+        <h2>🚀 Upgrade to the <span style="color:gold">Earth Pack</span> to unlock Learn Physics!</h2>
+        <p><a href="/plans.html">See Plans</a></p>
+      </body></html>
+    `);
   }
   res.sendFile(path.join(__dirname, "learn-physics.html"));
 });
+
+// Sun can create planets (designer), but can't access Universe hub
 app.get("/create-planet.html", (req, res) => {
   const plan = getPlan(req);
   if (!PLAN_LIMITS[plan].createPlanet) {
-    return res.send(`<html><body style="font-family:sans-serif;text-align:center;margin-top:50px;">
-      <h2>🌍 Upgrade to the <span style="color:orange">Sun Pack</span> to unlock Create Planet!</h2>
-      <p><a href="/plans.html">See Plans</a></p></body></html>`);
+    return res.send(`
+      <html><body style="font-family:sans-serif; text-align:center; margin-top:50px;">
+        <h2>🌍 Upgrade to the <span style="color:orange">Sun Pack</span> (or Your Space Pack) to unlock Create Planet!</h2>
+        <p><a href="/plans.html">See Plans</a></p>
+      </body></html>
+    `);
   }
   res.sendFile(path.join(__dirname, "create-planet.html"));
+});
+
+// Your Space Hub (only Your Space plan)
+app.get("/your-space.html", enforceFeature("yourSpace"), (req, res) => {
+  res.sendFile(path.join(__dirname, "your-space.html"));
+});
+
+// Builders (only Your Space plan)
+app.get("/build-rocket.html", enforceFeature("yourSpace"), (req, res) => {
+  res.sendFile(path.join(__dirname, "build-rocket.html"));
+});
+app.get("/build-satellite.html", enforceFeature("yourSpace"), (req, res) => {
+  res.sendFile(path.join(__dirname, "build-satellite.html"));
+});
+app.get(
+  "/create-advanced-planet.html",
+  enforceFeature("yourSpace"),
+  (req, res) => {
+    res.sendFile(path.join(__dirname, "create-advanced-planet.html"));
+  }
+);
+
+// ChatAI "Solve Homework" page requires homework quota (>0)
+app.get("/homework-helper.html", (req, res) => {
+  const plan = getPlan(req);
+  const limit = PLAN_LIMITS[plan]?.homework || 0;
+  if (limit <= 0) {
+    return res.send(`
+      <html><body style="font-family:sans-serif; text-align:center; margin-top:50px;">
+        <h2>📸 Upgrade to <span style="color:gold">Earth</span> or <span style="color:orange">Sun</span> to use Homework Helper.</h2>
+        <p><a href="/plans.html">See Plans</a></p>
+      </body></html>
+    `);
+  }
+  res.sendFile(path.join(__dirname, "homework-helper.html"));
+});
+
+// ---------- Public login/signup page ----------
+app.get("/login.html", (req, res) => {
+  const appName = "GoldenSpaceAI";
+  const base = getBaseUrl(req);
+  res.send(`<!doctype html><html lang="en"><head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>${appName} — Log in or Sign up</title><link rel="icon" href="/favicon.ico"/>
+<style>
+:root{--bg:#0b0f1a;--card:#12182a;--gold:#f0c419;--text:#e6ecff;--muted:#9fb0d1}
+*{box-sizing:border-box}body{margin:0;font-family:ui-sans-serif,system-ui,Segoe UI,Inter,Arial;background:
+linear-gradient(180deg, rgba(10,14,21,.86), rgba(10,14,21,.8)),
+radial-gradient(1200px 600px at 80% -10%, rgba(246,198,74,.18), transparent 60%),
+url('https://images.unsplash.com/photo-1462332420958-a05d1e002413?q=80&w=2000&auto=format&fit=crop') center/cover no-repeat fixed;color:var(--text)}
+.wrap{min-height:100dvh;display:grid;place-items:center;padding:24px}
+.card{width:100%;max-width:520px;background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.01));border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:28px 24px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+h1{margin:0 0 6px;font-size:28px}.sub{margin:0 0 18px;font-size:14px;color:var(--muted)}
+.features{margin:12px 0 22px;padding:0;list-style:none;display:grid;gap:10px}
+.badge{display:inline-flex;gap:8px;background:rgba(240,196,25,.1);border:1px solid rgba(240,196,25,.35);padding:6px 10px;border-radius:999px;color:var(--gold);font-weight:600;font-size:12px;margin-bottom:10px}
+.btn{display:flex;align-items:center;gap:10px;justify-content:center;width:100%;padding:12px 16px;border-radius:12px;border:none;font-size:16px;font-weight:700;cursor:pointer;background:var(--gold);color:#1a1a1a;transition:transform .06s ease, box-shadow .2s ease}
+.btn:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(240,196,25,.35)}
+.google{background:#fff;color:#1f2937;border:1px solid rgba(0,0,0,.08)}
+.or{display:flex;align-items:center;gap:12px;color:var(--muted);font-size:12px;margin:12px 0}
+.or:before,.or:after{content:"";flex:1;height:1px;background:rgba(255,255,255,.12)}
+.fine{margin-top:14px;color:var(--muted);font-size:12px}
+.links{display:flex;gap:16px;margin-top:10px}a{color:var(--text)}
+</style></head><body><div class="wrap"><div class="card">
+<div class="badge">✨ Welcome, explorer</div>
+<h1>Log in or Sign up</h1>
+<p class="sub">Access ${appName}: chat with AI, learn, and build your own universe.</p>
+<ul class="features"><li>🚀 Chat & tools (limits by plan)</li><li>📚 Learn Physics (Earth+)</li><li>🪐 Universe Hub (Your Space)</li></ul>
+<div class="or">continue</div>
+<button class="btn google" onclick="window.location='${base}/auth/google'">
+<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18" height="18" style="display:inline-block"/> Continue with Google
+</button>
+<p class="fine">By continuing, you agree to our
+<a href="/terms.html" target="_blank" rel="noopener">Terms</a> and
+<a href="/privacy.html" target="_blank" rel="noopener">Privacy</a> · <a href="/refund.html" target="_blank" rel="noopener">Refund</a>.
+</p>
+<div class="links"><a href="/">Back to home</a><a href="/plans.html">See Plans</a></div>
+</div></div></body></html>`);
 });
 
 // ---------- Select free plan (no checkout) ----------
@@ -399,5 +532,5 @@ app.use(express.static(__dirname));
 app.get("/health", (_req, res) => res.json({ ok: true }));
 
 // ---------- Start ----------
-const PORT = process.env.PORT || 1000;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 GoldenSpaceAI running on ${PORT}`));

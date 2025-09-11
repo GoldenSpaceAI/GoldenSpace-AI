@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#0a0e15" />
+    <title>Terms of Service • GoldenSpaceAI</title>
+    <link rel="icon" href="/favicon.ico" />
+    <style>
+      :root {
+        --bg: #0a0e15;
+        --panel: #0f1624;
+        --panel2: #0b1320;
+        --border: #1f2a40;
+        --text: #e7f4e9;
+        --muted: #cfc6a5;
+        --gold: #f6c64a;
+        --gold2: #eb8b36;
+        --shadow: 0 22px 70px rgba(0,0,0,.5);
+        --radius: 18px;
+        --max: 900px;
+      }
+      *{box-sizing:border-box}
+      html,body{height:100%}
+      body{
+        margin:0; color:var(--text);
+        font:16px/1.6 Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+        background:
+          linear-gradient(180deg, rgba(10,14,21,.86), rgba(10,14,21,.8)),
+          radial-gradient(1200px 600px at 80% -10%, rgba(246,198,74,.18), transparent 60%),
+          url("https://images.unsplash.com/photo-1457369804613-52c61a468e7d?q=80&w=2000&auto=format&fit=crop")
+          center/cover no-repeat fixed;
+        -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+      }
+      .top {
+        position: sticky; top: 0; z-index: 10; backdrop-filter: blur(10px);
+        background: linear-gradient(180deg, rgba(10,14,21,.85), rgba(10,14,21,.5) 60%, transparent);
+        border-bottom: 1px solid var(--border);
+        padding: max(12px, env(safe-area-inset-top)) 16px 10px;
+        display: flex; align-items: center; gap: 12px;
+      }
+      .brand {
+        display: flex; align-items: center; gap: 10px;
+        font-weight: 900; letter-spacing: .4px; color: var(--gold);
+        font-size: clamp(18px, 2vw, 24px);
+        text-shadow: 0 0 16px rgba(246,198,74,.25);
+      }
+      .dot { width: 10px; height: 10px; border-radius: 50%;
+        background: radial-gradient(circle at 30% 30%, #ffd86a, #f6c64a 50%, #eb8b36 90%);
+        box-shadow: 0 0 18px rgba(246,198,74,.5);
+      }
+      .wrap { max-width: var(--max); margin: 24px auto; padding: 0 16px; }
+      .card {
+        background: linear-gradient(180deg, var(--panel), var(--panel2));
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: clamp(18px, 3vw, 26px);
+        box-shadow: var(--shadow);
+      }
+      h1 { margin: 6px 0 12px; font-size: clamp(24px, 4vw, 36px); color: #fff7dc; }
+      h2 { margin: 22px 0 8px; font-size: 18px; color: var(--gold); }
+      p { margin: 8px 0; color: #dfe7f1; }
+      ul { margin: 8px 0 12px 18px; color: #dfe7f1; }
+      a { color: var(--gold); text-decoration: none; }
+      .footer {
+        margin: 20px 0 0; padding-top: 12px;
+        border-top: 1px solid var(--border); color: #aeb7c5; font-size: 12px;
+        display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap;
+      }
+      .links a { color: #e7f4e9; }
+    </style>
+  </head>
+  <body>
+    <div class="top">
+      <div class="brand"><span class="dot" aria-hidden="true"></span> GoldenSpaceAI</div>
+      <div style="flex:1"></div>
+      <div class="links" style="display:flex; gap:10px;">
+        <a href="/">Home</a>
+        <a href="/plans.html">Plans</a>
+      </div>
+    </div>
+
+    <main class="wrap">
+      <div class="card">
+        <h1>Terms of Service</h1>
+        <p><i>Last updated: <span id="lastUpdated"></span></i></p>
+
+        <h2>1. Acceptance of Terms</h2>
+        <p>
+          By accessing or using GoldenSpaceAI, you agree to be bound by these Terms of Service
+          and our Privacy Policy. If you do not agree, you must not use the service.
+        </p>
+
+        <h2>2. Services</h2>
+        <p>
+          GoldenSpaceAI provides educational and creative AI tools, including AI chat, physics learning,
+          planet and universe creation, and homework assistance. Features vary by subscription plan.
+        </p>
+
+        <h2>3. Accounts</h2>
+        <p>
+          You must sign in with Google to access certain features. You are responsible for
+          keeping your account secure. Misuse of your account is your responsibility.
+        </p>
+
+        <h2>4. Payments</h2>
+        <p>
+          Paid plans are billed through our payment partner Paddle. All sales are final and
+          non-refundable, as explained in our Refund Policy.
+        </p>
+
+        <h2>5. Fair Use</h2>
+        <p>
+          Daily limits apply to AI usage depending on your plan. Abuse of the service
+          (such as attempting to bypass limits or using bots) may result in suspension.
+        </p>
+
+        <h2>6. Intellectual Property</h2>
+        <p>
+          All content and software provided by GoldenSpaceAI is owned by GoldenSpaceAI.
+          You may not copy, resell, or misuse it without permission.
+        </p>
+
+        <h2>7. Disclaimer</h2>
+        <p>
+          GoldenSpaceAI is provided “as is” without warranties of any kind.
+          We are not liable for any damages resulting from use of the service.
+        </p>
+
+        <h2>8. Changes</h2>
+        <p>
+          We may update these Terms of Service at any time. Continued use of GoldenSpaceAI
+          means you accept the updated terms.
+        </p>
+
+        <div class="footer">
+          <div>©️ <span id="yr"></span> GoldenSpaceAI</div>
+          <div class="links">
+            <a href="/privacy.html">Privacy Policy</a> ·
+            <a href="/terms.html">Terms of Service</a> ·
+            <a href="/refund.html">Refund Policy</a>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      document.getElementById('yr').textContent = new Date().getFullYear();
+      const d = new Date();
+      const mm = String(d.getMonth()+1).padStart(2,'0');
+      const dd = String(d.getDate()).padStart(2,'0');
+      document.getElementById('lastUpdated').textContent = `${d.getFullYear()}-${mm}-${dd}`;
+    </script>
+  </body>
+</html>

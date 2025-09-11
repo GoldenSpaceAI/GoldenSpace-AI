@@ -16,11 +16,11 @@
       body{
         margin:0;color:var(--text);
         font:16px/1.6 Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-        /* brighter space bg */
+        /* brighter real galaxy background */
         background:
           linear-gradient(180deg,rgba(10,14,21,.55),rgba(10,14,21,.55)),
           radial-gradient(1400px 800px at 50% -20%,rgba(246,198,74,.30),transparent 70%),
-          url("https://images.unsplash.com/photo-1580428180171-bd03c9d95e23?q=80&w=2000&auto=format&fit=crop")
+          url("https://images.unsplash.com/photo-1462332420958-a05d1e002413?q=80&w=2000&auto=format&fit=crop")
           center/cover no-repeat fixed;
         -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
       }
@@ -145,7 +145,7 @@
           <div class="tile"><h3>🪐 Create Your Planet</h3><p>Design oceans, rings, moons — export your own world.</p></div>
         </aside>
 
-        <!-- Hero (kept + legal button) -->
+        <!-- Hero -->
         <section class="hero" aria-label="Welcome">
           <h1>Welcome to <span style="color:var(--gold)">GoldenSpaceAI</span></h1>
           <p>Ask AI, explore knowledge, learn physics, and design worlds — all in a golden suit.</p>
@@ -162,7 +162,7 @@
           </div>
         </section>
 
-        <!-- Right navigation (kept) -->
+        <!-- Right navigation -->
         <aside class="rightCol" aria-label="Navigate">
           <nav class="sideNav">
             <a class="navbtn" href="/advanced-ai.html">Chat with AI</a>
@@ -423,8 +423,7 @@
           const r = await fetch('/api/me', { credentials:'include' });
           const j = await r.json();
           const plan = (j.plan||'').toLowerCase();
-          const hasUniverse = (plan === 'yourspace' || plan === 'universe' || plan === 'sun'); 
-          // allow Sun to design planets but gate Universe hub if you prefer; tweak here.
+          const hasUniverse = (plan === 'yourspace' || plan === 'universe' || plan === 'sun');
 
           const cfg = LEARN_STEPS[activeKey];
 

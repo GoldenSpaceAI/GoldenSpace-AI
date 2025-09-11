@@ -203,13 +203,7 @@ app.get("/auth/google", (req, res, next) => {
     next
   );
 });
-app.get("/force-universe", (req, res) => {
-  if (req.user) {
-    req.user.plan = "universe";
-    if (req.session) req.session.plan = "universe";
-  }
-  res.redirect("/api/me");
-});app.get(DEFAULT_CALLBACK_PATH, (req, res, next) => {
+app.get(DEFAULT_CALLBACK_PATH, (req, res, next) => {
   const callbackURL = `${getBaseUrl(req)}${DEFAULT_CALLBACK_PATH}`;
   passport.authenticate("google", {
     failureRedirect: "/login.html",

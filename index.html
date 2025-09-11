@@ -1,294 +1,270 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="utf-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1, viewport-fit=cover"
-    />
-    <meta name="theme-color" content="#0a0e15" />
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+    <meta name="theme-color" content="#0a0e15"/>
     <title>GoldenSpaceAI • Home</title>
-    <link rel="icon" href="/favicon.ico" />
+    <link rel="icon" href="/favicon.ico"/>
     <style>
-      :root {
-        --bg: #0a0e15;
-        --panel: #0f1624; /* deep navy */
-        --panel2: #0b1320; /* darker */
-        --border: #1f2a40; /* cool slate */
-        --text: #e7f4e9;
-        --muted: #cfc6a5;
-        --gold: #f6c64a;
-        --gold2: #eb8b36;
-        --shadow: 0 22px 70px rgba(0, 0, 0, 0.5);
-        --radius: 18px;
-        --max: 1200px;
+      :root{
+        --bg:#0a0e15; --panel:#0f1624; --panel2:#0b1320; --border:#1f2a40;
+        --text:#e7f4e9; --muted:#cfc6a5; --gold:#f6c64a; --gold2:#eb8b36;
+        --shadow:0 22px 70px rgba(0,0,0,.5); --radius:18px; --max:1200px;
+        --purple:#9d7cff;
       }
-      * { box-sizing: border-box; }
-      html, body { height: 100%; }
-      body {
-        margin: 0; color: var(--text);
-        font: 16px/1.6 Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      *{box-sizing:border-box}
+      html,body{height:100%}
+      body{
+        margin:0; color:var(--text);
+        font:16px/1.6 Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
         background:
-          linear-gradient(180deg, rgba(10,14,21,.85), rgba(10,14,21,.78)),
-          radial-gradient(1200px 600px at 80% -10%, rgba(246,198,74,.18), transparent 60%),
-          url("https://images.unsplash.com/photo-1457369804613-52c61a468e7d?q=80&w=2000&auto=format&fit=crop") center/cover no-repeat fixed;
-        -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+          linear-gradient(180deg,rgba(10,14,21,.86),rgba(10,14,21,.8)),
+          radial-gradient(1200px 600px at 80% -10%,rgba(246,198,74,.18),transparent 60%),
+          url("https://images.unsplash.com/photo-1444703686981-a3abbc4d4fe3?q=80&w=2000&auto=format&fit=crop")
+          center/cover no-repeat fixed;
+        -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
       }
-      a { color: inherit; text-decoration: none; }
+      a{color:inherit; text-decoration:none}
 
-      /* ===== Top brand bar ===== */
-      .top {
-        position: sticky; top: 0; z-index: 30; backdrop-filter: blur(10px);
-        background: linear-gradient(180deg, rgba(10,14,21,.85), rgba(10,14,21,.5) 60%, transparent);
-        border-bottom: 1px solid var(--border);
-        padding: max(12px, env(safe-area-inset-top)) 16px 10px;
-        display: flex; align-items: center; gap: 12px;
+      /* Top bar */
+      .top{position:sticky; top:0; z-index:30; backdrop-filter:blur(10px);
+        background:linear-gradient(180deg,rgba(10,14,21,.85),rgba(10,14,21,.5) 60%,transparent);
+        border-bottom:1px solid var(--border); padding:max(12px,env(safe-area-inset-top)) 16px 10px;
+        display:flex; align-items:center; gap:12px;
       }
-      .brand {
-        display: flex; align-items: center; gap: 10px;
-        font-weight: 900; letter-spacing: .4px; color: var(--gold);
-        font-size: clamp(20px, 2.2vw, 26px);
-        text-shadow: 0 0 16px rgba(246,198,74,.25);
-      }
-      .dot { width: 10px; height: 10px; border-radius: 50%;
-        background: radial-gradient(circle at 30% 30%, #ffd86a, #f6c64a 50%, #eb8b36 90%);
-        box-shadow: 0 0 18px rgba(246,198,74,.5);
-      }
-      .spacer { flex: 1; }
-      .toplinks { display: flex; gap: 8px; }
-      .toplinks a {
-        padding: 8px 12px; border-radius: 999px; border: 1px solid var(--border);
-        color: var(--muted); font-weight: 800; font-size: 14px;
-      }
-      @media (max-width: 880px) { .toplinks { display: none; } }
+      .brand{display:flex; align-items:center; gap:10px; font-weight:900; letter-spacing:.4px; color:var(--gold);
+        font-size:clamp(20px,2.2vw,26px); text-shadow:0 0 16px rgba(246,198,74,.25);}
+      .dot{width:10px; height:10px; border-radius:50%; background:radial-gradient(circle at 30% 30%,#ffd86a,#f6c64a 50%,#eb8b36 90%);
+        box-shadow:0 0 18px rgba(246,198,74,.5);}
+      .spacer{flex:1}
+      .toplinks{display:flex; gap:8px}
+      .toplinks a{padding:8px 12px; border-radius:999px; border:1px solid var(--border); color:var(--muted); font-weight:800; font-size:14px}
+      @media (max-width:880px){.toplinks{display:none}}
 
-      /* ===== Shell layout ===== */
-      .wrap { max-width: var(--max); margin: 22px auto; padding: 0 16px; }
-      .layout { display: grid; gap: 18px; grid-template-columns: 280px 1fr 230px; }
-      @media (max-width: 1100px){ .layout{ grid-template-columns: 260px 1fr 200px; } }
-      @media (max-width: 980px){ .layout{ grid-template-columns: 1fr; } }
+      /* Shell */
+      .wrap{max-width:var(--max); margin:22px auto; padding:0 16px}
+      .layout{display:grid; gap:18px; grid-template-columns:280px 1fr 230px}
+      @media (max-width:1100px){.layout{grid-template-columns:260px 1fr 200px}}
+      @media (max-width:980px){.layout{grid-template-columns:1fr}}
 
-      /* ===== Left column: feature panels ===== */
-      .leftCol { display: grid; gap: 14px; align-content: start; }
-      .tile {
-        background: linear-gradient(180deg, var(--panel), var(--panel2));
-        border: 1px solid var(--border); border-radius: var(--radius);
-        padding: 14px 16px; box-shadow: var(--shadow);
-      }
-      .tile h3 {
-        margin: 0 0 4px; font-size: 16px; color: var(--gold);
-        display: flex; gap: 8px; align-items: center;
-      }
-      .tile p { margin: 0; color: #dfe7f1; font-size: 14px; }
+      /* Tiles */
+      .leftCol{display:grid; gap:14px; align-content:start}
+      .tile{background:linear-gradient(180deg,var(--panel),var(--panel2)); border:1px solid var(--border);
+        border-radius:var(--radius); padding:14px 16px; box-shadow:var(--shadow)}
+      .tile h3{margin:0 0 4px; font-size:16px; color:var(--gold); display:flex; gap:8px; align-items:center}
+      .tile p{margin:0; color:#dfe7f1; font-size:14px}
 
-      /* ===== Center: hero ===== */
-      .hero {
-        background: linear-gradient(180deg, rgba(14,21,34,.9), rgba(11,17,28,.9));
-        border: 1px solid var(--border); border-radius: calc(var(--radius) + 2px);
-        padding: clamp(18px, 4vw, 26px); box-shadow: var(--shadow); text-align: center;
-      }
-      .hero h1 { margin: 6px 0 10px; font-size: clamp(26px, 5.2vw, 54px); line-height: 1.08; color: #fff7dc; }
-      .hero p { margin: 0 0 16px; color: #f2ecd2; font-size: clamp(14px, 2.2vw, 18px); }
-      .cta { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
-      .btn {
-        display: inline-block; padding: 12px 16px; border-radius: 12px; font-weight: 900; cursor: pointer;
-        border: 1px solid rgba(0,0,0,.2);
-      }
-      .btn.gold {
-        background: linear-gradient(180deg, var(--gold), var(--gold2));
-        color: #1b1300; box-shadow: 0 10px 26px rgba(246,198,74,.28);
-      }
-      .btn.ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
-      .quickRow { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 10px; }
-      .chip {
-        display: inline-block; padding: 8px 12px; border-radius: 999px;
-        background: rgba(255,255,255,.06); border: 1px solid var(--border); color: #c9d1e6; font-weight: 800; font-size: 14px;
-      }
+      /* Hero */
+      .hero{background:linear-gradient(180deg,rgba(14,21,34,.9),rgba(11,17,28,.9)); border:1px solid var(--border);
+        border-radius:calc(var(--radius) + 2px); padding:clamp(18px,4vw,26px); box-shadow:var(--shadow); text-align:center}
+      .hero h1{margin:6px 0 10px; font-size:clamp(26px,5.2vw,54px); line-height:1.08; color:#fff7dc}
+      .hero p{margin:0 0 16px; color:#f2ecd2; font-size:clamp(14px,2.2vw,18px)}
+      .cta{display:flex; flex-wrap:wrap; gap:12px; justify-content:center}
+      .btn{display:inline-block; padding:12px 16px; border-radius:12px; font-weight:900; cursor:pointer; border:1px solid rgba(0,0,0,.2)}
+      .btn.gold{background:linear-gradient(180deg,var(--gold),var(--gold2)); color:#1b1300; box-shadow:0 10px 26px rgba(246,198,74,.28)}
+      .btn.ghost{background:transparent; color:var(--muted); border:1px solid var(--border)}
+      .quickRow{display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:10px}
+      .chip{display:inline-block; padding:8px 12px; border-radius:999px; background:rgba(255,255,255,.06);
+        border:1px solid var(--border); color:#c9d1e6; font-weight:800; font-size:14px}
 
-      /* ===== Right column: vertical nav + Google ===== */
-      .rightCol { position: sticky; top: 86px; align-self: start; display: grid; gap: 12px; height: fit-content; }
-      .sideNav { background: linear-gradient(180deg, var(--panel), var(--panel2));
-        border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; box-shadow: var(--shadow);
-        display: grid; gap: 10px;
-      }
-      .navbtn {
-        display: flex; align-items: center; justify-content: center;
-        padding: 10px 12px; border-radius: 999px; border: 1px solid var(--border);
-        color: #d7e2f4; background: rgba(255,255,255,.03); font-weight: 900;
-      }
-      .navbtn:hover { border-color: #2a3c5f; }
-      .google {
-        display: flex; align-items: center; justify-content: center; gap: 10px;
-        background: #fff; color: #333; border-radius: 999px; padding: 10px 12px; font-weight: 800;
-        border: 1px solid rgba(0,0,0,.12); box-shadow: 0 6px 18px rgba(0,0,0,.35);
-      }
-      .google img { width: 18px; height: 18px; }
-      .google:hover { filter: brightness(1.02); }
+      /* Right nav */
+      .rightCol{position:sticky; top:86px; align-self:start; display:grid; gap:12px; height:fit-content}
+      .sideNav{background:linear-gradient(180deg,var(--panel),var(--panel2)); border:1px solid var(--border);
+        border-radius:var(--radius); padding:12px; box-shadow:var(--shadow); display:grid; gap:10px}
+      .navbtn{display:flex; align-items:center; justify-content:center; padding:10px 12px; border-radius:999px;
+        border:1px solid var(--border); color:#d7e2f4; background:rgba(255,255,255,.03); font-weight:900}
+      .navbtn:hover{border-color:#2a3c5f}
+      .google{display:flex; align-items:center; justify-content:center; gap:10px; background:#fff; color:#333; border-radius:999px; padding:10px 12px; font-weight:800; border:1px solid rgba(0,0,0,.12); box-shadow:0 6px 18px rgba(0,0,0,.35)}
+      .google img{width:18px; height:18px}
+      .google:hover{filter:brightness(1.02)}
 
-      /* ===== Modal for "Create Your Universe" ===== */
-      .modal {
-        position: fixed; inset: 0; z-index: 1000;
-        display: none; align-items: center; justify-content: center;
-        background: rgba(0,0,0,.55); backdrop-filter: blur(4px);
+      /* BIG PACK SECTIONS */
+      .bigpack{margin-top:18px; background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.03));
+        border:1px solid rgba(255,255,255,.12); border-radius:26px; box-shadow:var(--shadow); padding:18px}
+      .bigpack h2{margin:0 0 6px; font-size:24px; color:#fff3cf}
+      .bigpack .sub{margin:0 0 12px; color:#eadfb9}
+      .grid3{display:grid; gap:12px; grid-template-columns:repeat(3,1fr)}
+      @media (max-width:880px){.grid3{grid-template-columns:1fr}}
+      .card{
+        background:linear-gradient(180deg,var(--panel),var(--panel2)); border:1px solid var(--border); border-radius:16px;
+        padding:12px; min-height:120px; display:flex; flex-direction:column; justify-content:space-between;
       }
-      .modal.on { display: flex; }
-      .modal-card{
-        width: min(680px, 92vw); background: linear-gradient(180deg, #0e1728, #0a1120);
-        border: 1px solid #213052; border-radius: 18px; padding: 18px;
-        box-shadow: 0 22px 70px rgba(0,0,0,.6); color: #e7f4e9;
-      }
-      .modal-h{ margin: 4px 0 8px; font-size: 20px; color: var(--gold); }
-      .modal-b{ font-size: 15px; color: #dfe7f1; min-height: 110px; }
-      .modal-actions{ display:flex; justify-content: space-between; gap:10px; margin-top: 12px; }
-      .btn-sm{
-        display:inline-flex; align-items:center; justify-content:center; gap:8px;
-        padding:10px 14px; border-radius:12px; font-weight:800; cursor:pointer;
-        border:1px solid var(--border); color:#e7f4e9; background: rgba(255,255,255,.04);
-      }
-      .btn-gold{ background: linear-gradient(180deg, var(--gold), var(--gold2)); color:#1a1200; border-color: rgba(0,0,0,.25); }
-      .btn-ghost{ background: transparent; color: #cfc6a5; border: 1px solid var(--border); }
-      .note{ font-size:12px; color:#bfc9de; opacity:.9; margin-top:8px;}
-      .upsell {
-        background: linear-gradient(180deg, rgba(246,198,74,.08), rgba(246,198,74,.02));
-        border: 1px solid rgba(246,198,74,.28); padding: 12px; border-radius: 14px; margin-top: 12px;
-      }
+      .card h4{margin:0 0 6px; color:#ffe9a8}
+      .card p{margin:0; color:#dfe7f1; font-size:14px}
+      .card .ctaRow{margin-top:10px; display:flex; gap:8px; flex-wrap:wrap}
+      .btn-sm{display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:10px 14px; border-radius:12px; font-weight:800; cursor:pointer; border:1px solid var(--border); color:#e7f4e9; background:rgba(255,255,255,.04)}
+      .btn-gold{background:linear-gradient(180deg,var(--gold),var(--gold2)); color:#1a1200; border-color:rgba(0,0,0,.25)}
+      .btn-ghost{background:transparent; color:#cfc6a5; border:1px solid var(--border)}
+      .accent{border-color:rgba(157,124,255,.45)}
+
+      /* Modal */
+      .modal{position:fixed; inset:0; z-index:1000; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.55); backdrop-filter:blur(4px)}
+      .modal.on{display:flex}
+      .modal-card{width:min(720px,92vw); background:linear-gradient(180deg,#0e1728,#0a1120);
+        border:1px solid #213052; border-radius:18px; padding:18px; box-shadow:0 22px 70px rgba(0,0,0,.6); color:#e7f4e9}
+      .modal-h{margin:4px 0 8px; font-size:20px; color:var(--gold)}
+      .modal-b{font-size:15px; color:#dfe7f1; min-height:110px}
+      .modal-actions{display:flex; justify-content:space-between; gap:10px; margin-top:12px}
+      .note{font-size:12px; color:#bfc9de; opacity:.9; margin-top:8px}
+      .upsell{background:linear-gradient(180deg,rgba(246,198,74,.08),rgba(246,198,74,.02)); border:1px solid rgba(246,198,74,.28); padding:12px; border-radius:14px; margin-top:12px}
     </style>
   </head>
   <body>
     <!-- Top -->
     <div class="top">
-      <div class="brand">
-        <span class="dot" aria-hidden="true"></span> GoldenSpaceAI
-      </div>
+      <div class="brand"><span class="dot" aria-hidden="true"></span> GoldenSpaceAI</div>
       <div class="spacer"></div>
       <div class="toplinks" aria-label="Shortcuts">
         <a href="/advanced-ai.html">Advanced AI</a>
         <a href="/search-info.html">Search Info</a>
         <a href="/learn-physics.html">Learn Physics</a>
         <a href="/create-planet.html">Create Planet</a>
-        <a href="/plans.html">Plans</a>
         <a href="/chatai.html">ChatAI</a>
+        <a href="/plans.html">Plans</a>
       </div>
     </div>
 
     <main class="wrap">
       <section class="layout" aria-label="Homepage">
-        <!-- Left: feature tiles -->
+        <!-- Left: quick tiles -->
         <aside class="leftCol" aria-label="Highlights">
-          <div class="tile">
-            <h3>🧠 Advanced AI Assistant</h3>
-            <p>Company-grade chat experience with voice, camera preview, and plan-aware limits.</p>
-          </div>
-          <div class="tile">
-            <h3>🔎 Search Information</h3>
-            <p>Clean summaries and topic chips in a golden theme — powered by Gemini.</p>
-          </div>
-          <div class="tile">
-            <h3>📘 Learn Physics</h3>
-            <p>Curated notes, calculators, and worked examples — with an optional Gemini helper.</p>
-          </div>
-          <div class="tile">
-            <h3>🪐 Create Your Planet</h3>
-            <p>Design oceans, rings, moons — export your world as JSON.</p>
-          </div>
-
-          <!-- NEW TILE: Create Your Universe -->
-          <div class="tile" id="universeTile">
-            <h3>🌌 Create Your Universe</h3>
-            <p>Build galaxies and place your planets inside your own space world.</p>
-            <div style="margin-top:10px;">
-              <a href="#" id="openUniverse" class="btn gold" aria-label="Learn about Your Space Pack">
-                Start → Learn & Build
-              </a>
-            </div>
-          </div>
-
-          <!-- NEW TILE: ChatAI (Homework Helper) -->
-          <div class="tile" id="chataiTile">
-            <h3>🤖 ChatAI — Homework Helper</h3>
-            <p>Upload a homework photo and ask what you don’t understand. Earth pack: <b>2 pages/day</b>. Upgrade for more.</p>
-            <div style="margin-top:10px;">
-              <a href="/chatai.html" class="btn gold" aria-label="Open ChatAI Homework Helper">
-                Open ChatAI
-              </a>
-            </div>
-          </div>
+          <div class="tile"><h3>🧠 Chat with AI</h3><p>Company-grade chat experience with voice & camera preview, plan-aware limits.</p></div>
+          <div class="tile"><h3>🔎 Learn Info</h3><p>Clean summaries & topic chips in a golden theme — powered by Gemini.</p></div>
+          <div class="tile"><h3>📘 Learn Physics</h3><p>Curated notes, calculators, worked examples — with an optional AI helper.</p></div>
+          <div class="tile"><h3>🪐 Create Your Planet</h3><p>Design oceans, rings, moons — export your world as JSON.</p></div>
         </aside>
 
         <!-- Center: hero -->
         <section class="hero" aria-label="Welcome">
-          <h1>
-            Welcome to <span style="color: var(--gold)">GoldenSpaceAI</span>
-          </h1>
-          <p>
-            Your all-in-one space companion: ask our Advanced AI, explore knowledge,
-            learn physics with tools, design entire worlds — and get help with homework via ChatAI.
-          </p>
-
+          <h1>Welcome to <span style="color:var(--gold)">GoldenSpaceAI</span></h1>
+          <p>Your all-in-one space companion: chat with AI, explore knowledge, learn physics, design worlds — and build your own Universe.</p>
           <div class="cta">
-            <a class="btn gold" href="/advanced-ai.html" aria-label="Launch Advanced AI">Launch Advanced AI ✨</a>
-            <a class="btn ghost" href="/plans.html" aria-label="View plans">View Plans</a>
-            <a class="btn ghost" href="/search-info.html" aria-label="Quick search">Quick Search</a>
+            <a class="btn gold" href="/advanced-ai.html" aria-label="Launch Chat with AI">Chat with AI ✨</a>
+            <a class="btn ghost" href="/search-info.html">Learn Info</a>
+            <a class="btn ghost" href="/plans.html">View Plans</a>
           </div>
-
-          <div class="quickRow" style="margin-top: 14px">
-            <span class="chip">Private by design</span>
-            <span class="chip">Server-secured Gemini</span>
-            <span class="chip">Mobile & laptop ready</span>
+          <div class="quickRow" style="margin-top:14px">
+            <span class="chip">Private by design</span><span class="chip">Server-secured Gemini</span><span class="chip">Mobile & laptop ready</span>
           </div>
         </section>
 
-        <!-- Right: vertical nav + Google -->
+        <!-- Right: nav + Google -->
         <aside class="rightCol" aria-label="Navigate">
           <nav class="sideNav">
-            <a class="navbtn" href="/advanced-ai.html">Advanced AI</a>
-            <a class="navbtn" href="/search-info.html">Search Info</a>
+            <a class="navbtn" href="/advanced-ai.html">Chat with AI</a>
+            <a class="navbtn" href="/search-info.html">Learn Info</a>
             <a class="navbtn" href="/learn-physics.html">Learn Physics</a>
             <a class="navbtn" href="/create-planet.html">Create Planet</a>
-            <a class="navbtn" href="/chatai.html">ChatAI</a>
+            <a class="navbtn" href="/chatai.html">ChatAI Pack</a>
             <a class="navbtn" href="/plans.html">See Plans</a>
           </nav>
-
-          <!-- Google sign-in (wire this to your backend route) -->
           <a class="google" href="/auth/google" aria-label="Continue with Google">
-            <img src="https://developers.google.com/identity/images/g-logo.png" alt="" />
+            <img src="https://developers.google.com/identity/images/g-logo.png" alt=""/>
             Continue with Google
           </a>
         </aside>
       </section>
+
+      <!-- BIG BOX: YOUR SPACE PACK -->
+      <section class="bigpack" id="yourSpace">
+        <h2>🌌 Your Space Pack</h2>
+        <p class="sub">Build galaxies, craft advanced planets, and attach rockets & satellites. Place everything into your own Universe.</p>
+
+        <!-- inner grid -->
+        <div class="grid3">
+          <!-- Rocket -->
+          <div class="card accent">
+            <div>
+              <h4>🚀 Create Rocket</h4>
+              <p>Stages, engines, payloads — learn the core parts, then build.</p>
+            </div>
+            <div class="ctaRow">
+              <button class="btn-sm btn-gold" data-learn="rocket">Learn Parts</button>
+              <button class="btn-sm btn-ghost" data-build="rocket">Ready to Build</button>
+            </div>
+          </div>
+
+          <!-- Satellite -->
+          <div class="card accent">
+            <div>
+              <h4>🛰️ Create Satellite</h4>
+              <p>Orbits, instruments, relays — learn the basics, then build.</p>
+            </div>
+            <div class="ctaRow">
+              <button class="btn-sm btn-gold" data-learn="satellite">Learn Parts</button>
+              <button class="btn-sm btn-ghost" data-build="satellite">Ready to Build</button>
+            </div>
+          </div>
+
+          <!-- Advanced Planet -->
+          <div class="card accent">
+            <div>
+              <h4>🪐 Create Advanced Planet</h4>
+              <p>Oceans, atmospheres, rings, biomes — then place it in your Universe.</p>
+            </div>
+            <div class="ctaRow">
+              <button class="btn-sm btn-gold" data-learn="planet">Learn Parts</button>
+              <button class="btn-sm btn-ghost" data-build="planet">Ready to Build</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Large inner box: Create Universe -->
+        <div class="card" style="margin-top:12px; border-width:2px;">
+          <div>
+            <h4 style="font-size:20px; color:#ffdfa3">🌠 Create Your Universe</h4>
+            <p>Organize up to 3 galaxies, 10 planets, 2 rockets & 2 satellites (with Your Space Pack). Import planets you’ve already made.</p>
+          </div>
+          <div class="ctaRow">
+            <button class="btn-sm btn-gold" id="learn-universe">Learn the Flow</button>
+            <button class="btn-sm btn-ghost" id="build-universe">Create Universe</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- BIG BOX: CHAT AI PACK -->
+      <section class="bigpack" id="chatAIPack">
+        <h2>🤖 Chat AI Pack</h2>
+        <p class="sub">Everything students need: solve homework from photos, advanced chat, and educational search — all in one pack.</p>
+
+        <div class="grid3">
+          <div class="card">
+            <div>
+              <h4>📷 Solve Homework</h4>
+              <p>Upload a picture of your homework. Earth plan: <b>2 pages/day</b>. Upgrade for more.</p>
+            </div>
+            <div class="ctaRow">
+              <a class="btn-sm btn-gold" href="/chatai-homework.html">Open</a>
+            </div>
+          </div>
+
+          <div class="card">
+            <div>
+              <h4>💬 Chat with AI</h4>
+              <p>Ask questions, get explanations, brainstorm — powered by Gemini.</p>
+            </div>
+            <div class="ctaRow">
+              <a class="btn-sm btn-gold" href="/advanced-ai.html">Open</a>
+            </div>
+          </div>
+
+          <div class="card">
+            <div>
+              <h4>🔎 Search Educational Lesson</h4>
+              <p>Get clean lesson summaries & key points for faster studying.</p>
+            </div>
+            <div class="ctaRow">
+              <a class="btn-sm btn-gold" href="/search-info.html">Open</a>
+            </div>
+          </div>
+        </div>
+      </section>
     </main>
 
-    <!-- Sign-in pill swap (kept) -->
-    <script>
-      (async () => {
-        try {
-          const res = await fetch("/me", { credentials: "include" });
-          const { user } = await res.json();
-          const btn = document.querySelector(".google"); // your login button
-
-          if (user && btn) {
-            const pill = document.createElement("div");
-            pill.style.display = "flex";
-            pill.style.alignItems = "center";
-            pill.style.gap = "10px";
-            pill.style.padding = "10px 12px";
-            pill.style.borderRadius = "999px";
-            pill.style.background = "rgba(255,255,255,.08)";
-            pill.style.border = "1px solid #1f2a40";
-            pill.innerHTML = `
-              <img src="${user.photo || ""}" alt="" style="width:22px;height:22px;border-radius:50%;object-fit:cover"/>
-              <span style="font-weight:800">${user.name || "Signed in"}</span>
-              <a href="/auth/logout" style="margin-left:8px;color:#cfc6a5;text-decoration:none;font-weight:800">Logout</a>
-            `;
-            btn.replaceWith(pill);
-          }
-        } catch {}
-      })();
-    </script>
-
     <!-- Footer -->
-    <footer role="contentinfo" style="max-width: var(--max); margin: 24px auto 36px; padding: 0 16px; color: #aeb7c5; font-size: 12px;">
-      <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;border-top: 1px solid var(--border); padding-top: 14px;">
+    <footer role="contentinfo" style="max-width:var(--max); margin:24px auto 36px; padding:0 16px; color:#aeb7c5; font-size:12px;">
+      <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; border-top:1px solid var(--border); padding-top:14px;">
         <div>©️ <span id="yr"></span> GoldenSpaceAI — Built with stardust and ambition.</div>
         <div>
           <a href="/privacy.html">Privacy Policy</a> ·
@@ -298,58 +274,166 @@
         </div>
       </div>
     </footer>
-    <script> document.getElementById("yr").textContent = new Date().getFullYear(); </script>
 
-    <!-- Plan badge (kept) -->
+    <!-- Sign-in pill swap -->
     <script>
-      async function loadUserBadge() {
+      (async () => {
         try {
-          const res = await fetch('/me', { credentials: 'include' });
-          if (!res.ok) throw new Error('not ok');
-          const data = await res.json();
-
-          const planTag = document.getElementById('planTag');
-          const quotaLine = document.getElementById('quotaLine');
-
-          if (!data.user) {
-            if (planTag) planTag.innerHTML = 'Plan: <b>Guest</b>';
-            if (quotaLine) quotaLine.textContent = 'Sign in to track usage';
-            return;
+          const res = await fetch("/me", { credentials: "include" });
+          const { user } = await res.json();
+          const btn = document.querySelector(".google");
+          if (user && btn) {
+            const pill = document.createElement("div");
+            pill.style.display="flex"; pill.style.alignItems="center"; pill.style.gap="10px";
+            pill.style.padding="10px 12px"; pill.style.borderRadius="999px";
+            pill.style.background="rgba(255,255,255,.08)"; pill.style.border="1px solid #1f2a40";
+            pill.innerHTML = `
+              <img src="${user.photo||""}" alt="" style="width:22px;height:22px;border-radius:50%;object-fit:cover"/>
+              <span style="font-weight:800">${user.name||"Signed in"}</span>
+              <a href="/auth/logout" style="margin-left:8px;color:#cfc6a5;text-decoration:none;font-weight:800">Logout</a>
+            `;
+            btn.replaceWith(pill);
           }
-
-          const { plan, usage } = data;
-          if (planTag) planTag.innerHTML = `Plan: <b>${(plan || '').toUpperCase()}</b>`;
-
-          if (usage?.remaining && quotaLine) {
-            const r = usage.remaining;
-            quotaLine.textContent =
-              `Today — Ask: ${Number.isFinite(r.ask) ? r.ask : '∞'}, ` +
-              `Search: ${Number.isFinite(r.search) ? r.search : '∞'}, ` +
-              `Physics: ${Number.isFinite(r.physics) ? r.physics : '∞'}`;
-          } else if (quotaLine) {
-            quotaLine.textContent = 'Usage data unavailable';
-          }
-        } catch (e) {
-          console.warn('Badge load failed', e);
-          const q = document.getElementById('quotaLine');
-          if (q) q.textContent = 'Unable to load usage';
-        }
-      }
-      loadUserBadge();
+        } catch {}
+      })();
+      document.getElementById("yr").textContent = new Date().getFullYear();
     </script>
 
-    <!-- Simple user pill (kept) -->
-    <div id="userBadge" style="margin: 8px 0 0; font-size: 13px">
-      <span
-        id="planTag"
-        style="
-          padding: 4px 8px;
-          border-radius: 999px;
-          border: 1px solid rgba(255, 255, 255, 0.15);
-          background: #0f1520;
-        "
-      >Plan: <b>—</b></span>
-      <span id="quotaLine" style="margin-left: 10px; opacity: 0.85">Loading limits…</span>
+    <!-- ===== Gating Modal (learn -> build -> upsell if not universe) ===== -->
+    <div id="gateModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="gateTitle">
+      <div class="modal-card">
+        <h2 id="gateTitle" class="modal-h"></h2>
+        <div id="gateBody" class="modal-b"></div>
+        <div class="modal-actions">
+          <button id="gateBack" class="btn-sm btn-ghost">← Back</button>
+          <div>
+            <button id="gateClose" class="btn-sm btn-ghost" style="margin-right:8px">Close</button>
+            <button id="gateNext" class="btn-sm btn-gold">Next →</button>
+          </div>
+        </div>
+        <div id="gateNote" class="note"></div>
+        <div id="gateUpsell" class="upsell" style="display:none;">
+          <div style="font-weight:900; color:#fff3ce; margin-bottom:6px;">Upgrade Required</div>
+          <div style="font-size:14px; color:#f3e9c9;">Please upgrade to the <b>Your Space Pack</b> to build this item.</div>
+          <div style="margin-top:10px;">
+            <a class="btn-sm btn-gold" href="/plans.html">Upgrade to Your Space Pack</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Content for "learn" steps
+      const LEARN = {
+        rocket: [
+          "Rockets have stages, engines, tanks, and payloads. Lighter upper stages improve delta-v.",
+          "Guidance & avionics control thrust vectoring. Thermal protection and fairings shield the payload.",
+          "Propellants: RP-1/LOX, Methalox, LH2/LOX. Engines: gas-generator, staged combustion, full-flow."
+        ],
+        satellite: [
+          "Satellites have bus (structure), payload (instruments), power (solar + batteries), and comms.",
+          "Orbits: LEO, MEO, GEO. Higher orbits give wider coverage but higher latency.",
+          "Attitude control: reaction wheels, magnetorquers, thrusters. Thermal control manages heat."
+        ],
+        planet: [
+          "Planets: core, mantle, crust; atmosphere, hydrosphere, magnetosphere shape habitability.",
+          "Parameters: mass, radius, density, rotation, orbital distance, eccentricity, albedo.",
+          "Biomes depend on climate bands, oceans, axial tilt, and stellar type of the parent star."
+        ],
+        universe: [
+          "Your Universe organizes your creations: up to 3 galaxies, 10 planets, 2 rockets, 2 satellites.",
+          "Name galaxies, pick styles, place planets you already designed.",
+          "Publish a private view and keep expanding later with Your Space Pack."
+        ]
+      };
+
+      const modal = document.getElementById('gateModal');
+      const mTitle = document.getElementById('gateTitle');
+      const mBody  = document.getElementById('gateBody');
+      const mNote  = document.getElementById('gateNote');
+      const mUp    = document.getElementById('gateUpsell');
+      const btnNext= document.getElementById('gateNext');
+      const btnBack= document.getElementById('gateBack');
+      const btnClose=document.getElementById('gateClose');
+
+      let flow = { kind: null, step: 0 };
+
+      function openLearn(kind){
+        flow = { kind, step: 0 };
+        mTitle.textContent = `Learn: ${cap(kind)}`;
+        mUp.style.display = 'none';
+        renderStep();
+        modal.classList.add('on');
+      }
+      function cap(s){ return s.charAt(0).toUpperCase() + s.slice(1); }
+      function renderStep(){
+        const arr = LEARN[flow.kind] || [];
+        mBody.textContent = arr[flow.step] || "";
+        mNote.textContent = `Step ${flow.step+1} of ${arr.length}`;
+        btnBack.style.visibility = flow.step === 0 ? 'hidden' : 'visible';
+        btnNext.textContent = (flow.step === arr.length-1) ? "Ready to Build" : "Next →";
+      }
+
+      async function checkUniverseAccess(){
+        try{
+          const r = await fetch('/api/me', { credentials:'include' });
+          const j = await r.json();
+          const plan = (j.plan || '').toLowerCase();
+          return (plan === 'yourspace' || plan === 'universe');
+        }catch{return false;}
+      }
+
+      async function goBuild(kind){
+        // If user has universe pack, go to builder pages (you can change routes later)
+        const has = await checkUniverseAccess();
+        if (has) {
+          if (kind === 'rocket')       location.href = '/build-rocket.html';
+          else if (kind === 'satellite') location.href = '/build-satellite.html';
+          else if (kind === 'planet')    location.href = '/create-planet.html';
+          else if (kind === 'universe')  location.href = '/your-space.html';
+          return;
+        }
+        // Otherwise show upsell
+        mTitle.textContent = `Upgrade Needed: ${cap(kind)}`;
+        mBody.textContent  = "This builder is locked. You can learn the parts, but building requires the Your Space Pack.";
+        mNote.textContent  = "To continue, upgrade below.";
+        mUp.style.display  = 'block';
+        modal.classList.add('on');
+      }
+
+      // Wire learn buttons
+      document.querySelectorAll('[data-learn]').forEach(el=>{
+        el.addEventListener('click', e => { e.preventDefault(); openLearn(el.dataset.learn); });
+      });
+      // Wire build buttons
+      document.querySelectorAll('[data-build]').forEach(el=>{
+        el.addEventListener('click', e => { e.preventDefault(); goBuild(el.dataset.build); });
+      });
+      // Universe special
+      document.getElementById('learn-universe')?.addEventListener('click', e=>{ e.preventDefault(); openLearn('universe'); });
+      document.getElementById('build-universe')?.addEventListener('click', e=>{ e.preventDefault(); goBuild('universe'); });
+
+      // Modal controls
+      btnBack.addEventListener('click', ()=>{
+        if (flow.step > 0){ flow.step--; renderStep(); }
+      });
+      btnClose.addEventListener('click', ()=> modal.classList.remove('on'));
+      btnNext.addEventListener('click', async ()=>{
+        const arr = LEARN[flow.kind] || [];
+        if (flow.step < arr.length - 1){ flow.step++; renderStep(); return; }
+        // final → build
+        await goBuild(flow.kind);
+      });
+
+      // backdrop & ESC close
+      modal.addEventListener('click', (ev)=>{ if (ev.target === modal) modal.classList.remove('on'); });
+      document.addEventListener('keydown', (e)=>{ if (e.key === 'Escape') modal.classList.remove('on'); });
+    </script>
+
+    <!-- Plan badge (optional snippet you had) -->
+    <div id="userBadge" style="margin:8px 0 0; font-size:13px">
+      <span id="planTag" style="padding:4px 8px; border-radius:999px; border:1px solid rgba(255,255,255,.15); background:#0f1520;">Plan: <b>—</b></span>
+      <span id="quotaLine" style="margin-left:10px; opacity:.85">Loading limits…</span>
     </div>
     <div id="userBadge" style="margin:10px; font-size:14px; color:white;">
       <span id="userInfo"></span>
@@ -357,129 +441,39 @@
     </div>
 
     <script>
-    async function loadUser() {
-      try {
-        const res = await fetch("/api/me");
-        const data = await res.json();
-        if (data.loggedIn) {
-          document.getElementById("userInfo").innerHTML = `
-            <img src="${data.user.photo}" 
-                 style="width:28px; height:28px; border-radius:50%; vertical-align:middle; margin-right:6px;">
-            ${data.user.name} (${data.plan})
-          `;
-          document.getElementById("logoutBtn").style.display = "inline-block";
-        } else {
-          document.getElementById("userInfo").innerHTML = 
-            '<a href="/auth/google">Sign in with Google</a>';
-        }
-      } catch (e) {
-        console.error("Failed to load /api/me", e);
-      }
-    }
-
-    document.getElementById("logoutBtn").onclick = async () => {
-      await fetch("/logout", { method: "POST" });
-      window.location.reload();
-    };
-
-    loadUser();
-    </script>
-
-    <!-- ===== Modal HTML (Create Your Universe flow) ===== -->
-    <div id="universeModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="univTitle">
-      <div class="modal-card">
-        <h2 id="univTitle" class="modal-h">Create Your Universe</h2>
-        <div id="univBody" class="modal-b"></div>
-
-        <div class="modal-actions">
-          <button id="univBack" class="btn-sm btn-ghost">← Back</button>
-          <div>
-            <button id="univClose" class="btn-sm btn-ghost" style="margin-right:8px">Close</button>
-            <button id="univNext" class="btn-sm btn-gold">Next →</button>
-          </div>
-        </div>
-        <div class="note" id="univNote"></div>
-        <div id="univUpsell" class="upsell" style="display:none;">
-          <div style="font-weight:900; color:#fff3ce; margin-bottom:6px;">Unlock Your Space Pack</div>
-          <div style="font-size:14px; color:#f3e9c9;">
-            Access the Space World hub (3 galaxies, 10 planets, 2 rockets & 2 satellites), and place your created planets into your own universe.
-          </div>
-          <div style="margin-top:10px;">
-            <a class="btn-sm btn-gold" href="/plans.html">Unlock Your Space Pack</a>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <script>
-      // --- Modal logic for Create Your Universe
-      const steps = [
-        "Welcome to Your Space World. Build a personal universe that lives across sessions.",
-        "Create up to 3 galaxies. Name them, style them, and organize your worlds.",
-        "Add up to 10 planets total. Import planets you've already created in Create Planet.",
-        "Attach 2 rockets and 2 satellites to any planets to transport people and gather data.",
-        "When you’re ready, publish your universe view (private by default) and keep expanding later."
-      ];
-
-      const modal = document.getElementById('universeModal');
-      const openBtn = document.getElementById('openUniverse');
-      const bodyEl = document.getElementById('univBody');
-      const noteEl = document.getElementById('univNote');
-      const upsellEl = document.getElementById('univUpsell');
-      const nextBtn = document.getElementById('univNext');
-      const backBtn = document.getElementById('univBack');
-      const closeBtn = document.getElementById('univClose');
-
-      let idx = 0;
-
-      function renderStep() {
-        bodyEl.textContent = steps[idx];
-        noteEl.textContent = `Step ${idx+1} of ${steps.length}`;
-        backBtn.style.visibility = idx === 0 ? 'hidden' : 'visible';
-        nextBtn.textContent = (idx === steps.length - 1) ? "Create Your Universe" : "Next →";
-        upsellEl.style.display = 'none';
-      }
-
-      openBtn?.addEventListener('click', (e)=>{
-        e.preventDefault();
-        idx = 0; renderStep(); modal.classList.add('on');
-      });
-
-      backBtn.addEventListener('click', ()=>{
-        if (idx > 0) { idx--; renderStep(); }
-      });
-
-      closeBtn.addEventListener('click', ()=> modal.classList.remove('on'));
-
-      nextBtn.addEventListener('click', async ()=>{
-        if (idx < steps.length - 1) {
-          idx++; renderStep(); return;
-        }
-        // Last step: check plan
-        try {
-          const r = await fetch('/api/me', { credentials: 'include' });
-          const j = await r.json();
-          const plan = (j.plan || '').toLowerCase();
-          const hasUniverse = (plan === 'yourspace' || plan === 'universe');
-
-          if (hasUniverse) {
-            // TODO: navigate to your builder page once ready
-            noteEl.textContent = "✅ Access granted. Loading Your Space World…";
-            setTimeout(()=>{ window.location.href = "/your-space.html"; }, 600);
-          } else {
-            upsellEl.style.display = 'block';
-            noteEl.textContent = "This feature requires the Your Space Pack.";
+      async function loadUserBadge(){
+        try{
+          const res = await fetch('/me', { credentials:'include' });
+          if (!res.ok) throw new Error('not ok');
+          const data = await res.json();
+          const planTag = document.getElementById('planTag');
+          const quotaLine = document.getElementById('quotaLine');
+          if (!data.user){ if (planTag) planTag.innerHTML='Plan: <b>Guest</b>'; if (quotaLine) quotaLine.textContent='Sign in to track usage'; return; }
+          const { plan, usage } = data;
+          if (planTag) planTag.innerHTML = `Plan: <b>${(plan||'').toUpperCase()}</b>`;
+          if (usage?.remaining && quotaLine){
+            const r = usage.remaining;
+            quotaLine.textContent = `Today — Ask: ${Number.isFinite(r.ask)?r.ask:'∞'}, Search: ${Number.isFinite(r.search)?r.search:'∞'}, Physics: ${Number.isFinite(r.physics)?r.physics:'∞'}`;
           }
-        } catch (e) {
-          upsellEl.style.display = 'block';
-          noteEl.textContent = "Unable to verify your plan. Please sign in or try again.";
-        }
-      });
-
-      // Close modal on backdrop click
-      modal.addEventListener('click', (ev)=>{ if (ev.target === modal) modal.classList.remove('on'); });
-      // ESC to close
-      document.addEventListener('keydown', (e)=>{ if (e.key === 'Escape') modal.classList.remove('on'); });
+        }catch(e){ const q = document.getElementById('quotaLine'); if (q) q.textContent='Unable to load usage'; }
+      }
+      async function loadUser(){
+        try{
+          const res = await fetch("/api/me");
+          const data = await res.json();
+          if (data.loggedIn) {
+            document.getElementById("userInfo").innerHTML = `
+              <img src="${data.user.photo}" style="width:28px;height:28px;border-radius:50%;vertical-align:middle;margin-right:6px;">
+              ${data.user.name} (${data.plan})
+            `;
+            document.getElementById("logoutBtn").style.display="inline-block";
+          } else {
+            document.getElementById("userInfo").innerHTML = '<a href="/auth/google">Sign in with Google</a>';
+          }
+        }catch(e){}
+      }
+      document.getElementById("logoutBtn").onclick = async ()=>{ await fetch("/logout", { method:"POST" }); location.reload(); };
+      loadUserBadge(); loadUser();
     </script>
   </body>
 </html>

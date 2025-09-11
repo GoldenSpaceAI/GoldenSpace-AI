@@ -97,8 +97,47 @@ function getBaseUrl(req) {
   const host = (req.headers["x-forwarded-host"] || "").toString().split(",")[0] || req.get("host");
   return `${proto}://${host}`;
 }
+<!-- ===== Auth pill (Google) ===== -->
+<div id="authPill" style="
+  margin-left:auto; display:inline-flex; align-items:center; gap:10px;
+  padding:8px 12px; border:1px solid rgba(255,255,255,.12); border-radius:999px;
+  background:rgba(255,255,255,.04); color:#e9eefc; font-weight:800; font-size:14px;">
+  <a id="googleBtn" href="/auth/google" style="
+     display:inline-flex; align-items:center; gap:8px; background:#fff; color:#1f2937;
+     padding:8px 12px; border-radius:999px; border:1px solid rgba(0,0,0,.1);">
+    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+         alt="" width="16" height="16"/>
+    Continue with Google
+  </a>
+</div>
 
-// ---------- Google OAuth ----------
+<script>
+(async () => {
+  try {
+    const r = await fetch('/api/me', { credentials:'include' });
+    const me = await r.json();
+    if (me && me.loggedIn && me.user) {
+      const pill = document.getElementById('authPill');
+      pill.innerHTML = `
+        <img src="${me.user.photo || ''}" alt="" style="width:22px;height:22px;border-radius:50%;object-fit:cover"/>
+        <span>${me.user.name || 'Signed in'}</span>
+        <span style="opacity:.8;">· ${(me.plan || '').toUpperCase()}</span>
+        <button id="logoutBtn" style="
+          margin-left:8px; background:transparent; color:#cfc6a5; border:1px solid rgba(255,255,255,.15);
+          border-radius:999px; padding:6px 10px; cursor:pointer; font-weight:800;">
+          Logout
+        </button>
+      `;
+      document.getElementById('logoutBtn').onclick = async () => {
+        await fetch('/logout', { method:'POST', credentials:'include' });
+        location.reload();
+      };
+    }
+  } catch(e) {
+    console.warn('auth pill failed', e);
+  }
+})();
+</script>// ---------- Google OAuth ----------
 const DEFAULT_CALLBACK_PATH = "/auth/google/callback";
 passport.use(
   new GoogleStrategy(

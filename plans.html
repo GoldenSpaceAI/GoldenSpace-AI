@@ -1,98 +1,194 @@
+<!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Space AI Plans</title>
-    <link
-      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
-      rel="stylesheet"
-    />
-  </head>
-  <body
-    class="bg-gray-900 text-white min-h-screen flex flex-col items-center justify-center p-6"
-  >
-    <h1 class="text-4xl font-bold mb-10">Choose Your Space AI Plan</h1>
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>GoldenSpaceAI • Plans</title>
+  <link rel="icon" href="/favicon.ico"/>
+  <style>
+    :root{
+      --bg:#070b14;
+      --card:#0e1626;
+      --card2:#0a1222;
+      --border:#1f2b45;
+      --text:#eaf1ff;
+      --muted:#b8c3dc;
+      --gold:#f6c64a;
+      --gold2:#eb8b36;
+      --accent:#7aa6ff;
+      --ok:#25d366;
+      --x:#ff6262;
+      --radius:18px;
+      --shadow:0 24px 80px rgba(0,0,0,.55);
+      --max:1100px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;color:var(--text);
+      font:16px/1.6 Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background:
+        linear-gradient(180deg, rgba(7,11,20,.75), rgba(7,11,20,.9)),
+        url("https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?q=80&w=1920&auto=format&fit=crop") center/cover fixed no-repeat;
+      -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+    }
+    a{color:inherit;text-decoration:none}
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl">
-      <!-- Moon Pack -->
-      <div
-        class="bg-gray-800 p-6 rounded-2xl shadow-lg border border-blue-500 hover:shadow-xl transition"
-      >
-        <h2 class="text-2xl font-semibold text-blue-400 mb-4">
-          🌙 Moon Pack (Free)
-        </h2>
-        <ul class="space-y-2 mb-6">
-          <li>✅ 20 Advanced AI question/day</li>
-          <li>✅ 5 Info search/day</li>
-          <li>❌ Physics learning access</li>
-          <li>❌ Create your own planet</li>
-        </ul>
-        <a
-          href="/moon-plan"
-          class="block text-center bg-blue-600 hover:bg-blue-700 rounded-xl py-2"
-          >Select Free Plan</a
-        >
-      </div>
+    .top{position:sticky;top:0;z-index:20;backdrop-filter:blur(10px);
+      background:linear-gradient(180deg, rgba(7,11,20,.85), rgba(7,11,20,.45) 60%, transparent);
+      border-bottom:1px solid var(--border); padding:12px 16px; display:flex; align-items:center; gap:12px;}
+    .brand{display:flex;align-items:center;gap:10px;color:var(--gold);font-weight:900;letter-spacing:.4px}
+    .dot{width:10px;height:10px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#ffd86a,#f6c64a 50%,#eb8b36 90%);box-shadow:0 0 18px rgba(246,198,74,.6)}
+    .wrap{max-width:var(--max);margin:22px auto;padding:0 16px}
 
-      <!-- Earth Pack -->
-      <div
-        class="bg-gray-800 p-6 rounded-2xl shadow-lg border border-green-500 hover:shadow-xl transition"
-      >
-        <h2 class="text-2xl font-semibold text-green-400 mb-4">
-          🌍 Earth Pack ($2/mo or $20/yr)
-        </h2>
-        <ul class="space-y-2 mb-6">
-          <li>✅ 50 Advanced AI questions/day</li>
-          <li>✅ 20 Info searches/day</li>
-          <li>✅ 5 Physics learnings/day</li>
-          <li>❌ Create your own planet</li>
-        </ul>
-        <a
-          href="/earth-plan"
-          class="block text-center bg-green-600 hover:bg-green-700 rounded-xl py-2"
-          >Choose Earth Pack</a
-        >
-      </div>
+    .gridTop{display:grid;grid-template-columns:1fr;gap:16px;margin-bottom:18px}
+    @media(min-width:900px){.gridTop{grid-template-columns:1fr 1fr}}
 
-      <!-- Sun Pack -->
-      <div
-        class="bg-gray-800 p-6 rounded-2xl shadow-lg border border-yellow-400 hover:shadow-xl transition"
-      >
-        <h2 class="text-2xl font-semibold text-yellow-300 mb-4">
-          ☀️ Sun Pack ($3/mo or $30/yr)
-        </h2>
-        <ul class="space-y-2 mb-6">
-          <li>✅ Unlimited Advanced AI</li>
-          <li>✅ Unlimited Info searches</li>
-          <li>✅ Unlimited Physics learning</li>
-          <li>✅ Access to create your own planet</li>
-        </ul>
-        <a
-          href="/sun-plan"
-          class="block text-center bg-yellow-500 hover:bg-yellow-600 rounded-xl py-2 text-black font-bold"
-          >Go Unlimited</a
-        >
-      </div>
+    .card{background:linear-gradient(180deg,var(--card),var(--card2)); border:1px solid var(--border);
+      border-radius:var(--radius); box-shadow:var(--shadow); padding:18px;}
+    .card h2{margin:0 0 8px;font-size:22px;color:#fff6d8}
+    .price{font-weight:900}
+    .pill{display:inline-flex;gap:8px;align-items:center;border:1px solid var(--border);border-radius:999px;padding:6px 10px;color:var(--muted);font-size:12px}
+    ul.feats{margin:10px 0 14px; padding-left:18px}
+    ul.feats li{margin:6px 0}
+    .ok{color:var(--ok);font-weight:800}
+    .no{color:var(--x);font-weight:800}
 
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;
+      padding:12px 14px;border-radius:12px;border:1px solid rgba(0,0,0,.25);font-weight:900;cursor:pointer}
+    .btn.gold{background:linear-gradient(180deg,var(--gold),var(--gold2));color:#1c1500;box-shadow:0 10px 26px rgba(246,198,74,.25)}
+    .btn.ghost{background:transparent;color:var(--muted);border:1px solid var(--border)}
+    .btn.wide{width:100%}
+
+    .gridSmall{display:grid;gap:14px;grid-template-columns:1fr; margin-top:6px}
+    @media(min-width:800px){.gridSmall{grid-template-columns:repeat(3,1fr)}}
+
+    footer{max-width:var(--max);margin:26px auto 34px;padding:0 16px;color:#aeb7c5;font-size:12px;
+      display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;border-top:1px solid var(--border);padding-top:12px}
+    :focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-radius:8px}
+  </style>
+</head>
+<body>
+  <div class="top">
+    <div class="brand"><span class="dot" aria-hidden="true"></span> GoldenSpaceAI</div>
+    <div style="flex:1"></div>
+    <a class="pill" href="/index.html">← Back to Home</a>
+  </div>
+
+  <main class="wrap" aria-label="Plans">
+    <h1 style="margin:6px 0 12px;font-size:clamp(22px,4vw,34px)">Choose your plan</h1>
+
+    <!-- TOP: Big cards -->
+    <section class="gridTop">
       <!-- Chat AI Pack -->
-      <div
-        class="bg-gray-800 p-6 rounded-2xl shadow-lg border border-purple-500 hover:shadow-xl transition lg:col-span-1 md:col-span-2"
-      >
-        <h2 class="text-2xl font-semibold text-purple-400 mb-4">
-          💬 Chat AI Pack ($5/mo)
-        </h2>
-        <ul class="space-y-2 mb-6">
-          <li>✅ Solve Homework with AI</li>
-          <li>✅ Chat with Advanced AI Tutor</li>
-          <li>✅ Search Educational Lessons</li>
-          <li>✅ Perfect for students</li>
+      <article class="card">
+        <h2>🧠 Chat AI Pack <span class="price">— $5 / month</span></h2>
+        <div class="pill">Best for students & study help</div>
+        <ul class="feats">
+          <li><span class="ok">✓</span> Unlimited Chat AI questions</li>
+          <li><span class="ok">✓</span> Unlimited info searches</li>
+          <li><span class="no">✗</span> Planet builder & Physics learning not included</li>
         </ul>
-        <a
-          href="/chatai-plan"
-          class="block text-center bg-purple-600 hover:bg-purple-700 rounded-xl py-2"
-          >Choose Chat AI Pack</a
-        >
+        <button class="btn gold wide" data-plan="chatai">Subscribe to Chat AI</button>
+      </article>
+
+      <!-- Your Space / Universe Pack -->
+      <article class="card">
+        <h2>🌌 Your Space Pack <span class="price">— $2.50 one-time</span></h2>
+        <div class="pill">Build your own universe hub</div>
+        <ul class="feats">
+          <li><span class="ok">✓</span> Create up to 3 galaxies</li>
+          <li><span class="ok">✓</span> Place up to 10 planets (import from Create Planet)</li>
+          <li><span class="ok">✓</span> 2 rockets & 2 satellites to attach to planets</li>
+          <li><span class="no">✗</span> No Learn Physics in this pack (keeps it focused on building)</li>
+        </ul>
+        <button class="btn gold wide" data-plan="yourspace">Unlock Your Space</button>
+      </article>
+    </section>
+
+    <!-- BOTTOM: Small cards -->
+    <section class="gridSmall" aria-label="Core packs">
+      <!-- Moon -->
+      <article class="card">
+        <h2>🌙 Moon (Free)</h2>
+        <ul class="feats">
+          <li><span class="ok">✓</span> 20 Chat AI questions / day</li>
+          <li><span class="ok">✓</span> 5 info searches / day</li>
+          <li><span class="no">✗</span> Learn Physics</li>
+          <li><span class="no">✗</span> Create your own planet</li>
+        </ul>
+        <button class="btn ghost wide" id="selectFree">Select Free Plan</button>
+      </article>
+
+      <!-- Earth -->
+      <article class="card">
+        <h2>🌍 Earth ($2 / month)</h2>
+        <ul class="feats">
+          <li><span class="ok">✓</span> 50 Chat AI questions / day</li>
+          <li><span class="ok">✓</span> 20 info searches / day</li>
+          <li><span class="ok">✓</span> 5 physics learnings / day</li>
+          <li><span class="no">✗</span> Create planet</li>
+        </ul>
+        <button class="btn gold wide" data-plan="earth">Choose Earth</button>
+      </article>
+
+      <!-- Sun -->
+      <article class="card">
+        <h2>☀️ Sun ($3 / month)</h2>
+        <ul class="feats">
+          <li><span class="ok">✓</span> Unlimited Chat AI</li>
+          <li><span class="ok">✓</span> Unlimited info searches</li>
+          <li><span class="ok">✓</span> Unlimited Physics learning</li>
+          <li><span class="ok">✓</span> Access to Create Planet</li>
+        </ul>
+        <button class="btn gold wide" data-plan="sun">Go Unlimited</button>
+      </article>
+    </section>
+
+    <footer>
+      <div>©️ <span id="yr"></span> GoldenSpaceAI</div>
+      <div>
+        <a href="/privacy.html">Privacy</a> ·
+        <a href="/terms.html">Terms</a> ·
+        <a href="/refund.html">Refund Policy</a>
       </div>
-    </div>
-  </body>
+    </footer>
+  </main>
+
+  <script>
+    document.getElementById('yr').textContent = new Date().getFullYear();
+
+    // Free plan
+    document.getElementById('selectFree')?.addEventListener('click', async ()=>{
+      try{
+        const r = await fetch('/api/select-free', {method:'POST', credentials:'include'});
+        if(!r.ok) throw new Error();
+        location.href = '/';
+      }catch(e){
+        alert('Please sign in first.');
+        location.href = '/auth/google';
+      }
+    });
+
+    // Paid plans
+    async function startCheckout(plan){
+      try{
+        const r = await fetch('/api/checkout?plan='+encodeURIComponent(plan), {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          credentials:'include'
+        });
+        if(r.status===401){ location.href='/auth/google'; return; }
+        const j = await r.json();
+        if(!j.url) throw new Error('No checkout URL');
+        window.location = j.url; // open Paddle hosted checkout
+      }catch(e){
+        alert('Unable to start checkout. Please sign in and try again.');
+      }
+    }
+    document.querySelectorAll('[data-plan]').forEach(btn=>{
+      btn.addEventListener('click', ()=> startCheckout(btn.dataset.plan));
+    });
+  </script>
+</body>
 </html>

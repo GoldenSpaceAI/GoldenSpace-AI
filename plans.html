@@ -1,166 +1,98 @@
-<!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>GoldenSpaceAI • Plans</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Space AI Plans</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body
+    class="bg-gray-900 text-white min-h-screen flex flex-col items-center justify-center p-6"
+  >
+    <h1 class="text-4xl font-bold mb-10">Choose Your Space AI Plan</h1>
 
-  <!-- Tailwind -->
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"/>
-
-  <link rel="icon" href="/favicon.ico"/>
-  <style>
-    body {
-      min-height: 100vh;
-      background:
-        linear-gradient(180deg, rgba(10,14,21,0.80), rgba(10,14,21,0.90)),
-        url("https://images.unsplash.com/photo-1444703686981-a3abbc4d4fe3?q=80&w=2000&auto=format&fit=crop")
-          center/cover no-repeat fixed; /* 🌌 Starry galaxy background */
-      color: white;
-    }
-    .glass {
-      background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
-      border: 1px solid rgba(255,255,255,0.12);
-      backdrop-filter: blur(6px);
-    }
-    .gold-btn {
-      background: linear-gradient(180deg, #f6c64a, #eb8b36);
-      color: #1b1300; font-weight: 900;
-      box-shadow: 0 8px 24px rgba(246,198,74,0.35);
-    }
-    .gold-btn:hover { filter: brightness(1.05); }
-    .link-ghost {
-      border: 1px solid rgba(255,255,255,.15);
-      background: rgba(255,255,255,.04);
-    }
-    .badge {
-      display:inline-flex; align-items:center;
-      padding:.25rem .6rem; border-radius:9999px; font-weight:800; font-size:.8rem;
-      background: rgba(246,198,74,.12); border:1px solid rgba(246,198,74,.35); color:#f6c64a;
-    }
-  </style>
-</head>
-<body>
-  <!-- Header -->
-  <header class="w-full sticky top-0 z-30 glass">
-    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center">
-      <div class="flex items-center space-x-2 font-extrabold text-yellow-300">
-        <span class="inline-block w-2.5 h-2.5 rounded-full bg-yellow-300 shadow-lg"></span>
-        <span>GoldenSpaceAI</span>
-      </div>
-      <div class="ml-auto hidden md:flex space-x-2 text-sm">
-        <a class="px-3 py-1 rounded-full link-ghost" href="/">Home</a>
-        <a class="px-3 py-1 rounded-full link-ghost" href="/advanced-ai.html">Advanced AI</a>
-        <a class="px-3 py-1 rounded-full link-ghost" href="/search-info.html">Search Info</a>
-        <a class="px-3 py-1 rounded-full link-ghost" href="/create-planet.html">Create Planet</a>
-      </div>
-    </div>
-  </header>
-
-  <!-- Title -->
-  <main class="max-w-6xl mx-auto px-4 pt-10 pb-16">
-    <div class="text-center mb-10">
-      <h1 class="text-4xl md:text-5xl font-black mb-3">Plans & Pricing</h1>
-      <p class="text-gray-300 max-w-2xl mx-auto">
-        Start free with Moon, or go farther with Earth, Sun, or the Your Space Pack.
-      </p>
-    </div>
-
-    <!-- 3 packs -->
-    <section class="grid grid-cols-1 md:grid-cols-3 gap-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl">
       <!-- Moon Pack -->
-      <div class="glass rounded-2xl p-6 hover:shadow-xl transition">
-        <h2 class="text-2xl font-extrabold text-blue-300">🌙 Moon Pack</h2>
-        <p class="text-sm text-gray-300 mb-4">Free forever</p>
-        <ul class="space-y-2 mb-6 text-gray-100">
-          <li>✅ 20 Advanced AI questions/day</li>
-          <li>✅ 5 Info searches/day</li>
-          <li>❌ Learn Physics</li>
+      <div
+        class="bg-gray-800 p-6 rounded-2xl shadow-lg border border-blue-500 hover:shadow-xl transition"
+      >
+        <h2 class="text-2xl font-semibold text-blue-400 mb-4">
+          🌙 Moon Pack (Free)
+        </h2>
+        <ul class="space-y-2 mb-6">
+          <li>✅ 20 Advanced AI question/day</li>
+          <li>✅ 5 Info search/day</li>
+          <li>❌ Physics learning access</li>
           <li>❌ Create your own planet</li>
         </ul>
-        <button class="w-full py-2 rounded-xl link-ghost">Select Free Plan</button>
+        <a
+          href="/moon-plan"
+          class="block text-center bg-blue-600 hover:bg-blue-700 rounded-xl py-2"
+          >Select Free Plan</a
+        >
       </div>
 
       <!-- Earth Pack -->
-      <div class="glass rounded-2xl p-6 hover:shadow-xl transition border border-green-500/40">
-        <h2 class="text-2xl font-extrabold text-green-300">🌍 Earth Pack</h2>
-        <p class="text-sm text-gray-300 mb-4">$2 / month or $20 / year</p>
-        <ul class="space-y-2 mb-6 text-gray-100">
+      <div
+        class="bg-gray-800 p-6 rounded-2xl shadow-lg border border-green-500 hover:shadow-xl transition"
+      >
+        <h2 class="text-2xl font-semibold text-green-400 mb-4">
+          🌍 Earth Pack ($2/mo or $20/yr)
+        </h2>
+        <ul class="space-y-2 mb-6">
           <li>✅ 50 Advanced AI questions/day</li>
           <li>✅ 20 Info searches/day</li>
           <li>✅ 5 Physics learnings/day</li>
           <li>❌ Create your own planet</li>
         </ul>
-        <button class="w-full py-2 rounded-xl gold-btn">Choose Earth Pack</button>
+        <a
+          href="/earth-plan"
+          class="block text-center bg-green-600 hover:bg-green-700 rounded-xl py-2"
+          >Choose Earth Pack</a
+        >
       </div>
 
       <!-- Sun Pack -->
-      <div class="glass rounded-2xl p-6 hover:shadow-xl transition border border-yellow-500/40">
-        <h2 class="text-2xl font-extrabold text-yellow-300">☀️ Sun Pack</h2>
-        <p class="text-sm text-gray-300 mb-4">$3 / month or $30 / year</p>
-        <ul class="space-y-2 mb-6 text-gray-100">
+      <div
+        class="bg-gray-800 p-6 rounded-2xl shadow-lg border border-yellow-400 hover:shadow-xl transition"
+      >
+        <h2 class="text-2xl font-semibold text-yellow-300 mb-4">
+          ☀️ Sun Pack ($3/mo or $30/yr)
+        </h2>
+        <ul class="space-y-2 mb-6">
           <li>✅ Unlimited Advanced AI</li>
           <li>✅ Unlimited Info searches</li>
           <li>✅ Unlimited Physics learning</li>
-          <li>✅ Access to Create Planet</li>
+          <li>✅ Access to create your own planet</li>
         </ul>
-        <button class="w-full py-2 rounded-xl gold-btn text-black">Go Unlimited</button>
+        <a
+          href="/sun-plan"
+          class="block text-center bg-yellow-500 hover:bg-yellow-600 rounded-xl py-2 text-black font-bold"
+          >Go Unlimited</a
+        >
       </div>
-    </section>
 
-    <!-- Your Space Pack -->
-    <section id="universe" class="mt-12">
-      <div class="glass rounded-3xl p-7 md:p-9 border border-purple-500/40 hover:shadow-2xl transition">
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
-          <div>
-            <h2 class="text-3xl font-extrabold text-purple-200">🌌 Your Space Pack</h2>
-            <p class="text-gray-200 mt-1">
-              Unlock Your Space World: up to <b>3 galaxies</b>, <b>10 planets</b>, 
-              <b>2 rockets</b>, and <b>2 satellites</b>.  
-              Place planets you create into your own Universe. (No Learn Physics)
-            </p>
-          </div>
-          <div><span class="badge">New</span></div>
-        </div>
-
-        <p class="text-lg font-semibold text-purple-200 mb-4">$2.50 / month</p>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
-          <div class="glass rounded-2xl p-4 border border-purple-600/40">
-            <h3 class="text-lg font-bold text-purple-200">Advanced Planet</h3>
-            <p class="text-gray-300 text-sm">Build oceans, atmospheres, and rings for planets.</p>
-          </div>
-          <div class="glass rounded-2xl p-4 border border-purple-600/40">
-            <h3 class="text-lg font-bold text-purple-200">Rocket</h3>
-            <p class="text-gray-300 text-sm">Create rockets to transport people across your space.</p>
-          </div>
-          <div class="glass rounded-2xl p-4 border border-purple-600/40">
-            <h3 class="text-lg font-bold text-purple-200">Satellite</h3>
-            <p class="text-gray-300 text-sm">Design satellites to orbit planets and gather data.</p>
-          </div>
-        </div>
-
-        <div class="flex flex-col sm:flex-row gap-3">
-          <button class="px-5 py-2 rounded-xl gold-btn w-full sm:w-auto">Unlock Your Space Pack</button>
-          <a href="/your-space.html" class="px-5 py-2 rounded-xl link-ghost text-center w-full sm:w-auto">
-            Open Your Space World
-          </a>
-        </div>
+      <!-- Chat AI Pack -->
+      <div
+        class="bg-gray-800 p-6 rounded-2xl shadow-lg border border-purple-500 hover:shadow-xl transition lg:col-span-1 md:col-span-2"
+      >
+        <h2 class="text-2xl font-semibold text-purple-400 mb-4">
+          💬 Chat AI Pack ($5/mo)
+        </h2>
+        <ul class="space-y-2 mb-6">
+          <li>✅ Solve Homework with AI</li>
+          <li>✅ Chat with Advanced AI Tutor</li>
+          <li>✅ Search Educational Lessons</li>
+          <li>✅ Perfect for students</li>
+        </ul>
+        <a
+          href="/chatai-plan"
+          class="block text-center bg-purple-600 hover:bg-purple-700 rounded-xl py-2"
+          >Choose Chat AI Pack</a
+        >
       </div>
-    </section>
-  </main>
-
-  <!-- Footer -->
-  <footer class="max-w-6xl mx-auto px-4 pb-8 text-xs text-gray-400">
-    <div class="border-t border-white border-opacity-10 pt-4 flex flex-wrap items-center justify-between gap-2">
-      <span>©️ <span id="yr"></span> GoldenSpaceAI</span>
-      <span class="space-x-3">
-        <a class="underline" href="/">Home</a>
-        <a class="underline" href="/contact.html">Contact</a>
-      </span>
     </div>
-  </footer>
-
-  <script>document.getElementById('yr').textContent = new Date().getFullYear();</script>
-</body>
+  </body>
 </html>

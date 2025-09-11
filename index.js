@@ -1,115 +1,132 @@
-// index.js
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("🚀 SpaceAI frontend loaded");
+  const loginBtn = document.getElementById("google-login-btn");
+  const featureButtons = document.querySelectorAll(".feature-btn");
+  const modal = document.getElementById("universe-modal");
+  const nextBtn = document.getElementById("next-btn");
+  const backBtn = document.getElementById("back-btn");
+  const stepTitle = document.getElementById("step-title");
+  const stepDescription = document.getElementById("step-description");
+  const closeModalBtn = document.getElementById("close-modal");
 
-  // -------------------------------
-  // Continue with Google button (kept as is)
-  // -------------------------------
-  const googleBtn = document.getElementById("google-login");
-  if (googleBtn) {
-    googleBtn.addEventListener("click", () => {
-      window.location.href = "/auth/google"; // keeps your Google OAuth flow
+  let currentStep = 0;
+  let loggedInUser = null;
+
+  const steps = [
+    { title: "Welcome to Universe Pack", description: "Explore the whole universe with AI." },
+    { title: "Galaxies", description: "Generate amazing galaxies." },
+    { title: "Planets", description: "Build planets and customize them." },
+    { title: "Rockets", description: "Design rockets to explore space." },
+    { title: "Publish", description: "Save and publish your creations 🚀" }
+  ];
+
+  // ✅ Handle Google login
+  loginBtn.addEventListener("click", async () => {
+    try {
+      // Redirect to backend Google login
+      window.location.href = "/auth/google";
+    } catch (err) {
+      console.error("Login error:", err);
+    }
+  });
+
+  // ✅ Check login status on load
+  async function checkLoginStatus() {
+    try {
+      const res = await fetch("/auth/status");
+      const data = await res.json();
+
+      if (data.loggedIn) {
+        loggedInUser = data.user;
+        loginBtn.textContent = `Welcome, ${loggedInUser.displayName}`;
+        unlockAllFeatures();
+      } else {
+        loginBtn.textContent = "Continue with Google";
+      }
+    } catch (err) {
+      console.error("Status check failed:", err);
+    }
+  }
+
+  // ✅ Unlock all features
+  function unlockAllFeatures() {
+    featureButtons.forEach(btn => {
+      btn.classList.remove("locked");
+      btn.disabled = false;
     });
   }
 
-  // -------------------------------
-  // Space background (kept as is)
-  // -------------------------------
-  document.body.style.backgroundImage = "url('/images/space-bg.jpg')";
-  document.body.style.backgroundSize = "cover";
-  document.body.style.backgroundAttachment = "fixed";
-
-  // -------------------------------
-  // Unlock all plans for testing
-  // -------------------------------
-  function setPlan(plan) {
-    localStorage.setItem("userPlan", plan);
-    alert(`✅ Your plan has been set to: ${plan} (unlocked for testing)`);
-    renderFeatures();
-  }
-
-  const planBtns = document.querySelectorAll(".plan-btn");
-  planBtns.forEach((btn) => {
+  // ✅ Feature button click
+  featureButtons.forEach(btn => {
     btn.addEventListener("click", () => {
-      const plan = btn.dataset.plan; // e.g. "moon", "earth", "universe"
-      setPlan(plan);
+      if (!loggedInUser) {
+        alert("Please log in with Google to unlock this feature.");
+        return;
+      }
+      if (btn.id === "universe-pack-btn") {
+        openModal();
+      } else if (btn.id === "create-planet-btn") {
+        savePlanet();
+      } else {
+        alert(`${btn.textContent} feature unlocked! 🚀`);
+      }
     });
   });
 
-  // -------------------------------
-  // Simple memory: store last 10 ChatAI Qs per user (by email)
-  // -------------------------------
-  function getUserEmail() {
-    return localStorage.getItem("userEmail") || "guest@example.com";
+  // ✅ Open Universe Pack modal
+  function openModal() {
+    currentStep = 0;
+    updateStep();
+    modal.style.display = "flex";
   }
 
-  function saveChatQuestion(question) {
-    const email = getUserEmail();
-    let memory = JSON.parse(localStorage.getItem("chatMemory")) || {};
-    if (!memory[email]) memory[email] = [];
-    memory[email].push(question);
-    if (memory[email].length > 10) {
-      memory[email].shift(); // keep only last 10
+  // ✅ Close modal
+  closeModalBtn.addEventListener("click", () => {
+    modal.style.display = "none";
+  });
+
+  // ✅ Modal navigation
+  nextBtn.addEventListener("click", () => {
+    if (currentStep < steps.length - 1) {
+      currentStep++;
+      updateStep();
     }
-    localStorage.setItem("chatMemory", JSON.stringify(memory));
+  });
+
+  backBtn.addEventListener("click", () => {
+    if (currentStep > 0) {
+      currentStep--;
+      updateStep();
+    }
+  });
+
+  function updateStep() {
+    stepTitle.textContent = steps[currentStep].title;
+    stepDescription.textContent = steps[currentStep].description;
   }
 
-  function getChatMemory() {
-    const email = getUserEmail();
-    let memory = JSON.parse(localStorage.getItem("chatMemory")) || {};
-    return memory[email] || [];
-  }
+  // ✅ Save Planet (backend memory)
+  async function savePlanet() {
+    const planetName = prompt("Enter a name for your planet:");
+    if (!planetName) return;
 
-  // Example hook: when user sends ChatAI question
-  const chatForm = document.getElementById("chat-form");
-  if (chatForm) {
-    chatForm.addEventListener("submit", (e) => {
-      e.preventDefault();
-      const input = document.getElementById("chat-input");
-      const question = input.value.trim();
-      if (question) {
-        saveChatQuestion(question);
-        console.log("💾 Saved question:", question);
-        input.value = "";
+    try {
+      const res = await fetch("/api/savePlanet", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user: loggedInUser.email, planetName })
+      });
+
+      if (res.ok) {
+        alert(`Planet "${planetName}" saved to your account 🌍`);
+      } else {
+        alert("Error saving planet.");
       }
-    });
+    } catch (err) {
+      console.error("Save planet error:", err);
+      alert("Failed to save planet.");
+    }
   }
 
-  // -------------------------------
-  // Save "Create Your Planet" permanently per email
-  // -------------------------------
-  function savePlanet(data) {
-    const email = getUserEmail();
-    let planets = JSON.parse(localStorage.getItem("planets")) || {};
-    if (!planets[email]) planets[email] = [];
-    planets[email].push(data);
-    localStorage.setItem("planets", JSON.stringify(planets));
-  }
-
-  const planetForm = document.getElementById("planet-form");
-  if (planetForm) {
-    planetForm.addEventListener("submit", (e) => {
-      e.preventDefault();
-      const planetName = document.getElementById("planet-name").value.trim();
-      if (planetName) {
-        savePlanet({ name: planetName, created: new Date().toISOString() });
-        alert(`🌍 Planet "${planetName}" saved forever for ${getUserEmail()}`);
-      }
-    });
-  }
-
-  // -------------------------------
-  // Render features based on plan (for testing unlocked)
-  // -------------------------------
-  function renderFeatures() {
-    const plan = localStorage.getItem("userPlan") || "universe"; // default unlocked
-    console.log("✨ Rendering features for plan:", plan);
-
-    // Example: unlock all sections
-    document.querySelectorAll(".feature").forEach((el) => {
-      el.style.display = "block";
-    });
-  }
-
-  renderFeatures();
+  // Run login check on page load
+  checkLoginStatus();
 });

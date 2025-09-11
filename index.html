@@ -7,7 +7,7 @@
     <title>GoldenSpaceAI • Home</title>
     <link rel="icon" href="/favicon.ico" />
     <style>
-      :root {
+      :root{
         --bg:#0a0e15; --panel:#0f1624; --panel2:#0b1320; --border:#1f2a40;
         --text:#e7f4e9; --muted:#cfc6a5; --gold:#f6c64a; --gold2:#eb8b36;
         --shadow:0 22px 70px rgba(0,0,0,.5); --radius:18px; --max:1200px;
@@ -16,15 +16,17 @@
       body{
         margin:0;color:var(--text);
         font:16px/1.6 Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+        /* brighter space bg */
         background:
-          linear-gradient(180deg,rgba(10,14,21,.65),rgba(10,14,21,.65)),
-          radial-gradient(1400px 800px at 50% -20%,rgba(246,198,74,.28),transparent 70%),
+          linear-gradient(180deg,rgba(10,14,21,.55),rgba(10,14,21,.55)),
+          radial-gradient(1400px 800px at 50% -20%,rgba(246,198,74,.30),transparent 70%),
           url("https://images.unsplash.com/photo-1580428180171-bd03c9d95e23?q=80&w=2000&auto=format&fit=crop")
           center/cover no-repeat fixed;
         -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
       }
       a{color:inherit;text-decoration:none}
 
+      /* Top bar */
       .top{position:sticky;top:0;z-index:30;backdrop-filter:blur(10px);
         background:linear-gradient(180deg,rgba(10,14,21,.85),rgba(10,14,21,.5) 60%,transparent);
         border-bottom:1px solid var(--border);padding:max(12px, env(safe-area-inset-top)) 16px 10px;
@@ -35,15 +37,17 @@
         background:radial-gradient(circle at 30% 30%,#ffd86a,#f6c64a 50%,#eb8b36 90%);
         box-shadow:0 0 18px rgba(246,198,74,.5);}
       .spacer{flex:1}
-      .toplinks{display:flex;gap:8px}
+      .toplinks{display:flex;gap:8px;flex-wrap:wrap}
       .toplinks a{padding:8px 12px;border-radius:999px;border:1px solid var(--border);
         color:var(--muted);font-weight:800;font-size:14px;}
       @media(max-width:880px){.toplinks{display:none}}
 
+      /* Shell */
       .wrap{max-width:var(--max);margin:22px auto;padding:0 16px;}
       .layout{display:grid;gap:18px;grid-template-columns:280px 1fr 230px;}
       @media(max-width:980px){.layout{grid-template-columns:1fr}}
 
+      /* Left tiles */
       .leftCol{display:grid;gap:14px;align-content:start;}
       .tile{background:linear-gradient(180deg,var(--panel),var(--panel2));
         border:1px solid var(--border);border-radius:var(--radius);
@@ -51,7 +55,8 @@
       .tile h3{margin:0 0 4px;font-size:16px;color:var(--gold);display:flex;gap:8px;align-items:center;}
       .tile p{margin:0;color:#dfe7f1;font-size:14px}
 
-      .hero{background:linear-gradient(180deg,rgba(14,21,34,.88),rgba(11,17,28,.88));
+      /* Hero */
+      .hero{background:linear-gradient(180deg,rgba(14,21,34,.9),rgba(11,17,28,.9));
         border:1px solid var(--border);border-radius:calc(var(--radius)+2px);
         padding:clamp(18px,4vw,26px);box-shadow:var(--shadow);text-align:center;}
       .hero h1{margin:6px 0 10px;font-size:clamp(26px,5.2vw,54px);line-height:1.08;color:#fff7dc;}
@@ -67,6 +72,7 @@
         background:rgba(255,255,255,.06);border:1px solid var(--border);
         color:#c9d1e6;font-weight:800;font-size:14px;}
 
+      /* Right nav + Google */
       .rightCol{position:sticky;top:86px;align-self:start;display:grid;gap:12px;height:fit-content}
       .sideNav{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--border);
         border-radius:var(--radius);padding:12px;box-shadow:var(--shadow);display:grid;gap:10px;}
@@ -75,6 +81,36 @@
       .google{display:flex;align-items:center;justify-content:center;gap:10px;background:#fff;color:#333;
         border-radius:999px;padding:10px 12px;font-weight:800;border:1px solid rgba(0,0,0,.12);box-shadow:0 6px 18px rgba(0,0,0,.35);}
       .google img{width:18px;height:18px}
+
+      /* Sections: Your Space Pack + ChatAI Pack */
+      .section{margin:24px auto 8px}
+      .section h2{margin:0 0 10px;font-size:20px;color:#fff7dc}
+      .grid{display:grid;gap:14px;grid-template-columns:repeat(12,1fr)}
+      .card{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--border);
+        border-radius:16px;padding:14px;box-shadow:var(--shadow)}
+      .mini{grid-column:span 4}
+      .large{grid-column:span 12}
+      @media(max-width:900px){.mini{grid-column:span 12}.large{grid-column:span 12}}
+      .card h3{margin:0 0 6px;font-size:16px;color:var(--gold)}
+      .card p{margin:0 0 10px;color:#dfe7f1;font-size:14px}
+      .card .row{display:flex;gap:10px;flex-wrap:wrap}
+      .badge{display:inline-block;padding:6px 10px;border:1px solid var(--border);border-radius:999px;color:#cfc6a5;font-weight:800;font-size:12px}
+
+      /* Modal */
+      .modal{position:fixed;inset:0;z-index:1000;display:none;align-items:center;justify-content:center;
+        background:rgba(0,0,0,.55);backdrop-filter:blur(4px)}
+      .modal.on{display:flex}
+      .modal-card{width:min(720px,92vw);background:linear-gradient(180deg,#0e1728,#0a1120);
+        border:1px solid #213052;border-radius:18px;padding:18px;box-shadow:0 22px 70px rgba(0,0,0,.6);color:#e7f4e9}
+      .modal-h{margin:4px 0 8px;font-size:20px;color:var(--gold)}
+      .modal-b{font-size:15px;color:#dfe7f1;min-height:120px}
+      .modal-actions{display:flex;justify-content:space-between;gap:10px;margin-top:12px}
+      .btn-sm{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px;border-radius:12px;font-weight:800;cursor:pointer;border:1px solid var(--border);color:#e7f4e9;background:rgba(255,255,255,.04)}
+      .btn-gold{background:linear-gradient(180deg,var(--gold),var(--gold2));color:#1a1200;border-color:rgba(0,0,0,.25)}
+      .btn-ghost{background:transparent;color:#cfc6a5;border:1px solid var(--border)}
+      .upsell{display:none;background:linear-gradient(180deg,rgba(246,198,74,.08),rgba(246,198,74,.02));
+        border:1px solid rgba(246,198,74,.28);padding:12px;border-radius:14px;margin-top:12px}
+      .note{font-size:12px;color:#bfc9de;opacity:.9;margin-top:6px}
 
       footer{max-width:var(--max);margin:24px auto 36px;padding:0 16px;
         color:#aeb7c5;font-size:12px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;
@@ -93,21 +129,24 @@
         <a href="/learn-physics.html">Learn Physics</a>
         <a href="/create-planet.html">Create Planet</a>
         <a href="/plans.html">Plans</a>
+        <a href="/privacy.html">Privacy</a>
+        <a href="/terms.html">Terms</a>
+        <a href="/refund.html">Refund</a>
       </div>
     </div>
 
     <main class="wrap">
-      <section class="layout">
-        <!-- Left tiles -->
-        <aside class="leftCol">
+      <section class="layout" aria-label="Homepage">
+        <!-- Left tiles (kept) -->
+        <aside class="leftCol" aria-label="Highlights">
           <div class="tile"><h3>🧠 Chat with AI</h3><p>Company-grade chat with Gemini, with daily plan limits.</p></div>
           <div class="tile"><h3>🔎 Learn Info</h3><p>Golden summaries and topic insights — powered by Gemini.</p></div>
           <div class="tile"><h3>📘 Learn Physics</h3><p>Curated lessons and Gemini tutoring support.</p></div>
           <div class="tile"><h3>🪐 Create Your Planet</h3><p>Design oceans, rings, moons — export your own world.</p></div>
         </aside>
 
-        <!-- Hero -->
-        <section class="hero">
+        <!-- Hero (kept + legal button) -->
+        <section class="hero" aria-label="Welcome">
           <h1>Welcome to <span style="color:var(--gold)">GoldenSpaceAI</span></h1>
           <p>Ask AI, explore knowledge, learn physics, and design worlds — all in a golden suit.</p>
           <div class="cta">
@@ -116,11 +155,15 @@
             <a class="btn ghost" href="/search-info.html">Quick Search</a>
             <a class="btn ghost" href="/privacy.html">View Legal Pages</a>
           </div>
-          <div class="quickRow"><span class="chip">Private by design</span><span class="chip">Server-secured Gemini</span><span class="chip">Mobile ready</span></div>
+          <div class="quickRow">
+            <span class="chip">Private by design</span>
+            <span class="chip">Server-secured Gemini</span>
+            <span class="chip">Mobile ready</span>
+          </div>
         </section>
 
-        <!-- Right nav -->
-        <aside class="rightCol">
+        <!-- Right navigation (kept) -->
+        <aside class="rightCol" aria-label="Navigate">
           <nav class="sideNav">
             <a class="navbtn" href="/advanced-ai.html">Chat with AI</a>
             <a class="navbtn" href="/search-info.html">Learn Info</a>
@@ -129,14 +172,115 @@
             <a class="navbtn" href="/plans.html">See Plans</a>
             <a class="navbtn" href="/privacy.html">Legal Pages</a>
           </nav>
-          <a class="google" href="/auth/google">
-            <img src="https://developers.google.com/identity/images/g-logo.png"/> Continue with Google
+          <!-- Google sign-in -->
+          <a class="google" href="/auth/google" aria-label="Continue with Google">
+            <img src="https://developers.google.com/identity/images/g-logo.png" alt="">
+            Continue with Google
           </a>
         </aside>
       </section>
+
+      <!-- ================== YOUR SPACE PACK ================== -->
+      <section class="section" aria-label="Your Space Pack">
+        <h2>🌌 Your Space Pack</h2>
+        <div class="grid">
+          <!-- 3 mini cards -->
+          <div class="card mini">
+            <h3>🚀 Create Your Rocket</h3>
+            <p>Learn rocket stages & parts. Ready to build? Start your custom design.</p>
+            <div class="row">
+              <span class="badge">Physics-based</span>
+              <button class="btn btn-ghost" data-open="rocket">Learn</button>
+              <button class="btn gold" data-build="rocket">Build</button>
+            </div>
+          </div>
+          <div class="card mini">
+            <h3>🛰️ Create Your Satellite</h3>
+            <p>Understand payloads, buses & orbits. Then assemble your satellite.</p>
+            <div class="row">
+              <span class="badge">Orbit chooser</span>
+              <button class="btn btn-ghost" data-open="satellite">Learn</button>
+              <button class="btn gold" data-build="satellite">Build</button>
+            </div>
+          </div>
+          <div class="card mini">
+            <h3>🌍 Create Advanced Planet</h3>
+            <p>Advanced planet designer: atmosphere, gravity, rings, moons & biomes.</p>
+            <div class="row">
+              <span class="badge">Advanced editor</span>
+              <button class="btn btn-ghost" data-open="planet">Learn</button>
+              <button class="btn gold" data-build="planet">Build</button>
+            </div>
+          </div>
+
+          <!-- 1 large card -->
+          <div class="card large">
+            <h3>🪐 Create Your Universe (Hub)</h3>
+            <p>Build your own space world: up to 3 galaxies, 10 planets, 2 rockets & 2 satellites. Place planets you made into your universe.</p>
+            <div class="row">
+              <span class="badge">Universe hub</span>
+              <button class="btn btn-ghost" data-open="universe">Learn</button>
+              <button class="btn gold" data-build="universe">Create Your Universe</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================== CHATAI PACK ================== -->
+      <section class="section" aria-label="ChatAI Pack">
+        <h2>🤖 ChatAI Pack</h2>
+        <div class="grid">
+          <div class="card mini">
+            <h3>📸 Solve Homework (Images)</h3>
+            <p>Upload a page; get step-by-step help. (Daily caps by plan.)</p>
+            <div class="row">
+              <button class="btn gold" onclick="location.href='/homework-helper.html'">Open</button>
+            </div>
+          </div>
+          <div class="card mini">
+            <h3>🧠 Chat Advanced AI</h3>
+            <p>Deep reasoning, longer context chat powered by Gemini.</p>
+            <div class="row">
+              <button class="btn gold" onclick="location.href='/advanced-ai.html'">Open</button>
+            </div>
+          </div>
+          <div class="card mini">
+            <h3>📚 Search Educational Lessons</h3>
+            <p>Find and summarize topics fast with clean golden summaries.</p>
+            <div class="row">
+              <button class="btn gold" onclick="location.href='/search-info.html'">Open</button>
+            </div>
+          </div>
+        </div>
+      </section>
     </main>
 
-    <footer>
+    <!-- Modal (info + upsell) -->
+    <div id="infoModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="infoTitle">
+      <div class="modal-card">
+        <h2 id="infoTitle" class="modal-h"></h2>
+        <div id="infoBody" class="modal-b"></div>
+        <div class="modal-actions">
+          <button id="infoBack" class="btn-sm btn-ghost">← Back</button>
+          <div>
+            <button id="infoClose" class="btn-sm btn-ghost" style="margin-right:8px">Close</button>
+            <button id="infoNext" class="btn-sm btn-gold">Next →</button>
+          </div>
+        </div>
+        <div id="infoNote" class="note"></div>
+        <div id="infoUpsell" class="upsell">
+          <div style="font-weight:900;color:#fff3ce;margin-bottom:6px;">Upgrade required</div>
+          <div style="font-size:14px;color:#f3e9c9;">
+            This feature requires the <b>Your Space Pack</b>. Unlock the universe hub and builders.
+          </div>
+          <div style="margin-top:10px;">
+            <a class="btn-sm btn-gold" href="/plans.html">See Plans</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer role="contentinfo">
       <div>©️ <span id="yr"></span> GoldenSpaceAI</div>
       <div>
         <a href="/privacy.html">Privacy</a> · 
@@ -145,6 +289,172 @@
       </div>
     </footer>
 
-    <script>document.getElementById('yr').textContent=new Date().getFullYear()</script>
+    <script>
+      document.getElementById('yr').textContent = new Date().getFullYear();
+
+      // Replace Google button with user pill if logged in
+      (async () => {
+        try {
+          const res = await fetch('/api/me', { credentials: 'include' });
+          if (!res.ok) return;
+          const data = await res.json();
+          const btn = document.querySelector('.google');
+          if (data.user && btn) {
+            const pill = document.createElement('div');
+            pill.style.display='flex'; pill.style.alignItems='center'; pill.style.gap='10px';
+            pill.style.padding='10px 12px'; pill.style.borderRadius='999px';
+            pill.style.background='rgba(255,255,255,.08)'; pill.style.border='1px solid #1f2a40';
+            pill.innerHTML = `
+              <img src="${data.user.photo||''}" style="width:22px;height:22px;border-radius:50%;object-fit:cover"/>
+              <span style="font-weight:800">${data.user.name||'Signed in'}</span>
+              <a href="/plans.html" style="margin-left:8px;color:#cfc6a5;text-decoration:none;font-weight:800">Plan: ${String(data.plan||'—').toUpperCase()}</a>
+            `;
+            btn.replaceWith(pill);
+          }
+        } catch {}
+      })();
+
+      // ---------- Learn flows & gating ----------
+      const LEARN_STEPS = {
+        rocket: {
+          title: 'Create Your Rocket',
+          steps: [
+            'Rockets have stages for efficiency. Stage 1 provides most thrust near sea level.',
+            'Common fuels: RP-1/LOX, Liquid Hydrogen/LOX, and hypergolics for RCS.',
+            'Key parts: payload fairing, avionics, interstage, engines, tanks, fins.',
+            'Guidance & control keep the rocket on trajectory using gimbals and RCS.',
+            'Ready to build your custom rocket?'
+          ],
+          buildUrl: '/build-rocket.html'
+        },
+        satellite: {
+          title: 'Create Your Satellite',
+          steps: [
+            'Satellites consist of payload (mission) and bus (power, comms, thermal).',
+            'Choose orbits: LEO for imaging, MEO for navigation, GEO for comms.',
+            'Subsystems: power (solar/battery), propulsion, ADCS, thermal control.',
+            'Data links and ground segment plan are crucial for ops.',
+            'Ready to assemble your satellite?'
+          ],
+          buildUrl: '/build-satellite.html'
+        },
+        planet: {
+          title: 'Create Advanced Planet',
+          steps: [
+            'Define mass, radius, atmosphere, temperature & gravity.',
+            'Add oceans, rings, moons; tune axial tilt and day length.',
+            'Biome presets or custom distributions for life potential.',
+            'Export or save to place inside your Universe later.',
+            'Ready to open the advanced planet designer?'
+          ],
+          buildUrl: '/create-advanced-planet.html'
+        },
+        universe: {
+          title: 'Create Your Universe',
+          steps: [
+            'Your Space Hub: manage galaxies, planets, rockets & satellites.',
+            'Start with up to 3 galaxies and 10 planets total.',
+            'Attach 2 rockets & 2 satellites; expand later with add-ons.',
+            'Place planets you built into your galaxies.',
+            'Ready to open Your Universe?'
+          ],
+          buildUrl: '/your-space.html'
+        }
+      };
+
+      const modal = document.getElementById('infoModal');
+      const titleEl = document.getElementById('infoTitle');
+      const bodyEl  = document.getElementById('infoBody');
+      const noteEl  = document.getElementById('infoNote');
+      const upsellEl= document.getElementById('infoUpsell');
+      const nextBtn = document.getElementById('infoNext');
+      const backBtn = document.getElementById('infoBack');
+      const closeBtn= document.getElementById('infoClose');
+
+      let activeKey = null;
+      let stepIdx = 0;
+
+      function renderStep(){
+        const cfg = LEARN_STEPS[activeKey];
+        titleEl.textContent = cfg.title;
+        bodyEl.textContent = cfg.steps[stepIdx];
+        noteEl.textContent = `Step ${stepIdx+1} of ${cfg.steps.length}`;
+        backBtn.style.visibility = stepIdx === 0 ? 'hidden' : 'visible';
+        nextBtn.textContent = (stepIdx === cfg.steps.length - 1) ? 'Build →' : 'Next →';
+        upsellEl.style.display = 'none';
+      }
+
+      function openLearn(key){
+        activeKey = key;
+        stepIdx = 0;
+        renderStep();
+        modal.classList.add('on');
+      }
+
+      document.querySelectorAll('[data-open]').forEach(btn=>{
+        btn.addEventListener('click', e=>{
+          e.preventDefault();
+          openLearn(btn.getAttribute('data-open'));
+        });
+      });
+
+      document.querySelectorAll('[data-build]').forEach(btn=>{
+        btn.addEventListener('click', async e=>{
+          e.preventDefault();
+          // instant build: still check plan
+          activeKey = btn.getAttribute('data-build');
+          stepIdx = LEARN_STEPS[activeKey].steps.length - 1;
+          renderStep();
+          await tryBuild();
+        });
+      });
+
+      backBtn.addEventListener('click', ()=>{ if(stepIdx>0){ stepIdx--; renderStep(); }});
+      closeBtn.addEventListener('click', ()=> modal.classList.remove('on'));
+
+      nextBtn.addEventListener('click', async ()=>{
+        const cfg = LEARN_STEPS[activeKey];
+        if(stepIdx < cfg.steps.length - 1){ stepIdx++; renderStep(); return; }
+        await tryBuild();
+      });
+
+      async function tryBuild(){
+        try{
+          const r = await fetch('/api/me', { credentials:'include' });
+          const j = await r.json();
+          const plan = (j.plan||'').toLowerCase();
+          const hasUniverse = (plan === 'yourspace' || plan === 'universe' || plan === 'sun'); 
+          // allow Sun to design planets but gate Universe hub if you prefer; tweak here.
+
+          const cfg = LEARN_STEPS[activeKey];
+
+          if(activeKey === 'universe'){
+            if(plan === 'yourspace' || plan === 'universe'){
+              noteEl.textContent = '✅ Access granted. Loading Your Space Hub…';
+              setTimeout(()=>{ window.location.href = cfg.buildUrl; }, 600);
+            } else {
+              upsellEl.style.display='block';
+              noteEl.textContent = 'This feature requires the Your Space Pack.';
+            }
+            return;
+          }
+
+          // For rocket/satellite/planet builders:
+          if(hasUniverse){
+            noteEl.textContent = '✅ Access granted. Opening builder…';
+            setTimeout(()=>{ window.location.href = cfg.buildUrl; }, 600);
+          }else{
+            upsellEl.style.display='block';
+            noteEl.textContent = 'Upgrade required to build. You can still read the basics above.';
+          }
+        }catch(e){
+          upsellEl.style.display='block';
+          noteEl.textContent = 'Unable to verify your plan. Please sign in.';
+        }
+      }
+
+      modal.addEventListener('click', (ev)=>{ if(ev.target===modal) modal.classList.remove('on'); });
+      document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') modal.classList.remove('on'); });
+    </script>
   </body>
 </html>

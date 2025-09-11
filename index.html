@@ -125,26 +125,7 @@
       .google img { width: 18px; height: 18px; }
       .google:hover { filter: brightness(1.02); }
 
-      /* ===== Footer ===== */
-      footer {
-        max-width: var(--max); margin: 24px auto 36px; padding: 0 16px;
-        color: #aeb7c5; font-size: 12px; display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap;
-        border-top: 1px solid var(--border); padding-top: 14px;
-      }
-
-      /* ===== Mobile tweaks ===== */
-      @media (max-width: 980px) {
-        .leftCol { order: 2; }
-        .hero { order: 1; }
-        .rightCol { order: 3; position: static; }
-        .sideNav { display: flex; flex-wrap: wrap; justify-content: center; }
-        .google { margin-top: 6px; }
-      }
-
-      :focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; border-radius: 8px; }
-      @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
-
-      /* ====== Modal for "Create Your Universe" ====== */
+      /* ===== Modal for "Create Your Universe" ===== */
       .modal {
         position: fixed; inset: 0; z-index: 1000;
         display: none; align-items: center; justify-content: center;
@@ -186,6 +167,7 @@
         <a href="/learn-physics.html">Learn Physics</a>
         <a href="/create-planet.html">Create Planet</a>
         <a href="/plans.html">Plans</a>
+        <a href="/chatai.html">ChatAI</a>
       </div>
     </div>
 
@@ -210,13 +192,24 @@
             <p>Design oceans, rings, moons — export your world as JSON.</p>
           </div>
 
-          <!-- Learn & Build tour entry (modal opener) -->
+          <!-- NEW TILE: Create Your Universe -->
           <div class="tile" id="universeTile">
             <h3>🌌 Create Your Universe</h3>
             <p>Build galaxies and place your planets inside your own space world.</p>
             <div style="margin-top:10px;">
               <a href="#" id="openUniverse" class="btn gold" aria-label="Learn about Your Space Pack">
                 Start → Learn & Build
+              </a>
+            </div>
+          </div>
+
+          <!-- NEW TILE: ChatAI (Homework Helper) -->
+          <div class="tile" id="chataiTile">
+            <h3>🤖 ChatAI — Homework Helper</h3>
+            <p>Upload a homework photo and ask what you don’t understand. Earth pack: <b>2 pages/day</b>. Upgrade for more.</p>
+            <div style="margin-top:10px;">
+              <a href="/chatai.html" class="btn gold" aria-label="Open ChatAI Homework Helper">
+                Open ChatAI
               </a>
             </div>
           </div>
@@ -229,7 +222,7 @@
           </h1>
           <p>
             Your all-in-one space companion: ask our Advanced AI, explore knowledge,
-            learn physics with tools, and design entire worlds — all in a golden suit.
+            learn physics with tools, design entire worlds — and get help with homework via ChatAI.
           </p>
 
           <div class="cta">
@@ -252,6 +245,7 @@
             <a class="navbtn" href="/search-info.html">Search Info</a>
             <a class="navbtn" href="/learn-physics.html">Learn Physics</a>
             <a class="navbtn" href="/create-planet.html">Create Planet</a>
+            <a class="navbtn" href="/chatai.html">ChatAI</a>
             <a class="navbtn" href="/plans.html">See Plans</a>
           </nav>
 
@@ -262,150 +256,134 @@
           </a>
         </aside>
       </section>
-
-      <!-- ===== Universe Hub (Your Space Pack only) ===== -->
-      <section aria-label="Universe Hub" style="margin-top:18px">
-        <div class="tile" style="padding:20px; border-color:#6b21a8; box-shadow:0 22px 70px rgba(107,33,168,.25)">
-          <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap">
-            <h2 style="margin:0; font-size:22px; color:#e9d5ff; display:flex; align-items:center; gap:10px">
-              <span style="display:inline-block;width:14px;height:14px;border-radius:50%;
-                background:radial-gradient(circle at 30% 30%, #a78bfa, #7c3aed 60%, #4c1d95 95%);
-                box-shadow:0 0 16px rgba(167,139,250,.6)"></span>
-              Your Space — Universe Hub
-            </h2>
-            <span class="chip" style="background:rgba(124,58,237,.18); border-color:#6b21a8; color:#e9d5ff; font-weight:900">
-              Your Space Pack only
-            </span>
-          </div>
-
-          <p style="margin:10px 0 16px; color:#d8cff6">
-            Build a personal space world: galaxies → planets & stars → satellites & rockets.
-          </p>
-
-          <!-- Large Create-Your-Universe card (full width) -->
-          <a
-            class="req-universe"
-            data-target="/your-space.html"
-            style="
-              text-decoration:none; color:inherit;
-              background:linear-gradient(180deg,#1a1236,#110a26);
-              border:1px solid #6b21a8; border-radius:18px; padding:18px;
-              display:block; box-shadow:0 18px 50px rgba(124,58,237,.18); margin-bottom:14px;
-            "
-          >
-            <div style="display:flex; gap:14px; align-items:flex-start; flex-wrap:wrap;">
-              <div style="flex:1; min-width:240px">
-                <h3 style="margin:0 0 6px; color:#f1e7ff; font-size:20px">Create Your Universe</h3>
-                <p style="margin:0; color:#d8ccff; font-size:15px">
-                  Open the Space World hub: manage up to <b>3 galaxies</b>, place <b>10 planets</b>,
-                  attach <b>2 rockets</b> & <b>2 satellites</b>, and grow your cosmos over time.
-                </p>
-              </div>
-              <span class="btn gold" style="align-self:center; padding:10px 14px;">Open Universe Hub</span>
-            </div>
-          </a>
-
-          <!-- Three inner boxes -->
-          <div style="
-            display:grid; gap:14px;
-            grid-template-columns: repeat(3, minmax(220px,1fr));
-          ">
-            <!-- Advanced Planet -->
-            <a class="req-universe" data-target="/create-planet.html?mode=advanced&dest=universe"
-               style="
-                 text-decoration:none; color:inherit;
-                 background:linear-gradient(180deg,#16112a,#0f0b21);
-                 border:1px solid #6b21a8; border-radius:16px; padding:16px;
-                 display:flex; flex-direction:column; justify-content:space-between; min-height:170px;
-               ">
-              <div>
-                <h3 style="margin:0 0 6px; color:#e9d5ff; font-size:18px">Create an Advanced Planet</h3>
-                <p style="margin:0; color:#c9b6f7; font-size:14px">
-                  Oceans, atmospheres, rings, biomes — then place it in your Universe.
-                </p>
-              </div>
-              <div style="display:flex; justify-content:flex-end; margin-top:14px">
-                <span class="btn gold" style="padding:10px 12px">Open designer</span>
-              </div>
-            </a>
-
-            <!-- Rocket -->
-            <a class="req-universe" data-target="/create-rocket.html"
-               style="
-                 text-decoration:none; color:inherit;
-                 background:linear-gradient(180deg,#16112a,#0f0b21);
-                 border:1px solid #6b21a8; border-radius:16px; padding:16px;
-                 display:flex; flex-direction:column; justify-content:space-between; min-height:170px;
-               ">
-              <div>
-                <h3 style="margin:0 0 6px; color:#e9d5ff; font-size:18px">Create a Rocket</h3>
-                <p style="margin:0; color:#c9b6f7; font-size:14px">
-                  Engines, stages, payloads — launch to your planets.
-                </p>
-              </div>
-              <div style="display:flex; justify-content:flex-end; margin-top:14px">
-                <span class="btn gold" style="padding:10px 12px">Build rocket</span>
-              </div>
-            </a>
-
-            <!-- Satellite -->
-            <a class="req-universe" data-target="/create-satellite.html"
-               style="
-                 text-decoration:none; color:inherit;
-                 background:linear-gradient(180deg,#16112a,#0f0b21);
-                 border:1px solid #6b21a8; border-radius:16px; padding:16px;
-                 display:flex; flex-direction:column; justify-content:space-between; min-height:170px;
-               ">
-              <div>
-                <h3 style="margin:0 0 6px; color:#e9d5ff; font-size:18px">Create a Satellite</h3>
-                <p style="margin:0; color:#c9b6f7; font-size:14px">
-                  Orbits, instruments, relays — attach to any planet in your Universe.
-                </p>
-              </div>
-              <div style="display:flex; justify-content:flex-end; margin-top:14px">
-                <span class="btn gold" style="padding:10px 12px">Build satellite</span>
-              </div>
-            </a>
-          </div>
-
-          <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap">
-            <a class="btn ghost" href="/plans.html#universe" aria-label="See Universe Pack details">
-              See Universe Pack details
-            </a>
-            <a class="btn gold req-universe" data-target="/your-space.html" aria-label="Open Your Space world">
-              Open Your Space world
-            </a>
-          </div>
-        </div>
-      </section>
-
-      <!-- Signed-in/usage badges -->
-      <div id="userBadge" style="margin: 8px 0 0; font-size: 13px">
-        <span
-          id="planTag"
-          style="
-            padding: 4px 8px;
-            border-radius: 999px;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            background: #0f1520;
-          "
-        >
-          Plan: <b>—</b>
-        </span>
-        <span id="quotaLine" style="margin-left: 10px; opacity: 0.85">Loading limits…</span>
-      </div>
-      <div id="userAuth" style="margin:10px 0; font-size:14px; color:white;">
-        <span id="userInfo"></span>
-        <button id="logoutBtn" style="margin-left:10px; display:none;">Logout</button>
-      </div>
     </main>
 
-    <footer role="contentinfo">
-      <div>©️ <span id="yr"></span> GoldenSpaceAI — Built with stardust and ambition.</div>
-      <div>
-        <a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a> · <a href="/contact.html">Contact</a>
+    <!-- Sign-in pill swap (kept) -->
+    <script>
+      (async () => {
+        try {
+          const res = await fetch("/me", { credentials: "include" });
+          const { user } = await res.json();
+          const btn = document.querySelector(".google"); // your login button
+
+          if (user && btn) {
+            const pill = document.createElement("div");
+            pill.style.display = "flex";
+            pill.style.alignItems = "center";
+            pill.style.gap = "10px";
+            pill.style.padding = "10px 12px";
+            pill.style.borderRadius = "999px";
+            pill.style.background = "rgba(255,255,255,.08)";
+            pill.style.border = "1px solid #1f2a40";
+            pill.innerHTML = `
+              <img src="${user.photo || ""}" alt="" style="width:22px;height:22px;border-radius:50%;object-fit:cover"/>
+              <span style="font-weight:800">${user.name || "Signed in"}</span>
+              <a href="/auth/logout" style="margin-left:8px;color:#cfc6a5;text-decoration:none;font-weight:800">Logout</a>
+            `;
+            btn.replaceWith(pill);
+          }
+        } catch {}
+      })();
+    </script>
+
+    <!-- Footer -->
+    <footer role="contentinfo" style="max-width: var(--max); margin: 24px auto 36px; padding: 0 16px; color: #aeb7c5; font-size: 12px;">
+      <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;border-top: 1px solid var(--border); padding-top: 14px;">
+        <div>©️ <span id="yr"></span> GoldenSpaceAI — Built with stardust and ambition.</div>
+        <div>
+          <a href="/privacy.html">Privacy Policy</a> ·
+          <a href="/terms.html">Terms of Service</a> ·
+          <a href="/refund.html">Refund Policy</a> ·
+          <a href="/contact.html">Contact</a>
+        </div>
       </div>
     </footer>
+    <script> document.getElementById("yr").textContent = new Date().getFullYear(); </script>
+
+    <!-- Plan badge (kept) -->
+    <script>
+      async function loadUserBadge() {
+        try {
+          const res = await fetch('/me', { credentials: 'include' });
+          if (!res.ok) throw new Error('not ok');
+          const data = await res.json();
+
+          const planTag = document.getElementById('planTag');
+          const quotaLine = document.getElementById('quotaLine');
+
+          if (!data.user) {
+            if (planTag) planTag.innerHTML = 'Plan: <b>Guest</b>';
+            if (quotaLine) quotaLine.textContent = 'Sign in to track usage';
+            return;
+          }
+
+          const { plan, usage } = data;
+          if (planTag) planTag.innerHTML = `Plan: <b>${(plan || '').toUpperCase()}</b>`;
+
+          if (usage?.remaining && quotaLine) {
+            const r = usage.remaining;
+            quotaLine.textContent =
+              `Today — Ask: ${Number.isFinite(r.ask) ? r.ask : '∞'}, ` +
+              `Search: ${Number.isFinite(r.search) ? r.search : '∞'}, ` +
+              `Physics: ${Number.isFinite(r.physics) ? r.physics : '∞'}`;
+          } else if (quotaLine) {
+            quotaLine.textContent = 'Usage data unavailable';
+          }
+        } catch (e) {
+          console.warn('Badge load failed', e);
+          const q = document.getElementById('quotaLine');
+          if (q) q.textContent = 'Unable to load usage';
+        }
+      }
+      loadUserBadge();
+    </script>
+
+    <!-- Simple user pill (kept) -->
+    <div id="userBadge" style="margin: 8px 0 0; font-size: 13px">
+      <span
+        id="planTag"
+        style="
+          padding: 4px 8px;
+          border-radius: 999px;
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          background: #0f1520;
+        "
+      >Plan: <b>—</b></span>
+      <span id="quotaLine" style="margin-left: 10px; opacity: 0.85">Loading limits…</span>
+    </div>
+    <div id="userBadge" style="margin:10px; font-size:14px; color:white;">
+      <span id="userInfo"></span>
+      <button id="logoutBtn" style="margin-left:10px; display:none;">Logout</button>
+    </div>
+
+    <script>
+    async function loadUser() {
+      try {
+        const res = await fetch("/api/me");
+        const data = await res.json();
+        if (data.loggedIn) {
+          document.getElementById("userInfo").innerHTML = `
+            <img src="${data.user.photo}" 
+                 style="width:28px; height:28px; border-radius:50%; vertical-align:middle; margin-right:6px;">
+            ${data.user.name} (${data.plan})
+          `;
+          document.getElementById("logoutBtn").style.display = "inline-block";
+        } else {
+          document.getElementById("userInfo").innerHTML = 
+            '<a href="/auth/google">Sign in with Google</a>';
+        }
+      } catch (e) {
+        console.error("Failed to load /api/me", e);
+      }
+    }
+
+    document.getElementById("logoutBtn").onclick = async () => {
+      await fetch("/logout", { method: "POST" });
+      window.location.reload();
+    };
+
+    loadUser();
+    </script>
 
     <!-- ===== Modal HTML (Create Your Universe flow) ===== -->
     <div id="universeModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="univTitle">
@@ -427,105 +405,14 @@
             Access the Space World hub (3 galaxies, 10 planets, 2 rockets & 2 satellites), and place your created planets into your own universe.
           </div>
           <div style="margin-top:10px;">
-            <a class="btn-sm btn-gold" href="/plans.html#universe">Unlock Your Space Pack</a>
+            <a class="btn-sm btn-gold" href="/plans.html">Unlock Your Space Pack</a>
           </div>
         </div>
       </div>
     </div>
 
     <script>
-      // Footer year
-      document.getElementById("yr").textContent = new Date().getFullYear();
-
-      // Replace Google button with profile pill when signed in
-      (async () => {
-        try {
-          const r = await fetch("/api/me", { credentials: "include" });
-          const { user } = await r.json();
-          const btn = document.querySelector(".google"); // your login button
-
-          if (user && btn) {
-            const pill = document.createElement("div");
-            pill.style.display = "flex";
-            pill.style.alignItems = "center";
-            pill.style.gap = "10px";
-            pill.style.padding = "10px 12px";
-            pill.style.borderRadius = "999px";
-            pill.style.background = "rgba(255,255,255,.08)";
-            pill.style.border = "1px solid #1f2a40";
-            pill.innerHTML = `
-              <img src="${user.photo || ""}" alt="" style="width:22px;height:22px;border-radius:50%;object-fit:cover"/>
-              <span style="font-weight:800">${user.name || "Signed in"}</span>
-              <a href="/auth/logout" style="margin-left:8px;color:#cfc6a5;text-decoration:none;font-weight:800">Logout</a>
-            `;
-            btn.replaceWith(pill);
-          }
-        } catch {}
-      })();
-
-      // Badge & usage block
-      async function loadUserBadge() {
-        try {
-          const res = await fetch('/api/me', { credentials: 'include' });
-          if (!res.ok) throw new Error('not ok');
-          const data = await res.json();
-
-          const planTag = document.getElementById('planTag');
-          const quotaLine = document.getElementById('quotaLine');
-
-          if (!data.user) {
-            planTag.innerHTML = 'Plan: <b>Guest</b>';
-            quotaLine.textContent = 'Sign in to track usage';
-            return;
-          }
-
-          const { plan, remaining } = data;
-          planTag.innerHTML = `Plan: <b>${(plan || '').toUpperCase()}</b>`;
-
-          if (remaining) {
-            const r = remaining;
-            quotaLine.textContent =
-              `Today — Ask: ${Number.isFinite(r.ask) ? r.ask : '∞'}, ` +
-              `Search: ${Number.isFinite(r.search) ? r.search : '∞'}, ` +
-              `Physics: ${Number.isFinite(r.physics) ? r.physics : '∞'}`;
-          } else {
-            quotaLine.textContent = 'Usage data unavailable';
-          }
-        } catch (e) {
-          console.warn('Badge load failed', e);
-          const q = document.getElementById('quotaLine');
-          if (q) q.textContent = 'Unable to load usage';
-        }
-      }
-      loadUserBadge();
-
-      // Simple auth block (header badge)
-      async function loadUser() {
-        try {
-          const res = await fetch("/api/me", { credentials: "include" });
-          const data = await res.json();
-          if (data.loggedIn) {
-            document.getElementById("userInfo").innerHTML = `
-              <img src="${data.user.photo}" 
-                   style="width:28px; height:28px; border-radius:50%; vertical-align:middle; margin-right:6px;">
-              ${data.user.name} (${data.plan})
-            `;
-            document.getElementById("logoutBtn").style.display = "inline-block";
-          } else {
-            document.getElementById("userInfo").innerHTML = 
-              '<a href="/auth/google">Sign in with Google</a>';
-          }
-        } catch (e) {
-          console.error("Failed to load /api/me", e);
-        }
-      }
-      document.getElementById("logoutBtn").onclick = async () => {
-        await fetch("/logout", { method: "POST" });
-        window.location.reload();
-      };
-      loadUser();
-
-      // --- Modal logic for Create Your Universe (Learn & Build tour) ---
+      // --- Modal logic for Create Your Universe
       const steps = [
         "Welcome to Your Space World. Build a personal universe that lives across sessions.",
         "Create up to 3 galaxies. Name them, style them, and organize your worlds.",
@@ -568,7 +455,7 @@
         if (idx < steps.length - 1) {
           idx++; renderStep(); return;
         }
-        // Last step: check plan & route
+        // Last step: check plan
         try {
           const r = await fetch('/api/me', { credentials: 'include' });
           const j = await r.json();
@@ -576,6 +463,7 @@
           const hasUniverse = (plan === 'yourspace' || plan === 'universe');
 
           if (hasUniverse) {
+            // TODO: navigate to your builder page once ready
             noteEl.textContent = "✅ Access granted. Loading Your Space World…";
             setTimeout(()=>{ window.location.href = "/your-space.html"; }, 600);
           } else {
@@ -588,36 +476,10 @@
         }
       });
 
-      // Gate Universe-only links (big & small cards)
-      (async function gateUniverse() {
-        try {
-          const res = await fetch('/api/me', { credentials: 'include' });
-          const data = await res.json();
-          const p = (data?.plan || '').toLowerCase();
-          const isUniverse = (p === 'yourspace' || p === 'universe');
-
-          document.querySelectorAll('.req-universe').forEach(el => {
-            el.addEventListener('click', (e) => {
-              const target = el.getAttribute('data-target') || el.getAttribute('href') || '/';
-              if (!isUniverse) {
-                e.preventDefault();
-                alert('Upgrade to the Universe Pack to unlock this feature.');
-                window.location.href = '/plans.html#universe';
-              } else if (el.hasAttribute('data-target')) {
-                e.preventDefault();
-                window.location.href = target;
-              }
-            });
-          });
-        } catch {
-          document.querySelectorAll('.req-universe').forEach(el => {
-            el.addEventListener('click', (evt) => {
-              evt.preventDefault();
-              window.location.href = '/plans.html#universe';
-            });
-          });
-        }
-      })();
+      // Close modal on backdrop click
+      modal.addEventListener('click', (ev)=>{ if (ev.target === modal) modal.classList.remove('on'); });
+      // ESC to close
+      document.addEventListener('keydown', (e)=>{ if (e.key === 'Escape') modal.classList.remove('on'); });
     </script>
   </body>
 </html>

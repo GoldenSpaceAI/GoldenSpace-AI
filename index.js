@@ -211,7 +211,13 @@ app.get(DEFAULT_CALLBACK_PATH, (req, res, next) => {
     callbackURL,
   })(req, res, () => res.redirect("/"));
 });
-
+app.get("/my-planets.html", (req, res) => {
+  if (!(req.isAuthenticated && req.isAuthenticated())) {
+    if (req.accepts("html")) return res.redirect("/login.html");
+    return res.status(401).json({ error: "Sign in required" });
+  }
+  res.sendFile(path.join(__dirname, "my-planets.html"));
+});
 app.post("/logout", (req, res, next) => {
   req.logout((err) => {
     if (err) return next(err);

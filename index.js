@@ -7,12 +7,11 @@ const session = require("express-session");
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// Fix __dirname for CommonJS
-const __dirname = path.resolve();
-
 // Middleware
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+
+// Use __dirname directly (already available in CommonJS)
 app.use(express.static(__dirname));
 
 app.use(
@@ -23,7 +22,7 @@ app.use(
   })
 );
 
-// Fake login (for testing)
+// Fake login (testing only)
 app.get("/auth/google", (req, res) => {
   req.session.user = { name: "Test User", email: "test@goldenspaceai.space" };
   res.redirect("/");

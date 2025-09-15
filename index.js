@@ -1,10 +1,16 @@
-const express = require("express");
-const path = require("path");
-const bodyParser = require("body-parser");
-const session = require("express-session");
+import express from "express";
+import path from "path";
+import bodyParser from "body-parser";
+import session from "express-session";
+import fetch from "node-fetch";
+import { fileURLToPath } from "url";
 
 const app = express();
 const PORT = process.env.PORT || 10000;
+
+// Fix __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Middleware
 app.use(bodyParser.json());
@@ -19,20 +25,52 @@ app.use(
   })
 );
 
-// --- Login Required Middleware ---
+// --- Login Gate Middleware ---
 function requireLogin(req, res, next) {
   if (!req.session.user) {
     return res.send(`
       <html>
-        <head><title>Login Required</title></head>
-        <body style="font-family:sans-serif; text-align:center; margin-top:100px;">
-          <h2>🚀 Welcome to GoldenSpaceAI</h2>
-          <p>Please log in to continue.</p>
-          <a href="/auth/google">
-            <button style="padding:10px 20px; font-size:16px; cursor:pointer;">
-              Continue with Google
-            </button>
-          </a>
+        <head>
+          <title>GoldenSpaceAI - Login</title>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              background: radial-gradient(circle at top, #000428, #004e92);
+              color: white;
+              text-align: center;
+              padding: 50px;
+            }
+            .box {
+              background: rgba(0,0,0,0.7);
+              padding: 40px;
+              border-radius: 15px;
+              max-width: 600px;
+              margin: 100px auto;
+              box-shadow: 0 0 20px gold;
+            }
+            button {
+              background: gold;
+              border: none;
+              padding: 15px 30px;
+              font-size: 18px;
+              border-radius: 8px;
+              cursor: pointer;
+            }
+            button:hover {
+              background: #ffcc00;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="box">
+            <h1>🌌 Welcome to GoldenSpaceAI</h1>
+            <p>The universe of learning, AI, and creativity.<br>
+               Explore physics, chat with AI, create your own planet,<br>
+               and discover knowledge beyond the stars.</p>
+            <p><b>Why GoldenSpaceAI is Outstanding?</b></p>
+            <p>Because it’s your gateway to the universe 🚀 — where AI meets imagination.</p>
+            <a href="/auth/google"><button>Continue with Google</button></a>
+          </div>
         </body>
       </html>
     `);
@@ -40,7 +78,7 @@ function requireLogin(req, res, next) {
   next();
 }
 
-// --- Fake Google Login ---
+// --- Google Login (Fake for now; replace with Passport if needed) ---
 app.get("/auth/google", (req, res) => {
   req.session.user = { name: "Test User", email: "test@goldenspaceai.space" };
   res.redirect("/");
@@ -64,36 +102,49 @@ app.get("/api/me", (req, res) => {
   });
 });
 
+// --- Gemini AI Helper ---
+async function askGemini(prompt) {
+  try {
+    const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateText?key=" + process.env.GEMINI_API_KEY, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }]
+      }),
+    });
+    const data = await response.json();
+    return data?.candidates?.[0]?.content?.parts?.[0]?.text || "⚠️ No response from Gemini.";
+  } catch (err) {
+    console.error(err);
+    return "⚠️ Error contacting Gemini API.";
+  }
+}
+
 // --- Chat AI endpoint ---
-app.post("/api/ask", requireLogin, (req, res) => {
+app.post("/api/ask", requireLogin, async (req, res) => {
   const { message } = req.body;
-  res.json({ reply: `🤖 ChatAI says: "${message}"` });
+  const reply = await askGemini(message);
+  res.json({ reply });
 });
 
 // --- Learn Physics endpoint ---
-app.post("/api/learn-physics", requireLogin, (req, res) => {
+app.post("/api/learn-physics", requireLogin, async (req, res) => {
   const { topic } = req.body;
-  const reply = topic
-    ? `📘 Physics lesson on "${topic}": Energy, motion, and matter are all connected.`
-    : "📘 Please provide a topic to learn physics about.";
+  const reply = await askGemini(`Explain this physics topic for a student: ${topic}`);
   res.json({ reply });
 });
 
 // --- Search Information endpoint ---
-app.post("/api/search-info", requireLogin, (req, res) => {
+app.post("/api/search-info", requireLogin, async (req, res) => {
   const { query } = req.body;
-  const reply = query
-    ? `🔎 Search result for "${query}": This is sample information from GoldenSpaceAI.`
-    : "🔎 Please provide a search query.";
+  const reply = await askGemini(`Search and explain: ${query}`);
   res.json({ reply });
 });
 
 // --- Search Lesson endpoint ---
-app.post("/api/search-lesson", requireLogin, (req, res) => {
+app.post("/api/search-lesson", requireLogin, async (req, res) => {
   const { subject } = req.body;
-  const reply = subject
-    ? `📚 Lesson on "${subject}": Here’s a helpful explanation from GoldenSpaceAI.`
-    : "📚 Please provide a subject for the lesson.";
+  const reply = await askGemini(`Give a learning lesson about: ${subject}`);
   res.json({ reply });
 });
 
@@ -119,7 +170,7 @@ pages.forEach((page) => {
   });
 });
 
-// --- Catch-all (login check first) ---
+// --- Catch-all ---
 app.get("*", requireLogin, (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });

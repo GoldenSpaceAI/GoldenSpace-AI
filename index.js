@@ -4,14 +4,14 @@ const bodyParser = require("body-parser");
 const session = require("express-session");
 const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
-const { Configuration, OpenAIApi } = require("openai");
+const OpenAI = require("openai");  // ✅ Correct import for latest SDK
 
 require("dotenv").config();
 
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// ✅ Middleware
+// Middleware
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname)));
@@ -45,21 +45,15 @@ passport.use(
   )
 );
 
-passport.serializeUser((user, done) => {
-  done(null, user);
-});
-passport.deserializeUser((user, done) => {
-  done(null, user);
+passport.serializeUser((user, done) => done(null, user));
+passport.deserializeUser((user, done) => done(null, user));
+
+// ✅ OpenAI / Gemini Setup (fixed)
+const openai = new OpenAI({
+  apiKey: process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY,
 });
 
-// ✅ OpenAI / Gemini Setup
-const openai = new OpenAIApi(
-  new Configuration({
-    apiKey: process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY,
-  })
-);
-
-// ✅ Auth Routes
+// Auth Routes
 app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
 
 app.get(
@@ -76,11 +70,9 @@ app.get("/auth/logout", (req, res) => {
   });
 });
 
-// ✅ Homepage (before login)
+// ✅ Homepage
 app.get("/", (req, res) => {
-  if (req.isAuthenticated()) {
-    return res.redirect("/dashboard");
-  }
+  if (req.isAuthenticated()) return res.redirect("/dashboard");
 
   res.send(`
     <html>
@@ -106,7 +98,7 @@ app.get("/", (req, res) => {
   `);
 });
 
-// ✅ Dashboard after login
+// ✅ Dashboard
 app.get("/dashboard", (req, res) => {
   if (!req.isAuthenticated()) return res.redirect("/");
 
@@ -136,7 +128,7 @@ app.post("/api/ask", async (req, res) => {
   try {
     const { message } = req.body;
     const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini", // change to Gemini if you want
+      model: "gpt-4o-mini", // or Gemini if you switch
       messages: [{ role: "user", content: message }],
     });
 
@@ -147,7 +139,7 @@ app.post("/api/ask", async (req, res) => {
   }
 });
 
-// ✅ Static pages
+// ✅ Static Pages
 const pages = [
   "plans.html",
   "privacy.html",
@@ -159,7 +151,7 @@ const pages = [
   "learn-physics.html",
   "create-planet.html",
   "your-space.html",
-  "chatai.html"
+  "chatai.html",
 ];
 
 pages.forEach((page) => {
@@ -169,7 +161,7 @@ pages.forEach((page) => {
   });
 });
 
-// ✅ Start server
+// Start Server
 app.listen(PORT, () => {
   console.log(`🚀 GoldenSpaceAI running on port ${PORT}`);
 });

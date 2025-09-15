@@ -1,5 +1,5 @@
 {
-  "name": "space-ai-backend",
+  "name": "goldenspaceai-backend",
   "version": "1.0.0",
   "private": true,
   "main": "index.js",
@@ -10,7 +10,6 @@
     "node": "18.x"
   },
   "dependencies": {
-    "@google/generative-ai": "^0.24.1",
     "body-parser": "^1.20.2",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",

@@ -2,7 +2,6 @@ const express = require("express");
 const path = require("path");
 const bodyParser = require("body-parser");
 const session = require("express-session");
-const fetch = require("node-fetch");
 
 const app = express();
 const PORT = process.env.PORT || 10000;
@@ -117,7 +116,7 @@ async function askGemini(prompt) {
       "⚠️ No response from Gemini."
     );
   } catch (err) {
-    console.error(err);
+    console.error("Gemini API error:", err);
     return "⚠️ Error contacting Gemini API.";
   }
 }

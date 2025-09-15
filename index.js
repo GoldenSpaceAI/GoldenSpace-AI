@@ -1,263 +1,395 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-  <title>Create Your Advanced Planet • GoldenSpaceAI</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: Inter, system-ui, sans-serif;
-      background: url("https://images.unsplash.com/photo-1580428180163-9c89365a2d50?q=80&w=1920&auto=format&fit=crop") center/cover fixed;
-      color: #f9f9f9;
-      padding: 0;
+// index.js
+// GoldenSpaceAI — backend (Express + Google Auth + Paddle Webhooks + Gemini)
+// Node 18+ required
+
+require('dotenv').config();
+const path = require('path');
+const fs = require('fs');
+const express = require('express');
+const session = require('express-session');
+const cors = require('cors');
+const cookieParser = require('cookie-parser');
+const bodyParser = require('body-parser');
+const passport = require('passport');
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
+const crypto = require('crypto');
+
+// === Env ===
+const {
+  NODE_ENV = 'production',
+  PORT = 3000,
+  SESSION_SECRET,
+  FRONTEND_ORIGIN = 'https://goldenspace-ai.onrender.com',
+
+  // Google OAuth
+  GOOGLE_CLIENT_ID,
+  GOOGLE_CLIENT_SECRET,
+  GOOGLE_CALLBACK_URL, // e.g. https://goldenspace-ai.onrender.com/auth/google/callback
+
+  // Gemini
+  GEMINI_API_KEY,
+
+  // Paddle
+  PADDLE_WEBHOOK_SECRET,
+  // Price IDs (example names; use your real IDs from Paddle)
+  PADDLE_PRICE_MOON,            // (optional, if you keep a free SKU)
+  PADDLE_PRICE_EARTH,           // subscription
+  PADDLE_PRICE_SUN,             // subscription
+  PADDLE_PRICE_YOURSPACE,       // one-time or subscription per your setup
+  PADDLE_PRICE_CHATAI,          // subscription
+
+  // Optional test override (keep false in production)
+  TEST_MODE = 'false'
+} = process.env;
+
+if (!SESSION_SECRET) {
+  console.error('❌ Missing SESSION_SECRET in .env');
+  process.exit(1);
+}
+if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET || !GOOGLE_CALLBACK_URL) {
+  console.error('❌ Missing Google OAuth env (GOOGLE_CLIENT_ID/SECRET/CALLBACK_URL)');
+  process.exit(1);
+}
+if (!PADDLE_WEBHOOK_SECRET) {
+  console.error('❌ Missing PADDLE_WEBHOOK_SECRET in .env');
+  process.exit(1);
+}
+if (!GEMINI_API_KEY) {
+  console.error('❌ Missing GEMINI_API_KEY in .env');
+  process.exit(1);
+}
+
+// === Minimal “db” (file-backed) to persist entitlements by email ===
+const DATA_DIR = path.join(__dirname, 'data');
+const ENTITLEMENTS_FILE = path.join(DATA_DIR, 'entitlements.json');
+
+if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+if (!fs.existsSync(ENTITLEMENTS_FILE)) fs.writeFileSync(ENTITLEMENTS_FILE, JSON.stringify({}), 'utf8');
+
+const readEntitlements = () => JSON.parse(fs.readFileSync(ENTITLEMENTS_FILE, 'utf8'));
+const writeEntitlements = (obj) => fs.writeFileSync(ENTITLEMENTS_FILE, JSON.stringify(obj, null, 2), 'utf8');
+
+// entitlement shape:
+// { "user@email.com": { plans: { earth: true, sun: true, yourspace: true, chatai: true }, updatedAt: "..." } }
+
+// === Helper: map Paddle price IDs -> internal flags ===
+const PRICE_MAP = {
+  [PADDLE_PRICE_EARTH || '']: { key: 'earth', type: 'subscription' },
+  [PADDLE_PRICE_SUN || '']: { key: 'sun', type: 'subscription' },
+  [PADDLE_PRICE_YOURSPACE || '']: { key: 'yourspace', type: 'one_or_sub' },
+  [PADDLE_PRICE_CHATAI || '']: { key: 'chatai', type: 'subscription' },
+};
+
+// === Express app ===
+const app = express();
+app.set('trust proxy', 1);
+
+app.use(cors({
+  origin: FRONTEND_ORIGIN,
+  credentials: true,
+}));
+app.use(cookieParser());
+app.use(bodyParser.json({ verify: rawBodyBuffer })); // keep raw body for HMAC
+app.use(bodyParser.urlencoded({ extended: true }));
+
+app.use(session({
+  secret: SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    sameSite: 'lax',
+    secure: NODE_ENV === 'production',
+    httpOnly: true,
+    maxAge: 1000 * 60 * 60 * 24 * 30, // 30 days
+  },
+}));
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+// === Passport: Google OAuth ===
+passport.serializeUser((user, done) => {
+  done(null, {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    photo: user.photo,
+  });
+});
+
+passport.deserializeUser((obj, done) => {
+  done(null, obj);
+});
+
+passport.use(new GoogleStrategy({
+  clientID: GOOGLE_CLIENT_ID,
+  clientSecret: GOOGLE_CLIENT_SECRET,
+  callbackURL: GOOGLE_CALLBACK_URL,
+}, (accessToken, refreshToken, profile, done) => {
+  const email = (profile.emails && profile.emails[0] && profile.emails[0].value) || '';
+  const photo = (profile.photos && profile.photos[0] && profile.photos[0].value) || '';
+  const user = {
+    id: profile.id,
+    email,
+    name: profile.displayName || 'User',
+    photo
+  };
+  return done(null, user);
+}));
+
+// === Auth routes ===
+app.get('/auth/google',
+  passport.authenticate('google', { scope: ['profile', 'email'] })
+);
+
+app.get('/auth/google/callback',
+  passport.authenticate('google', {
+    failureRedirect: '/?login=failed',
+    session: true,
+  }),
+  (req, res) => {
+    res.redirect('/?login=ok');
+  }
+);
+
+app.get('/auth/logout', (req, res) => {
+  req.logout?.(() => {});
+  req.session.destroy(() => res.redirect('/'));
+});
+
+// === Utils ===
+function ensureAuth(req, res, next) {
+  if (req.isAuthenticated && req.isAuthenticated()) return next();
+  return res.status(401).json({ error: 'Not authenticated' });
+}
+
+function rawBodyBuffer(req, res, buf) {
+  // Save raw buffer on req for Paddle HMAC verification
+  if (buf && buf.length) {
+    req.rawBody = buf;
+  }
+}
+
+// === Plans: evaluate effective features for a user ===
+function getUserEntitlements(email) {
+  const store = readEntitlements();
+  const entry = store[email] || { plans: {} };
+  // TEST_MODE support (leave false in prod)
+  const testMode = (TEST_MODE || 'false').toLowerCase() === 'true';
+  if (testMode) {
+    return { ...entry, plans: { earth: true, sun: true, yourspace: true, chatai: true } };
+  }
+  return entry;
+}
+
+// Simple label of “main plan” (for your badge); Sun > Earth > Moon
+function pickMainPlan(plans) {
+  if (plans.sun) return 'sun';
+  if (plans.earth) return 'earth';
+  // Moon is your free baseline
+  return 'moon';
+}
+
+// === Public: who am I? ===
+app.get('/api/me', (req, res) => {
+  const user = req.user || null;
+  if (!user) return res.json({ loggedIn: false });
+
+  const ent = getUserEntitlements(user.email);
+  const plans = ent.plans || {};
+  const mainPlan = pickMainPlan(plans);
+
+  res.json({
+    loggedIn: true,
+    user,
+    plan: mainPlan,
+    entitlements: plans,
+  });
+});
+
+// === Public: list plan price IDs (frontend uses these to start Paddle checkout) ===
+app.get('/api/plan-prices', (_req, res) => {
+  res.json({
+    earth: PADDLE_PRICE_EARTH || null,
+    sun: PADDLE_PRICE_SUN || null,
+    yourspace: PADDLE_PRICE_YOURSPACE || null,
+    chatai: PADDLE_PRICE_CHATAI || null,
+  });
+});
+
+// === Paddle webhook ===
+// Set your Paddle “Destination” URL to: https://YOUR_DOMAIN/webhooks/paddle
+// Choose JSON format and copy the secret into PADDLE_WEBHOOK_SECRET
+app.post('/webhooks/paddle', (req, res) => {
+  try {
+    // HMAC verification (SHA-256)
+    const signature = req.get('Paddle-Signature') || req.get('Paddle-Signature-V2');
+    if (!signature) {
+      return res.status(400).send('Missing signature');
     }
-    header {
-      padding: 16px;
-      background: rgba(10, 14, 21, 0.8);
-      border-bottom: 1px solid rgba(255,255,255,.1);
-      color: #f6c64a;
-      font-size: 20px;
-      font-weight: 800;
-      text-align: center;
+    const hmac = crypto
+      .createHmac('sha256', PADDLE_WEBHOOK_SECRET)
+      .update(req.rawBody || JSON.stringify(req.body))
+      .digest('hex');
+
+    const provided = signature.replace(/^hmac=|^sha256=/, '');
+    if (hmac !== provided) {
+      return res.status(400).send('Invalid signature');
     }
-    main {
-      max-width: 900px;
-      margin: 20px auto;
-      background: rgba(15, 22, 36, 0.9);
-      padding: 20px;
-      border-radius: 16px;
-      box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+
+    const event = req.body; // JSON
+    // Paddle “event_type” (new) or “alert_name” (legacy). Support both.
+    const type = event.event_type || event.alert_name || '';
+
+    // We’ll read common bits safely:
+    const customerEmail =
+      event?.data?.customer?.email ||
+      event?.customer?.email ||
+      event?.data?.subscription?.customer_email ||
+      event?.subscription?.customer_email ||
+      event?.customer_email ||
+      '';
+
+    const priceId =
+      event?.data?.items?.[0]?.price?.id ||
+      event?.data?.order?.items?.[0]?.price?.id ||
+      event?.data?.subscription?.items?.[0]?.price?.id ||
+      event?.price_id ||
+      '';
+
+    // Handle subscription/one-time purchase activation/cancellation
+    const store = readEntitlements();
+    const now = new Date().toISOString();
+
+    function enable(price) {
+      const map = PRICE_MAP[price];
+      if (!map || !customerEmail) return;
+      const { key } = map;
+      if (!store[customerEmail]) store[customerEmail] = { plans: {}, updatedAt: now };
+      store[customerEmail].plans[key] = true;
+      store[customerEmail].updatedAt = now;
+      writeEntitlements(store);
     }
-    h2 {
-      margin-top: 28px;
-      color: #f6c64a;
-      font-size: 20px;
+
+    function disable(price) {
+      const map = PRICE_MAP[price];
+      if (!map || !customerEmail) return;
+      const { key } = map;
+      if (!store[customerEmail]) store[customerEmail] = { plans: {}, updatedAt: now };
+      store[customerEmail].plans[key] = false;
+      store[customerEmail].updatedAt = now;
+      writeEntitlements(store);
     }
-    label {
-      display: block;
-      margin: 10px 0 4px;
-      font-weight: 600;
+
+    // Common events (v2 new names first, then legacy)
+    switch (type) {
+      // Purchase / enable
+      case 'transaction.completed':
+      case 'subscription.activated':
+      case 'subscription.updated':
+      case 'payment_succeeded':
+      case 'subscription_created':
+      case 'subscription_payment_succeeded':
+        enable(priceId);
+        break;
+
+      // Cancellation / disable
+      case 'subscription.cancelled':
+      case 'subscription_paused':
+      case 'payment_failed':
+      case 'subscription_payment_failed':
+        disable(priceId);
+        break;
+
+      default:
+        // ignore other events
+        break;
     }
-    input, select {
-      width: 100%;
-      padding: 8px;
-      border-radius: 8px;
-      border: none;
-      background: #0f1624;
-      color: #fff;
-      font-size: 14px;
-    }
-    input[type=range] {
-      padding: 0;
-    }
-    .section {
-      margin-bottom: 20px;
-      border-bottom: 1px solid rgba(255,255,255,.08);
-      padding-bottom: 20px;
-    }
-    #preview {
-      background: #111a2d;
-      border: 1px solid rgba(255,255,255,.1);
-      border-radius: 12px;
-      padding: 16px;
-      margin-top: 20px;
-      font-size: 14px;
-      color: #d0d7e4;
-    }
-    .btn {
-      display: inline-block;
-      margin-top: 20px;
-      padding: 12px 20px;
-      border-radius: 12px;
-      font-weight: 800;
-      background: linear-gradient(180deg, #f6c64a, #eb8b36);
-      border: none;
-      color: #1a1200;
-      cursor: pointer;
-      box-shadow: 0 8px 20px rgba(246,198,74,.3);
-    }
-    .btn:hover {
-      transform: translateY(-1px);
-    }
-    #message {
-      margin-top: 20px;
-      font-size: 14px;
-      color: #ffecb3;
-    }
-  </style>
-</head>
-<body>
-  <header>🌌 GoldenSpaceAI — Create Your Advanced Planet</header>
-  <main>
-    <h1>Create Your Advanced Planet</h1>
-    <p>Customize everything: climate, oceans, life, and unique features. When done, build your planet!</p>
 
-    <!-- Planet Basics -->
-    <div class="section">
-      <h2>Planet Basics</h2>
-      <label>Planet Name</label>
-      <input type="text" id="planetName" placeholder="Enter planet name"/>
-      
-      <label>Size</label>
-      <select id="planetSize">
-        <option>Small</option>
-        <option>Earth-like</option>
-        <option>Giant</option>
-      </select>
+    res.status(200).send('ok');
+  } catch (e) {
+    console.error('Webhook error', e);
+    res.status(500).send('error');
+  }
+});
 
-      <label>Gravity Level</label>
-      <select id="gravity">
-        <option>Low</option>
-        <option>Medium</option>
-        <option>High</option>
-      </select>
-    </div>
+// === AI endpoints (Gemini) ===
+// Keep them simple; frontend handles formatting.
+const { GoogleGenerativeAI } = require('@google/generative-ai');
+const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
-    <!-- Environment -->
-    <div class="section">
-      <h2>Environment & Climate</h2>
-      <label>Temperature (°C)</label>
-      <input type="range" id="temp" min="-200" max="500" value="25"/>
-      <span id="tempVal">25°C</span>
+app.post('/ask', ensureAuth, async (req, res) => {
+  try {
+    const { prompt } = req.body || {};
+    if (!prompt) return res.status(400).json({ error: 'Missing prompt' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
+    const result = await model.generateContent(prompt);
+    const text = result?.response?.text?.() || '';
+    res.json({ text });
+  } catch (e) {
+    console.error('/ask error', e);
+    res.status(500).json({ error: 'AI error' });
+  }
+});
 
-      <label>Atmosphere</label>
-      <select id="atmosphere">
-        <option>Oxygen-rich</option>
-        <option>Carbon-heavy</option>
-        <option>Methane</option>
-        <option>Custom</option>
-      </select>
+app.post('/search-info', ensureAuth, async (req, res) => {
+  try {
+    const { query } = req.body || {};
+    if (!query) return res.status(400).json({ error: 'Missing query' });
+    // For now, call Gemini to “summarize” as a placeholder
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
+    const result = await model.generateContent(
+      `Summarize this for a user in 5 bullets with sources if known: ${query}`
+    );
+    const text = result?.response?.text?.() || '';
+    res.json({ text });
+  } catch (e) {
+    console.error('/search-info error', e);
+    res.status(500).json({ error: 'Search error' });
+  }
+});
 
-      <label>Weather</label>
-      <select id="weather">
-        <option>Calm</option>
-        <option>Stormy</option>
-        <option>Windy</option>
-        <option>Snowy</option>
-        <option>Mixed</option>
-      </select>
-    </div>
+app.post('/ai/physics-explain', ensureAuth, async (req, res) => {
+  try {
+    const { topic } = req.body || {};
+    if (!topic) return res.status(400).json({ error: 'Missing topic' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
+    const result = await model.generateContent(
+      `Explain "${topic}" to a high-school student with a short example and a tiny quiz at the end.`
+    );
+    res.json({ text: result?.response?.text?.() || '' });
+  } catch (e) {
+    console.error('/ai/physics-explain error', e);
+    res.status(500).json({ error: 'AI error' });
+  }
+});
 
-    <!-- Oceans -->
-    <div class="section">
-      <h2>Oceans & Land</h2>
-      <label>Water Coverage (%)</label>
-      <input type="range" id="water" min="0" max="100" value="70"/>
-      <span id="waterVal">70%</span>
+// === Protected content gating helpers ===
+app.get('/gate/your-space', ensureAuth, (req, res) => {
+  const ent = getUserEntitlements(req.user.email);
+  if (ent.plans?.yourspace) return res.json({ allowed: true });
+  return res.status(402).json({ allowed: false, needed: 'yourspace' });
+});
 
-      <label>Ocean Color</label>
-      <select id="oceanColor">
-        <option>Blue</option>
-        <option>Green</option>
-        <option>Red</option>
-        <option>Black</option>
-      </select>
+app.get('/gate/chatai', ensureAuth, (req, res) => {
+  const ent = getUserEntitlements(req.user.email);
+  if (ent.plans?.chatai) return res.json({ allowed: true });
+  return res.status(402).json({ allowed: false, needed: 'chatai' });
+});
 
-      <label>Continents</label>
-      <input type="number" id="continents" value="5"/>
-    </div>
+// === Static files (serve your frontend) ===
+// If you deploy static files with Render’s static site, you can remove this block.
+// If you serve from the same Node app, place your built/static files in /public.
+app.use(express.static(path.join(__dirname, 'public'), {
+  extensions: ['html'],
+}));
 
-    <!-- Life -->
-    <div class="section">
-      <h2>Life & Ecosystem</h2>
-      <label>Type of Life</label>
-      <select id="life">
-        <option>None</option>
-        <option>Microbial</option>
-        <option>Plants</option>
-        <option>Animals</option>
-        <option>Intelligent Civilization</option>
-      </select>
+// === Fallback ===
+app.use((req, res) => {
+  res.status(404).json({ error: 'Not found' });
+});
 
-      <label>Diversity</label>
-      <input type="range" id="diversity" min="0" max="10" value="5"/>
-      <span id="divVal">5</span>
-
-      <label>Civilization Level</label>
-      <select id="civLevel">
-        <option>Stone Age</option>
-        <option>Industrial</option>
-        <option>Futuristic</option>
-      </select>
-    </div>
-
-    <!-- Special -->
-    <div class="section">
-      <h2>Special Features</h2>
-      <label>Rings</label>
-      <select id="rings">
-        <option>No</option>
-        <option>Yes</option>
-      </select>
-
-      <label>Number of Moons</label>
-      <input type="number" id="moons" value="1"/>
-
-      <label>Magnetic Field</label>
-      <select id="magField">
-        <option>Weak</option>
-        <option>Strong</option>
-        <option>None</option>
-      </select>
-
-      <label>Core Type</label>
-      <select id="core">
-        <option>Iron</option>
-        <option>Ice</option>
-        <option>Exotic</option>
-      </select>
-    </div>
-
-    <button class="btn" id="buildBtn">🚀 Build Advanced Planet</button>
-    <div id="message"></div>
-
-    <div id="preview"></div>
-  </main>
-
-  <script>
-    const temp = document.getElementById("temp");
-    const tempVal = document.getElementById("tempVal");
-    temp.oninput = () => tempVal.textContent = temp.value + "°C";
-
-    const water = document.getElementById("water");
-    const waterVal = document.getElementById("waterVal");
-    water.oninput = () => waterVal.textContent = water.value + "%";
-
-    const diversity = document.getElementById("diversity");
-    const divVal = document.getElementById("divVal");
-    diversity.oninput = () => divVal.textContent = diversity.value;
-
-    document.getElementById("buildBtn").onclick = async () => {
-      const planet = {
-        name: document.getElementById("planetName").value,
-        size: document.getElementById("planetSize").value,
-        gravity: document.getElementById("gravity").value,
-        temp: temp.value,
-        atmosphere: document.getElementById("atmosphere").value,
-        weather: document.getElementById("weather").value,
-        water: water.value,
-        oceanColor: document.getElementById("oceanColor").value,
-        continents: document.getElementById("continents").value,
-        life: document.getElementById("life").value,
-        diversity: diversity.value,
-        civLevel: document.getElementById("civLevel").value,
-        rings: document.getElementById("rings").value,
-        moons: document.getElementById("moons").value,
-        magField: document.getElementById("magField").value,
-        core: document.getElementById("core").value,
-      };
-
-      const res = await fetch("/api/me", { credentials: "include" });
-      const data = await res.json();
-
-      if (data.plan === "sun" || data.plan === "universe") {
-        document.getElementById("message").textContent = "✅ Planet created! Saved to your account.";
-        document.getElementById("preview").textContent = JSON.stringify(planet, null, 2);
-      } else {
-        document.getElementById("message").textContent = "⚠️ Please upgrade to Sun Pack or Your Space Pack to build advanced planets.";
-      }
-    };
-  </script>
-</body>
-</html>
+// === Start ===
+app.listen(PORT, () => {
+  console.log(`✅ GoldenSpaceAI server on :${PORT}`);
+});

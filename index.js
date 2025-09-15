@@ -25,44 +25,68 @@ function requireLogin(req, res, next) {
     return res.send(`
       <html>
         <head>
-          <title>GoldenSpaceAI - Login</title>
+          <title>GoldenSpaceAI</title>
           <style>
             body {
               font-family: Arial, sans-serif;
-              background: radial-gradient(circle at top, #000428, #004e92);
+              background: linear-gradient(135deg, #000428, #004e92);
               color: white;
-              text-align: center;
-              padding: 50px;
+              margin: 0;
+              padding: 0;
+              height: 100vh;
+              display: flex;
+              justify-content: center;
+              align-items: center;
             }
             .box {
-              background: rgba(0,0,0,0.7);
+              background: rgba(0, 0, 0, 0.8);
               padding: 40px;
               border-radius: 15px;
-              max-width: 600px;
-              margin: 100px auto;
-              box-shadow: 0 0 20px gold;
+              max-width: 700px;
+              text-align: center;
+              box-shadow: 0 0 30px gold;
+              animation: fadeIn 1s ease-in-out;
+            }
+            h1 {
+              color: gold;
+              font-size: 2.5em;
+              margin-bottom: 20px;
+            }
+            p {
+              font-size: 1.2em;
+              line-height: 1.6;
+              margin-bottom: 20px;
             }
             button {
               background: gold;
               border: none;
-              padding: 15px 30px;
+              padding: 15px 35px;
               font-size: 18px;
               border-radius: 8px;
               cursor: pointer;
+              transition: 0.3s;
             }
             button:hover {
               background: #ffcc00;
+              transform: scale(1.05);
+            }
+            @keyframes fadeIn {
+              from { opacity: 0; transform: translateY(20px); }
+              to { opacity: 1; transform: translateY(0); }
             }
           </style>
         </head>
         <body>
           <div class="box">
             <h1>🌌 Welcome to GoldenSpaceAI</h1>
-            <p>The universe of learning, AI, and creativity.<br>
-               Explore physics, chat with AI, create your own planet,<br>
-               and discover knowledge beyond the stars.</p>
-            <p><b>Why GoldenSpaceAI is Outstanding?</b></p>
-            <p>Because it’s your gateway to the universe 🚀 — where AI meets imagination.</p>
+            <p>
+              Explore the universe of knowledge.<br>
+              ✨ Learn physics<br>
+              🤖 Chat with advanced AI<br>
+              🪐 Create your own planet<br>
+              🔎 Search and discover information
+            </p>
+            <p><b>GoldenSpaceAI is your gateway to the universe 🚀</b></p>
             <a href="/auth/google"><button>Continue with Google</button></a>
           </div>
         </body>
@@ -74,7 +98,7 @@ function requireLogin(req, res, next) {
 
 // --- Fake Google Login ---
 app.get("/auth/google", (req, res) => {
-  req.session.user = { name: "Test User", email: "test@goldenspaceai.space" };
+  req.session.user = { name: "Explorer", email: "user@goldenspaceai.space" };
   res.redirect("/");
 });
 
@@ -96,7 +120,7 @@ app.get("/api/me", (req, res) => {
   });
 });
 
-// --- Gemini AI Helper ---
+// --- Gemini API helper ---
 async function askGemini(prompt) {
   try {
     const response = await fetch(
@@ -130,19 +154,19 @@ app.post("/api/ask", requireLogin, async (req, res) => {
 
 app.post("/api/learn-physics", requireLogin, async (req, res) => {
   const { topic } = req.body;
-  const reply = await askGemini(`Explain this physics topic: ${topic}`);
+  const reply = await askGemini(`Explain this physics topic in detail: ${topic}`);
   res.json({ reply });
 });
 
 app.post("/api/search-info", requireLogin, async (req, res) => {
   const { query } = req.body;
-  const reply = await askGemini(`Search and explain: ${query}`);
+  const reply = await askGemini(`Find and explain: ${query}`);
   res.json({ reply });
 });
 
 app.post("/api/search-lesson", requireLogin, async (req, res) => {
   const { subject } = req.body;
-  const reply = await askGemini(`Give a full lesson about: ${subject}`);
+  const reply = await askGemini(`Give me a full lesson on: ${subject}`);
   res.json({ reply });
 });
 

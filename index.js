@@ -2,14 +2,19 @@ const express = require("express");
 const path = require("path");
 const bodyParser = require("body-parser");
 const session = require("express-session");
+const passport = require("passport");
+const GoogleStrategy = require("passport-google-oauth20").Strategy;
+const { Configuration, OpenAIApi } = require("openai");
+
+require("dotenv").config();
 
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// Middleware
+// ✅ Middleware
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static(__dirname));
+app.use(express.static(path.join(__dirname)));
 
 app.use(
   session({
@@ -19,160 +24,131 @@ app.use(
   })
 );
 
-// --- Login Gate ---
-function requireLogin(req, res, next) {
-  if (!req.session.user) {
-    return res.send(`
-      <html>
-        <head>
-          <title>GoldenSpaceAI</title>
-          <style>
-            body {
-              font-family: Arial, sans-serif;
-              background: linear-gradient(135deg, #000428, #004e92);
-              color: white;
-              margin: 0;
-              padding: 0;
-              height: 100vh;
-              display: flex;
-              justify-content: center;
-              align-items: center;
-            }
-            .box {
-              background: rgba(0, 0, 0, 0.8);
-              padding: 40px;
-              border-radius: 15px;
-              max-width: 700px;
-              text-align: center;
-              box-shadow: 0 0 30px gold;
-              animation: fadeIn 1s ease-in-out;
-            }
-            h1 {
-              color: gold;
-              font-size: 2.5em;
-              margin-bottom: 20px;
-            }
-            p {
-              font-size: 1.2em;
-              line-height: 1.6;
-              margin-bottom: 20px;
-            }
-            button {
-              background: gold;
-              border: none;
-              padding: 15px 35px;
-              font-size: 18px;
-              border-radius: 8px;
-              cursor: pointer;
-              transition: 0.3s;
-            }
-            button:hover {
-              background: #ffcc00;
-              transform: scale(1.05);
-            }
-            @keyframes fadeIn {
-              from { opacity: 0; transform: translateY(20px); }
-              to { opacity: 1; transform: translateY(0); }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="box">
-            <h1>🌌 Welcome to GoldenSpaceAI</h1>
-            <p>
-              Explore the universe of knowledge.<br>
-              ✨ Learn physics<br>
-              🤖 Chat with advanced AI<br>
-              🪐 Create your own planet<br>
-              🔎 Search and discover information
-            </p>
-            <p><b>GoldenSpaceAI is your gateway to the universe 🚀</b></p>
-            <a href="/auth/google"><button>Continue with Google</button></a>
-          </div>
-        </body>
-      </html>
-    `);
-  }
-  next();
-}
+app.use(passport.initialize());
+app.use(passport.session());
 
-// --- Fake Google Login ---
-app.get("/auth/google", (req, res) => {
-  req.session.user = { name: "Explorer", email: "user@goldenspaceai.space" };
-  res.redirect("/");
+// ✅ Passport Google Strategy
+passport.use(
+  new GoogleStrategy(
+    {
+      clientID: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      callbackURL: "/auth/google/callback",
+    },
+    (accessToken, refreshToken, profile, done) => {
+      return done(null, {
+        id: profile.id,
+        name: profile.displayName,
+        email: profile.emails[0].value,
+      });
+    }
+  )
+);
+
+passport.serializeUser((user, done) => {
+  done(null, user);
 });
+passport.deserializeUser((user, done) => {
+  done(null, user);
+});
+
+// ✅ OpenAI / Gemini Setup
+const openai = new OpenAIApi(
+  new Configuration({
+    apiKey: process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY,
+  })
+);
+
+// ✅ Auth Routes
+app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
+
+app.get(
+  "/auth/google/callback",
+  passport.authenticate("google", { failureRedirect: "/" }),
+  (req, res) => {
+    res.redirect("/dashboard");
+  }
+);
 
 app.get("/auth/logout", (req, res) => {
-  req.session.destroy(() => res.redirect("/"));
-});
-
-// --- Plans ---
-app.get("/switch-plan/:plan", requireLogin, (req, res) => {
-  req.session.plan = req.params.plan;
-  res.json({ plan: req.session.plan });
-});
-
-app.get("/api/me", (req, res) => {
-  res.json({
-    loggedIn: !!req.session.user,
-    user: req.session.user,
-    plan: req.session.plan || "guest",
+  req.logout(() => {
+    req.session.destroy(() => res.redirect("/"));
   });
 });
 
-// --- Gemini API helper ---
-async function askGemini(prompt) {
-  try {
-    const response = await fetch(
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateText?key=" +
-        process.env.GEMINI_API_KEY,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-        }),
-      }
-    );
-    const data = await response.json();
-    return (
-      data?.candidates?.[0]?.content?.parts?.[0]?.text ||
-      "⚠️ No response from Gemini."
-    );
-  } catch (err) {
-    console.error("Gemini API error:", err);
-    return "⚠️ Error contacting Gemini API.";
+// ✅ Homepage (before login)
+app.get("/", (req, res) => {
+  if (req.isAuthenticated()) {
+    return res.redirect("/dashboard");
   }
-}
 
-// --- AI Endpoints ---
-app.post("/api/ask", requireLogin, async (req, res) => {
-  const { message } = req.body;
-  const reply = await askGemini(message);
-  res.json({ reply });
+  res.send(`
+    <html>
+      <head>
+        <title>Welcome to GoldenSpaceAI</title>
+        <style>
+          body { font-family: Arial; text-align: center; padding: 50px; background: #0d0d0d; color: #ffd700; }
+          .box { max-width: 600px; margin: auto; background: #1a1a1a; padding: 30px; border-radius: 12px; }
+          a { display: inline-block; margin: 15px; padding: 12px 24px; background: #ffd700; color: #0d0d0d; text-decoration: none; border-radius: 8px; font-weight: bold; }
+          a:hover { background: #e6c200; }
+        </style>
+      </head>
+      <body>
+        <div class="box">
+          <h1>🌌 Welcome to GoldenSpaceAI</h1>
+          <p>GoldenSpaceAI is your gateway to the universe. Explore physics, AI-powered knowledge, and your own custom space journeys!</p>
+          <a href="/auth/google">Continue with Google</a>
+          <br/>
+          <a href="/login">Login</a>
+        </div>
+      </body>
+    </html>
+  `);
 });
 
-app.post("/api/learn-physics", requireLogin, async (req, res) => {
-  const { topic } = req.body;
-  const reply = await askGemini(`Explain this physics topic in detail: ${topic}`);
-  res.json({ reply });
+// ✅ Dashboard after login
+app.get("/dashboard", (req, res) => {
+  if (!req.isAuthenticated()) return res.redirect("/");
+
+  res.send(`
+    <html>
+      <head><title>Dashboard - GoldenSpaceAI</title></head>
+      <body style="font-family:Arial; background:#0d0d0d; color:#ffd700; text-align:center; padding:40px;">
+        <h1>Welcome, ${req.user.name} 🚀</h1>
+        <p>You are logged in with ${req.user.email}</p>
+        <p>Choose where to go:</p>
+        <a href="/plans">Plans</a> |
+        <a href="/advanced-ai">Advanced AI</a> |
+        <a href="/search-info">Search Info</a> |
+        <a href="/learn-physics">Learn Physics</a> |
+        <a href="/create-planet">Create Planet</a> |
+        <a href="/your-space">Your Space</a> |
+        <a href="/chatai">Chat AI</a>
+        <br/><br/>
+        <a href="/auth/logout">Logout</a>
+      </body>
+    </html>
+  `);
 });
 
-app.post("/api/search-info", requireLogin, async (req, res) => {
-  const { query } = req.body;
-  const reply = await askGemini(`Find and explain: ${query}`);
-  res.json({ reply });
+// ✅ AI endpoint
+app.post("/api/ask", async (req, res) => {
+  try {
+    const { message } = req.body;
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini", // change to Gemini if you want
+      messages: [{ role: "user", content: message }],
+    });
+
+    res.json({ reply: response.choices[0].message.content });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "AI request failed" });
+  }
 });
 
-app.post("/api/search-lesson", requireLogin, async (req, res) => {
-  const { subject } = req.body;
-  const reply = await askGemini(`Give me a full lesson on: ${subject}`);
-  res.json({ reply });
-});
-
-// --- Pages ---
+// ✅ Static pages
 const pages = [
-  "index.html",
   "plans.html",
   "privacy.html",
   "terms.html",
@@ -183,21 +159,17 @@ const pages = [
   "learn-physics.html",
   "create-planet.html",
   "your-space.html",
-  "chatai.html",
+  "chatai.html"
 ];
 
 pages.forEach((page) => {
-  app.get("/" + page.replace(".html", ""), requireLogin, (req, res) => {
+  app.get("/" + page.replace(".html", ""), (req, res) => {
+    if (!req.isAuthenticated()) return res.redirect("/");
     res.sendFile(path.join(__dirname, page));
   });
 });
 
-// --- Catch-all ---
-app.get("*", requireLogin, (req, res) => {
-  res.sendFile(path.join(__dirname, "index.html"));
-});
-
-// --- Start server ---
+// ✅ Start server
 app.listen(PORT, () => {
   console.log(`🚀 GoldenSpaceAI running on port ${PORT}`);
 });

@@ -1,16 +1,14 @@
-import express from "express";
-import path from "path";
-import bodyParser from "body-parser";
-import session from "express-session";
-import fetch from "node-fetch";
-import { fileURLToPath } from "url";
+const express = require("express");
+const path = require("path");
+const bodyParser = require("body-parser");
+const session = require("express-session");
+const fetch = require("node-fetch");
 
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// Fix __dirname
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// __dirname fix (for Render)
+const __dirname = path.resolve();
 
 // Middleware
 app.use(bodyParser.json());
@@ -25,7 +23,7 @@ app.use(
   })
 );
 
-// --- Login Gate Middleware ---
+// --- Login Gate ---
 function requireLogin(req, res, next) {
   if (!req.session.user) {
     return res.send(`
@@ -78,7 +76,7 @@ function requireLogin(req, res, next) {
   next();
 }
 
-// --- Google Login (Fake for now; replace with Passport if needed) ---
+// --- Fake Google Login (replace with Passport later if needed) ---
 app.get("/auth/google", (req, res) => {
   req.session.user = { name: "Test User", email: "test@goldenspaceai.space" };
   res.redirect("/");
@@ -105,46 +103,50 @@ app.get("/api/me", (req, res) => {
 // --- Gemini AI Helper ---
 async function askGemini(prompt) {
   try {
-    const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateText?key=" + process.env.GEMINI_API_KEY, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }]
-      }),
-    });
+    const response = await fetch(
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateText?key=" +
+        process.env.GEMINI_API_KEY,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+        }),
+      }
+    );
     const data = await response.json();
-    return data?.candidates?.[0]?.content?.parts?.[0]?.text || "⚠️ No response from Gemini.";
+    return (
+      data?.candidates?.[0]?.content?.parts?.[0]?.text ||
+      "⚠️ No response from Gemini."
+    );
   } catch (err) {
     console.error(err);
     return "⚠️ Error contacting Gemini API.";
   }
 }
 
-// --- Chat AI endpoint ---
+// --- AI Endpoints ---
 app.post("/api/ask", requireLogin, async (req, res) => {
   const { message } = req.body;
   const reply = await askGemini(message);
   res.json({ reply });
 });
 
-// --- Learn Physics endpoint ---
 app.post("/api/learn-physics", requireLogin, async (req, res) => {
   const { topic } = req.body;
-  const reply = await askGemini(`Explain this physics topic for a student: ${topic}`);
+  const reply = await askGemini(`Explain this physics topic: ${topic}`);
   res.json({ reply });
 });
 
-// --- Search Information endpoint ---
 app.post("/api/search-info", requireLogin, async (req, res) => {
   const { query } = req.body;
   const reply = await askGemini(`Search and explain: ${query}`);
   res.json({ reply });
 });
 
-// --- Search Lesson endpoint ---
 app.post("/api/search-lesson", requireLogin, async (req, res) => {
   const { subject } = req.body;
-  const reply = await askGemini(`Give a learning lesson about: ${subject}`);
+  const reply = await askGemini(`Give a full lesson about: ${subject}`);
   res.json({ reply });
 });
 
@@ -161,7 +163,7 @@ const pages = [
   "learn-physics.html",
   "create-planet.html",
   "your-space.html",
-  "chatai.html"
+  "chatai.html",
 ];
 
 pages.forEach((page) => {

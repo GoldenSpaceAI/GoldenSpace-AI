@@ -7,9 +7,6 @@ const fetch = require("node-fetch");
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// __dirname fix (for Render)
-const __dirname = path.resolve();
-
 // Middleware
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -76,7 +73,7 @@ function requireLogin(req, res, next) {
   next();
 }
 
-// --- Fake Google Login (replace with Passport later if needed) ---
+// --- Fake Google Login ---
 app.get("/auth/google", (req, res) => {
   req.session.user = { name: "Test User", email: "test@goldenspaceai.space" };
   res.redirect("/");

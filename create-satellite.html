@@ -3,15 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Your Satellite | GoldenSpaceAI</title>
+    <title>Advanced Satellite Builder | GoldenSpaceAI</title>
     <style>
-        /* --- Basic Setup & Theme --- */
         :root {
             --bg-dark: #0b0f1a;
             --card-bg: #1a2035;
             --primary-text: #e0e0e0;
             --gold-accent: #f6c64a;
             --border-color: #3c4260;
+            --success-color: #4ade80;
+            --warning-color: #facc15;
+            --error-color: #f87171;
         }
 
         body {
@@ -27,66 +29,124 @@
 
         h1 {
             color: var(--gold-accent);
-            text-align: center;
         }
-
-        /* --- Main Layout --- */
-        .container {
+        
+        .main-container {
             display: flex;
             flex-wrap: wrap;
             gap: 2rem;
             width: 100%;
             max-width: 1200px;
+        }
+
+        .left-panel {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .right-panel {
+            flex: 3;
+            min-width: 500px;
+        }
+
+        /* Toolbox Styling */
+        .toolbox, .test-bay {
             background-color: var(--card-bg);
             border-radius: 12px;
-            padding: 2rem;
+            padding: 1.5rem;
             border: 1px solid var(--border-color);
         }
 
-        .controls {
-            flex: 1;
-            min-width: 300px;
+        .toolbox h2, .test-bay h2 {
+            margin-top: 0;
+            color: var(--gold-accent);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+        
+        .parts-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
         }
 
-        .viewer {
-            flex: 2;
-            min-width: 400px;
-            min-height: 400px;
-            display: grid;
-            place-items: center;
+        .part {
+            padding: 1rem;
+            border: 2px dashed var(--border-color);
+            border-radius: 8px;
+            text-align: center;
+            cursor: grab;
+            background-color: #2a314d;
+            transition: background-color 0.2s, transform 0.2s;
+        }
+
+        .part:hover {
+            background-color: #3c4260;
+        }
+        
+        .part.dragging {
+            opacity: 0.5;
+            transform: scale(1.05);
+            cursor: grabbing;
+        }
+        
+        .part img {
+            max-width: 60px;
+            pointer-events: none; /* Prevents image from being dragged instead of the div */
+        }
+        
+        .part p {
+            margin: 0.5rem 0 0;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        /* Assembly Area Styling */
+        .assembly-area {
+            height: 400px;
             background: radial-gradient(circle, #2a314d 0%, var(--card-bg) 70%);
             border-radius: 8px;
-            border: 1px dashed var(--border-color);
-        }
-
-        /* --- Controls Styling --- */
-        .control-group {
-            margin-bottom: 1.5rem;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: bold;
-            color: var(--gold-accent);
-        }
-
-        select, input[type="color"] {
-            width: 100%;
-            padding: 10px;
-            border-radius: 5px;
             border: 1px solid var(--border-color);
-            background-color: var(--bg-dark);
-            color: var(--primary-text);
-            font-size: 1rem;
+            position: relative;
+            overflow: hidden;
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
         }
 
-        input[type="color"] {
-            padding: 5px;
-            height: 50px;
+        .drop-zone {
+            position: absolute;
+            border: 2px dashed #5fa8d3;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        
+        .drop-zone.drag-over {
+            background-color: rgba(95, 168, 211, 0.2);
+            border-color: var(--gold-accent);
         }
 
-        button {
+        /* Specific Drop Zones */
+        #bus-zone { width: 120px; height: 120px; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        #panel-zone-left { width: 150px; height: 50px; top: 50%; left: 10%; transform: translateY(-50%); }
+        #panel-zone-right { width: 150px; height: 50px; top: 50%; right: 10%; transform: translateY(-50%); }
+        #antenna-zone { width: 80px; height: 80px; bottom: 5%; left: 50%; transform: translateX(-50%); }
+
+        .drop-zone .part {
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            cursor: default;
+        }
+
+        /* Test Bay Styling */
+        .test-bay { margin-top: 2rem; }
+        
+        #test-flight-btn {
             width: 100%;
             padding: 15px;
             font-size: 1.1rem;
@@ -96,174 +156,149 @@
             border: none;
             border-radius: 8px;
             cursor: pointer;
-            margin-top: 1rem;
             transition: background-color 0.2s;
         }
-
-        button:hover {
-            background-color: #ffdd77;
+        
+        #test-flight-btn:hover { background-color: #ffdd77; }
+        
+        #test-results {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 8px;
+            min-height: 50px;
+            background-color: #2a314d;
         }
-
-        /* --- Satellite Viewer & Parts Styling --- */
-        #satellite-assembly {
-            position: relative;
-            width: 200px;
-            height: 200px;
-            display: grid;
-            place-items: center;
-        }
-
-        #satellite-body {
-            width: 120px;
-            height: 120px;
-            background-color: #cccccc;
-            z-index: 10;
-            transition: all 0.3s ease;
-        }
-
-        /* Body Shapes */
-        .body-cube { border-radius: 10px; }
-        .body-sphere { border-radius: 50%; }
-        .body-cylinder { border-radius: 50% / 15%; width: 140px; height: 100px; }
-
-        /* Solar Panels */
-        .solar-panel {
-            position: absolute;
-            background-color: #0d2c54;
-            border: 2px solid #5fa8d3;
-            z-index: 5;
-            transition: all 0.3s ease;
-        }
-        .panels-none .solar-panel { display: none; }
-        .panels-dual-wing .solar-panel-left { width: 150px; height: 40px; top: 50%; left: -140px; transform: translateY(-50%); }
-        .panels-dual-wing .solar-panel-right { width: 150px; height: 40px; top: 50%; right: -140px; transform: translateY(-50%); }
-        .panels-array .solar-panel-left { width: 80px; height: 80px; top: -70px; left: -100px; }
-        .panels-array .solar-panel-right { width: 80px; height: 80px; top: -70px; right: -100px; }
-
-        /* Antenna */
-        #antenna {
-            position: absolute;
-            z-index: 15;
-            transition: all 0.3s ease;
-        }
-        .antenna-none { display: none; }
-        .antenna-dish { width: 80px; height: 80px; background-color: #f0f0f0; border-radius: 50%; border: 4px solid #aaa; bottom: -40px; }
-        .antenna-whip { width: 4px; height: 120px; background-color: #ddd; top: -110px; }
+        
+        #test-results.success { border-left: 5px solid var(--success-color); }
+        #test-results.warning { border-left: 5px solid var(--warning-color); }
+        #test-results.error { border-left: 5px solid var(--error-color); }
 
     </style>
 </head>
 <body>
 
-    <h1>Create Your Satellite 🛰️</h1>
-    <p style="text-align: center; max-width: 600px;">Design your own satellite for any mission. Choose the components below and see your creation come to life in the design viewer.</p>
+    <h1>Advanced Satellite Builder 🛰️</h1>
 
-    <div class="container">
-        <div class="controls">
-            <h2>Customization Panel</h2>
-
-            <div class="control-group">
-                <label for="body-shape">1. Satellite Bus (Body)</label>
-                <select id="body-shape">
-                    <option value="cube">CubeSat</option>
-                    <option value="sphere">Spherical Orbiter</option>
-                    <option value="cylinder">Cylindrical Probe</option>
-                </select>
+    <div class="main-container">
+        <div class="left-panel">
+            <div class="toolbox">
+                <h2>Component Toolbox</h2>
+                <div class="parts-container">
+                    <div id="part-bus" class="part" draggable="true">
+                        <img src="https://img.icons8.com/plasticine/100/box.png" alt="Satellite Bus">
+                        <p>Satellite Bus</p>
+                    </div>
+                    <div id="part-panel" class="part" draggable="true">
+                        <img src="https://img.icons8.com/plasticine/100/solar-panel.png" alt="Solar Panel">
+                        <p>Solar Panel</p>
+                    </div>
+                    <div id="part-antenna" class="part" draggable="true">
+                        <img src="https://img.icons8.com/plasticine/100/satellite-dish.png" alt="Antenna">
+                        <p>Antenna</p>
+                    </div>
+                </div>
             </div>
 
-            <div class="control-group">
-                <label for="body-color">2. Thermal Blanket Color</label>
-                <input type="color" id="body-color" value="#cccccc">
+            <div class="test-bay">
+                <h2>Mission Control</h2>
+                <button id="test-flight-btn">🚀 Test Flight</button>
+                <div id="test-results">
+                    <p>Assemble your satellite and run a test flight.</p>
+                </div>
             </div>
-
-            <div class="control-group">
-                <label for="solar-panels">3. Power Source (Solar Panels)</label>
-                <select id="solar-panels">
-                    <option value="dual-wing">Dual-Wing Array</option>
-                    <option value="array">Square Array</option>
-                    <option value="none">Internal RTG (No Panels)</option>
-                </select>
-            </div>
-
-            <div class="control-group">
-                <label for="antenna-type">4. Communication System</label>
-                <select id="antenna-type">
-                    <option value="dish">High-Gain Dish</option>
-                    <option value="whip">Omni-Directional Whip</option>
-                    <option value="none">No Antenna</option>
-                </select>
-            </div>
-
-            <button id="finalize-btn">Finalize Design</button>
         </div>
 
-        <div class="viewer">
-            <div id="satellite-assembly">
-                <div id="satellite-body"></div>
-                <div class="solar-panel solar-panel-left"></div>
-                <div class="solar-panel solar-panel-right"></div>
-                <div id="antenna"></div>
+        <div class="right-panel">
+            <div class="assembly-area">
+                <div id="bus-zone" class="drop-zone" data-part-type="bus"></div>
+                <div id="panel-zone-left" class="drop-zone" data-part-type="panel"></div>
+                <div id="panel-zone-right" class="drop-zone" data-part-type="panel"></div>
+                <div id="antenna-zone" class="drop-zone" data-part-type="antenna"></div>
             </div>
         </div>
     </div>
 
     <script>
-        // --- Get references to HTML elements ---
-        const bodyShapeSelect = document.getElementById('body-shape');
-        const bodyColorInput = document.getElementById('body-color');
-        const solarPanelSelect = document.getElementById('solar-panels');
-        const antennaSelect = document.getElementById('antenna-type');
-        const finalizeBtn = document.getElementById('finalize-btn');
+        const parts = document.querySelectorAll('.part');
+        const dropZones = document.querySelectorAll('.drop-zone');
 
-        const satelliteBody = document.getElementById('satellite-body');
-        const satelliteAssembly = document.getElementById('satellite-assembly');
-        const antenna = document.getElementById('antenna');
+        // --- Drag and Drop Logic ---
 
-        // --- Main function to update the satellite's appearance ---
-        function updateSatellite() {
-            // 1. Update Body Shape
-            const bodyShape = bodyShapeSelect.value;
-            satelliteBody.className = ''; // Reset classes
-            satelliteBody.classList.add(`body-${bodyShape}`);
-            
-            // 2. Update Body Color
-            satelliteBody.style.backgroundColor = bodyColorInput.value;
+        // Add dragging class when drag starts
+        parts.forEach(part => {
+            part.addEventListener('dragstart', (e) => {
+                part.classList.add('dragging');
+                e.dataTransfer.setData('text/plain', part.id);
+            });
 
-            // 3. Update Solar Panels
-            const panelType = solarPanelSelect.value;
-            satelliteAssembly.className = ''; // Reset classes
-            satelliteAssembly.classList.add(`panels-${panelType}`);
-            
-            // 4. Update Antenna
-            const antennaType = antennaSelect.value;
-            antenna.className = ''; // Reset classes
-            antenna.classList.add(`antenna-${antennaType}`);
-        }
-
-        // --- Attach event listeners to all controls ---
-        bodyShapeSelect.addEventListener('change', updateSatellite);
-        bodyColorInput.addEventListener('input', updateSatellite);
-        solarPanelSelect.addEventListener('change', updateSatellite);
-        antennaSelect.addEventListener('change', updateSatellite);
-
-        // --- Finalize Button Logic ---
-        finalizeBtn.addEventListener('click', () => {
-            const shape = bodyShapeSelect.options[bodyShapeSelect.selectedIndex].text;
-            const panels = solarPanelSelect.options[solarPanelSelect.selectedIndex].text;
-            const comms = antennaSelect.options[antennaSelect.selectedIndex].text;
-
-            alert(
-                `🛰️ Satellite Design Finalized! 🛰️\n\n` +
-                `Specifications:\n` +
-                `- Body Type: ${shape}\n` +
-                `- Power System: ${panels}\n` +
-                `- Communications: ${comms}\n\n` +
-                `Ready for virtual launch!`
-            );
+            part.addEventListener('dragend', () => {
+                part.classList.remove('dragging');
+            });
         });
 
-        // --- Initial call to set the default satellite view on page load ---
-        updateSatellite();
+        dropZones.forEach(zone => {
+            zone.addEventListener('dragover', (e) => {
+                e.preventDefault(); // Necessary to allow dropping
+                zone.classList.add('drag-over');
+            });
 
+            zone.addEventListener('dragleave', () => {
+                zone.classList.remove('drag-over');
+            });
+
+            zone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                zone.classList.remove('drag-over');
+
+                const partId = e.dataTransfer.getData('text/plain');
+                const draggedPart = document.getElementById(partId);
+                const expectedPartType = zone.dataset.partType;
+
+                // Check if the dropped part matches the zone type
+                if (draggedPart && partId.includes(expectedPartType)) {
+                    // Clone the part to drop it, allowing reuse from toolbox
+                    const partClone = draggedPart.cloneNode(true);
+                    partClone.classList.remove('dragging');
+                    partClone.id = ''; // Remove ID from clone to avoid duplicates
+                    zone.innerHTML = ''; // Clear previous part
+                    zone.appendChild(partClone);
+                }
+            });
+        });
+
+        // --- Test Flight Simulation Logic ---
+        const testFlightBtn = document.getElementById('test-flight-btn');
+        const testResultsEl = document.getElementById('test-results');
+
+        testFlightBtn.addEventListener('click', () => {
+            const busZone = document.getElementById('bus-zone');
+            const panelZoneLeft = document.getElementById('panel-zone-left');
+            const panelZoneRight = document.getElementById('panel-zone-right');
+            const antennaZone = document.getElementById('antenna-zone');
+
+            const hasBus = busZone.hasChildNodes();
+            const hasPower = panelZoneLeft.hasChildNodes() || panelZoneRight.hasChildNodes();
+            const hasAntenna = antennaZone.hasChildNodes();
+            
+            let resultText = '';
+            testResultsEl.className = ''; // Reset result style
+
+            if (hasBus && hasPower && hasAntenna) {
+                testResultsEl.classList.add('success');
+                resultText = "<strong>Mission Success!</strong> Satellite is fully operational. It has power, core functions, and can communicate with Earth.";
+            } else if (hasBus && hasPower) {
+                testResultsEl.classList.add('warning');
+                resultText = "<strong>Partial Failure.</strong> Satellite launched and has power, but without an antenna, it cannot transmit or receive data.";
+            } else if (hasBus) {
+                testResultsEl.classList.add('error');
+                resultText = "<strong>Total Failure!</strong> The satellite bus is in orbit, but without a power source, all systems are offline.";
+            } else {
+                testResultsEl.classList.add('error');
+                resultText = "<strong>Launch Failure!</strong> A satellite bus is the essential first piece. The launch could not proceed without it.";
+            }
+
+            testResultsEl.innerHTML = `<p>${resultText}</p>`;
+        });
     </script>
 </body>
 </html>

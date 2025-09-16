@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rocket Design & Launchpad | GoldenSpaceAI</title>
+    <style>
+        :root {
+            --bg-dark: #0b0f1a;
+            --card-bg: #1a2035;
+            --primary-text: #e0e0e0;
+            --gold-accent: #f6c64a;
+            --border-color: #3c4260;
+            --success-color: #4ade80;
+            --error-color: #f87171;
+            --info-color: #60a5fa;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--primary-text);
+            margin: 0;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            color: var(--gold-accent);
+        }
+        
+        .main-layout {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .left-panel { flex: 2; }
+        .right-panel { flex: 1; }
+
+        .panel {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .panel h2 {
+            margin-top: 0;
+            color: var(--gold-accent);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+        
+        /* Assembly Silo */
+        .assembly-silo {
+            height: 600px;
+            display: flex;
+            flex-direction: column-reverse; /* Build from the bottom up */
+            align-items: center;
+            background: radial-gradient(circle, #2a314d 0%, var(--card-bg) 70%);
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .rocket-stage {
+            width: 120px;
+            border: 2px dashed var(--border-color);
+            margin: 5px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease-in-out;
+            background-color: transparent;
+            color: #9fb0d1;
+        }
+
+        .rocket-stage.active-build {
+            border-color: var(--gold-accent);
+            box-shadow: 0 0 20px rgba(246, 198, 74, 0.4);
+            color: var(--gold-accent);
+        }
+        
+        #engine-stage { height: 100px; }
+        #tank-stage { height: 200px; }
+        #payload-stage { height: 150px; }
+
+        .rocket-part {
+            width: 100%;
+            height: 100%;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            image-rendering: pixelated;
+        }
+        
+        /* Component Bay */
+        .component-options { display: none; }
+        .component-options.active { display: block; }
+        
+        .component {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+        .component:hover {
+            background-color: #2a314d;
+            border-color: var(--gold-accent);
+        }
+        .component img { max-width: 50px; }
+        .component-info h3 { margin: 0; }
+        .component-info p { margin: 0.25rem 0 0; font-size: 0.85rem; color: #9fb0d1; }
+        
+        /* Checklist and Launch */
+        .checklist ul {
+            list-style: none;
+            padding: 0;
+        }
+        .checklist li {
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            border-radius: 6px;
+            border-left: 4px solid var(--border-color);
+            background-color: #2a314d;
+            transition: all 0.3s;
+        }
+        .checklist li.complete {
+            border-left-color: var(--success-color);
+            text-decoration: line-through;
+            color: #9fb0d1;
+        }
+        .checklist li.complete::before {
+            content: '✅ ';
+        }
+
+        #launch-btn {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--card-bg);
+            background-color: #555;
+            border: none;
+            border-radius: 8px;
+            cursor: not-allowed;
+            margin-top: 1rem;
+            transition: all 0.3s;
+        }
+
+        #launch-btn.ready {
+            background-color: var(--success-color);
+            cursor: pointer;
+            color: var(--bg-dark);
+        }
+        
+        #launch-btn.ready:hover {
+            background-color: #6bf69c;
+        }
+
+        /* Launch Animation */
+        #rocket-assembly.liftoff {
+            transition: transform 3s ease-in;
+            transform: translateY(-800px);
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Rocket Design & Launchpad 🚀</h1>
+
+    <div class="main-layout">
+        <div class="left-panel panel">
+            <h2>Assembly Silo</h2>
+            <div class="assembly-silo">
+                <div id="rocket-assembly" style="display:contents;">
+                    <div id="payload-stage" class="rocket-stage"><span>Payload Fairing</span></div>
+                    <div id="tank-stage" class="rocket-stage"><span>Fuel Tank</span></div>
+                    <div id="engine-stage" class="rocket-stage active-build"><span>Engine Mount</span></div>
+                </div>
+            </div>
+        </div>
+        <div class="right-panel">
+            <div class="panel">
+                <h2 id="component-bay-title">Select Engine</h2>
+                <div id="component-bay">
+                    <div id="engine-options" class="component-options active">
+                        <div class="component" data-part-id="engine_merlin">
+                            <img src="https://img.icons8.com/plasticine/100/engine.png" alt="Merlin Engine">
+                            <div class="component-info"><h3>Merlin Engine</h3><p>Reliable & efficient. Good for medium payloads.</p></div>
+                        </div>
+                        <div class="component" data-part-id="engine_raptor">
+                            <img src="https://img.icons8.com/arcade/64/experimental-rocket.png" alt="Raptor Engine">
+                            <div class="component-info"><h3>Raptor Engine</h3><p>High thrust. Ideal for heavy payloads to deep space.</p></div>
+                        </div>
+                    </div>
+                    <div id="tank-options" class="component-options">
+                        <div class="component" data-part-id="tank_small">
+                            <img src="https://img.icons8.com/plasticine/100/gas-tank.png" alt="Small Tank">
+                            <div class="component-info"><h3>Small Fuel Tank</h3><p>Lightweight. Best for short-range missions.</p></div>
+                        </div>
+                        <div class="component" data-part-id="tank_large">
+                            <img src="https://img.icons8.com/plasticine/100/barrel.png" alt="Large Tank">
+                            <div class="component-info"><h3>Large Fuel Tank</h3><p>Heavy, but provides maximum range.</p></div>
+                        </div>
+                    </div>
+                    <div id="payload-options" class="component-options">
+                        <div class="component" data-part-id="payload_satellite">
+                            <img src="https://img.icons8.com/plasticine/100/satellite.png" alt="Satellite">
+                            <div class="component-info"><h3>Satellite Payload</h3><p>Standard weight. Deploy in Earth orbit.</p></div>
+                        </div>
+                         <div class="component" data-part-id="payload_probe">
+                            <img src="https://img.icons8.com/plasticine/100/planet-on-a-string.png" alt="Probe">
+                            <div class="component-info"><h3>Deep Space Probe</h3><p>Heavy scientific equipment for long journeys.</p></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel" style="margin-top: 2rem;">
+                <h2>Pre-Flight Checklist</h2>
+                <div class="checklist">
+                    <ul>
+                        <li id="check-engine">Propulsion System</li>
+                        <li id="check-tank">Fuel System</li>
+                        <li id="check-payload">Payload Secured</li>
+                    </ul>
+                </div>
+                <button id="launch-btn">Awaiting Systems Check</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA ---
+        const partsData = {
+            engine_merlin: { name: 'Merlin', thrust: 5, efficiency: 8, image: 'url(https://www.spacex.com/static/images/merlin.png)' },
+            engine_raptor: { name: 'Raptor', thrust: 9, efficiency: 6, image: 'url(https://www.spacex.com/static/images/raptor.png)' },
+            tank_small: { name: 'Small Tank', fuel: 5, weight: 3 },
+            tank_large: { name: 'Large Tank', fuel: 10, weight: 7 },
+            payload_satellite: { name: 'Satellite', weight: 4 },
+            payload_probe: { name: 'Probe', weight: 8 }
+        };
+
+        // --- STATE ---
+        let currentBuildStage = 'engine';
+        let rocketConfig = {};
+
+        // --- DOM ELEMENTS ---
+        const stages = {
+            engine: document.getElementById('engine-stage'),
+            tank: document.getElementById('tank-stage'),
+            payload: document.getElementById('payload-stage')
+        };
+        const options = {
+            engine: document.getElementById('engine-options'),
+            tank: document.getElementById('tank-options'),
+            payload: document.getElementById('payload-options')
+        };
+        const checklist = {
+            engine: document.getElementById('check-engine'),
+            tank: document.getElementById('check-tank'),
+            payload: document.getElementById('check-payload')
+        };
+        const bayTitle = document.getElementById('component-bay-title');
+        const launchBtn = document.getElementById('launch-btn');
+
+        // --- FUNCTIONS ---
+        function setBuildStage(stageName) {
+            // Deactivate current stage
+            stages[currentBuildStage].classList.remove('active-build');
+            options[currentBuildStage].classList.remove('active');
+
+            // Activate new stage
+            currentBuildStage = stageName;
+            if (currentBuildStage) {
+                stages[currentBuildStage].classList.add('active-build');
+                options[currentBuildStage].classList.add('active');
+                bayTitle.textContent = `Select ${stageName.charAt(0).toUpperCase() + stageName.slice(1)}`;
+            } else {
+                bayTitle.textContent = 'Assembly Complete';
+            }
+        }
+
+        function selectComponent(partId) {
+            const partType = partId.split('_')[0];
+            if (partType !== currentBuildStage) return;
+
+            // Store configuration and update visually
+            rocketConfig[partType] = partsData[partId];
+            const stageElement = stages[partType];
+            stageElement.innerHTML = ''; // Clear text
+            const partElement = document.createElement('div');
+            partElement.className = 'rocket-part';
+            // Placeholder for image - in a real app, you'd have image URLs in partsData
+            // For now, we'll just color it
+            partElement.style.backgroundColor = partType === 'engine' ? '#555' : (partType === 'tank' ? '#ccc' : '#fff');
+            stageElement.appendChild(partElement);
+            
+            // Update checklist
+            checklist[partType].classList.add('complete');
+
+            // Progress to next stage
+            if (partType === 'engine') setBuildStage('tank');
+            else if (partType === 'tank') setBuildStage('payload');
+            else if (partType === 'payload') {
+                setBuildStage(null); // End of build
+                checkLaunchReadiness();
+            }
+        }
+
+        function checkLaunchReadiness() {
+            if (rocketConfig.engine && rocketConfig.tank && rocketConfig.payload) {
+                launchBtn.classList.add('ready');
+                launchBtn.textContent = '🚀 LAUNCH 🚀';
+            }
+        }
+        
+        function launch() {
+            if (!launchBtn.classList.contains('ready')) return;
+            launchBtn.disabled = true;
+
+            // Simple simulation logic
+            const totalWeight = rocketConfig.tank.weight + rocketConfig.payload.weight;
+            const liftPower = rocketConfig.engine.thrust * rocketConfig.tank.fuel / totalWeight;
+
+            let result = '';
+            if (liftPower > 10) {
+                result = `Perfect Launch! The ${rocketConfig.payload.name} reached its target orbit with optimal efficiency. Mission Success!`;
+            } else if (liftPower > 5) {
+                result = `Stable Orbit Achieved. The rocket had enough power, but fuel margins were tight. Mission Partial Success.`;
+            } else {
+                result = `Launch Failure. The ${rocketConfig.engine.name} engine didn't have enough thrust to lift the heavy payload and fuel. The rocket failed to reach orbit.`;
+            }
+            
+            // Animate and show result
+            document.getElementById('rocket-assembly').classList.add('liftoff');
+            setTimeout(() => {
+                alert(`Mission Report:\n\n${result}`);
+                window.location.reload(); // Reset after launch
+            }, 3500);
+        }
+
+        // --- EVENT LISTENERS ---
+        document.querySelectorAll('.component').forEach(comp => {
+            comp.addEventListener('click', () => selectComponent(comp.dataset.partId));
+        });
+        
+        launchBtn.addEventListener('click', launch);
+
+    </script>
+</body>
+</html>

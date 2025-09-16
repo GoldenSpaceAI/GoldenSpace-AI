@@ -1,4 +1,4 @@
-// index.js — GoldenSpaceAI backend (Gemini + Google Login + Plans & Quotas)
+// index.js — GoldenSpaceAI (Login/Signup + Google OAuth + Plan Limits + Paddle Webhook)
 
 import express from "express";
 import cors from "cors";
@@ -8,358 +8,328 @@ import { fileURLToPath } from "url";
 import session from "express-session";
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
+import cookieParser from "cookie-parser";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import bodyParser from "body-parser";
+import crypto from "crypto";
 
 dotenv.config();
 
 const app = express();
+app.set("trust proxy", 1);
 
-/* ------------------------------ CORS ------------------------------ */
-app.use(
-  cors({
-    origin: true,
-    credentials: true,
-  })
-);
+app.use(cors({ origin: true, credentials: true }));
+app.use(express.json());
+app.use(cookieParser());
 
-/* ---------------------------- JSON body --------------------------- */
-app.use(express.json({ limit: "1mb" }));
-
-/* --------------------------- Paths/static ------------------------- */
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-/* --------------------------- Sessions ----------------------------- */
-app.set("trust proxy", 1); // needed for secure cookies behind Replit proxy
-
+// ---------- Sessions ----------
 app.use(
   session({
-    secret: process.env.SESSION_SECRET || "change_me_pls",
+    secret: process.env.SESSION_SECRET || "super-secret",
     resave: false,
     saveUninitialized: false,
     cookie: {
+      httpOnly: true,
       sameSite: "lax",
-      secure: true, // HTTPS on Replit
+      secure: process.env.NODE_ENV === "production",
       maxAge: 1000 * 60 * 60 * 24 * 7,
     },
-  })
+  }),
 );
 
-/* --------------------------- Passport ----------------------------- */
 app.use(passport.initialize());
 app.use(passport.session());
 
-passport.serializeUser((user, done) => done(null, user));
-passport.deserializeUser((obj, done) => done(null, obj));
+// ---------- Paths ----------
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-const BASE_URL =
-  process.env.BASE_URL?.replace(/\/+$/, "") || "http://localhost:3000";
-
-passport.use(
-  new GoogleStrategy(
-    {
-      clientID: process.env.GOOGLE_CLIENT_ID || "",
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
-      callbackURL: `${BASE_URL}/auth/google/callback`,
-    },
-    async (_accessToken, _refresh, profile, done) => {
-      try {
-        // Attach a plan to the session user (default = "moon")
-        const user = {
-          id: profile.id,
-          name: profile.displayName,
-          photo: profile.photos?.[0]?.value,
-          email: profile.emails?.[0]?.value,
-          provider: "google",
-          plan: "moon", // default plan — you can upgrade via /plan endpoint or your billing flow
-        };
-        return done(null, user);
-      } catch (e) {
-        return done(e);
-      }
-    }
-  )
-);
-
-/* --------------------------- Auth routes -------------------------- */
-app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
-
-app.get(
-  "/auth/google/callback",
-  passport.authenticate("google", { failureRedirect: "/login.html" }),
-  (req, res) => res.redirect("/")
-);
-
-app.get("/auth/logout", (req, res, next) => {
-  req.logout(err => {
-    if (err) return next(err);
-    req.session.destroy(() => res.redirect("/"));
-  });
-});
-
-app.get("/me", (req, res) => {
-  // Attach current usage/limits summary too
-  const user = req.user || null;
-  const plan = user?.plan || "guest";
-  const summary = user ? usageSummary(user.id, plan) : null;
-  res.json({ user, plan, usage: summary });
-});
-
-/* --------------------- Plans & daily quotas ----------------------- */
-const PLANS = {
-  moon:  {
-    askPerDay: 20,  // AI chat
-    searchPerDay: 5,
-    physicsPerDay: 0,
-    allowLearn: false,
-    allowCreate: false,
-  },
-  earth: {
-    askPerDay: 50,
-    searchPerDay: 10,
-    physicsPerDay: 5,
-    allowLearn: true,
-    allowCreate: false,
-  },
-  sun:   {
-    askPerDay: Infinity,
-    searchPerDay: Infinity,
-    physicsPerDay: Infinity,
-    allowLearn: true,
-    allowCreate: true,
-  },
+// ---------- Plan definitions ----------
+const PLAN_LIMITS = {
+  moon: { ask: 10, search: 5, physics: 0,  learnPhysics: false, createPlanet: false },
+  earth:{ ask: 30, search: 20, physics: 5,  learnPhysics: true,  createPlanet: false },
+  sun:  { ask: Infinity, search: Infinity, physics: Infinity, learnPhysics: true, createPlanet: true },
 };
 
-// In-memory usage: { day:"YYYY-MM-DD", ask, search, physics }
-const usageStore = new Map();
+// ---------- Usage tracking (memory, resets daily) ----------
+const usage = {}; // { userKey: { date, ask, search, physics } }
+const today = () => new Date().toISOString().slice(0,10);
 
-function todayUTC() {
-  return new Date().toISOString().slice(0, 10);
-}
-
-function getPlan(req) {
-  return (req.user?.plan || "moon").toLowerCase();
-}
-
-function getUserId(req) {
-  return req.user?.id || null;
-}
-
-function getUsage(userId) {
-  const day = todayUTC();
-  const cur = usageStore.get(userId);
-  if (!cur || cur.day !== day) {
-    const fresh = { day, ask: 0, search: 0, physics: 0 };
-    usageStore.set(userId, fresh);
-    return fresh;
+function getUserKey(req, res){
+  if (req.user?.id) return `u:${req.user.id}`;
+  if (!req.cookies.gs_uid){
+    const uid = Math.random().toString(36).slice(2) + Date.now().toString(36);
+    res.cookie("gs_uid", uid, { httpOnly:true, sameSite:"lax", secure:process.env.NODE_ENV==="production" });
+    return `g:${uid}`;
   }
-  return cur;
+  return `g:${req.cookies.gs_uid}`;
 }
-
-function usageSummary(userId, planKey) {
-  const plan = PLANS[planKey] || PLANS.moon;
-  const u = usageStore.get(userId) || { day: todayUTC(), ask: 0, search: 0, physics: 0 };
-  function rem(used, limit) {
-    return Number.isFinite(limit) ? Math.max(0, limit - used) : Infinity;
-    }
-  return {
-    day: u.day,
-    limits: {
-      ask: plan.askPerDay,
-      search: plan.searchPerDay,
-      physics: plan.physicsPerDay,
-    },
-    used: { ask: u.ask, search: u.search, physics: u.physics },
-    remaining: {
-      ask: rem(u.ask, plan.askPerDay),
-      search: rem(u.search, plan.searchPerDay),
-      physics: rem(u.physics, plan.physicsPerDay),
-    },
-  };
+function getPlan(req){ return (req.user && req.user.plan) || req.session?.plan || "moon"; }
+function getUsage(req,res){
+  const key = getUserKey(req,res);
+  const d = today();
+  if (!usage[key] || usage[key].date !== d) usage[key] = { date:d, ask:0, search:0, physics:0 };
+  return usage[key];
 }
-
-function requireAuth(req, res, next) {
-  if (req.isAuthenticated && req.isAuthenticated()) return next();
-  return res.status(401).json({ error: "Sign in required" });
-}
-
-function ensureAccess(featureKey) {
-  return (req, res, next) => {
+function enforceLimit(kind){
+  return (req,res,next)=>{
     const plan = getPlan(req);
-    const conf = PLANS[plan] || PLANS.moon;
-    if (featureKey === "learn" && !conf.allowLearn) {
-      return res.redirect("/plans.html?upgrade=learn");
-    }
-    if (featureKey === "create" && !conf.allowCreate) {
-      return res.redirect("/plans.html?upgrade=create");
-    }
+    const limits = PLAN_LIMITS[plan];
+    const u = getUsage(req,res);
+    const allowed = limits[kind];
+    if (allowed === 0) return res.status(403).json({ error:`Your plan does not allow ${kind}.` });
+    if (Number.isFinite(allowed) && u[kind] >= allowed) return res.status(429).json({ error:`Daily ${kind} limit reached for ${plan} plan.` });
+    if (Number.isFinite(allowed)) u[kind]++;
     next();
   };
 }
 
-// Check quota without consuming it (we'll consume on success)
-function checkQuota(actionKey) {
-  return (req, res, next) => {
-    const planKey = getPlan(req);
-    const plan = PLANS[planKey] || PLANS.moon;
-    const userId = getUserId(req);
-    if (!userId) return res.status(401).json({ error: "Sign in required" });
-
-    const usage = getUsage(userId);
-    const limit =
-      actionKey === "ask"
-        ? plan.askPerDay
-        : actionKey === "search"
-        ? plan.searchPerDay
-        : actionKey === "physics"
-        ? plan.physicsPerDay
-        : 0;
-
-    if (!Number.isFinite(limit)) return next(); // Infinity => allowed
-    const used =
-      actionKey === "ask" ? usage.ask : actionKey === "search" ? usage.search : usage.physics;
-
-    if (used >= limit) {
-      const summary = usageSummary(userId, planKey);
-      return res.status(429).json({
-        error: `Daily limit reached for ${actionKey}.`,
-        plan: planKey,
-        usage: summary,
-      });
-    }
-    next();
-  };
+// ---------- Helper: compute base URL dynamically ----------
+function getBaseUrl(req){
+  const proto = (req.headers["x-forwarded-proto"]||"").toString().split(",")[0] || req.protocol || "https";
+  const host  = (req.headers["x-forwarded-host"] || "").toString().split(",")[0] || req.get("host");
+  return `${proto}://${host}`;
 }
 
-// Consume quota after a successful call
-function consumeQuota(userId, actionKey) {
-  const u = getUsage(userId);
-  if (actionKey === "ask") u.ask++;
-  else if (actionKey === "search") u.search++;
-  else if (actionKey === "physics") u.physics++;
-  usageStore.set(userId, u);
-}
-
-/* ----------- TEMP endpoint to change plan (for testing) ----------- */
-/* In production, replace this with Stripe webhooks / admin flow.    */
-app.post("/plan", requireAuth, (req, res) => {
-  const plan = (req.body?.plan || "").toLowerCase();
-  if (!["moon", "earth", "sun"].includes(plan)) {
-    return res.status(400).json({ error: "Invalid plan. Use moon | earth | sun" });
+// ---------- Google OAuth ----------
+const DEFAULT_CALLBACK_PATH = "/auth/google/callback";
+passport.use(new GoogleStrategy(
+  {
+    clientID: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    callbackURL: DEFAULT_CALLBACK_PATH,
+    proxy: true,
+  },
+  (accessToken, refreshToken, profile, done)=>{
+    const user = {
+      id: profile.id,
+      name: profile.displayName,
+      email: profile.emails?.[0]?.value || "",
+      photo: profile.photos?.[0]?.value || "",
+      plan: "moon",
+    };
+    return done(null, user);
   }
-  req.user.plan = plan; // stored in session
-  const summary = usageSummary(req.user.id, plan);
-  res.json({ ok: true, plan, usage: summary });
+));
+passport.serializeUser((user,done)=>done(null,user));
+passport.deserializeUser((obj,done)=>done(null,obj));
+
+app.get("/auth/google",(req,res,next)=>{
+  const callbackURL = `${getBaseUrl(req)}${DEFAULT_CALLBACK_PATH}`;
+  passport.authenticate("google",{ scope:["profile","email"], callbackURL })(req,res,next);
+});
+app.get(DEFAULT_CALLBACK_PATH,(req,res,next)=>{
+  const callbackURL = `${getBaseUrl(req)}${DEFAULT_CALLBACK_PATH}`;
+  passport.authenticate("google",{ failureRedirect:"/login.html", callbackURL })(req,res,()=>res.redirect("/"));
+});
+app.post("/logout",(req,res,next)=>{
+  req.logout(err=>{ if (err) return next(err); req.session.destroy(()=>res.json({ok:true})); });
 });
 
-/* --------------------------- Gemini setup -------------------------- */
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-if (!GEMINI_API_KEY) console.error("❌ Missing GEMINI_API_KEY in .env");
+// ---------- Public Login/Signup Page ----------
+app.get("/login.html",(req,res)=>{
+  const appName="GoldenSpaceAI";
+  const base=getBaseUrl(req);
+  res.send(`<!doctype html><html lang="en"><head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>${appName} — Log in or Sign up</title><link rel="icon" href="/favicon.ico"/>
+<style>
+:root{--bg:#0b0f1a;--card:#12182a;--gold:#f0c419;--text:#e6ecff;--muted:#9fb0d1}
+*{box-sizing:border-box}body{margin:0;font-family:ui-sans-serif,system-ui,Segoe UI,Inter,Arial;background:radial-gradient(1200px 800px at 80% -10%,#1a2340 0%,#0b0f1a 60%,#070a12 100%);color:var(--text)}
+.wrap{min-height:100dvh;display:grid;place-items:center;padding:24px}
+.card{width:100%;max-width:520px;background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.01));border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:28px 24px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+h1{margin:0 0 6px;font-size:28px}.sub{margin:0 0 18px;font-size:14px;color:var(--muted)}
+.features{margin:12px 0 22px;padding:0;list-style:none;display:grid;gap:10px}
+.badge{display:inline-flex;gap:8px;background:rgba(240,196,25,.1);border:1px solid rgba(240,196,25,.35);padding:6px 10px;border-radius:999px;color:var(--gold);font-weight:600;font-size:12px;margin-bottom:10px}
+.btn{display:flex;align-items:center;gap:10px;justify-content:center;width:100%;padding:12px 16px;border-radius:12px;border:none;font-size:16px;font-weight:700;cursor:pointer;background:var(--gold);color:#1a1a1a;transition:transform .06s ease, box-shadow .2s ease}
+.btn:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(240,196,25,.35)}
+.google{background:#fff;color:#1f2937;border:1px solid rgba(0,0,0,.08)}
+.or{display:flex;align-items:center;gap:12px;color:var(--muted);font-size:12px;margin:12px 0}
+.or:before,.or:after{content:"";flex:1;height:1px;background:rgba(255,255,255,.12)}
+.fine{margin-top:14px;color:var(--muted);font-size:12px}
+.links{display:flex;gap:16px;margin-top:10px}a{color:var(--text)}
+</style></head><body><div class="wrap"><div class="card">
+<div class="badge">✨ Welcome, explorer</div>
+<h1>Log in or Sign up</h1>
+<p class="sub">Access ${appName}: ask AI about space, learn physics, and create your own planets.</p>
+<ul class="features"><li>🚀 Ask Advanced AI (daily limits based on your plan)</li><li>📚 Learn Physics</li><li>🪐 Create custom planets (Sun Pack)</li></ul>
+<div class="or">continue</div>
+<button class="btn google" onclick="window.location='${base}/auth/google'">
+<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18" height="18" style="display:inline-block"/> Continue with Google
+</button>
+<p class="fine">By continuing, you agree to our
+<a href="https://www.goldenspaceai.space/terms-of-service" target="_blank" rel="noopener">Terms</a> and
+<a href="https://www.goldenspaceai.space/privacy" target="_blank" rel="noopener">Privacy</a>.</p>
+<div class="links"><a href="/">Back to home</a><a href="/plans.html">See plans</a></div>
+</div></div></body></html>`);
+});
 
-const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-function fail(res, msg, code = 500) {
-  res.status(code).json({ answer: msg, reply: msg });
+// ---------- PUBLIC / AUTH GATE ----------
+const PUBLIC_FILE_EXT = /\.(css|js|mjs|map|png|jpg|jpeg|gif|svg|ico|txt|woff2?)$/i;
+function isPublicPath(req){
+  const p = req.path;
+  if (p === "/login.html") return true;
+  if (p === "/terms.html") return true;
+  if (p === "/privacy.html") return true;
+  if (p === "/health") return true;
+  if (p === "/webhooks/paddle") return true;  // Paddle must reach this without auth
+  if (p.startsWith("/auth/google")) return true;
+  if (PUBLIC_FILE_EXT.test(p)) return true;
+  if (p === "/favicon.ico") return true;
+  return false;
+}
+function authRequired(req,res,next){
+  if (isPublicPath(req)) return next();
+  if (req.isAuthenticated && req.isAuthenticated()) return next();
+  if (req.accepts("html")) return res.redirect("/login.html");
+  return res.status(401).json({ error:"Sign in required" });
 }
 
-/* ---------------------------- AI: /ask ----------------------------- */
-const SYSTEM =
-  "You are GoldenSpace Advanced AI. Be concise, accurate, and kind.\n" +
-  "Use clear steps and bullet points when helpful.";
+// ---------- Paddle Webhook (PUBLIC) ----------
+const upgradesByEmail = {}; // { "email": "earth" | "sun" }
+app.post("/webhooks/paddle",
+  bodyParser.raw({ type: "*/*" }), // keep raw for signature
+  (req,res)=>{
+    try{
+      const signature = req.header("Paddle-Signature") || req.header("paddle-signature");
+      const secret = process.env.PADDLE_WEBHOOK_SECRET;
+      if (!signature || !secret) return res.status(400).send("Missing signature or secret");
 
-app.post("/ask", requireAuth, checkQuota("ask"), async (req, res) => {
-  try {
-    const q = (req.body?.question || "").toString().trim();
-    if (!q) return res.json({ answer: "Ask me anything!" });
-    const prompt = `${SYSTEM}\n\nUser: ${q}`;
+      const computed = crypto.createHmac("sha256", secret).update(req.body).digest("hex");
+      if (signature !== computed && !signature.includes(computed)) {
+        return res.status(401).send("Invalid signature");
+      }
 
-    const result = await model.generateContent([prompt]);
+      const evt = JSON.parse(req.body.toString("utf8"));
+      const type = evt?.event_type || evt?.type || "";
+
+      // identify plan
+      const item = evt?.data?.items?.[0];
+      const priceId = item?.price?.id || evt?.data?.price_id || null;
+      const customPlan = item?.custom_data?.plan || evt?.data?.custom_data?.plan || null;
+
+      let plan = null;
+      if (customPlan === "earth" || customPlan === "sun") plan = customPlan;
+      else if (priceId === process.env.PADDLE_PRICE_EARTH) plan = "earth";
+      else if (priceId === process.env.PADDLE_PRICE_SUN)   plan = "sun";
+
+      const okEvent =
+        type.includes("subscription.created") ||
+        type.includes("subscription.activated") ||
+        type.includes("transaction.completed");
+
+      const email =
+        evt?.data?.customer?.email ||
+        evt?.data?.customer_email ||
+        item?.customer?.email ||
+        null;
+
+      if (okEvent && plan && email) {
+        upgradesByEmail[email.toLowerCase()] = plan;
+        console.log(`Paddle: upgraded ${email} -> ${plan}`);
+      }
+
+      return res.status(200).send("ok");
+    }catch(err){
+      console.error("Paddle webhook error", err);
+      return res.status(200).send("ok");
+    }
+  }
+);
+
+// mount the guard AFTER webhook so the webhook stays public
+app.use(authRequired);
+
+// ---------- Alias/redirects for Terms & Privacy ----------
+app.get("/terms.html", (_req,res)=>res.redirect("https://www.goldenspaceai.space/terms-of-service"));
+app.get("/privacy.html", (_req,res)=>res.redirect("https://www.goldenspaceai.space/privacy"));
+
+// ---------- Gemini ----------
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const model = genAI.getGenerativeModel({ model:"gemini-1.5-flash" });
+
+// ---------- AI Routes ----------
+app.post("/ask", enforceLimit("ask"), async (req,res)=>{
+  try{
+    const q = (req.body?.question || "").trim();
+    if (!q) return res.json({ answer:"Ask me anything!" });
+    const result = await model.generateContent([{ text:`User: ${q}` }]);
     const answer = result.response.text() || "No response.";
-
-    // success => consume quota
-    consumeQuota(req.user.id, "ask");
-    res.json({ answer, usage: usageSummary(req.user.id, getPlan(req)) });
-  } catch (err) {
-    console.error("Gemini /ask error:", err);
-    fail(res, "Oops—Gemini error. Try again.");
-  }
+    res.json({ answer });
+  }catch(e){ console.error("ask error", e); res.status(500).json({ answer:"Gemini error" }); }
 });
-
-/* ---------------------- AI: /search-info -------------------------- */
-app.post("/search-info", requireAuth, checkQuota("search"), async (req, res) => {
-  try {
-    const query = (req.body?.query || "").toString().trim();
-    if (!query) return res.json({ answer: "Type a topic to search." });
-
-    const prompt =
-      "You are GoldenSpace Knowledge. Explain clearly like a mini-encyclopedia.\n" +
-      "Format:\n" +
-      "- A 3–6 sentence overview (no fluff).\n" +
-      "- 3 bullet key facts.\n" +
-      "- Include numbers or dates if relevant.\n" +
-      "Topic: " + query;
-
-    const result = await model.generateContent([prompt]);
+app.post("/search-info", enforceLimit("search"), async (req,res)=>{
+  try{
+    const q = (req.body?.query || "").trim();
+    if (!q) return res.json({ answer:"Type something to search." });
+    const prompt = `You are GoldenSpace Knowledge. Overview + 3 bullet facts.\nTopic: ${q}`;
+    const result = await model.generateContent([{ text: prompt }]);
     const answer = result.response.text() || "No info found.";
-
-    consumeQuota(req.user.id, "search");
-    res.json({ answer, usage: usageSummary(req.user.id, getPlan(req)) });
-  } catch (err) {
-    console.error("Gemini /search-info error:", err);
-    fail(res, "Search Info error. Try again.");
-  }
+    res.json({ answer });
+  }catch(e){ console.error("search-info error", e); res.status(500).json({ answer:"Search error" }); }
 });
-
-/* ------------------ AI: /ai/physics-explain ----------------------- */
-app.post("/ai/physics-explain", requireAuth, checkQuota("physics"), async (req, res) => {
-  try {
-    const q = (req.body?.question || "").toString().trim();
-    if (!q) return res.json({ reply: "Ask a physics question to explain." });
-
-    const prompt =
-      "You are GoldenSpace Physics Tutor.\n" +
-      "Explain clearly with correct units and simple math.\n" +
-      "Format:\n" +
-      "1) Short overview (2–3 lines)\n" +
-      "2) Key formulas (define symbols + units)\n" +
-      "3) Step-by-step solution if relevant\n" +
-      "4) Tiny worked example (if no numbers, invent a simple one)\n" +
-      "Keep it under ~180 words.\n\n" +
-      "Question: " + q;
-
-    const result = await model.generateContent([prompt]);
+app.post("/ai/physics-explain", enforceLimit("physics"), async (req,res)=>{
+  try{
+    const q = (req.body?.question || "").trim();
+    if (!q) return res.json({ reply:"Ask a physics question." });
+    const prompt = `You are GoldenSpace Physics Tutor. Explain clearly.\nQuestion: ${q}`;
+    const result = await model.generateContent([{ text: prompt }]);
     const reply = result.response.text() || "No reply.";
+    res.json({ reply });
+  }catch(e){ console.error("physics error", e); res.status(500).json({ reply:"Physics error" }); }
+});
 
-    consumeQuota(req.user.id, "physics");
-    res.json({ reply, usage: usageSummary(req.user.id, getPlan(req)) });
-  } catch (err) {
-    console.error("Gemini /ai/physics-explain error:", err);
-    res.status(500).json({ reply: "Physics helper error. Try again." });
+// ---------- Apply Paddle upgrades when user hits API ----------
+app.get("/api/me",(req,res)=>{
+  if (req.user?.email){
+    const up = upgradesByEmail[req.user.email.toLowerCase()];
+    if (up && (req.user.plan !== up || req.session?.plan !== up)){
+      req.user.plan = up;
+      if (req.session) req.session.plan = up;
+    }
   }
+  const plan = getPlan(req);
+  const limits = PLAN_LIMITS[plan];
+  const u = getUsage(req,res);
+  const remaining = {
+    ask: limits.ask===Infinity?Infinity:Math.max(0, limits.ask-u.ask),
+    search: limits.search===Infinity?Infinity:Math.max(0, limits.search-u.search),
+    physics: limits.physics===Infinity?Infinity:Math.max(0, limits.physics-u.physics),
+  };
+  res.json({ loggedIn:!!req.user, user:req.user||null, plan, limits, used:u, remaining });
 });
 
-/* --------------------- Page gating (HTML) -------------------------- */
-// Put these BEFORE the static() so they override default file serving.
-app.get("/learn-physics.html", requireAuth, ensureAccess("learn"), (req, res) => {
-  res.sendFile(path.join(__dirname, "learn-physics.html"));
+// ---------- Gated pages ----------
+app.get("/learn-physics.html",(req,res)=>{
+  const plan = getPlan(req);
+  if (!PLAN_LIMITS[plan].learnPhysics){
+    return res.send(`<html><body style="font-family:sans-serif;text-align:center;margin-top:50px;">
+      <h2>🚀 Upgrade to the <span style="color:gold">Earth Pack</span> to unlock Learn Physics!</h2>
+      <p><a href="/plans.html">See Plans</a></p></body></html>`);
+  }
+  res.sendFile(path.join(__dirname,"learn-physics.html"));
 });
-app.get("/create-planet.html", requireAuth, ensureAccess("create"), (req, res) => {
-  res.sendFile(path.join(__dirname, "create-planet.html"));
+app.get("/create-planet.html",(req,res)=>{
+  const plan = getPlan(req);
+  if (!PLAN_LIMITS[plan].createPlanet){
+    return res.send(`<html><body style="font-family:sans-serif;text-align:center;margin-top:50px;">
+      <h2>🌍 Upgrade to the <span style="color:orange">Sun Pack</span> to unlock Create Planet!</h2>
+      <p><a href="/plans.html">See Plans</a></p></body></html>`);
+  }
+  res.sendFile(path.join(__dirname,"create-planet.html"));
 });
 
-/* -------------------------- Static last --------------------------- */
+// ---------- Select free plan (no checkout) ----------
+app.post("/api/select-free",(req,res)=>{
+  if (req.user) req.user.plan = "moon";
+  if (req.session) req.session.plan = "moon";
+  res.json({ ok:true, plan:"moon" });
+});
+
+// ---------- Static & Health ----------
 app.use(express.static(__dirname));
+app.get("/health",(_req,res)=>res.json({ ok:true }));
 
-/* ------------------------- Health + Usage ------------------------- */
-app.get("/usage", requireAuth, (req, res) => {
-  res.json({ plan: getPlan(req), usage: usageSummary(req.user.id, getPlan(req)) });
-});
-
-app.get("/health", (_req, res) => res.json({ ok: true }));
-
-/* --------------------------- Server start ------------------------- */
+// ---------- Start ----------
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`🚀 GoldenSpaceAI running on ${BASE_URL.replace("http://localhost:3000", `http://localhost:${PORT}`)}`);
-});
+app.listen(PORT,()=>console.log(`🚀 GoldenSpaceAI running on ${PORT}`));

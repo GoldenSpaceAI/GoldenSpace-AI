@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Your Space | GoldenSpaceAI</title>
+    <title>Your Space | Gravitational Sandbox | GoldenSpaceAI</title>
     <style>
         :root {
             --bg-dark: #0a0e15;
@@ -27,7 +27,7 @@
 
         /* --- Toolbox Panel --- */
         .toolbox {
-            width: 280px;
+            width: 300px;
             background-color: var(--panel-bg);
             border-right: 1px solid var(--border-color);
             padding: 1.5rem;
@@ -56,14 +56,8 @@
             border-color: var(--gold-accent);
             background-color: #1E293B;
         }
-        .tool-item-icon {
-            font-size: 2rem;
-            line-height: 1;
-        }
-        .tool-item h3 {
-            margin: 0;
-            font-size: 1rem;
-        }
+        .tool-item-icon { font-size: 2rem; line-height: 1; }
+        .tool-item h3 { margin: 0; font-size: 1rem; }
         
         /* --- Inspector Panel --- */
         #inspector-panel {
@@ -80,7 +74,7 @@
             margin-bottom: 0.5rem;
             color: var(--text-secondary);
         }
-        .inspector-group input {
+        .inspector-group input, .inspector-group select {
             width: 100%;
             background-color: var(--panel-bg);
             border: 1px solid var(--border-color);
@@ -89,14 +83,12 @@
             border-radius: 4px;
             box-sizing: border-box;
         }
+        #advanced-planet-settings { display: none; } /* Hidden by default */
 
         /* --- Universe Canvas --- */
         .universe-canvas {
             flex: 1;
             position: relative;
-            background-image:
-                radial-gradient(circle at 20% 30%, rgba(135, 206, 235, 0.1), transparent 30%),
-                radial-gradient(circle at 80% 70%, rgba(246, 198, 74, 0.1), transparent 40%);
             background-color: var(--bg-dark);
             overflow: hidden;
         }
@@ -109,53 +101,38 @@
             align-items: center;
             justify-content: center;
             border-radius: 50%;
-            transition: box-shadow 0.2s;
+            transition: box-shadow 0.2s, width 0.3s, height 0.3s;
         }
         .celestial-object.selected {
             box-shadow: 0 0 20px 5px var(--gold-glow), 0 0 0 2px var(--gold-accent);
             z-index: 100;
         }
-        .celestial-object.dragging {
-            cursor: grabbing;
-            z-index: 101;
-        }
+        .celestial-object.dragging { cursor: grabbing; z-index: 101; }
 
         /* Specific Object Styles */
         .galaxy {
-            width: 200px;
-            height: 200px;
+            width: 250px;
+            height: 250px;
             background: radial-gradient(ellipse, #fff 0%, rgba(255,255,255,0.6) 10%, rgba(255,255,255,0) 60%);
         }
         .star {
-            width: 50px;
-            height: 50px;
+            width: 60px;
+            height: 60px;
             background: radial-gradient(circle, #fff, var(--gold-accent));
-            box-shadow: 0 0 30px var(--gold-accent);
+            box-shadow: 0 0 40px var(--gold-accent);
         }
         .planet {
-            width: 30px;
-            height: 30px;
+            width: 20px;
+            height: 20px;
             background-color: #38bdf8;
+            z-index: 50;
         }
-
-        /* Mobile Responsiveness */
-        @media (max-width: 768px) {
-            body { flex-direction: column-reverse; }
-            .toolbox {
-                width: 100%;
-                height: auto;
-                flex-direction: row;
-                flex-wrap: wrap;
-                justify-content: center;
-                border-right: none;
-                border-top: 1px solid var(--border-color);
-            }
-            .tool-item {
-                flex-basis: 120px;
-            }
-            #inspector-panel {
-                display: none !important; /* Hide inspector on mobile for simplicity */
-            }
+        .orbit-path {
+            position: absolute;
+            border: 1px dashed var(--border-color);
+            border-radius: 50%;
+            pointer-events: none; /* Allows clicking through it */
+            transition: width 0.3s, height 0.3s, top 0.3s, left 0.3s;
         }
     </style>
 </head>
@@ -167,18 +144,9 @@
     <aside class="toolbox">
         <div>
             <h2>Toolbox</h2>
-            <div class="tool-item" data-type="galaxy">
-                <div class="tool-item-icon">🌌</div>
-                <div class="tool-item-info"><h3>Add Galaxy</h3></div>
-            </div>
-            <div class="tool-item" data-type="star">
-                <div class="tool-item-icon">🌟</div>
-                <div class="tool-item-info"><h3>Add Star</h3></div>
-            </div>
-             <div class="tool-item" data-type="planet">
-                <div class="tool-item-icon">🪐</div>
-                <div class="tool-item-info"><h3>Add Planet</h3></div>
-            </div>
+            <div class="tool-item" data-type="galaxy"><div class="tool-item-icon">🌌</div><h3>Add Galaxy</h3></div>
+            <div class="tool-item" data-type="star"><div class="tool-item-icon">🌟</div><h3>Add Star</h3></div>
+            <div class="tool-item" data-type="planet"><div class="tool-item-icon">🪐</div><h3>Add Planet</h3></div>
         </div>
         
         <div id="inspector-panel">
@@ -187,9 +155,28 @@
                 <label for="name-input">Object Name</label>
                 <input type="text" id="name-input">
             </div>
-            <div class="inspector-group">
-                <label for="color-input">Color</label>
-                <input type="color" id="color-input">
+            <div id="advanced-planet-settings">
+                 <div class="inspector-group">
+                    <label for="size-input">Planet Size</label>
+                    <input type="range" id="size-input" min="10" max="80" value="20">
+                </div>
+                <div class="inspector-group">
+                    <label for="color-input">Planet Color</label>
+                    <input type="color" id="color-input" value="#38bdf8">
+                </div>
+                <div class="inspector-group">
+                    <label for="oxygen-input">Oxygen Level</label>
+                    <input type="text" id="oxygen-input" value="21%">
+                </div>
+                <div class="inspector-group">
+                    <label for="life-input">Type of Life</label>
+                    <select id="life-input">
+                        <option>None</option>
+                        <option>Microbial</option>
+                        <option>Complex (Flora/Fauna)</option>
+                        <option>Intelligent</option>
+                    </select>
+                </div>
             </div>
         </div>
     </aside>
@@ -199,97 +186,173 @@
         const toolboxItems = document.querySelectorAll('.tool-item');
         const inspectorPanel = document.getElementById('inspector-panel');
         const nameInput = document.getElementById('name-input');
+        const advancedSettings = document.getElementById('advanced-planet-settings');
+        const sizeInput = document.getElementById('size-input');
         const colorInput = document.getElementById('color-input');
+        const oxygenInput = document.getElementById('oxygen-input');
+        const lifeInput = document.getElementById('life-input');
 
         let activeObject = null;
         let objectCounter = 0;
+        let objects = new Map();
 
         // --- ADDING OBJECTS ---
         toolboxItems.forEach(item => {
-            item.addEventListener('click', () => {
-                const type = item.dataset.type;
-                createObject(type, { x: 100, y: 100 });
-            });
+            item.addEventListener('click', () => createObject(item.dataset.type, { x: 200, y: 200 }));
         });
 
         function createObject(type, position) {
             objectCounter++;
-            const obj = document.createElement('div');
-            obj.className = `celestial-object ${type}`;
-            obj.id = `obj-${objectCounter}`;
-            obj.style.left = `${position.x}px`;
-            obj.style.top = `${position.y}px`;
-            obj.dataset.name = `${type.charAt(0).toUpperCase() + type.slice(1)} ${objectCounter}`;
+            const id = `obj-${objectCounter}`;
+            const objEl = document.createElement('div');
+            objEl.className = `celestial-object ${type}`;
+            objEl.id = id;
+            objEl.style.left = `${position.x}px`;
+            objEl.style.top = `${position.y}px`;
 
-            makeDraggable(obj);
+            const objectData = {
+                id: id,
+                el: objEl,
+                type: type,
+                name: `${type.charAt(0).toUpperCase() + type.slice(1)} ${objectCounter}`,
+            };
             
-            obj.addEventListener('click', (e) => {
-                e.stopPropagation();
-                selectObject(obj);
-            });
+            if (type === 'planet') {
+                objectData.size = 20;
+                objectData.color = '#38bdf8';
+                objectData.oxygen = '21%';
+                objectData.life = 'None';
+                objectData.orbitalAngle = Math.random() * 360;
+                objectData.orbitSpeed = (Math.random() * 0.2) + 0.1;
+                // Create an orbit path for the planet
+                const orbitEl = document.createElement('div');
+                orbitEl.className = 'orbit-path';
+                canvas.appendChild(orbitEl);
+                objectData.orbitEl = orbitEl;
+            }
+
+            objects.set(id, objectData);
             
-            canvas.appendChild(obj);
-            selectObject(obj);
+            makeDraggable(objectData);
+            objEl.addEventListener('click', e => { e.stopPropagation(); selectObject(objectData); });
+            canvas.appendChild(objEl);
+            selectObject(objectData);
+            
+            if (type === 'planet') updatePlanetOrbit(objectData);
         }
         
-        // --- SELECTING & INSPECTING OBJECTS ---
-        function selectObject(obj) {
-            // Deselect any currently selected object
-            if (activeObject) {
-                activeObject.classList.remove('selected');
-            }
+        // --- SELECTING & INSPECTING ---
+        function selectObject(objData) {
+            if (activeObject && activeObject.el) activeObject.el.classList.remove('selected');
             
-            activeObject = obj;
-            activeObject.classList.add('selected');
+            activeObject = objData;
+            activeObject.el.classList.add('selected');
 
-            // Show and populate inspector
             inspectorPanel.style.display = 'block';
-            nameInput.value = activeObject.dataset.name;
+            nameInput.value = activeObject.name;
             
-            // Show color picker only for planets and stars
-            const type = activeObject.classList.contains('planet') ? 'planet' : (activeObject.classList.contains('star') ? 'star' : null);
-            colorInput.parentElement.style.display = type ? 'block' : 'none';
+            if (activeObject.type === 'planet') {
+                advancedSettings.style.display = 'block';
+                sizeInput.value = activeObject.size;
+                colorInput.value = activeObject.color;
+                oxygenInput.value = activeObject.oxygen;
+                lifeInput.value = activeObject.life;
+            } else {
+                advancedSettings.style.display = 'none';
+            }
         }
         
-        canvas.addEventListener('click', () => {
-            if (activeObject) {
-                activeObject.classList.remove('selected');
-                activeObject = null;
-                inspectorPanel.style.display = 'none';
-            }
-        });
-        
-        nameInput.addEventListener('input', () => {
-            if (activeObject) {
-                activeObject.dataset.name = nameInput.value;
-            }
-        });
+        // Inspector event listeners
+        nameInput.addEventListener('input', () => { if (activeObject) activeObject.name = nameInput.value; });
+        sizeInput.addEventListener('input', () => { if (activeObject?.type === 'planet') {
+            activeObject.size = parseFloat(sizeInput.value);
+            activeObject.el.style.width = `${activeObject.size}px`;
+            activeObject.el.style.height = `${activeObject.size}px`;
+        }});
+        colorInput.addEventListener('input', () => { if (activeObject?.type === 'planet') {
+            activeObject.color = colorInput.value;
+            activeObject.el.style.backgroundColor = activeObject.color;
+        }});
+        oxygenInput.addEventListener('input', () => { if (activeObject?.type === 'planet') activeObject.oxygen = oxygenInput.value; });
+        lifeInput.addEventListener('change', () => { if (activeObject?.type === 'planet') activeObject.life = lifeInput.value; });
 
-        colorInput.addEventListener('input', () => {
-            if (activeObject) {
-                activeObject.style.backgroundColor = colorInput.value;
-                 if (activeObject.classList.contains('star')) {
-                    activeObject.style.boxShadow = `0 0 30px ${colorInput.value}`;
-                 }
+        // --- ORBIT & GRAVITY SIMULATION ---
+        function getCenter(data) {
+            return {
+                x: data.el.offsetLeft + data.el.offsetWidth / 2,
+                y: data.el.offsetTop + data.el.offsetHeight / 2
+            };
+        }
+
+        function updatePlanetOrbit(planetData) {
+            let nearestStar = null;
+            let minDistance = Infinity;
+
+            objects.forEach(obj => {
+                if (obj.type === 'star') {
+                    const planetCenter = getCenter(planetData);
+                    const starCenter = getCenter(obj);
+                    const distance = Math.hypot(planetCenter.x - starCenter.x, planetCenter.y - starCenter.y);
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        nearestStar = obj;
+                    }
+                }
+            });
+
+            if (nearestStar) {
+                planetData.anchorStar = nearestStar;
+                planetData.orbitRadius = minDistance;
+                
+                // Update visual orbit path
+                const orbitSize = minDistance * 2;
+                const starCenter = getCenter(nearestStar);
+                planetData.orbitEl.style.width = `${orbitSize}px`;
+                planetData.orbitEl.style.height = `${orbitSize}px`;
+                planetData.orbitEl.style.left = `${starCenter.x - minDistance}px`;
+                planetData.orbitEl.style.top = `${starCenter.y - minDistance}px`;
+                planetData.orbitEl.style.display = 'block';
+            } else {
+                // No star nearby, hide orbit
+                planetData.anchorStar = null;
+                planetData.orbitEl.style.display = 'none';
             }
-        });
+        }
+
+        function animate() {
+            objects.forEach(obj => {
+                if (obj.type === 'planet' && obj.anchorStar) {
+                    obj.orbitalAngle += obj.orbitSpeed;
+                    const starCenter = getCenter(obj.anchorStar);
+                    
+                    const newX = starCenter.x + obj.orbitRadius * Math.cos(obj.orbitalAngle * Math.PI / 180) - obj.size / 2;
+                    const newY = starCenter.y + obj.orbitRadius * Math.sin(obj.orbitalAngle * Math.PI / 180) - obj.size / 2;
+
+                    obj.el.style.left = `${newX}px`;
+                    obj.el.style.top = `${newY}px`;
+                }
+            });
+            requestAnimationFrame(animate);
+        }
 
         // --- DRAGGING LOGIC ---
-        function makeDraggable(element) {
+        function makeDraggable(elementData) {
             let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+            const element = elementData.el;
 
             element.onmousedown = dragMouseDown;
 
             function dragMouseDown(e) {
                 e.preventDefault();
                 e.stopPropagation();
-                selectObject(element); // Select object on drag start
+                selectObject(elementData);
 
                 pos3 = e.clientX;
                 pos4 = e.clientY;
                 document.onmouseup = closeDragElement;
                 document.onmousemove = elementDrag;
                 element.classList.add('dragging');
+                if(elementData.orbitEl) elementData.orbitEl.style.display = 'none';
             }
 
             function elementDrag(e) {
@@ -307,8 +370,18 @@
                 document.onmouseup = null;
                 document.onmousemove = null;
                 element.classList.remove('dragging');
+                if (elementData.type === 'planet') {
+                    updatePlanetOrbit(elementData);
+                }
+                // If a star was moved, re-calculate orbits for all planets
+                if (elementData.type === 'star') {
+                    objects.forEach(obj => { if(obj.type === 'planet') updatePlanetOrbit(obj); });
+                }
             }
         }
+
+        // --- INITIALIZATION ---
+        animate(); // Start the simulation loop
     </script>
 </body>
 </html>

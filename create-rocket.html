@@ -8,171 +8,44 @@
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/katex.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body);"></script>
     <style>
-        :root {
-            --bg-dark: #0A0F1A;
-            --panel-bg: #101828;
-            --border-color: #334155;
-            --text-primary: #E2E8F0;
-            --text-secondary: #94A3B8;
-            --accent-blue: #38BDF8;
-            --accent-green: #34D399;
-            --accent-red: #F87171;
-            --font-main: 'Segoe UI', 'Roboto', system-ui, sans-serif;
-            --font-mono: 'Courier New', 'monospace';
-        }
-
-        body {
-            font-family: var(--font-main);
-            background-color: var(--bg-dark);
-            color: var(--text-primary);
-            margin: 0;
-            padding: 2rem;
-            font-size: 14px;
-        }
-
-        .main-grid {
-            display: grid;
-            grid-template-columns: 2fr 3fr 2fr;
-            gap: 1.5rem;
-            max-width: 1600px;
-            margin: auto;
-        }
-
-        .panel {
-            background-color: var(--panel-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 1.5rem;
-        }
-
-        h1, h2, h3 {
-            color: var(--text-primary);
-            margin-top: 0;
-            font-weight: 600;
-        }
-        h2 { border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; }
-
-        /* Left Panel: Components */
-        .component-list .component {
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            margin-bottom: 1rem;
-            padding: 1rem;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        .component-list .component:hover { border-color: var(--accent-blue); background-color: #1E293B; }
-        .component-list .component h3 { margin-bottom: 0.5rem; color: var(--accent-blue); }
-        .component-stats {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 0.5rem;
-            font-family: var(--font-mono);
-            font-size: 0.9em;
-            color: var(--text-secondary);
-        }
-
-        /* Center Panel: Assembly & Telemetry */
-        .assembly-silo {
-            height: 450px;
-            display: flex;
-            flex-direction: column-reverse;
-            align-items: center;
-            background-color: #0c121e;
-            border-radius: 6px;
-            border: 1px solid var(--border-color);
-            padding: 1rem;
-        }
-        .stage {
-            width: 30%;
-            min-height: 50px;
-            border-left: 1px solid var(--border-color);
-            border-right: 1px solid var(--border-color);
-            text-align: center;
-            color: var(--text-secondary);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-        }
-        .stage.filled {
-            background-color: #475569;
-            color: var(--text-primary);
-            border-color: #64748B;
-        }
-        #stage-payload { border-top: 1px solid var(--border-color); border-top-left-radius: 50px; border-top-right-radius: 50px; height: 100px; }
-        #stage-tank { height: 200px; }
-        #stage-engine { border-bottom: 1px solid var(--border-color); height: 80px; }
-        
-        .telemetry-panel { margin-top: 1.5rem; }
-        .telemetry-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 1rem;
-        }
-        .telemetry-readout {
-            background-color: var(--bg-dark);
-            padding: 1rem;
-            border-radius: 4px;
-        }
-        .telemetry-readout label {
-            display: block;
-            font-size: 0.9em;
-            color: var(--text-secondary);
-            margin-bottom: 0.5rem;
-        }
-        .telemetry-readout .value {
-            font-family: var(--font-mono);
-            font-size: 1.5em;
-            font-weight: bold;
-            color: var(--accent-green);
-        }
-        .telemetry-readout .value.warning { color: #FBBF24; }
-        .telemetry-readout .value.error { color: var(--accent-red); }
-
-        /* Right Panel: Mission & Launch */
-        .mission-selector, .systems-analysis, .launch-control { margin-bottom: 2rem; }
-        select, button {
-            width: 100%;
-            background-color: #1E293B;
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-            padding: 0.75rem;
-            border-radius: 4px;
-            font-size: 1em;
-        }
-        button { cursor: pointer; font-weight: bold; }
-        #launch-btn {
-            background-color: #4B5563;
-            color: #9CA3AF;
-            cursor: not-allowed;
-        }
-        #launch-btn.ready {
-            background-color: var(--accent-green);
-            color: var(--bg-dark);
-            cursor: pointer;
-        }
-        #launch-btn.ready:hover { background-color: #6EE7B7; }
-
-        .analysis-item {
-            color: var(--text-secondary);
-            margin-bottom: 0.5rem;
-        }
-        .analysis-item.pass { color: var(--accent-green); }
-        .analysis-item.fail { color: var(--accent-red); }
-
-        .formula { font-size: 0.9em; color: var(--text-secondary); margin-top: 1rem; }
+        :root { --bg-dark:#0A0F1A; --panel-bg:#101828; --border-color:#334155; --text-primary:#E2E8F0; --text-secondary:#94A3B8; --accent-blue:#38BDF8; --accent-green:#34D399; --accent-red:#F87171; --font-main:'Segoe UI','Roboto',system-ui,sans-serif; --font-mono:'Courier New','monospace'; }
+        body { font-family:var(--font-main); background-color:var(--bg-dark); color:var(--text-primary); margin:0; padding:2rem; font-size:14px; }
+        .main-grid { display:grid; grid-template-columns:2fr 3fr 2fr; gap:1.5rem; max-width:1600px; margin:auto; }
+        .panel { background-color:var(--panel-bg); border:1px solid var(--border-color); border-radius:8px; padding:1.5rem; }
+        h1,h2,h3 { color:var(--text-primary); margin-top:0; font-weight:600; }
+        h2 { border-bottom:1px solid var(--border-color); padding-bottom:0.75rem; }
+        .component-list .component { border:1px solid var(--border-color); border-radius:6px; margin-bottom:1rem; padding:1rem; cursor:pointer; transition:all 0.2s ease; }
+        .component-list .component:hover { border-color:var(--accent-blue); background-color:#1E293B; }
+        .component-list .component h3 { margin-bottom:0.5rem; color:var(--accent-blue); }
+        .component-stats { display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; font-family:var(--font-mono); font-size:0.9em; color:var(--text-secondary); }
+        .assembly-silo { height:450px; display:flex; flex-direction:column-reverse; align-items:center; background-color:#0c121e; border-radius:6px; border:1px solid var(--border-color); padding:1rem; }
+        .stage { width:30%; min-height:50px; border-left:1px solid var(--border-color); border-right:1px solid var(--border-color); text-align:center; color:var(--text-secondary); display:flex; align-items:center; justify-content:center; transition:all 0.3s ease; }
+        .stage.filled { background-color:#475569; color:var(--text-primary); border-color:#64748B; }
+        #stage-payload { border-top:1px solid var(--border-color); border-top-left-radius:50px; border-top-right-radius:50px; height:100px; }
+        #stage-tank { height:200px; }
+        #stage-engine { border-bottom:1px solid var(--border-color); height:80px; }
+        .telemetry-panel { margin-top:1.5rem; }
+        .telemetry-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:1rem; }
+        .telemetry-readout { background-color:var(--bg-dark); padding:1rem; border-radius:4px; }
+        .telemetry-readout label { display:block; font-size:0.9em; color:var(--text-secondary); margin-bottom:0.5rem; }
+        .telemetry-readout .value { font-family:var(--font-mono); font-size:1.5em; font-weight:bold; color:var(--accent-green); }
+        .telemetry-readout .value.warning { color:#FBBF24; }
+        .telemetry-readout .value.error { color:var(--accent-red); }
+        .mission-selector,.systems-analysis,.launch-control { margin-bottom:2rem; }
+        select,button { width:100%; background-color:#1E293B; border:1px solid var(--border-color); color:var(--text-primary); padding:0.75rem; border-radius:4px; font-size:1em; }
+        button { cursor:pointer; font-weight:bold; }
+        #launch-btn { background-color:#4B5563; color:#9CA3AF; cursor:not-allowed; }
+        #launch-btn.ready { background-color:var(--accent-green); color:var(--bg-dark); cursor:pointer; }
+        #launch-btn.ready:hover { background-color:#6EE7B7; }
+        .analysis-item { color:var(--text-secondary); margin-bottom:0.5rem; }
+        .analysis-item.pass { color:var(--accent-green); }
+        .analysis-item.fail { color:var(--accent-red); }
+        .formula { font-size:0.9em; color:var(--text-secondary); margin-top:1rem; }
     </style>
 </head>
 <body>
-
     <main class="main-grid">
-        <section id="components-panel" class="panel">
-            <h2>Component Selector</h2>
-            <div id="component-list" class="component-list">
-                </div>
-        </section>
-
+        <section id="components-panel" class="panel"><h2>Component Selector</h2><div id="component-list" class="component-list"></div></section>
         <section id="assembly-panel" class="panel">
             <h2>Assembly & Vehicle Telemetry</h2>
             <div class="assembly-silo">
@@ -183,233 +56,55 @@
             <div class="telemetry-panel">
                 <h3>Performance Projection</h3>
                 <div class="telemetry-grid">
-                    <div class="telemetry-readout">
-                        <label>Total Mass</label>
-                        <span id="telemetry-mass" class="value">0 t</span>
-                    </div>
-                    <div class="telemetry-readout">
-                        <label>Thrust-to-Weight</label>
-                        <span id="telemetry-twr" class="value">0</span>
-                    </div>
-                    <div class="telemetry-readout">
-                        <label>Projected Delta-V ($\Delta v$)</label>
-                        <span id="telemetry-dv" class="value">0 m/s</span>
-                    </div>
+                    <div class="telemetry-readout"><label>Total Mass</label><span id="telemetry-mass" class="value">0 t</span></div>
+                    <div class="telemetry-readout"><label>Thrust-to-Weight</label><span id="telemetry-twr" class="value">0</span></div>
+                    <div class="telemetry-readout"><label>Projected Delta-V ($\Delta v$)</label><span id="telemetry-dv" class="value">0 m/s</span></div>
                 </div>
-                <div class="formula">
-                    Rocket Equation: $\Delta v = I_{sp} \cdot g_0 \cdot \ln(\frac{m_{start}}{m_{final}})$
-                </div>
+                <div class="formula">Rocket Equation: $\Delta v = I_{sp} \cdot g_0 \cdot \ln(\frac{m_{start}}{m_{final}})$</div>
             </div>
         </section>
-
         <section id="mission-panel" class="panel">
-            <div class="mission-selector">
-                <h2>1. Mission Profile</h2>
-                <select id="mission-select">
-                    <option value="leo">LEO Satellite Deployment</option>
-                    <option value="gto">GTO Communications Relay</option>
-                    <option value="mars">Mars Cargo Supply</option>
-                </select>
-            </div>
-            <div class="systems-analysis">
-                <h2>2. Systems Analysis</h2>
-                <div id="analysis-output">
-                    <div id="analysis-dv" class="analysis-item">Awaiting vehicle data...</div>
-                    <div id="analysis-twr" class="analysis-item">Awaiting vehicle data...</div>
-                    <div id="analysis-payload" class="analysis-item">Awaiting vehicle data...</div>
-                </div>
-            </div>
-            <div class="launch-control">
-                <h2>3. Launch Control</h2>
-                <button id="launch-btn" disabled>Systems Offline</button>
-            </div>
+            <div class="mission-selector"><h2>1. Mission Profile</h2><select id="mission-select"><option value="leo">LEO Satellite Deployment</option><option value="gto">GTO Communications Relay</option><option value="mars">Mars Cargo Supply</option></select></div>
+            <div class="systems-analysis"><h2>2. Systems Analysis</h2><div id="analysis-output"><div id="analysis-dv" class="analysis-item">Awaiting vehicle data...</div><div id="analysis-twr" class="analysis-item">Awaiting vehicle data...</div><div id="analysis-payload" class="analysis-item">Awaiting vehicle data...</div></div></div>
+            <div class="launch-control"><h2>3. Launch Control</h2><button id="launch-btn" disabled>Systems Offline</button></div>
         </section>
     </main>
 
     <script>
-        // --- DATA ---
-        const components = {
-            engines: [
-                { id: 'en-merlin', name: 'Merlin 1D', type: 'engine', thrust: 845, isp: 311, mass: 0.47 },
-                { id: 'en-raptor', name: 'Raptor 2', type: 'engine', thrust: 2256, isp: 350, mass: 1.6 },
-                { id: 'en-be3', name: 'BE-3', type: 'engine', thrust: 490, isp: 310, mass: 0.63 },
-            ],
-            tanks: [
-                { id: 'tn-medium', name: 'Medium Tank', type: 'tank', fuelMass: 25, dryMass: 2 },
-                { id: 'tn-large', name: 'Large Tank', type: 'tank', fuelMass: 100, dryMass: 7 },
-                { id: 'tn-heavy', name: 'Heavy Tank', type: 'tank', fuelMass: 250, dryMass: 15 },
-            ],
-            payloads: [
-                { id: 'pl-cubesat', name: 'CubeSat Cluster', type: 'payload', mass: 0.5 },
-                { id: 'pl-comm', name: 'Communications Satellite', type: 'payload', mass: 4 },
-                { id: 'pl-cargo', name: 'Mars Cargo Pod', type: 'payload', mass: 10 },
-            ]
-        };
-
-        const missions = {
-            leo: { name: 'LEO Satellite Deployment', dv_req: 9400, payload_req: 'pl-cubesat' },
-            gto: { name: 'GTO Communications Relay', dv_req: 11900, payload_req: 'pl-comm' },
-            mars: { name: 'Mars Cargo Supply', dv_req: 14500, payload_req: 'pl-cargo' },
-        };
-
-        const G0 = 9.81; // Standard gravity
-
-        // --- STATE ---
-        let selectedParts = { engine: null, tank: null, payload: null };
+        const components = { engines:[{id:'en-merlin',name:'Merlin 1D',type:'engine',thrust:845,isp:311,mass:0.47},{id:'en-raptor',name:'Raptor 2',type:'engine',thrust:2256,isp:350,mass:1.6},], tanks:[{id:'tn-medium',name:'Medium Tank',type:'tank',fuelMass:25,dryMass:2},{id:'tn-large',name:'Large Tank',type:'tank',fuelMass:100,dryMass:7},], payloads:[{id:'pl-cubesat',name:'CubeSat Cluster',type:'payload',mass:0.5},{id:'pl-comm',name:'Comm Satellite',type:'payload',mass:4},{id:'pl-cargo',name:'Mars Cargo Pod',type:'payload',mass:10},]};
+        const missions = { leo:{name:'LEO Satellite Deployment',dv_req:9400,payload_req:'pl-cubesat'}, gto:{name:'GTO Communications Relay',dv_req:11900,payload_req:'pl-comm'}, mars:{name:'Mars Cargo Supply',dv_req:14500,payload_req:'pl-cargo'},};
+        const G0 = 9.81;
+        let selectedParts = {engine:null,tank:null,payload:null};
         let currentMission = missions.leo;
-
-        // --- DOM ELEMENTS ---
         const componentListEl = document.getElementById('component-list');
-        const stagesEl = {
-            engine: document.getElementById('stage-engine'),
-            tank: document.getElementById('stage-tank'),
-            payload: document.getElementById('stage-payload')
-        };
-        const telemetry = {
-            mass: document.getElementById('telemetry-mass'),
-            twr: document.getElementById('telemetry-twr'),
-            dv: document.getElementById('telemetry-dv')
-        };
-        const analysis = {
-            dv: document.getElementById('analysis-dv'),
-            twr: document.getElementById('analysis-twr'),
-            payload: document.getElementById('analysis-payload')
-        };
+        const stagesEl = {engine:document.getElementById('stage-engine'),tank:document.getElementById('stage-tank'),payload:document.getElementById('stage-payload')};
+        const telemetry = {mass:document.getElementById('telemetry-mass'),twr:document.getElementById('telemetry-twr'),dv:document.getElementById('telemetry-dv')};
+        const analysis = {dv:document.getElementById('analysis-dv'),twr:document.getElementById('analysis-twr'),payload:document.getElementById('analysis-payload')};
         const missionSelectEl = document.getElementById('mission-select');
         const launchBtnEl = document.getElementById('launch-btn');
 
-        // --- FUNCTIONS ---
-        function populateComponents() {
-            componentListEl.innerHTML = '<h2>Engines</h2>';
-            components.engines.forEach(c => componentListEl.innerHTML += createComponentHTML(c));
-            componentListEl.innerHTML += '<h2>Fuel Tanks</h2>';
-            components.tanks.forEach(c => componentListEl.innerHTML += createComponentHTML(c));
-            componentListEl.innerHTML += '<h2>Payloads</h2>';
-            components.payloads.forEach(c => componentListEl.innerHTML += createComponentHTML(c));
-
-            document.querySelectorAll('.component').forEach(el => {
-                el.addEventListener('click', () => selectPart(el.dataset.id));
-            });
-        }
-
-        function createComponentHTML(comp) {
-            let stats = '';
-            if(comp.type === 'engine') stats = `<div class="component-stats"><span>Thrust:</span><span>${comp.thrust} kN</span><span>Isp:</span><span>${comp.isp} s</span><span>Mass:</span><span>${comp.mass} t</span></div>`;
-            if(comp.type === 'tank') stats = `<div class="component-stats"><span>Fuel Mass:</span><span>${comp.fuelMass} t</span><span>Dry Mass:</span><span>${comp.dryMass} t</span></div>`;
-            if(comp.type === 'payload') stats = `<div class="component-stats"><span>Mass:</span><span>${comp.mass} t</span></div>`;
-            
-            return `
-                <div class="component" data-id="${comp.id}">
-                    <h3>${comp.name}</h3>
-                    ${stats}
-                </div>
-            `;
-        }
-
-        function selectPart(partId) {
-            const [prefix, id] = partId.split('-');
-            let partData;
-            let partType;
-
-            if (prefix === 'en') { partType = 'engine'; partData = components.engines.find(p => p.id === partId); }
-            if (prefix === 'tn') { partType = 'tank'; partData = components.tanks.find(p => p.id === partId); }
-            if (prefix === 'pl') { partType = 'payload'; partData = components.payloads.find(p => p.id === partId); }
-
-            if(partData) {
-                selectedParts[partType] = partData;
-                stagesEl[partType].textContent = partData.name;
-                stagesEl[partType].classList.add('filled');
-                updateSimulation();
-            }
-        }
-
-        function updateSimulation() {
-            if (!selectedParts.engine || !selectedParts.tank || !selectedParts.payload) return;
-            
-            // 1. Calculate Mass
-            const m_payload = selectedParts.payload.mass;
-            const m_engine = selectedParts.engine.mass;
-            const m_tank_dry = selectedParts.tank.dryMass;
-            const m_fuel = selectedParts.tank.fuelMass;
-
-            const m_final = m_payload + m_engine + m_tank_dry; // Mass after fuel is burned
-            const m_start = m_final + m_fuel; // Initial mass with fuel
-            
-            // 2. Calculate TWR
-            const thrust_N = selectedParts.engine.thrust * 1000;
-            const weight_N = m_start * 1000 * G0;
-            const twr = thrust_N / weight_N;
-
-            // 3. Calculate Delta-V using Tsiolkovsky Rocket Equation
-            const isp = selectedParts.engine.isp;
-            const deltaV = isp * G0 * Math.log(m_start / m_final);
-
-            // Update Telemetry display
-            telemetry.mass.textContent = `${m_start.toFixed(2)} t`;
-            telemetry.twr.textContent = twr.toFixed(2);
-            telemetry.dv.textContent = `${Math.round(deltaV)} m/s`;
-            
-            // Run Systems Analysis
-            runAnalysis(deltaV, twr);
-        }
-
-        function runAnalysis(deltaV, twr) {
-            let dvPass = false, twrPass = false, payloadPass = false;
-
-            // DV check
-            if (deltaV >= currentMission.dv_req) {
-                analysis.dv.textContent = `✅ Delta-V sufficient (${Math.round(deltaV)} / ${currentMission.dv_req} m/s)`;
-                analysis.dv.className = 'analysis-item pass';
-                dvPass = true;
-            } else {
-                analysis.dv.textContent = `❌ Delta-V insufficient (${Math.round(deltaV)} / ${currentMission.dv_req} m/s)`;
-                analysis.dv.className = 'analysis-item fail';
-            }
-            
-            // TWR check
-            if (twr > 1.2) {
-                analysis.twr.textContent = `✅ TWR optimal (${twr.toFixed(2)} > 1.2)`;
-                analysis.twr.className = 'analysis-item pass';
-                twrPass = true;
-            } else {
-                analysis.twr.textContent = `❌ TWR too low (${twr.toFixed(2)} < 1.2)`;
-                analysis.twr.className = 'analysis-item fail';
-            }
-            
-            // Payload check
-            if (selectedParts.payload && selectedParts.payload.id === currentMission.payload_req) {
-                analysis.payload.textContent = `✅ Correct payload for mission.`;
-                analysis.payload.className = 'analysis-item pass';
-                payloadPass = true;
-            } else {
-                analysis.payload.textContent = `❌ Incorrect payload for mission.`;
-                analysis.payload.className = 'analysis-item fail';
-            }
-
-            // Update Launch Button
-            if(dvPass && twrPass && payloadPass) {
-                launchBtnEl.disabled = false;
-                launchBtnEl.textContent = 'Initiate Launch Sequence';
-                launchBtnEl.className = 'ready';
-            } else {
-                launchBtnEl.disabled = true;
-                launchBtnEl.textContent = 'Design Incomplete';
-                launchBtnEl.className = '';
-            }
-        }
-
-        // --- EVENT LISTENERS ---
-        missionSelectEl.addEventListener('change', (e) => {
-            currentMission = missions[e.target.value];
-            updateSimulation();
-        });
-
+        function populateComponents(){componentListEl.innerHTML='<h2>Engines</h2>';components.engines.forEach(c=>componentListEl.innerHTML+=createComponentHTML(c));componentListEl.innerHTML+='<h2>Fuel Tanks</h2>';components.tanks.forEach(c=>componentListEl.innerHTML+=createComponentHTML(c));componentListEl.innerHTML+='<h2>Payloads</h2>';components.payloads.forEach(c=>componentListEl.innerHTML+=createComponentHTML(c));document.querySelectorAll('.component').forEach(el=>{el.addEventListener('click',()=>selectPart(el.dataset.id));});}
+        function createComponentHTML(c){let s='';if(c.type==='engine')s=`<div class="component-stats"><span>Thrust:</span><span>${c.thrust} kN</span><span>Isp:</span><span>${c.isp} s</span><span>Mass:</span><span>${c.mass} t</span></div>`;if(c.type==='tank')s=`<div class="component-stats"><span>Fuel Mass:</span><span>${c.fuelMass} t</span><span>Dry Mass:</span><span>${c.dryMass} t</span></div>`;if(c.type==='payload')s=`<div class="component-stats"><span>Mass:</span><span>${c.mass} t</span></div>`;return `<div class="component" data-id="${c.id}"><h3>${c.name}</h3>${s}</div>`;}
+        function selectPart(pId){const [pre,id]=pId.split('-');let pData;let pType;if(pre==='en'){pType='engine';pData=components.engines.find(p=>p.id===pId);}if(pre==='tn'){pType='tank';pData=components.tanks.find(p=>p.id===pId);}if(pre==='pl'){pType='payload';pData=components.payloads.find(p=>p.id===pId);}if(pData){selectedParts[pType]=pData;stagesEl[pType].textContent=pData.name;stagesEl[pType].classList.add('filled');updateSimulation();}}
+        function updateSimulation(){if(!selectedParts.engine||!selectedParts.tank||!selectedParts.payload)return;const m_f=selectedParts.payload.mass+selectedParts.engine.mass+selectedParts.tank.dryMass;const m_s=m_f+selectedParts.tank.fuelMass;const twr=(selectedParts.engine.thrust*1000)/(m_s*1000*G0);const dV=selectedParts.engine.isp*G0*Math.log(m_s/m_f);telemetry.mass.textContent=`${m_s.toFixed(2)} t`;telemetry.twr.textContent=twr.toFixed(2);telemetry.dv.textContent=`${Math.round(dV)} m/s`;runAnalysis(dV,twr);}
+        function runAnalysis(dV,twr){let dP=false,tP=false,pP=false;if(dV>=currentMission.dv_req){analysis.dv.textContent=`✅ Delta-V sufficient (${Math.round(dV)}/${currentMission.dv_req} m/s)`;analysis.dv.className='analysis-item pass';dP=true;}else{analysis.dv.textContent=`❌ Delta-V insufficient (${Math.round(dV)}/${currentMission.dv_req} m/s)`;analysis.dv.className='analysis-item fail';}if(twr>1.2){analysis.twr.textContent=`✅ TWR optimal (${twr.toFixed(2)} > 1.2)`;analysis.twr.className='analysis-item pass';tP=true;}else{analysis.twr.textContent=`❌ TWR too low (${twr.toFixed(2)} < 1.2)`;analysis.twr.className='analysis-item fail';}if(selectedParts.payload&&selectedParts.payload.id===currentMission.payload_req){analysis.payload.textContent=`✅ Correct payload for mission.`;analysis.payload.className='analysis-item pass';pP=true;}else{analysis.payload.textContent=`❌ Incorrect payload for mission.`;analysis.payload.className='analysis-item fail';}if(dP&&tP&&pP){launchBtnEl.disabled=false;launchBtnEl.textContent='Initiate Launch Sequence';launchBtnEl.className='ready';}else{launchBtnEl.disabled=true;launchBtnEl.textContent='Design Incomplete';launchBtnEl.className='';}}
+        missionSelectEl.addEventListener('change',(e)=>{currentMission=missions[e.target.value];updateSimulation();});
+        
         launchBtnEl.addEventListener('click', () => {
             if (launchBtnEl.disabled) return;
-            alert(`LAUNCH SIMULATION:\n\nMission: ${currentMission.name}\nStatus: SUCCESSFUL\n\nYour vehicle design met all performance requirements for this mission profile. The payload has been successfully deployed.`);
+            const missionReport = `LAUNCH SIMULATION:\n\nMission: ${currentMission.name}\nStatus: SUCCESSFUL\n\nYour vehicle design met all performance requirements.`;
+            alert(missionReport);
+
+            // --- NEW UPDATE: Save to localStorage and redirect ---
+            const rocketData = {
+                name: `Rocket for ${currentMission.name}`,
+                engine: selectedParts.engine.name,
+                payload: selectedParts.payload.name
+            };
+            localStorage.setItem('completedRocket', JSON.stringify(rocketData));
+            window.location.href = '/your-space.html';
         });
 
-        // --- INITIALIZATION ---
         populateComponents();
         renderMathInElement(document.body);
     </script>

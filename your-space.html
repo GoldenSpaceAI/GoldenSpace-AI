@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Space | GoldenSpaceAI</title>
+    <style>
+        :root {
+            --bg-dark: #0a0e15;
+            --panel-bg: #101828;
+            --border-color: #334155;
+            --text-primary: #E2E8F0;
+            --text-secondary: #94A3B8;
+            --gold-accent: #f6c64a;
+            --gold-glow: rgba(246, 198, 74, 0.2);
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Roboto', system-ui, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            margin: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* --- Toolbox Panel --- */
+        .toolbox {
+            width: 280px;
+            background-color: var(--panel-bg);
+            border-right: 1px solid var(--border-color);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            z-index: 10;
+        }
+        .toolbox h2 {
+            color: var(--gold-accent);
+            margin-top: 0;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.75rem;
+        }
+        .tool-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.75rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            border: 1px solid var(--border-color);
+            transition: all 0.2s ease;
+        }
+        .tool-item:hover {
+            border-color: var(--gold-accent);
+            background-color: #1E293B;
+        }
+        .tool-item-icon {
+            font-size: 2rem;
+            line-height: 1;
+        }
+        .tool-item h3 {
+            margin: 0;
+            font-size: 1rem;
+        }
+        
+        /* --- Inspector Panel --- */
+        #inspector-panel {
+            margin-top: auto;
+            background-color: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            display: none; /* Initially hidden */
+        }
+        .inspector-group { margin-bottom: 1rem; }
+        .inspector-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+        }
+        .inspector-group input {
+            width: 100%;
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 0.5rem;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        /* --- Universe Canvas --- */
+        .universe-canvas {
+            flex: 1;
+            position: relative;
+            background-image:
+                radial-gradient(circle at 20% 30%, rgba(135, 206, 235, 0.1), transparent 30%),
+                radial-gradient(circle at 80% 70%, rgba(246, 198, 74, 0.1), transparent 40%);
+            background-color: var(--bg-dark);
+            overflow: hidden;
+        }
+
+        /* Celestial Objects */
+        .celestial-object {
+            position: absolute;
+            cursor: grab;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: box-shadow 0.2s;
+        }
+        .celestial-object.selected {
+            box-shadow: 0 0 20px 5px var(--gold-glow), 0 0 0 2px var(--gold-accent);
+            z-index: 100;
+        }
+        .celestial-object.dragging {
+            cursor: grabbing;
+            z-index: 101;
+        }
+
+        /* Specific Object Styles */
+        .galaxy {
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(ellipse, #fff 0%, rgba(255,255,255,0.6) 10%, rgba(255,255,255,0) 60%);
+        }
+        .star {
+            width: 50px;
+            height: 50px;
+            background: radial-gradient(circle, #fff, var(--gold-accent));
+            box-shadow: 0 0 30px var(--gold-accent);
+        }
+        .planet {
+            width: 30px;
+            height: 30px;
+            background-color: #38bdf8;
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+            body { flex-direction: column-reverse; }
+            .toolbox {
+                width: 100%;
+                height: auto;
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: center;
+                border-right: none;
+                border-top: 1px solid var(--border-color);
+            }
+            .tool-item {
+                flex-basis: 120px;
+            }
+            #inspector-panel {
+                display: none !important; /* Hide inspector on mobile for simplicity */
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <main class="universe-canvas" id="universe-canvas">
+        </main>
+
+    <aside class="toolbox">
+        <div>
+            <h2>Toolbox</h2>
+            <div class="tool-item" data-type="galaxy">
+                <div class="tool-item-icon">🌌</div>
+                <div class="tool-item-info"><h3>Add Galaxy</h3></div>
+            </div>
+            <div class="tool-item" data-type="star">
+                <div class="tool-item-icon">🌟</div>
+                <div class="tool-item-info"><h3>Add Star</h3></div>
+            </div>
+             <div class="tool-item" data-type="planet">
+                <div class="tool-item-icon">🪐</div>
+                <div class="tool-item-info"><h3>Add Planet</h3></div>
+            </div>
+        </div>
+        
+        <div id="inspector-panel">
+            <h3>Inspector</h3>
+            <div class="inspector-group">
+                <label for="name-input">Object Name</label>
+                <input type="text" id="name-input">
+            </div>
+            <div class="inspector-group">
+                <label for="color-input">Color</label>
+                <input type="color" id="color-input">
+            </div>
+        </div>
+    </aside>
+
+    <script>
+        const canvas = document.getElementById('universe-canvas');
+        const toolboxItems = document.querySelectorAll('.tool-item');
+        const inspectorPanel = document.getElementById('inspector-panel');
+        const nameInput = document.getElementById('name-input');
+        const colorInput = document.getElementById('color-input');
+
+        let activeObject = null;
+        let objectCounter = 0;
+
+        // --- ADDING OBJECTS ---
+        toolboxItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const type = item.dataset.type;
+                createObject(type, { x: 100, y: 100 });
+            });
+        });
+
+        function createObject(type, position) {
+            objectCounter++;
+            const obj = document.createElement('div');
+            obj.className = `celestial-object ${type}`;
+            obj.id = `obj-${objectCounter}`;
+            obj.style.left = `${position.x}px`;
+            obj.style.top = `${position.y}px`;
+            obj.dataset.name = `${type.charAt(0).toUpperCase() + type.slice(1)} ${objectCounter}`;
+
+            makeDraggable(obj);
+            
+            obj.addEventListener('click', (e) => {
+                e.stopPropagation();
+                selectObject(obj);
+            });
+            
+            canvas.appendChild(obj);
+            selectObject(obj);
+        }
+        
+        // --- SELECTING & INSPECTING OBJECTS ---
+        function selectObject(obj) {
+            // Deselect any currently selected object
+            if (activeObject) {
+                activeObject.classList.remove('selected');
+            }
+            
+            activeObject = obj;
+            activeObject.classList.add('selected');
+
+            // Show and populate inspector
+            inspectorPanel.style.display = 'block';
+            nameInput.value = activeObject.dataset.name;
+            
+            // Show color picker only for planets and stars
+            const type = activeObject.classList.contains('planet') ? 'planet' : (activeObject.classList.contains('star') ? 'star' : null);
+            colorInput.parentElement.style.display = type ? 'block' : 'none';
+        }
+        
+        canvas.addEventListener('click', () => {
+            if (activeObject) {
+                activeObject.classList.remove('selected');
+                activeObject = null;
+                inspectorPanel.style.display = 'none';
+            }
+        });
+        
+        nameInput.addEventListener('input', () => {
+            if (activeObject) {
+                activeObject.dataset.name = nameInput.value;
+            }
+        });
+
+        colorInput.addEventListener('input', () => {
+            if (activeObject) {
+                activeObject.style.backgroundColor = colorInput.value;
+                 if (activeObject.classList.contains('star')) {
+                    activeObject.style.boxShadow = `0 0 30px ${colorInput.value}`;
+                 }
+            }
+        });
+
+        // --- DRAGGING LOGIC ---
+        function makeDraggable(element) {
+            let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+
+            element.onmousedown = dragMouseDown;
+
+            function dragMouseDown(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                selectObject(element); // Select object on drag start
+
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                document.onmouseup = closeDragElement;
+                document.onmousemove = elementDrag;
+                element.classList.add('dragging');
+            }
+
+            function elementDrag(e) {
+                e.preventDefault();
+                pos1 = pos3 - e.clientX;
+                pos2 = pos4 - e.clientY;
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+
+                element.style.top = (element.offsetTop - pos2) + "px";
+                element.style.left = (element.offsetLeft - pos1) + "px";
+            }
+
+            function closeDragElement() {
+                document.onmouseup = null;
+                document.onmousemove = null;
+                element.classList.remove('dragging');
+            }
+        }
+    </script>
+</body>
+</html>

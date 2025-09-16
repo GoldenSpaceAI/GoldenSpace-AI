@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Your Satellite | GoldenSpaceAI</title>
+    <style>
+        /* --- Basic Setup & Theme --- */
+        :root {
+            --bg-dark: #0b0f1a;
+            --card-bg: #1a2035;
+            --primary-text: #e0e0e0;
+            --gold-accent: #f6c64a;
+            --border-color: #3c4260;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--primary-text);
+            margin: 0;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            color: var(--gold-accent);
+            text-align: center;
+        }
+
+        /* --- Main Layout --- */
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+            width: 100%;
+            max-width: 1200px;
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 2rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .controls {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .viewer {
+            flex: 2;
+            min-width: 400px;
+            min-height: 400px;
+            display: grid;
+            place-items: center;
+            background: radial-gradient(circle, #2a314d 0%, var(--card-bg) 70%);
+            border-radius: 8px;
+            border: 1px dashed var(--border-color);
+        }
+
+        /* --- Controls Styling --- */
+        .control-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+            color: var(--gold-accent);
+        }
+
+        select, input[type="color"] {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-dark);
+            color: var(--primary-text);
+            font-size: 1rem;
+        }
+
+        input[type="color"] {
+            padding: 5px;
+            height: 50px;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--card-bg);
+            background-color: var(--gold-accent);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 1rem;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: #ffdd77;
+        }
+
+        /* --- Satellite Viewer & Parts Styling --- */
+        #satellite-assembly {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            display: grid;
+            place-items: center;
+        }
+
+        #satellite-body {
+            width: 120px;
+            height: 120px;
+            background-color: #cccccc;
+            z-index: 10;
+            transition: all 0.3s ease;
+        }
+
+        /* Body Shapes */
+        .body-cube { border-radius: 10px; }
+        .body-sphere { border-radius: 50%; }
+        .body-cylinder { border-radius: 50% / 15%; width: 140px; height: 100px; }
+
+        /* Solar Panels */
+        .solar-panel {
+            position: absolute;
+            background-color: #0d2c54;
+            border: 2px solid #5fa8d3;
+            z-index: 5;
+            transition: all 0.3s ease;
+        }
+        .panels-none .solar-panel { display: none; }
+        .panels-dual-wing .solar-panel-left { width: 150px; height: 40px; top: 50%; left: -140px; transform: translateY(-50%); }
+        .panels-dual-wing .solar-panel-right { width: 150px; height: 40px; top: 50%; right: -140px; transform: translateY(-50%); }
+        .panels-array .solar-panel-left { width: 80px; height: 80px; top: -70px; left: -100px; }
+        .panels-array .solar-panel-right { width: 80px; height: 80px; top: -70px; right: -100px; }
+
+        /* Antenna */
+        #antenna {
+            position: absolute;
+            z-index: 15;
+            transition: all 0.3s ease;
+        }
+        .antenna-none { display: none; }
+        .antenna-dish { width: 80px; height: 80px; background-color: #f0f0f0; border-radius: 50%; border: 4px solid #aaa; bottom: -40px; }
+        .antenna-whip { width: 4px; height: 120px; background-color: #ddd; top: -110px; }
+
+    </style>
+</head>
+<body>
+
+    <h1>Create Your Satellite 🛰️</h1>
+    <p style="text-align: center; max-width: 600px;">Design your own satellite for any mission. Choose the components below and see your creation come to life in the design viewer.</p>
+
+    <div class="container">
+        <div class="controls">
+            <h2>Customization Panel</h2>
+
+            <div class="control-group">
+                <label for="body-shape">1. Satellite Bus (Body)</label>
+                <select id="body-shape">
+                    <option value="cube">CubeSat</option>
+                    <option value="sphere">Spherical Orbiter</option>
+                    <option value="cylinder">Cylindrical Probe</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="body-color">2. Thermal Blanket Color</label>
+                <input type="color" id="body-color" value="#cccccc">
+            </div>
+
+            <div class="control-group">
+                <label for="solar-panels">3. Power Source (Solar Panels)</label>
+                <select id="solar-panels">
+                    <option value="dual-wing">Dual-Wing Array</option>
+                    <option value="array">Square Array</option>
+                    <option value="none">Internal RTG (No Panels)</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="antenna-type">4. Communication System</label>
+                <select id="antenna-type">
+                    <option value="dish">High-Gain Dish</option>
+                    <option value="whip">Omni-Directional Whip</option>
+                    <option value="none">No Antenna</option>
+                </select>
+            </div>
+
+            <button id="finalize-btn">Finalize Design</button>
+        </div>
+
+        <div class="viewer">
+            <div id="satellite-assembly">
+                <div id="satellite-body"></div>
+                <div class="solar-panel solar-panel-left"></div>
+                <div class="solar-panel solar-panel-right"></div>
+                <div id="antenna"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Get references to HTML elements ---
+        const bodyShapeSelect = document.getElementById('body-shape');
+        const bodyColorInput = document.getElementById('body-color');
+        const solarPanelSelect = document.getElementById('solar-panels');
+        const antennaSelect = document.getElementById('antenna-type');
+        const finalizeBtn = document.getElementById('finalize-btn');
+
+        const satelliteBody = document.getElementById('satellite-body');
+        const satelliteAssembly = document.getElementById('satellite-assembly');
+        const antenna = document.getElementById('antenna');
+
+        // --- Main function to update the satellite's appearance ---
+        function updateSatellite() {
+            // 1. Update Body Shape
+            const bodyShape = bodyShapeSelect.value;
+            satelliteBody.className = ''; // Reset classes
+            satelliteBody.classList.add(`body-${bodyShape}`);
+            
+            // 2. Update Body Color
+            satelliteBody.style.backgroundColor = bodyColorInput.value;
+
+            // 3. Update Solar Panels
+            const panelType = solarPanelSelect.value;
+            satelliteAssembly.className = ''; // Reset classes
+            satelliteAssembly.classList.add(`panels-${panelType}`);
+            
+            // 4. Update Antenna
+            const antennaType = antennaSelect.value;
+            antenna.className = ''; // Reset classes
+            antenna.classList.add(`antenna-${antennaType}`);
+        }
+
+        // --- Attach event listeners to all controls ---
+        bodyShapeSelect.addEventListener('change', updateSatellite);
+        bodyColorInput.addEventListener('input', updateSatellite);
+        solarPanelSelect.addEventListener('change', updateSatellite);
+        antennaSelect.addEventListener('change', updateSatellite);
+
+        // --- Finalize Button Logic ---
+        finalizeBtn.addEventListener('click', () => {
+            const shape = bodyShapeSelect.options[bodyShapeSelect.selectedIndex].text;
+            const panels = solarPanelSelect.options[solarPanelSelect.selectedIndex].text;
+            const comms = antennaSelect.options[antennaSelect.selectedIndex].text;
+
+            alert(
+                `🛰️ Satellite Design Finalized! 🛰️\n\n` +
+                `Specifications:\n` +
+                `- Body Type: ${shape}\n` +
+                `- Power System: ${panels}\n` +
+                `- Communications: ${comms}\n\n` +
+                `Ready for virtual launch!`
+            );
+        });
+
+        // --- Initial call to set the default satellite view on page load ---
+        updateSatellite();
+
+    </script>
+</body>
+</html>

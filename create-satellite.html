@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced Satellite Builder | GoldenSpaceAI</title>
+    <title>Mission Satellite Design Lab | GoldenSpaceAI</title>
     <style>
         :root {
             --bg-dark: #0b0f1a;
@@ -14,6 +14,7 @@
             --success-color: #4ade80;
             --warning-color: #facc15;
             --error-color: #f87171;
+            --info-color: #60a5fa;
         }
 
         body {
@@ -27,128 +28,33 @@
             align-items: center;
         }
 
-        h1 {
-            color: var(--gold-accent);
-        }
-        
-        .main-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 2rem;
-            width: 100%;
-            max-width: 1200px;
-        }
+        /* --- Screen States --- */
+        .screen { display: none; width: 100%; max-width: 1200px; }
+        .screen.active { display: block; }
 
-        .left-panel {
-            flex: 1;
-            min-width: 250px;
-        }
-
-        .right-panel {
-            flex: 3;
-            min-width: 500px;
-        }
-
-        /* Toolbox Styling */
-        .toolbox, .test-bay {
+        /* --- Mission Definition Screen --- */
+        #mission-screen .container {
+            text-align: center;
+            padding: 3rem;
             background-color: var(--card-bg);
             border-radius: 12px;
-            padding: 1.5rem;
             border: 1px solid var(--border-color);
         }
-
-        .toolbox h2, .test-bay h2 {
-            margin-top: 0;
-            color: var(--gold-accent);
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 0.5rem;
-        }
-        
-        .parts-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-        }
-
-        .part {
+        #mission-screen h1 { color: var(--gold-accent); margin-top: 0; }
+        #mission-input {
+            width: 100%;
+            height: 100px;
+            background-color: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--primary-text);
+            font-size: 1.1rem;
             padding: 1rem;
-            border: 2px dashed var(--border-color);
-            border-radius: 8px;
-            text-align: center;
-            cursor: grab;
-            background-color: #2a314d;
-            transition: background-color 0.2s, transform 0.2s;
+            resize: none;
+            margin-top: 1rem;
         }
-
-        .part:hover {
-            background-color: #3c4260;
-        }
-        
-        .part.dragging {
-            opacity: 0.5;
-            transform: scale(1.05);
-            cursor: grabbing;
-        }
-        
-        .part img {
-            max-width: 60px;
-            pointer-events: none; /* Prevents image from being dragged instead of the div */
-        }
-        
-        .part p {
-            margin: 0.5rem 0 0;
-            font-weight: bold;
-            font-size: 0.9rem;
-        }
-
-        /* Assembly Area Styling */
-        .assembly-area {
-            height: 400px;
-            background: radial-gradient(circle, #2a314d 0%, var(--card-bg) 70%);
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-            position: relative;
-            overflow: hidden;
-            background-image: 
-                linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
-            background-size: 20px 20px;
-        }
-
-        .drop-zone {
-            position: absolute;
-            border: 2px dashed #5fa8d3;
-            transition: background-color 0.3s, border-color 0.3s;
-        }
-        
-        .drop-zone.drag-over {
-            background-color: rgba(95, 168, 211, 0.2);
-            border-color: var(--gold-accent);
-        }
-
-        /* Specific Drop Zones */
-        #bus-zone { width: 120px; height: 120px; top: 50%; left: 50%; transform: translate(-50%, -50%); }
-        #panel-zone-left { width: 150px; height: 50px; top: 50%; left: 10%; transform: translateY(-50%); }
-        #panel-zone-right { width: 150px; height: 50px; top: 50%; right: 10%; transform: translateY(-50%); }
-        #antenna-zone { width: 80px; height: 80px; bottom: 5%; left: 50%; transform: translateX(-50%); }
-
-        .drop-zone .part {
-            width: 100%;
-            height: 100%;
-            padding: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: none;
-            cursor: default;
-        }
-
-        /* Test Bay Styling */
-        .test-bay { margin-top: 2rem; }
-        
-        #test-flight-btn {
-            width: 100%;
-            padding: 15px;
+        .button {
+            padding: 15px 30px;
             font-size: 1.1rem;
             font-weight: bold;
             color: var(--card-bg);
@@ -156,148 +62,400 @@
             border: none;
             border-radius: 8px;
             cursor: pointer;
+            margin-top: 1.5rem;
             transition: background-color 0.2s;
         }
-        
-        #test-flight-btn:hover { background-color: #ffdd77; }
-        
-        #test-results {
-            margin-top: 1rem;
+        .button:hover { background-color: #ffdd77; }
+
+        /* --- Builder Screen --- */
+        #hint-bar {
+            background-color: rgba(96, 165, 250, 0.1);
+            border: 1px solid var(--info-color);
+            color: var(--info-color);
             padding: 1rem;
             border-radius: 8px;
-            min-height: 50px;
-            background-color: #2a314d;
+            text-align: center;
+            margin-bottom: 2rem;
+            font-weight: bold;
         }
+
+        .builder-layout {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .component-bay { flex: 1; }
+        .assembly-area { flex: 2; }
+
+        .panel {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+        }
+        .panel h2 {
+            margin-top: 0;
+            color: var(--gold-accent);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        /* Component Bay Parts */
+        .component {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: background-color 0.2s, border-color 0.2s;
+            position: relative;
+        }
+        .component:hover {
+            background-color: #2a314d;
+            border-color: var(--gold-accent);
+        }
+        .component.selected {
+            border-color: var(--gold-accent);
+            box-shadow: 0 0 15px rgba(246, 198, 74, 0.3);
+        }
+        .component img { max-width: 50px; }
+        .component-info h3 { margin: 0; }
+        .component-info p { margin: 0.25rem 0 0; font-size: 0.85rem; color: #9fb0d1; }
         
-        #test-results.success { border-left: 5px solid var(--success-color); }
-        #test-results.warning { border-left: 5px solid var(--warning-color); }
-        #test-results.error { border-left: 5px solid var(--error-color); }
+        /* Assembly Slots */
+        .assembly-grid {
+            display: grid;
+            grid-template-areas:
+                ". antenna ."
+                "panelL bus panelR"
+                ". engine .";
+            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-rows: 1fr 1fr 1fr;
+            height: 450px;
+            gap: 1rem;
+        }
+        .slot {
+            border: 2px dashed var(--border-color);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .slot.highlight {
+            border-color: var(--gold-accent);
+            background-color: rgba(246, 198, 74, 0.1);
+            cursor: pointer;
+        }
+        .slot[data-slot="bus"] { grid-area: bus; }
+        .slot[data-slot="engine"] { grid-area: engine; }
+        .slot[data-slot="panel-left"] { grid-area: panelL; }
+        .slot[data-slot="panel-right"] { grid-area: panelR; }
+        .slot[data-slot="antenna"] { grid-area: antenna; }
+        .slot p { color: #9fb0d1; font-weight: bold; }
+        .slot .component { width: 80%; height: 80%; margin: 0; pointer-events: none; }
+
+        /* Satellite Brain Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-content {
+            background-color: var(--card-bg);
+            padding: 2rem;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+        }
+        .modal-content h2 { margin-top: 0; color: var(--gold-accent); }
+        .module-options { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .module-options label {
+            display: block;
+            padding: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .module-options label:hover { background-color: #2a314d; }
+        .modal-buttons { margin-top: 1.5rem; text-align: right; }
 
     </style>
 </head>
 <body>
 
-    <h1>Advanced Satellite Builder 🛰️</h1>
+    <div id="mission-screen" class="screen active">
+        <div class="container">
+            <h1>Satellite Mission Design Lab</h1>
+            <p>Every great satellite starts with a mission. Describe your satellite's primary objective below. Will it take photos of Earth, communicate with deep space probes, or study Martian weather?</p>
+            <textarea id="mission-input" placeholder="Example: My satellite will take high-resolution photos of the Amazon rainforest to monitor deforestation."></textarea>
+            <button id="start-design-btn" class="button">Analyze Mission & Proceed to Design</button>
+        </div>
+    </div>
 
-    <div class="main-container">
-        <div class="left-panel">
-            <div class="toolbox">
-                <h2>Component Toolbox</h2>
-                <div class="parts-container">
-                    <div id="part-bus" class="part" draggable="true">
-                        <img src="https://img.icons8.com/plasticine/100/box.png" alt="Satellite Bus">
-                        <p>Satellite Bus</p>
+    <div id="builder-screen" class="screen">
+        <div id="hint-bar">Define your mission to receive design hints.</div>
+        <div class="builder-layout">
+            <div class="component-bay panel">
+                <h2>Component Bay</h2>
+                <div id="component-list">
                     </div>
-                    <div id="part-panel" class="part" draggable="true">
-                        <img src="https://img.icons8.com/plasticine/100/solar-panel.png" alt="Solar Panel">
-                        <p>Solar Panel</p>
-                    </div>
-                    <div id="part-antenna" class="part" draggable="true">
-                        <img src="https://img.icons8.com/plasticine/100/satellite-dish.png" alt="Antenna">
-                        <p>Antenna</p>
-                    </div>
-                </div>
+                <button id="launch-btn" class="button" style="width:100%; margin-top: 1rem;">🚀 Launch Satellite</button>
             </div>
-
-            <div class="test-bay">
-                <h2>Mission Control</h2>
-                <button id="test-flight-btn">🚀 Test Flight</button>
-                <div id="test-results">
-                    <p>Assemble your satellite and run a test flight.</p>
+            <div class="assembly-area panel">
+                <h2>Satellite Assembly</h2>
+                <div class="assembly-grid">
+                    <div class="slot" data-slot="bus"><p>Bus</p></div>
+                    <div class="slot" data-slot="engine"><p>Engine</p></div>
+                    <div class="slot" data-slot="panel-left"><p>Power</p></div>
+                    <div class="slot" data-slot="panel-right"><p>Power</p></div>
+                    <div class="slot" data-slot="antenna"><p>Comms</p></div>
                 </div>
             </div>
         </div>
-
-        <div class="right-panel">
-            <div class="assembly-area">
-                <div id="bus-zone" class="drop-zone" data-part-type="bus"></div>
-                <div id="panel-zone-left" class="drop-zone" data-part-type="panel"></div>
-                <div id="panel-zone-right" class="drop-zone" data-part-type="panel"></div>
-                <div id="antenna-zone" class="drop-zone" data-part-type="antenna"></div>
+    </div>
+    
+    <div id="brain-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 id="brain-modal-title">Configure Satellite Brain</h2>
+            <p>Based on your mission, the satellite brain requires specific logic modules. Please select up to 2 essential modules.</p>
+            <div id="brain-module-options" class="module-options">
+                </div>
+            <div class="modal-buttons">
+                <button id="confirm-brain-btn" class="button">Confirm Configuration</button>
             </div>
         </div>
     </div>
 
     <script>
-        const parts = document.querySelectorAll('.part');
-        const dropZones = document.querySelectorAll('.drop-zone');
+        // --- DATA ---
+        const allComponents = {
+            bus: { name: 'Satellite Bus', desc: 'The core structure and housing.', img: 'https://img.icons8.com/plasticine/100/box.png', slot: 'bus' },
+            engine_standard: { name: 'Chemical Engine', desc: 'Standard propulsion for orbit adjustments.', img: 'https://img.icons8.com/plasticine/100/rocket.png', slot: 'engine' },
+            engine_ion: { name: 'Ion Engine', desc: 'High-efficiency for deep space travel.', img: 'https://img.icons8.com/plasticine/100/engine.png', slot: 'engine' },
+            panel_standard: { name: 'Solar Panels', desc: 'Generates power from sunlight.', img: 'https://img.icons8.com/plasticine/100/solar-panel.png', slot: 'panel' },
+            antenna_short: { name: 'Short-Range Antenna', desc: 'For communication in Low Earth Orbit.', img: 'https://img.icons8.com/plasticine/100/satellite-dish.png', slot: 'antenna' },
+            antenna_long: { name: 'Long-Range Antenna', desc: 'For deep space communication.', img: 'https://img.icons8.com/arcade/64/satellite-sending-signal.png', slot: 'antenna' },
+            brain: { name: 'Satellite Brain', desc: 'The central computer. Requires configuration.', img: 'https://img.icons8.com/plasticine/100/processor.png', slot: 'bus' },
+            camera: { name: 'Hi-Res Camera', desc: 'For taking detailed photos.', img: 'https://img.icons8.com/plasticine/100/camera.png', slot: 'bus' },
+            spectrometer: { name: 'Spectrometer', desc: 'To analyze atmospheric composition.', img: 'https://img.icons8.com/plasticine/100/telescope.png', slot: 'bus' }
+        };
+        
+        const brainModules = {
+            image_processor: { name: 'Image Processor', desc: 'Processes and compresses image data.' },
+            data_transmitter: { name: 'Data Transmitter', desc: 'Handles high-volume data streams.' },
+            climate_model: { name: 'Climate Modeler', desc: 'Analyzes weather and atmospheric data.' },
+            trajectory_calc: { name: 'Trajectory Calculator', desc: 'Manages complex deep space navigation.' }
+        };
 
-        // --- Drag and Drop Logic ---
+        // --- STATE ---
+        let missionRequirements = {};
+        let selectedComponent = null;
+        let assembledParts = {};
 
-        // Add dragging class when drag starts
-        parts.forEach(part => {
-            part.addEventListener('dragstart', (e) => {
-                part.classList.add('dragging');
-                e.dataTransfer.setData('text/plain', part.id);
-            });
+        // --- DOM ELEMENTS ---
+        const missionScreen = document.getElementById('mission-screen');
+        const builderScreen = document.getElementById('builder-screen');
+        const startDesignBtn = document.getElementById('start-design-btn');
+        const missionInput = document.getElementById('mission-input');
+        const hintBar = document.getElementById('hint-bar');
+        const componentList = document.getElementById('component-list');
+        const slots = document.querySelectorAll('.slot');
+        const launchBtn = document.getElementById('launch-btn');
+        const brainModal = document.getElementById('brain-modal');
 
-            part.addEventListener('dragend', () => {
-                part.classList.remove('dragging');
-            });
-        });
+        // --- FUNCTIONS ---
+        function analyzeMission(text) {
+            const missionText = text.toLowerCase();
+            const reqs = { components: new Set(['bus', 'panel_standard']), brainModules: new Set() };
 
-        dropZones.forEach(zone => {
-            zone.addEventListener('dragover', (e) => {
-                e.preventDefault(); // Necessary to allow dropping
-                zone.classList.add('drag-over');
-            });
-
-            zone.addEventListener('dragleave', () => {
-                zone.classList.remove('drag-over');
-            });
-
-            zone.addEventListener('drop', (e) => {
-                e.preventDefault();
-                zone.classList.remove('drag-over');
-
-                const partId = e.dataTransfer.getData('text/plain');
-                const draggedPart = document.getElementById(partId);
-                const expectedPartType = zone.dataset.partType;
-
-                // Check if the dropped part matches the zone type
-                if (draggedPart && partId.includes(expectedPartType)) {
-                    // Clone the part to drop it, allowing reuse from toolbox
-                    const partClone = draggedPart.cloneNode(true);
-                    partClone.classList.remove('dragging');
-                    partClone.id = ''; // Remove ID from clone to avoid duplicates
-                    zone.innerHTML = ''; // Clear previous part
-                    zone.appendChild(partClone);
-                }
-            });
-        });
-
-        // --- Test Flight Simulation Logic ---
-        const testFlightBtn = document.getElementById('test-flight-btn');
-        const testResultsEl = document.getElementById('test-results');
-
-        testFlightBtn.addEventListener('click', () => {
-            const busZone = document.getElementById('bus-zone');
-            const panelZoneLeft = document.getElementById('panel-zone-left');
-            const panelZoneRight = document.getElementById('panel-zone-right');
-            const antennaZone = document.getElementById('antenna-zone');
-
-            const hasBus = busZone.hasChildNodes();
-            const hasPower = panelZoneLeft.hasChildNodes() || panelZoneRight.hasChildNodes();
-            const hasAntenna = antennaZone.hasChildNodes();
-            
-            let resultText = '';
-            testResultsEl.className = ''; // Reset result style
-
-            if (hasBus && hasPower && hasAntenna) {
-                testResultsEl.classList.add('success');
-                resultText = "<strong>Mission Success!</strong> Satellite is fully operational. It has power, core functions, and can communicate with Earth.";
-            } else if (hasBus && hasPower) {
-                testResultsEl.classList.add('warning');
-                resultText = "<strong>Partial Failure.</strong> Satellite launched and has power, but without an antenna, it cannot transmit or receive data.";
-            } else if (hasBus) {
-                testResultsEl.classList.add('error');
-                resultText = "<strong>Total Failure!</strong> The satellite bus is in orbit, but without a power source, all systems are offline.";
+            if (missionText.includes('photo') || missionText.includes('image') || missionText.includes('monitor')) {
+                reqs.components.add('camera');
+                reqs.brainModules.add('image_processor');
+                reqs.brainModules.add('data_transmitter');
+            }
+            if (missionText.includes('deep space') || missionText.includes('mars') || missionText.includes('jupiter')) {
+                reqs.components.add('engine_ion');
+                reqs.components.add('antenna_long');
+                reqs.brainModules.add('trajectory_calc');
             } else {
-                testResultsEl.classList.add('error');
-                resultText = "<strong>Launch Failure!</strong> A satellite bus is the essential first piece. The launch could not proceed without it.";
+                reqs.components.add('engine_standard');
+                reqs.components.add('antenna_short');
+            }
+            if (missionText.includes('weather') || missionText.includes('atmosphere') || missionText.includes('climate')) {
+                reqs.components.add('spectrometer');
+                reqs.brainModules.add('climate_model');
+            }
+            
+            // The brain is always a required component to be configured
+            reqs.components.add('brain');
+            
+            return reqs;
+        }
+
+        function populateComponentBay() {
+            componentList.innerHTML = '';
+            for (const key in allComponents) {
+                const comp = allComponents[key];
+                const compEl = document.createElement('div');
+                compEl.className = 'component';
+                compEl.dataset.id = key;
+                compEl.innerHTML = `
+                    <img src="${comp.img}" alt="${comp.name}">
+                    <div class="component-info">
+                        <h3>${comp.name}</h3>
+                        <p>${comp.desc}</p>
+                    </div>
+                `;
+                compEl.addEventListener('click', () => selectComponent(key, compEl));
+                componentList.appendChild(compEl);
+            }
+        }
+
+        function selectComponent(id, element) {
+            if (selectedComponent && selectedComponent.element) {
+                selectedComponent.element.classList.remove('selected');
+            }
+            if (slots) {
+                slots.forEach(s => s.classList.remove('highlight'));
             }
 
-            testResultsEl.innerHTML = `<p>${resultText}</p>`;
+            selectedComponent = { id, element };
+            element.classList.add('selected');
+
+            // Highlight compatible slots
+            const comp = allComponents[id];
+            if (comp.slot === 'panel') {
+                document.querySelector('.slot[data-slot="panel-left"]').classList.add('highlight');
+                document.querySelector('.slot[data-slot="panel-right"]').classList.add('highlight');
+            } else {
+                 document.querySelectorAll(`.slot[data-slot="${comp.slot}"]`).forEach(s => s.classList.add('highlight'));
+            }
+            
+            if (id === 'brain') {
+                openBrainModal();
+            }
+        }
+
+        function placeComponent(slot) {
+            if (!selectedComponent || !slot.classList.contains('highlight')) return;
+
+            const partId = selectedComponent.id;
+            const slotId = slot.dataset.slot;
+
+            assembledParts[slotId] = partId;
+            slot.innerHTML = selectedComponent.element.innerHTML; // Copy content
+            
+            // For panels, if one is placed, the other one is also placed.
+            if (allComponents[partId].slot === 'panel') {
+                const otherSlotId = slotId === 'panel-left' ? 'panel-right' : 'panel-left';
+                assembledParts[otherSlotId] = partId;
+                document.querySelector(`.slot[data-slot="${otherSlotId}"]`).innerHTML = selectedComponent.element.innerHTML;
+            }
+            
+            selectedComponent.element.style.display = 'none'; // "Use up" the component
+            selectedComponent = null;
+            slots.forEach(s => s.classList.remove('highlight'));
+            updateHint();
+        }
+
+        function openBrainModal() {
+            const optionsContainer = document.getElementById('brain-module-options');
+            optionsContainer.innerHTML = '';
+            for (const key in brainModules) {
+                const module = brainModules[key];
+                optionsContainer.innerHTML += `
+                    <label>
+                        <input type="checkbox" name="brain-module" value="${key}">
+                        <strong>${module.name}</strong>: ${module.desc}
+                    </label>
+                `;
+            }
+            brainModal.classList.add('active');
+        }
+
+        function updateHint() {
+            const remaining = [...missionRequirements.components].filter(c => !Object.values(assembledParts).includes(c));
+            if (remaining.length > 0) {
+                hintBar.textContent = `Hint: Your mission still requires a component for: ${allComponents[remaining[0]].name}`;
+            } else {
+                hintBar.textContent = 'All essential components seem to be in place. Ready for launch!';
+                hintBar.style.borderColor = 'var(--success-color)';
+                hintBar.style.color = 'var(--success-color)';
+            }
+        }
+
+        // --- EVENT LISTENERS ---
+        startDesignBtn.addEventListener('click', () => {
+            if (missionInput.value.trim() === '') {
+                alert('Please define your mission first!');
+                return;
+            }
+            missionRequirements = analyzeMission(missionInput.value);
+            missionScreen.classList.remove('active');
+            builderScreen.classList.add('active');
+            populateComponentBay();
+            updateHint();
+        });
+
+        slots.forEach(slot => slot.addEventListener('click', () => placeComponent(slot)));
+
+        document.getElementById('confirm-brain-btn').addEventListener('click', () => {
+            const selectedModules = Array.from(document.querySelectorAll('input[name="brain-module"]:checked')).map(cb => cb.value);
+            assembledParts.brainModules = new Set(selectedModules);
+            brainModal.classList.remove('active');
+            updateHint();
+        });
+
+        launchBtn.addEventListener('click', () => {
+            let score = 0;
+            let total = missionRequirements.components.size;
+            let feedback = "<strong>Mission Debrief:</strong><br>";
+
+            missionRequirements.components.forEach(req => {
+                if (Object.values(assembledParts).includes(req)) {
+                    score++;
+                    feedback += `✅ ${allComponents[req].name} installed.<br>`;
+                } else {
+                    feedback += `❌ Critical component missing: ${allComponents[req].name}.<br>`;
+                }
+            });
+            
+            const requiredBrainModules = missionRequirements.brainModules;
+            const installedBrainModules = assembledParts.brainModules || new Set();
+            if(requiredBrainModules.size > 0 && installedBrainModules.size === 0) {
+                feedback += `❌ Satellite Brain was not configured for the mission.<br>`;
+            } else {
+                let brainScore = 0;
+                requiredBrainModules.forEach(mod => {
+                    if (installedBrainModules.has(mod)) brainScore++;
+                });
+                if (brainScore === requiredBrainModules.size) {
+                    feedback += `✅ Satellite Brain configured correctly.<br>`;
+                } else {
+                    feedback += `⚠️ Satellite Brain configuration was incomplete for mission objectives.<br>`;
+                }
+            }
+
+            const successRate = score / total;
+            if (successRate === 1) {
+                feedback += "<br><strong>Outcome: Mission Success!</strong>";
+            } else if (successRate >= 0.5) {
+                feedback += "<br><strong>Outcome: Partial Success.</strong> The satellite launched but could not fully complete its objectives.";
+            } else {
+                feedback += "<br><strong>Outcome: Mission Failure.</strong> Critical systems were missing.";
+            }
+
+            alert(feedback.replace(/<br>/g, "\n"));
         });
     </script>
 </body>

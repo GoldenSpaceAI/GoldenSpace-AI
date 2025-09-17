@@ -82,7 +82,7 @@
       .google img{width:18px;height:18px}
       .skip-login { color: var(--muted); font-size: 14px; text-decoration: underline; margin-top: 8px; display: inline-block; }
 
-      /* Sections */
+      /* Sections: Your Space Pack + ChatAI Pack */
       .section{margin:24px auto 8px}
       .section h2{margin:0 0 10px;font-size:20px;color:#fff7dc}
       .grid{display:grid;gap:14px;grid-template-columns:repeat(12,1fr)}
@@ -96,6 +96,22 @@
       .card .row{display:flex;gap:10px;flex-wrap:wrap}
       .badge{display:inline-block;padding:6px 10px;border:1px solid var(--border);border-radius:999px;color:#cfc6a5;font-weight:800;font-size:12px}
 
+      /* Modal */
+      .modal{position:fixed;inset:0;z-index:1000;display:none;align-items:center;justify-content:center;
+        background:rgba(0,0,0,.55);backdrop-filter:blur(4px)}
+      .modal.on{display:flex}
+      .modal-card{width:min(720px,92vw);background:linear-gradient(180deg,#0e1728,#0a1120);
+        border:1px solid #213052;border-radius:18px;padding:18px;box-shadow:0 22px 70px rgba(0,0,0,.6);color:#e7f4e9}
+      .modal-h{margin:4px 0 8px;font-size:20px;color:var(--gold)}
+      .modal-b{font-size:15px;color:#dfe7f1;min-height:120px}
+      .modal-actions{display:flex;justify-content:space-between;gap:10px;margin-top:12px}
+      .btn-sm{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px;border-radius:12px;font-weight:800;cursor:pointer;border:1px solid var(--border);color:#e7f4e9;background:rgba(255,255,255,.04)}
+      .btn-gold{background:linear-gradient(180deg,var(--gold),var(--gold2));color:#1a1200;border-color:rgba(0,0,0,.25)}
+      .btn-ghost{background:transparent;color:#cfc6a5;border:1px solid var(--border)}
+      .upsell{display:none;background:linear-gradient(180deg,rgba(246,198,74,.08),rgba(246,198,74,.02));
+        border:1px solid rgba(246,198,74,.28);padding:12px;border-radius:14px;margin-top:12px}
+      .note{font-size:12px;color:#bfc9de;opacity:.9;margin-top:6px}
+
       footer{max-width:var(--max);margin:24px auto 36px;padding:0 16px;
         color:#aeb7c5;font-size:12px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;
         border-top:1px solid var(--border);padding-top:14px;}
@@ -105,26 +121,59 @@
   <body>
     <div class="top">
       <div class="brand"><span class="dot"></span> GoldenSpaceAI</div>
+      <div class="spacer"></div>
+      <div class="toplinks">
+        <a href="/advanced-ai.html">Advanced AI</a>
+        <a href="/search-info.html">Search Info</a>
+        <a href="/learn-physics.html">Learn Physics</a>
+        <a href="/create-planet.html">Create Planet</a>
+        <a href="/plans.html">Plans</a>
+        <a href="/privacy.html">Privacy</a>
+        <a href="/terms.html">Terms</a>
+        <a href="/refund.html">Refund</a>
       </div>
+    </div>
 
     <main class="wrap">
       <section class="layout" aria-label="Homepage">
         <aside class="leftCol" aria-label="Highlights">
-          </aside>
+          <div class="tile"><h3>🧠 Chat with AI</h3><p>Company-grade chat with Gemini, with daily plan limits.</p></div>
+          <div class="tile"><h3>🔎 Learn Info</h3><p>Golden summaries and topic insights — powered by Gemini.</p></div>
+          <div class="tile"><h3>📘 Learn Physics</h3><p>Curated lessons and Gemini tutoring support.</p></div>
+          <div class="tile"><h3>🪐 Create Your Planet</h3><p>Design oceans, rings, moons — export your own world.</p></div>
+        </aside>
 
         <section class="hero" aria-label="Welcome">
-          </section>
+          <h1>Welcome to <span style="color:var(--gold)">GoldenSpaceAI</span></h1>
+          <p>Ask AI, explore knowledge, learn physics, and design worlds — all in a golden suit.</p>
+          <div class="cta">
+            <a class="btn gold" href="/advanced-ai.html">Launch Chat with AI ✨</a>
+            <a class="btn ghost" href="/plans.html">View Plans</a>
+            <a class="btn ghost" href="/search-info.html">Quick Search</a>
+            <a class="btn ghost" href="/privacy.html">View Legal Pages</a>
+          </div>
+          <div class="quickRow">
+            <span class="chip">Private by design</span>
+            <span class="chip">Server-secured Gemini</span>
+            <span class="chip">Mobile ready</span>
+          </div>
+        </section>
 
         <aside class="rightCol" aria-label="Navigate">
           <nav class="sideNav">
-            </nav>
-          
-          <div style="text-align: center;">
-            <a class="google" href="/auth/google" aria-label="Continue with Google">
-              <img src="https://developers.google.com/identity/images/g-logo.png" alt="">
-              Continue with Google
-            </a>
-            <a href="/" class="skip-login">Skip for later</a>
+            <a class="navbtn" href="/advanced-ai.html">Chat with AI</a>
+            <a class="navbtn" href="/search-info.html">Learn Info</a>
+            <a class="navbtn" href="/learn-physics.html">Learn Physics</a>
+            <a class="navbtn" href="/create-planet.html">Create Planet</a>
+            <a class="navbtn" href="/plans.html">See Plans</a>
+            <a class="navbtn" href="/privacy.html">Legal Pages</a>
+          </nav>
+          <div id="user-display" style="text-align: center;">
+              <a class="google" href="/auth/google" aria-label="Continue with Google">
+                <img src="https://developers.google.com/identity/images/g-logo.png" alt="">
+                Continue with Google
+              </a>
+              <a href="/" class="skip-login">Skip for later</a>
           </div>
         </aside>
       </section>
@@ -137,6 +186,7 @@
             <p>Learn rocket stages & parts. Ready to build? Start your custom design.</p>
             <div class="row">
               <span class="badge">Physics-based</span>
+              <button class="btn btn-ghost" data-open="rocket">Learn</button>
               <button class="btn gold" onclick="location.href='/create-rocket.html'">Build</button>
             </div>
           </div>
@@ -145,6 +195,7 @@
             <p>Understand payloads, buses & orbits. Then assemble your satellite.</p>
             <div class="row">
               <span class="badge">Orbit chooser</span>
+              <button class="btn btn-ghost" data-open="satellite">Learn</button>
               <button class="btn gold" onclick="location.href='/create-satellite.html'">Build</button>
             </div>
           </div>
@@ -153,16 +204,71 @@
             <p>Advanced planet designer: atmosphere, gravity, rings, moons & biomes.</p>
             <div class="row">
               <span class="badge">Advanced editor</span>
+              <button class="btn btn-ghost" data-open="planet">Learn</button>
               <button class="btn gold" onclick="location.href='/create-planet.html'">Build</button>
+            </div>
+          </div>
+
+          <div class="card large">
+            <h3>🪐 Create Your Universe (Hub)</h3>
+            <p>Build your own space world: up to 3 galaxies, 10 planets, 2 rockets & 2 satellites. Place planets you made into your universe.</p>
+            <div class="row">
+              <span class="badge">Universe hub</span>
+              <button class="btn btn-ghost" data-open="universe">Learn</button>
+              <button class="btn gold" onclick="location.href='/your-space.html'">Create Your Universe</button>
             </div>
           </div>
         </div>
       </section>
 
-      </main>
+      <section class="section" aria-label="ChatAI Pack">
+        <h2>🤖 ChatAI Pack</h2>
+        <div class="grid">
+          <div class="card mini">
+            <h3>📸 Solve Homework (Images)</h3>
+            <p>Upload a page; get step-by-step help. (Daily caps by plan.)</p>
+            <div class="row">
+              <button class="btn gold" onclick="location.href='/homework-helper.html'">Open</button>
+            </div>
+          </div>
+          <div class="card mini">
+            <h3>🧠 Chat Advanced AI</h3>
+            <p>Deep reasoning, longer context chat powered by Gemini.</p>
+            <div class="row">
+              <button class="btn gold" onclick="location.href='/advanced-ai.html'">Open</button>
+            </div>
+          </div>
+          <div class="card mini">
+            <h3>📚 Search Educational Lessons</h3>
+            <p>Find and summarize topics fast with clean golden summaries.</p>
+            <div class="row">
+              <button class="btn gold" onclick="location.href='/search-lessons.html'">Open</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <div id="infoModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="infoTitle">
+        </div>
 
     <footer role="contentinfo">
-        </footer>
-    
-    </body>
+      <div>©️ <span id="yr"></span> GoldenSpaceAI</div>
+      <div>
+        <a href="/privacy.html">Privacy</a> · 
+        <a href="/terms.html">Terms</a> · 
+        <a href="/refund.html">Refund</a>
+      </div>
+    </footer>
+
+    <script>
+      document.getElementById('yr').textContent = new Date().getFullYear();
+      
+      // Your existing script for replacing the Google button with a user pill
+      (async () => { /* ... your script ... */ })();
+
+      // Your existing script for the modal
+      // ...
+    </script>
+  </body>
 </html>

@@ -1,421 +1,112 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-    <meta name="theme-color" content="#0a0e15" />
-    <title>GoldenSpaceAI • Home</title>
-    <link rel="icon" href="/favicon.ico" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orbital Design & Trajectory Simulator | GoldenSpaceAI</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body);"></script>
     <style>
-      :root{
-        --bg:#0a0e15; --panel:#0f1624; --panel2:#0b1320; --border:#1f2a40;
-        --text:#e7f4e9; --muted:#cfc6a5; --gold:#f6c64a; --gold2:#eb8b36;
-        --shadow:0 22px 70px rgba(0,0,0,.5); --radius:18px; --max:1200px;
-      }
-      *{box-sizing:border-box} html,body{height:100%}
-      body{
-        margin:0;color:var(--text);
-        font:16px/1.6 Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-        background:
-          linear-gradient(180deg,rgba(10,14,21,.55),rgba(10,14,21,.55)),
-          radial-gradient(1400px 800px at 50% -20%,rgba(246,198,74,.30),transparent 70%),
-          url("https://images.unsplash.com/photo-1462332420958-a05d1e002413?q=80&w=2000&auto=format&fit=crop")
-          center/cover no-repeat fixed;
-        -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
-      }
-      a{color:inherit;text-decoration:none}
-
-      /* Top bar */
-      .top{position:sticky;top:0;z-index:30;backdrop-filter:blur(10px);
-        background:linear-gradient(180deg,rgba(10,14,21,.85),rgba(10,14,21,.5) 60%,transparent);
-        border-bottom:1px solid var(--border);padding:max(12px, env(safe-area-inset-top)) 16px 10px;
-        display:flex;align-items:center;gap:12px;}
-      .brand{display:flex;align-items:center;gap:10px;font-weight:900;color:var(--gold);
-        font-size:clamp(20px,2.2vw,26px);text-shadow:0 0 16px rgba(246,198,74,.25);}
-      .dot{width:10px;height:10px;border-radius:50%;
-        background:radial-gradient(circle at 30% 30%,#ffd86a,#f6c64a 50%,#eb8b36 90%);
-        box-shadow:0 0 18px rgba(246,198,74,.5);}
-      .spacer{flex:1}
-      .toplinks{display:flex;gap:8px;flex-wrap:wrap}
-      .toplinks a{padding:8px 12px;border-radius:999px;border:1px solid var(--border);
-        color:var(--muted);font-weight:800;font-size:14px;}
-
-      /* Shell */
-      .wrap{max-width:var(--max);margin:22px auto;padding:0 16px;}
-      
-      /* --- NEW LAYOUT: Hero is now separate and above the two columns --- */
-      .layout{display:grid;gap:18px;grid-template-columns:1fr 230px; margin-top: 18px;}
-
-      /* Left tiles */
-      .leftCol{display:grid;gap:14px;align-content:start;}
-      .tile{background:linear-gradient(180deg,var(--panel),var(--panel2));
-        border:1px solid var(--border);border-radius:var(--radius);
-        padding:14px 16px;box-shadow:var(--shadow);}
-      .tile h3{margin:0 0 4px;font-size:16px;color:var(--gold);display:flex;gap:8px;align-items:center;}
-      .tile p{margin:0;color:#dfe7f1;font-size:14px}
-
-      /* Hero */
-      .hero{background:linear-gradient(180deg,rgba(14,21,34,.9),rgba(11,17,28,.9));
-        border:1px solid var(--border);border-radius:calc(var(--radius)+2px);
-        padding:clamp(18px,4vw,26px);box-shadow:var(--shadow);text-align:center;}
-      .hero h1{margin:6px 0 10px;font-size:clamp(26px,5.2vw,54px);line-height:1.08;color:#fff7dc;}
-      .hero p{margin:0 0 16px;color:#f2ecd2;font-size:clamp(14px,2.2vw,18px);}
-      .cta{display:flex;flex-wrap:wrap;gap:12px;justify-content:center}
-      .btn{display:inline-block;padding:12px 16px;border-radius:12px;font-weight:900;cursor:pointer;
-        border:1px solid rgba(0,0,0,.2);}
-      .btn.gold{background:linear-gradient(180deg,var(--gold),var(--gold2));
-        color:#1b1300;box-shadow:0 10px 26px rgba(246,198,74,.28);}
-      .btn.ghost{background:transparent;color:var(--muted);border:1px solid var(--border);}
-      .quickRow{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:10px;}
-      .chip{display:inline-block;padding:8px 12px;border-radius:999px;
-        background:rgba(255,255,255,.06);border:1px solid var(--border);
-        color:#c9d1e6;font-weight:800;font-size:14px;}
-
-      /* Right nav + Google */
-      .rightCol{position:sticky;top:86px;align-self:start;display:grid;gap:12px;height:fit-content}
-      .sideNav{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--border);
-        border-radius:var(--radius);padding:12px;box-shadow:var(--shadow);display:grid;gap:10px;}
-      .navbtn{display:flex;align-items:center;justify-content:center;padding:10px 12px;
-        border-radius:999px;border:1px solid var(--border);color:#d7e2f4;background:rgba(255,255,255,.03);font-weight:900;}
-      .google{display:flex;align-items:center;justify-content:center;gap:10px;background:#fff;color:#333;
-        border-radius:999px;padding:10px 12px;font-weight:800;border:1px solid rgba(0,0,0,.12);box-shadow:0 6px 18px rgba(0,0,0,.35);}
-      .google img{width:18px;height:18px}
-
-      /* Sections: Your Space Pack + ChatAI Pack */
-      .section{margin:24px auto 8px}
-      .section h2{margin:0 0 10px;font-size:20px;color:#fff7dc}
-      .grid{display:grid;gap:14px;grid-template-columns:repeat(12,1fr)}
-      .card{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--border);
-        border-radius:16px;padding:14px;box-shadow:var(--shadow)}
-      .mini{grid-column:span 4}
-      .large{grid-column:span 12}
-      
-      .card h3{margin:0 0 6px;font-size:16px;color:var(--gold)}
-      .card p{margin:0 0 10px;color:#dfe7f1;font-size:14px}
-      .card .row{display:flex;gap:10px;flex-wrap:wrap}
-      .badge{display:inline-block;padding:6px 10px;border:1px solid var(--border);border-radius:999px;color:#cfc6a5;font-weight:800;font-size:12px}
-
-      /* Modal */
-      .modal{position:fixed;inset:0;z-index:1000;display:none;align-items:center;justify-content:center;
-        background:rgba(0,0,0,.55);backdrop-filter:blur(4px)}
-      .modal.on{display:flex}
-      .modal-card{width:min(720px,92vw);background:linear-gradient(180deg,#0e1728,#0a1120);
-        border:1px solid #213052;border-radius:18px;padding:18px;box-shadow:0 22px 70px rgba(0,0,0,.6);color:#e7f4e9}
-      .modal-h{margin:4px 0 8px;font-size:20px;color:var(--gold)}
-      .modal-b{font-size:15px;color:#dfe7f1;min-height:120px}
-      .modal-actions{display:flex;justify-content:space-between;gap:10px;margin-top:12px}
-      .btn-sm{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px;border-radius:12px;font-weight:800;cursor:pointer;border:1px solid var(--border);color:#e7f4e9;background:rgba(255,255,255,.04)}
-      .btn-gold{background:linear-gradient(180deg,var(--gold),var(--gold2));color:#1a1200;border-color:rgba(0,0,0,.25)}
-      .btn-ghost{background:transparent;color:#cfc6a5;border:1px solid var(--border)}
-      .upsell{display:none;background:linear-gradient(180deg,rgba(246,198,74,.08),rgba(246,198,74,.02));
-        border:1px solid rgba(246,198,74,.28);padding:12px;border-radius:14px;margin-top:12px}
-      .note{font-size:12px;color:#bfc9de;opacity:.9;margin-top:6px}
-
-      footer{max-width:var(--max);margin:24px auto 36px;padding:0 16px;
-        color:#aeb7c5;font-size:12px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;
-        border-top:1px solid var(--border);padding-top:14px;}
-      footer a{color:#e7f4e9;text-decoration:none}
-
-      /* --- RESPONSIVE DESIGN FOR MOBILE --- */
-      @media (max-width: 980px) {
-        .layout {
-          grid-template-columns: 1fr; /* Stack columns vertically */
-        }
-        .rightCol {
-          position: static; /* Remove sticky position on mobile */
-        }
-      }
-
-      @media (max-width: 900px) {
-        .mini {
-            grid-column: span 12; /* Make mini cards full width */
-        }
-        .large {
-            grid-column: span 12; /* Make large card full width */
-        }
-      }
-      
-      @media (max-width: 880px) {
-        .toplinks {
-          display: none; /* Hide top links on smaller screens */
-        }
-      }
-
+        :root { --bg-dark:#0A0F1A; --panel-bg:#101828; --border-color:#334155; --text-primary:#E2E8F0; --text-secondary:#94A3B8; --accent-blue:#38BDF8; --accent-green:#34D399; --accent-red:#F87171; --font-main:'Segoe UI','Roboto',system-ui,sans-serif; --font-mono:'Courier New','monospace'; }
+        body { font-family:var(--font-main); background-color:var(--bg-dark); color:var(--text-primary); margin:0; padding:2rem; font-size:14px; }
+        .main-grid { display:grid; grid-template-columns:2fr 3fr 2fr; gap:1.5rem; max-width:1600px; margin:auto; }
+        .panel { background-color:var(--panel-bg); border:1px solid var(--border-color); border-radius:8px; padding:1.5rem; }
+        h1,h2,h3 { color:var(--text-primary); margin-top:0; font-weight:600; }
+        h2 { border-bottom:1px solid var(--border-color); padding-bottom:0.75rem; }
+        .component-list .component { border:1px solid var(--border-color); border-radius:6px; margin-bottom:1rem; padding:1rem; cursor:pointer; transition:all 0.2s ease; }
+        .component-list .component:hover { border-color:var(--accent-blue); background-color:#1E293B; }
+        .component-list .component h3 { margin-bottom:0.5rem; color:var(--accent-blue); }
+        .component-stats { display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; font-family:var(--font-mono); font-size:0.9em; color:var(--text-secondary); }
+        .assembly-silo { height:450px; display:flex; flex-direction:column-reverse; align-items:center; background-color:#0c121e; border-radius:6px; border:1px solid var(--border-color); padding:1rem; }
+        .stage { width:30%; min-height:50px; border-left:1px solid var(--border-color); border-right:1px solid var(--border-color); text-align:center; color:var(--text-secondary); display:flex; align-items:center; justify-content:center; transition:all 0.3s ease; }
+        .stage.filled { background-color:#475569; color:var(--text-primary); border-color:#64748B; }
+        #stage-payload { border-top:1px solid var(--border-color); border-top-left-radius:50px; border-top-right-radius:50px; height:100px; }
+        #stage-tank { height:200px; }
+        #stage-engine { border-bottom:1px solid var(--border-color); height:80px; }
+        .telemetry-panel { margin-top:1.5rem; }
+        .telemetry-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:1rem; }
+        .telemetry-readout { background-color:var(--bg-dark); padding:1rem; border-radius:4px; }
+        .telemetry-readout label { display:block; font-size:0.9em; color:var(--text-secondary); margin-bottom:0.5rem; }
+        .telemetry-readout .value { font-family:var(--font-mono); font-size:1.5em; font-weight:bold; color:var(--accent-green); }
+        .telemetry-readout .value.warning { color:#FBBF24; }
+        .telemetry-readout .value.error { color:var(--accent-red); }
+        .mission-selector,.systems-analysis,.launch-control { margin-bottom:2rem; }
+        select,button { width:100%; background-color:#1E293B; border:1px solid var(--border-color); color:var(--text-primary); padding:0.75rem; border-radius:4px; font-size:1em; }
+        button { cursor:pointer; font-weight:bold; }
+        #launch-btn { background-color:#4B5563; color:#9CA3AF; cursor:not-allowed; }
+        #launch-btn.ready { background-color:var(--accent-green); color:var(--bg-dark); cursor:pointer; }
+        #launch-btn.ready:hover { background-color:#6EE7B7; }
+        .analysis-item { color:var(--text-secondary); margin-bottom:0.5rem; }
+        .analysis-item.pass { color:var(--accent-green); }
+        .analysis-item.fail { color:var(--accent-red); }
+        .formula { font-size:0.9em; color:var(--text-secondary); margin-top:1rem; }
     </style>
-  </head>
-  <body>
-    <div class="top">
-      <div class="brand"><span class="dot"></span> GoldenSpaceAI</div>
-      <div class="spacer"></div>
-      <div class="toplinks">
-        <a href="/advanced-ai.html">Advanced AI</a>
-        <a href="/search-info.html">Search Info</a>
-        <a href="/learn-physics.html">Learn Physics</a>
-        <a href="/create-planet.html">Create Planet</a>
-        <a href="/plans.html">Plans</a>
-        <a href="/privacy.html">Privacy</a>
-        <a href="/terms.html">Terms</a>
-        <a href="/refund.html">Refund</a>
-      </div>
-    </div>
-
-    <main class="wrap">
-    
-      <section class="hero" aria-label="Welcome">
-        <h1>Welcome to <span style="color:var(--gold)">GoldenSpaceAI</span></h1>
-        <p>Ask AI, explore knowledge, learn physics, and design worlds — all in a golden suit.</p>
-        <div class="cta">
-          <a class="btn gold" href="/advanced-ai.html">Launch Chat with AI ✨</a>
-          <a class="btn ghost" href="/plans.html">View Plans</a>
-          <a class="btn ghost" href="/search-info.html">Quick Search</a>
-          <a class="btn ghost" href="/privacy.html">View Legal Pages</a>
-        </div>
-        <div class="quickRow">
-          <span class="chip">Private by design</span>
-          <span class="chip">Server-secured Gemini</span>
-          <span class="chip">Mobile ready</span>
-        </div>
-      </section>
-
-      <section class="layout" aria-label="Homepage Content">
-        <aside class="leftCol" aria-label="Highlights">
-          <div class="tile"><h3>🧠 Chat with AI</h3><p>Company-grade chat with Gemini, with daily plan limits.</p></div>
-          <div class="tile"><h3>🔎 Learn Info</h3><p>Golden summaries and topic insights — powered by Gemini.</p></div>
-          <div class="tile"><h3>📘 Learn Physics</h3><p>Curated lessons and Gemini tutoring support.</p></div>
-          <div class="tile"><h3>🪐 Create Your Planet</h3><p>Design oceans, rings, moons — export your own world.</p></div>
-        </aside>
-
-        <aside class="rightCol" aria-label="Navigate">
-          <nav class="sideNav">
-            <a class="navbtn" href="/advanced-ai.html">Chat with AI</a>
-            <a class="navbtn" href="/search-info.html">Learn Info</a>
-            <a class="navbtn" href="/learn-physics.html">Learn Physics</a>
-            <a class="navbtn" href="/create-planet.html">Create Planet</a>
-            <a class="navbtn" href="/plans.html">See Plans</a>
-            <a class="navbtn" href="/privacy.html">Legal Pages</a>
-          </nav>
-          <a class="google" href="/auth/google" aria-label="Continue with Google">
-            <img src="https://developers.google.com/identity/images/g-logo.png" alt="">
-            Continue with Google
-          </a>
-        </aside>
-      </section>
-
-      <section class="section" aria-label="Your Space Pack">
-        <h2>🌌 Your Space Pack</h2>
-        <div class="grid">
-          <div class="card mini">
-            <h3>🚀 Create Your Rocket</h3>
-            <p>Learn rocket stages & parts. Ready to build? Start your custom design.</p>
-            <div class="row">
-              <span class="badge">Physics-based</span>
-              <button class="btn btn-ghost" data-open="rocket">Learn</button>
-              <button class="btn gold" onclick="location.href='/create-rocket.html'">Build</button>
+</head>
+<body>
+    <main class="main-grid">
+        <section id="components-panel" class="panel"><h2>Component Selector</h2><div id="component-list" class="component-list"></div></section>
+        <section id="assembly-panel" class="panel">
+            <h2>Assembly & Vehicle Telemetry</h2>
+            <div class="assembly-silo">
+                <div id="stage-payload" class="stage">Payload Fairing</div>
+                <div id="stage-tank" class="stage">Fuel Tank</div>
+                <div id="stage-engine" class="stage">Engine</div>
             </div>
-          </div>
-          <div class="card mini">
-            <h3>🛰️ Create Your Satellite</h3>
-            <p>Understand payloads, buses & orbits. Then assemble your satellite.</p>
-            <div class="row">
-              <span class="badge">Orbit chooser</span>
-              <button class="btn btn-ghost" data-open="satellite">Learn</button>
-              <button class="btn gold" onclick="location.href='/create-satellite.html'">Build</button>
+            <div class="telemetry-panel">
+                <h3>Performance Projection</h3>
+                <div class="telemetry-grid">
+                    <div class="telemetry-readout"><label>Total Mass</label><span id="telemetry-mass" class="value">0 t</span></div>
+                    <div class="telemetry-readout"><label>Thrust-to-Weight</label><span id="telemetry-twr" class="value">0</span></div>
+                    <div class="telemetry-readout"><label>Projected Delta-V ($\Delta v$)</label><span id="telemetry-dv" class="value">0 m/s</span></div>
+                </div>
+                <div class="formula">Rocket Equation: $\Delta v = I_{sp} \cdot g_0 \cdot \ln(\frac{m_{start}}{m_{final}})$</div>
             </div>
-          </div>
-          <div class="card mini">
-            <h3>🌍 Create Advanced Planet</h3>
-            <p>Advanced planet designer: atmosphere, gravity, rings, moons & biomes.</p>
-            <div class="row">
-              <span class="badge">Advanced editor</span>
-              <button class="btn btn-ghost" data-open="planet">Learn</button>
-              <button class="btn gold" onclick="location.href='/create-planet.html'">Build</button>
-            </div>
-          </div>
-
-          <div class="card large">
-            <h3>🪐 Create Your Universe (Hub)</h3>
-            <p>Build your own space world: up to 3 galaxies, 10 planets, 2 rockets & 2 satellites. Place planets you made into your universe.</p>
-            <div class="row">
-              <span class="badge">Universe hub</span>
-              <button class="btn btn-ghost" data-open="universe">Learn</button>
-              <button class="btn gold" onclick="location.href='/your-space.html'">Create Your Universe</button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="section" aria-label="ChatAI Pack">
-        <h2>🤖 ChatAI Pack</h2>
-        <div class="grid">
-          <div class="card mini">
-            <h3>📸 Solve Homework (Images)</h3>
-            <p>Upload a page; get step-by-step help. (Daily caps by plan.)</p>
-            <div class="row">
-              <button class="btn gold" onclick="location.href='/homework-helper.html'">Open</button>
-            </div>
-          </div>
-          <div class="card mini">
-            <h3>🧠 Chat Advanced AI</h3>
-            <p>Deep reasoning, longer context chat powered by Gemini.</p>
-            <div class="row">
-              <button class="btn gold" onclick="location.href='/advanced-ai.html'">Open</button>
-            </div>
-          </div>
-          <div class="card mini">
-            <h3>📚 Search Educational Lessons</h3>
-            <p>Find and summarize topics fast with clean golden summaries.</p>
-            <div class="row">
-              <button class="btn gold" onclick="location.href='/search-lessons.html'">Open</button>
-            </div>
-          </div>
-        </div>
-      </section>
+        </section>
+        <section id="mission-panel" class="panel">
+            <div class="mission-selector"><h2>1. Mission Profile</h2><select id="mission-select"><option value="leo">LEO Satellite Deployment</option><option value="gto">GTO Communications Relay</option><option value="mars">Mars Cargo Supply</option></select></div>
+            <div class="systems-analysis"><h2>2. Systems Analysis</h2><div id="analysis-output"><div id="analysis-dv" class="analysis-item">Awaiting vehicle data...</div><div id="analysis-twr" class="analysis-item">Awaiting vehicle data...</div><div id="analysis-payload" class="analysis-item">Awaiting vehicle data...</div></div></div>
+            <div class="launch-control"><h2>3. Launch Control</h2><button id="launch-btn" disabled>Systems Offline</button></div>
+        </section>
     </main>
 
-    <div id="infoModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="infoTitle">
-      <div class="modal-card">
-        <h2 id="infoTitle" class="modal-h"></h2>
-        <div id="infoBody" class="modal-b"></div>
-        <div class="modal-actions">
-          <button id="infoBack" class="btn-sm btn-ghost">← Back</button>
-          <div>
-            <button id="infoClose" class="btn-sm btn-ghost" style="margin-right:8px">Close</button>
-            <button id="infoNext" class="btn-sm btn-gold">Next →</button>
-          </div>
-        </div>
-        <div id="infoNote" class="note"></div>
-        <div id="infoUpsell" class="upsell">
-          <div style="font-weight:900;color:#fff3ce;margin-bottom:6px;">Upgrade required</div>
-          <div style="font-size:14px;color:#f3e9c9;">
-            This feature requires the <b>Your Space Pack</b>. Unlock the universe hub and builders.
-          </div>
-          <div style="margin-top:10px;">
-            <a class="btn-sm btn-gold" href="/plans.html">See Plans</a>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <footer role="contentinfo">
-      <div>©️ <span id="yr"></span> GoldenSpaceAI</div>
-      <div>
-        <a href="/privacy.html">Privacy</a> · 
-        <a href="/terms.html">Terms</a> · 
-        <a href="/refund.html">Refund</a>
-      </div>
-    </footer>
-
     <script>
-      document.getElementById('yr').textContent = new Date().getFullYear();
+        const components = { engines:[{id:'en-merlin',name:'Merlin 1D',type:'engine',thrust:845,isp:311,mass:0.47},{id:'en-raptor',name:'Raptor 2',type:'engine',thrust:2256,isp:350,mass:1.6},], tanks:[{id:'tn-medium',name:'Medium Tank',type:'tank',fuelMass:25,dryMass:2},{id:'tn-large',name:'Large Tank',type:'tank',fuelMass:100,dryMass:7},], payloads:[{id:'pl-cubesat',name:'CubeSat Cluster',type:'payload',mass:0.5},{id:'pl-comm',name:'Comm Satellite',type:'payload',mass:4},{id:'pl-cargo',name:'Mars Cargo Pod',type:'payload',mass:10},]};
+        const missions = { leo:{name:'LEO Satellite Deployment',dv_req:9400,payload_req:'pl-cubesat'}, gto:{name:'GTO Communications Relay',dv_req:11900,payload_req:'pl-comm'}, mars:{name:'Mars Cargo Supply',dv_req:14500,payload_req:'pl-cargo'},};
+        const G0 = 9.81;
+        let selectedParts = {engine:null,tank:null,payload:null};
+        let currentMission = missions.leo;
+        const componentListEl = document.getElementById('component-list');
+        const stagesEl = {engine:document.getElementById('stage-engine'),tank:document.getElementById('stage-tank'),payload:document.getElementById('stage-payload')};
+        const telemetry = {mass:document.getElementById('telemetry-mass'),twr:document.getElementById('telemetry-twr'),dv:document.getElementById('telemetry-dv')};
+        const analysis = {dv:document.getElementById('analysis-dv'),twr:document.getElementById('analysis-twr'),payload:document.getElementById('analysis-payload')};
+        const missionSelectEl = document.getElementById('mission-select');
+        const launchBtnEl = document.getElementById('launch-btn');
 
-      // Replace Google button with user pill if logged in
-      (async () => {
-        try {
-          const res = await fetch('/api/me', { credentials: 'include' });
-          if (!res.ok) return;
-          const data = await res.json();
-          const btn = document.querySelector('.google');
-          if (data.user && btn) {
-            const pill = document.createElement('div');
-            pill.style.display='flex'; pill.style.alignItems='center'; pill.style.gap='10px';
-            pill.style.padding='10px 12px'; pill.style.borderRadius='999px';
-            pill.style.background='rgba(255,255,255,.08)'; pill.style.border='1px solid #1f2a40';
-            pill.innerHTML = `
-              <img src="${data.user.photo||''}" style="width:22px;height:22px;border-radius:50%;object-fit:cover"/>
-              <span style="font-weight:800">${data.user.name||'Signed in'}</span>
-              <a href="/plans.html" style="margin-left:8px;color:#cfc6a5;text-decoration:none;font-weight:800">Plan: ${String(data.plan||'—').toUpperCase()}</a>
-            `;
-            btn.replaceWith(pill);
-          }
-        } catch {}
-      })();
+        function populateComponents(){componentListEl.innerHTML='<h2>Engines</h2>';components.engines.forEach(c=>componentListEl.innerHTML+=createComponentHTML(c));componentListEl.innerHTML+='<h2>Fuel Tanks</h2>';components.tanks.forEach(c=>componentListEl.innerHTML+=createComponentHTML(c));componentListEl.innerHTML+='<h2>Payloads</h2>';components.payloads.forEach(c=>componentListEl.innerHTML+=createComponentHTML(c));document.querySelectorAll('.component').forEach(el=>{el.addEventListener('click',()=>selectPart(el.dataset.id));});}
+        function createComponentHTML(c){let s='';if(c.type==='engine')s=`<div class="component-stats"><span>Thrust:</span><span>${c.thrust} kN</span><span>Isp:</span><span>${c.isp} s</span><span>Mass:</span><span>${c.mass} t</span></div>`;if(c.type==='tank')s=`<div class="component-stats"><span>Fuel Mass:</span><span>${c.fuelMass} t</span><span>Dry Mass:</span><span>${c.dryMass} t</span></div>`;if(c.type==='payload')s=`<div class="component-stats"><span>Mass:</span><span>${c.mass} t</span></div>`;return `<div class="component" data-id="${c.id}"><h3>${c.name}</h3>${s}</div>`;}
+        function selectPart(pId){const [pre,id]=pId.split('-');let pData;let pType;if(pre==='en'){pType='engine';pData=components.engines.find(p=>p.id===pId);}if(pre==='tn'){pType='tank';pData=components.tanks.find(p=>p.id===pId);}if(pre==='pl'){pType='payload';pData=components.payloads.find(p=>p.id===pId);}if(pData){selectedParts[pType]=pData;stagesEl[pType].textContent=pData.name;stagesEl[pType].classList.add('filled');updateSimulation();}}
+        function updateSimulation(){if(!selectedParts.engine||!selectedParts.tank||!selectedParts.payload)return;const m_f=selectedParts.payload.mass+selectedParts.engine.mass+selectedParts.tank.dryMass;const m_s=m_f+selectedParts.tank.fuelMass;const twr=(selectedParts.engine.thrust*1000)/(m_s*1000*G0);const dV=selectedParts.engine.isp*G0*Math.log(m_s/m_f);telemetry.mass.textContent=`${m_s.toFixed(2)} t`;telemetry.twr.textContent=twr.toFixed(2);telemetry.dv.textContent=`${Math.round(dV)} m/s`;runAnalysis(dV,twr);}
+        function runAnalysis(dV,twr){let dP=false,tP=false,pP=false;if(dV>=currentMission.dv_req){analysis.dv.textContent=`✅ Delta-V sufficient (${Math.round(dV)}/${currentMission.dv_req} m/s)`;analysis.dv.className='analysis-item pass';dP=true;}else{analysis.dv.textContent=`❌ Delta-V insufficient (${Math.round(dV)}/${currentMission.dv_req} m/s)`;analysis.dv.className='analysis-item fail';}if(twr>1.2){analysis.twr.textContent=`✅ TWR optimal (${twr.toFixed(2)} > 1.2)`;analysis.twr.className='analysis-item pass';tP=true;}else{analysis.twr.textContent=`❌ TWR too low (${twr.toFixed(2)} < 1.2)`;analysis.twr.className='analysis-item fail';}if(selectedParts.payload&&selectedParts.payload.id===currentMission.payload_req){analysis.payload.textContent=`✅ Correct payload for mission.`;analysis.payload.className='analysis-item pass';pP=true;}else{analysis.payload.textContent=`❌ Incorrect payload for mission.`;analysis.payload.className='analysis-item fail';}if(dP&&tP&&pP){launchBtnEl.disabled=false;launchBtnEl.textContent='Initiate Launch Sequence';launchBtnEl.className='ready';}else{launchBtnEl.disabled=true;launchBtnEl.textContent='Design Incomplete';launchBtnEl.className='';}}
+        missionSelectEl.addEventListener('change',(e)=>{currentMission=missions[e.target.value];updateSimulation();});
+        
+        launchBtnEl.addEventListener('click', () => {
+            if (launchBtnEl.disabled) return;
+            const missionReport = `LAUNCH SIMULATION:\n\nMission: ${currentMission.name}\nStatus: SUCCESSFUL\n\nYour vehicle design met all performance requirements.`;
+            alert(missionReport);
 
-      // Modal logic
-      const LEARN_STEPS = {
-        rocket: {
-          title: 'Create Your Rocket',
-          steps: [
-            'Rockets have stages for efficiency. Stage 1 provides most thrust near sea level.',
-            'Key parts: payload fairing, avionics, interstage, engines, tanks, fins.',
-            'Ready to build your custom rocket?'
-          ],
-          buildUrl: '/create-rocket.html'
-        },
-        satellite: {
-          title: 'Create Your Satellite',
-          steps: [
-            'Satellites consist of payload (mission) and bus (power, comms, thermal).',
-            'Choose orbits: LEO for imaging, MEO for navigation, GEO for comms.',
-            'Ready to assemble your satellite?'
-          ],
-          buildUrl: '/create-satellite.html'
-        },
-        planet: {
-          title: 'Create Advanced Planet',
-          steps: [
-            'Define mass, radius, atmosphere, temperature & gravity.',
-            'Add oceans, rings, moons; tune axial tilt and day length.',
-            'Ready to open the advanced planet designer?'
-          ],
-          buildUrl: '/create-planet.html'
-        },
-        universe: {
-          title: 'Create Your Universe',
-          steps: [
-            'Your Space Hub: manage galaxies, planets, rockets & satellites.',
-            'Place planets you built into your galaxies.',
-            'Ready to open Your Universe?'
-          ],
-          buildUrl: '/your-space.html'
-        }
-      };
-
-      const modal = document.getElementById('infoModal');
-      const titleEl = document.getElementById('infoTitle');
-      const bodyEl  = document.getElementById('infoBody');
-      const noteEl  = document.getElementById('infoNote');
-      const nextBtn = document.getElementById('infoNext');
-      const backBtn = document.getElementById('infoBack');
-      const closeBtn= document.getElementById('infoClose');
-
-      let activeKey = null;
-      let stepIdx = 0;
-
-      function renderStep(){
-        const cfg = LEARN_STEPS[activeKey];
-        titleEl.textContent = cfg.title;
-        bodyEl.textContent = cfg.steps[stepIdx];
-        noteEl.textContent = `Step ${stepIdx+1} of ${cfg.steps.length}`;
-        backBtn.style.visibility = stepIdx === 0 ? 'hidden' : 'visible';
-        nextBtn.textContent = (stepIdx === cfg.steps.length - 1) ? 'Build →' : 'Next →';
-        nextBtn.onclick = () => {
-            if (stepIdx < cfg.steps.length - 1) {
-                stepIdx++;
-                renderStep();
-            } else {
-                window.location.href = cfg.buildUrl;
-            }
-        };
-      }
-
-      function openLearn(key){
-        activeKey = key;
-        stepIdx = 0;
-        renderStep();
-        modal.classList.add('on');
-      }
-
-      document.querySelectorAll('[data-open]').forEach(btn=>{
-        btn.addEventListener('click', e=>{
-          e.preventDefault();
-          openLearn(btn.getAttribute('data-open'));
+            // --- NEW UPDATE: Save to localStorage and redirect ---
+            const rocketData = {
+                name: `Rocket for ${currentMission.name}`,
+                engine: selectedParts.engine.name,
+                payload: selectedParts.payload.name
+            };
+            localStorage.setItem('completedRocket', JSON.stringify(rocketData));
+            window.location.href = '/your-space.html';
         });
-      });
-      
-      backBtn.addEventListener('click', ()=>{ if(stepIdx>0){ stepIdx--; renderStep(); }});
-      closeBtn.addEventListener('click', ()=> modal.classList.remove('on'));
-      modal.addEventListener('click', (ev)=>{ if(ev.target===modal) modal.classList.remove('on'); });
-      document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') modal.classList.remove('on'); });
+
+        populateComponents();
+        renderMathInElement(document.body);
     </script>
-  </body>
+</body>
 </html>

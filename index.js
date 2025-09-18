@@ -1,4 +1,4 @@
-// index.js — GoldenSpaceAI (Gemini integration + plan limits + profile info)
+// index.js — GoldenSpaceAI (Gemini connected everywhere + safe checks)
 
 import express from "express";
 import cors from "cors";
@@ -110,17 +110,23 @@ passport.deserializeUser((obj,done)=>done(null,obj));
 // ---------- Gemini ----------
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-// ---------- Chat AI (default Flash) ----------
+// ---------- Chat AI (default: Flash) ----------
 app.post("/chat-ai", enforceLimit("chatAI"), async (req,res)=>{
-  try{
-    const q = req.body?.q || "";
-    if(!q) return res.json({ answer:"Ask me something." });
-    const result = await genAI.getGenerativeModel({ model:"gemini-1.5-flash" }).generateContent([{ text:q }]);
-    res.json({ answer: result.response.text() });
-  }catch(e){ console.error(e); res.status(500).json({ answer:"Chat AI error" }); }
+  try {
+    const q = (req.body?.q || "").trim();
+    if (!q) return res.json({ answer:"Ask me something." });
+
+    const model = genAI.getGenerativeModel({ model:"gemini-1.5-flash" });
+    const result = await model.generateContent([{ text:q }]);
+    const answer = result?.response?.text?.() || "No response.";
+    res.json({ answer });
+  } catch(e){
+    console.error("Chat AI error", e);
+    res.status(500).json({ answer:"Gemini API error" });
+  }
 });
 
-// ---------- Advanced AI (with model selector) ----------
+// ---------- Advanced AI (Flash or Pro selector) ----------
 app.post("/advanced-chat-ai", async (req,res)=>{
   const plan = getPlan(req);
   if (plan !== "chatai") return res.status(403).json({ error:"Only Chat AI Pack users can access Advanced AI." });
@@ -133,7 +139,7 @@ app.post("/advanced-chat-ai", async (req,res)=>{
   try {
     const model = genAI.getGenerativeModel({ model: chosenModel });
     const result = await model.generateContent([{ text:q }]);
-    const answer = result.response.text() || "No response.";
+    const answer = result?.response?.text?.() || "No response.";
     res.json({ model: chosenModel, answer });
   } catch(e){
     console.error("Advanced AI error", e);
@@ -143,24 +149,36 @@ app.post("/advanced-chat-ai", async (req,res)=>{
 
 // ---------- Info Search ----------
 app.post("/search-info", enforceLimit("search"), async (req,res)=>{
-  try{
-    const q = req.body?.q || "";
-    if(!q) return res.json({ answer:"Type something to search." });
+  try {
+    const q = (req.body?.q || "").trim();
+    if (!q) return res.json({ answer:"Type something to search." });
+
     const prompt = `Overview with 3 bullet points about: ${q}`;
-    const result = await genAI.getGenerativeModel({ model:"gemini-1.5-flash" }).generateContent([{ text:prompt }]);
-    res.json({ answer: result.response.text() });
-  }catch(e){ console.error(e); res.status(500).json({ answer:"Search error" }); }
+    const model = genAI.getGenerativeModel({ model:"gemini-1.5-flash" });
+    const result = await model.generateContent([{ text:prompt }]);
+    const answer = result?.response?.text?.() || "No info found.";
+    res.json({ answer });
+  } catch(e){
+    console.error("Search error", e);
+    res.status(500).json({ answer:"Gemini API error" });
+  }
 });
 
-// ---------- Physics ----------
+// ---------- Learn Physics ----------
 app.post("/learn-physics", enforceLimit("physics"), async (req,res)=>{
-  try{
-    const q = req.body?.q || "";
-    if(!q) return res.json({ reply:"Ask a physics question." });
+  try {
+    const q = (req.body?.q || "").trim();
+    if (!q) return res.json({ reply:"Ask a physics question." });
+
     const prompt = `You are GoldenSpace Physics Tutor. Explain clearly.\nQuestion: ${q}`;
-    const result = await genAI.getGenerativeModel({ model:"gemini-1.5-flash" }).generateContent([{ text:prompt }]);
-    res.json({ reply: result.response.text() });
-  }catch(e){ console.error(e); res.status(500).json({ reply:"Physics error" }); }
+    const model = genAI.getGenerativeModel({ model:"gemini-1.5-flash" });
+    const result = await model.generateContent([{ text:prompt }]);
+    const reply = result?.response?.text?.() || "No reply.";
+    res.json({ reply });
+  } catch(e){
+    console.error("Physics error", e);
+    res.status(500).json({ reply:"Gemini API error" });
+  }
 });
 
 // ---------- Page Routes ----------
@@ -179,7 +197,7 @@ app.get("/create-advanced-planet.html",(req,res)=>{
   res.sendFile(path.join(__dirname,"create-advanced-planet.html"));
 });
 
-// ---------- Free Plan Select ----------
+// ---------- Select Plan (testing) ----------
 app.post("/api/select-plan/:plan",(req,res)=>{
   const plan = req.params.plan;
   if (!PLAN_LIMITS[plan]) return res.status(400).json({ error:"Invalid plan" });

@@ -52,8 +52,8 @@ const PLAN_LIMITS = {
   sun:  { ask: Infinity, search: Infinity, physics: Infinity, learnPhysics: true, createPlanet: true },
 };
 
-// ---------- Usage tracking (memory, resets daily) ----------
-const usage = {}; // { userKey: { date, ask, search, physics } }
+// ---------- Usage tracking ----------
+const usage = {}; 
 const today = () => new Date().toISOString().slice(0,10);
 
 function getUserKey(req, res){
@@ -85,7 +85,7 @@ function enforceLimit(kind){
   };
 }
 
-// ---------- Helper: compute base URL dynamically ----------
+// ---------- Helper: compute base URL ----------
 function getBaseUrl(req){
   const proto = (req.headers["x-forwarded-proto"]||"").toString().split(",")[0] || req.protocol || "https";
   const host  = (req.headers["x-forwarded-host"] || "").toString().split(",")[0] || req.get("host");
@@ -131,7 +131,38 @@ app.post("/logout",(req,res,next)=>{
 app.get("/login.html",(req,res)=>{
   const appName="GoldenSpaceAI";
   const base=getBaseUrl(req);
-  res.send(`<!doctype html><html lang="en"><head> ... (unchanged login page) ... </html>`);
+  res.send(`<!doctype html><html lang="en"><head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>${appName} — Log in or Sign up</title><link rel="icon" href="/favicon.ico"/>
+<style>
+:root{--bg:#0b0f1a;--card:#12182a;--gold:#f0c419;--text:#e6ecff;--muted:#9fb0d1}
+*{box-sizing:border-box}body{margin:0;font-family:ui-sans-serif,system-ui,Segoe UI,Inter,Arial;background:radial-gradient(1200px 800px at 80% -10%,#1a2340 0%,#0b0f1a 60%,#070a12 100%);color:var(--text)}
+.wrap{min-height:100dvh;display:grid;place-items:center;padding:24px}
+.card{width:100%;max-width:520px;background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.01));border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:28px 24px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+h1{margin:0 0 6px;font-size:28px}.sub{margin:0 0 18px;font-size:14px;color:var(--muted)}
+.features{margin:12px 0 22px;padding:0;list-style:none;display:grid;gap:10px}
+.badge{display:inline-flex;gap:8px;background:rgba(240,196,25,.1);border:1px solid rgba(240,196,25,.35);padding:6px 10px;border-radius:999px;color:var(--gold);font-weight:600;font-size:12px;margin-bottom:10px}
+.btn{display:flex;align-items:center;gap:10px;justify-content:center;width:100%;padding:12px 16px;border-radius:12px;border:none;font-size:16px;font-weight:700;cursor:pointer;background:var(--gold);color:#1a1a1a;transition:transform .06s ease, box-shadow .2s ease}
+.btn:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(240,196,25,.35)}
+.google{background:#fff;color:#1f2937;border:1px solid rgba(0,0,0,.08)}
+.or{display:flex;align-items:center;gap:12px;color:var(--muted);font-size:12px;margin:12px 0}
+.or:before,.or:after{content:"";flex:1;height:1px;background:rgba(255,255,255,.12)}
+.fine{margin-top:14px;color:var(--muted);font-size:12px}
+.links{display:flex;gap:16px;margin-top:10px}a{color:var(--text)}
+</style></head><body><div class="wrap"><div class="card">
+<div class="badge">✨ Welcome, explorer</div>
+<h1>Log in or Sign up</h1>
+<p class="sub">Access ${appName}: ask AI about space, learn physics, and create your own planets.</p>
+<ul class="features"><li>🚀 Ask Advanced AI (daily limits based on your plan)</li><li>📚 Learn Physics</li><li>🪐 Create custom planets (Sun Pack)</li></ul>
+<div class="or">continue</div>
+<button class="btn google" onclick="window.location='${base}/auth/google'">
+<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18" height="18" style="display:inline-block"/> Continue with Google
+</button>
+<p class="fine">By continuing, you agree to our
+<a href="https://www.goldenspaceai.space/terms-of-service" target="_blank" rel="noopener">Terms</a> and
+<a href="https://www.goldenspaceai.space/privacy" target="_blank" rel="noopener">Privacy</a>.</p>
+<div class="links"><a href="/">Back to home</a><a href="/plans.html">See plans</a></div>
+</div></div></body></html>`);
 });
 
 // ---------- PUBLIC / AUTH GATE ----------
@@ -142,7 +173,7 @@ function isPublicPath(req){
   if (p === "/terms.html") return true;
   if (p === "/privacy.html") return true;
   if (p === "/health") return true;
-  if (p === "/webhooks/paddle") return true;
+  if (p === "/webhooks/paddle") return true; 
   if (p.startsWith("/auth/google")) return true;
   if (PUBLIC_FILE_EXT.test(p)) return true;
   if (p === "/favicon.ico") return true;
@@ -155,125 +186,63 @@ function authRequired(req,res,next){
   return res.status(401).json({ error:"Sign in required" });
 }
 
-// ---------- Paddle Webhook (PUBLIC) ----------
-const upgradesByEmail = {}; 
-app.post("/webhooks/paddle",
-  bodyParser.raw({ type: "*/*" }),
-  (req,res)=>{
-    try{
-      const signature = req.header("Paddle-Signature") || req.header("paddle-signature");
-      const secret = process.env.PADDLE_WEBHOOK_SECRET;
-      if (!signature || !secret) return res.status(400).send("Missing signature or secret");
-
-      const computed = crypto.createHmac("sha256", secret).update(req.body).digest("hex");
-      if (signature !== computed && !signature.includes(computed)) {
-        return res.status(401).send("Invalid signature");
-      }
-
-      const evt = JSON.parse(req.body.toString("utf8"));
-      const type = evt?.event_type || evt?.type || "";
-
-      const item = evt?.data?.items?.[0];
-      const priceId = item?.price?.id || evt?.data?.price_id || null;
-      const customPlan = item?.custom_data?.plan || evt?.data?.custom_data?.plan || null;
-
-      let plan = null;
-      if (customPlan === "earth" || customPlan === "sun") plan = customPlan;
-      else if (priceId === process.env.PADDLE_PRICE_EARTH) plan = "earth";
-      else if (priceId === process.env.PADDLE_PRICE_SUN)   plan = "sun";
-
-      const okEvent =
-        type.includes("subscription.created") ||
-        type.includes("subscription.activated") ||
-        type.includes("transaction.completed");
-
-      const email =
-        evt?.data?.customer?.email ||
-        evt?.data?.customer_email ||
-        item?.customer?.email ||
-        null;
-
-      if (okEvent && plan && email) {
-        upgradesByEmail[email.toLowerCase()] = plan;
-        console.log(`Paddle: upgraded ${email} -> ${plan}`);
-      }
-
-      return res.status(200).send("ok");
-    }catch(err){
-      console.error("Paddle webhook error", err);
-      return res.status(200).send("ok");
-    }
-  }
-);
-
-app.use(authRequired);
-
-// ---------- Alias/redirects ----------
-app.get("/terms.html", (_req,res)=>res.redirect("https://www.goldenspaceai.space/terms-of-service"));
-app.get("/privacy.html", (_req,res)=>res.redirect("https://www.goldenspaceai.space/privacy"));
-
 // ---------- Gemini ----------
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model:"gemini-1.5-flash" });
+const modelFlash = genAI.getGenerativeModel({ model:"gemini-1.5-flash" });
+const modelPro = genAI.getGenerativeModel({ model:"gemini-1.5-pro" });
 
 // ---------- AI Routes ----------
 app.post("/ask", enforceLimit("ask"), async (req,res)=>{
   try{
     const q = (req.body?.question || "").trim();
     if (!q) return res.json({ answer:"Ask me anything!" });
-    const result = await model.generateContent([{ text:`User: ${q}` }]);
+    const result = await modelFlash.generateContent([{ text:`User: ${q}` }]);
     const answer = result.response.text() || "No response.";
     res.json({ answer });
   }catch(e){ console.error("ask error", e); res.status(500).json({ answer:"Gemini error" }); }
 });
+
 app.post("/search-info", enforceLimit("search"), async (req,res)=>{
   try{
     const q = (req.body?.query || "").trim();
     if (!q) return res.json({ answer:"Type something to search." });
     const prompt = `You are GoldenSpace Knowledge. Overview + 3 bullet facts.\nTopic: ${q}`;
-    const result = await model.generateContent([{ text: prompt }]);
+    const result = await modelFlash.generateContent([{ text: prompt }]);
     const answer = result.response.text() || "No info found.";
     res.json({ answer });
   }catch(e){ console.error("search-info error", e); res.status(500).json({ answer:"Search error" }); }
 });
+
 app.post("/ai/physics-explain", enforceLimit("physics"), async (req,res)=>{
   try{
     const q = (req.body?.question || "").trim();
     if (!q) return res.json({ reply:"Ask a physics question." });
     const prompt = `You are GoldenSpace Physics Tutor. Explain clearly.\nQuestion: ${q}`;
-    const result = await model.generateContent([{ text: prompt }]);
+    const result = await modelFlash.generateContent([{ text: prompt }]);
     const reply = result.response.text() || "No reply.";
     res.json({ reply });
   }catch(e){ console.error("physics error", e); res.status(500).json({ reply:"Physics error" }); }
 });
 
-// ---------- Advanced Chat AI (with model selector + file upload) ----------
+// ---------- Advanced Chat AI ----------
 const upload = multer({ dest: "uploads/" });
-app.post("/chat-advanced-ai", upload.single("file"), async (req, res) => {
-  try {
+app.post("/chat-advanced-ai", upload.single("file"), async (req,res)=>{
+  try{
     const q = (req.body?.q || "").trim();
     const modelType = (req.body?.modelType || "flash").toLowerCase();
-    if (!q) return res.json({ answer: "Ask me something." });
+    if (!q) return res.json({ answer:"Ask me something." });
 
-    const modelName = modelType === "pro" ? "gemini-1.5-pro" : "gemini-1.5-flash";
-    const advModel = genAI.getGenerativeModel({ model: modelName });
-
-    // Optional: include uploaded file path if provided
-    let fileNote = "";
-    if (req.file) {
-      fileNote = `\n\n(User also uploaded a file: ${req.file.originalname})`;
-    }
-
-    const result = await advModel.generateContent([{ text: q + fileNote }]);
+    const useModel = modelType === "pro" ? modelPro : modelFlash;
+    const result = await useModel.generateContent([{ text: q }]);
     const answer = result?.response?.text?.() || "No response.";
-    res.json({ model: modelName, answer });
-  } catch (e) {
+    res.json({ model: modelType, answer });
+  }catch(e){
     console.error("advanced-ai error", e);
-    res.status(500).json({ answer: "Advanced AI error" });
+    res.status(500).json({ answer:"Advanced AI error" });
   }
 });
 
-// ---------- Apply Paddle upgrades ----------
+// ---------- Apply Paddle upgrades when user hits API ----------
 app.get("/api/me",(req,res)=>{
   if (req.user?.email){
     const up = upgradesByEmail[req.user.email.toLowerCase()];
@@ -303,6 +272,7 @@ app.get("/learn-physics.html",(req,res)=>{
   }
   res.sendFile(path.join(__dirname,"learn-physics.html"));
 });
+
 app.get("/create-planet.html",(req,res)=>{
   const plan = getPlan(req);
   if (!PLAN_LIMITS[plan].createPlanet){
@@ -313,7 +283,7 @@ app.get("/create-planet.html",(req,res)=>{
   res.sendFile(path.join(__dirname,"create-planet.html"));
 });
 
-// ---------- Select free plan (no checkout) ----------
+// ---------- Select free plan ----------
 app.post("/api/select-free",(req,res)=>{
   if (req.user) req.user.plan = "moon";
   if (req.session) req.session.plan = "moon";

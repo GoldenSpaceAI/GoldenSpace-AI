@@ -12,6 +12,7 @@ import cookieParser from "cookie-parser";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import bodyParser from "body-parser";
 import crypto from "crypto";
+import multer from "multer";
 
 dotenv.config();
 
@@ -130,7 +131,7 @@ app.post("/logout",(req,res,next)=>{
 app.get("/login.html",(req,res)=>{
   const appName="GoldenSpaceAI";
   const base=getBaseUrl(req);
-  res.send(`<!doctype html><html lang="en"><head> ... (unchanged) ... </html>`);
+  res.send(`<!doctype html><html lang="en"><head> ... (unchanged login page) ... </html>`);
 });
 
 // ---------- PUBLIC / AUTH GATE ----------
@@ -158,7 +159,51 @@ function authRequired(req,res,next){
 const upgradesByEmail = {}; 
 app.post("/webhooks/paddle",
   bodyParser.raw({ type: "*/*" }),
-  (req,res)=>{ ... }
+  (req,res)=>{
+    try{
+      const signature = req.header("Paddle-Signature") || req.header("paddle-signature");
+      const secret = process.env.PADDLE_WEBHOOK_SECRET;
+      if (!signature || !secret) return res.status(400).send("Missing signature or secret");
+
+      const computed = crypto.createHmac("sha256", secret).update(req.body).digest("hex");
+      if (signature !== computed && !signature.includes(computed)) {
+        return res.status(401).send("Invalid signature");
+      }
+
+      const evt = JSON.parse(req.body.toString("utf8"));
+      const type = evt?.event_type || evt?.type || "";
+
+      const item = evt?.data?.items?.[0];
+      const priceId = item?.price?.id || evt?.data?.price_id || null;
+      const customPlan = item?.custom_data?.plan || evt?.data?.custom_data?.plan || null;
+
+      let plan = null;
+      if (customPlan === "earth" || customPlan === "sun") plan = customPlan;
+      else if (priceId === process.env.PADDLE_PRICE_EARTH) plan = "earth";
+      else if (priceId === process.env.PADDLE_PRICE_SUN)   plan = "sun";
+
+      const okEvent =
+        type.includes("subscription.created") ||
+        type.includes("subscription.activated") ||
+        type.includes("transaction.completed");
+
+      const email =
+        evt?.data?.customer?.email ||
+        evt?.data?.customer_email ||
+        item?.customer?.email ||
+        null;
+
+      if (okEvent && plan && email) {
+        upgradesByEmail[email.toLowerCase()] = plan;
+        console.log(`Paddle: upgraded ${email} -> ${plan}`);
+      }
+
+      return res.status(200).send("ok");
+    }catch(err){
+      console.error("Paddle webhook error", err);
+      return res.status(200).send("ok");
+    }
+  }
 );
 
 app.use(authRequired);
@@ -172,12 +217,39 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model:"gemini-1.5-flash" });
 
 // ---------- AI Routes ----------
-app.post("/ask", enforceLimit("ask"), async (req,res)=>{ ... });
-app.post("/search-info", enforceLimit("search"), async (req,res)=>{ ... });
-app.post("/ai/physics-explain", enforceLimit("physics"), async (req,res)=>{ ... });
+app.post("/ask", enforceLimit("ask"), async (req,res)=>{
+  try{
+    const q = (req.body?.question || "").trim();
+    if (!q) return res.json({ answer:"Ask me anything!" });
+    const result = await model.generateContent([{ text:`User: ${q}` }]);
+    const answer = result.response.text() || "No response.";
+    res.json({ answer });
+  }catch(e){ console.error("ask error", e); res.status(500).json({ answer:"Gemini error" }); }
+});
+app.post("/search-info", enforceLimit("search"), async (req,res)=>{
+  try{
+    const q = (req.body?.query || "").trim();
+    if (!q) return res.json({ answer:"Type something to search." });
+    const prompt = `You are GoldenSpace Knowledge. Overview + 3 bullet facts.\nTopic: ${q}`;
+    const result = await model.generateContent([{ text: prompt }]);
+    const answer = result.response.text() || "No info found.";
+    res.json({ answer });
+  }catch(e){ console.error("search-info error", e); res.status(500).json({ answer:"Search error" }); }
+});
+app.post("/ai/physics-explain", enforceLimit("physics"), async (req,res)=>{
+  try{
+    const q = (req.body?.question || "").trim();
+    if (!q) return res.json({ reply:"Ask a physics question." });
+    const prompt = `You are GoldenSpace Physics Tutor. Explain clearly.\nQuestion: ${q}`;
+    const result = await model.generateContent([{ text: prompt }]);
+    const reply = result.response.text() || "No reply.";
+    res.json({ reply });
+  }catch(e){ console.error("physics error", e); res.status(500).json({ reply:"Physics error" }); }
+});
 
-// ---------- Advanced Chat AI (with model selector) ----------
-app.post("/chat-advanced-ai", async (req, res) => {
+// ---------- Advanced Chat AI (with model selector + file upload) ----------
+const upload = multer({ dest: "uploads/" });
+app.post("/chat-advanced-ai", upload.single("file"), async (req, res) => {
   try {
     const q = (req.body?.q || "").trim();
     const modelType = (req.body?.modelType || "flash").toLowerCase();
@@ -186,7 +258,13 @@ app.post("/chat-advanced-ai", async (req, res) => {
     const modelName = modelType === "pro" ? "gemini-1.5-pro" : "gemini-1.5-flash";
     const advModel = genAI.getGenerativeModel({ model: modelName });
 
-    const result = await advModel.generateContent([{ text: q }]);
+    // Optional: include uploaded file path if provided
+    let fileNote = "";
+    if (req.file) {
+      fileNote = `\n\n(User also uploaded a file: ${req.file.originalname})`;
+    }
+
+    const result = await advModel.generateContent([{ text: q + fileNote }]);
     const answer = result?.response?.text?.() || "No response.";
     res.json({ model: modelName, answer });
   } catch (e) {
@@ -196,14 +274,51 @@ app.post("/chat-advanced-ai", async (req, res) => {
 });
 
 // ---------- Apply Paddle upgrades ----------
-app.get("/api/me",(req,res)=>{ ... });
+app.get("/api/me",(req,res)=>{
+  if (req.user?.email){
+    const up = upgradesByEmail[req.user.email.toLowerCase()];
+    if (up && (req.user.plan !== up || req.session?.plan !== up)){
+      req.user.plan = up;
+      if (req.session) req.session.plan = up;
+    }
+  }
+  const plan = getPlan(req);
+  const limits = PLAN_LIMITS[plan];
+  const u = getUsage(req,res);
+  const remaining = {
+    ask: limits.ask===Infinity?Infinity:Math.max(0, limits.ask-u.ask),
+    search: limits.search===Infinity?Infinity:Math.max(0, limits.search-u.search),
+    physics: limits.physics===Infinity?Infinity:Math.max(0, limits.physics-u.physics),
+  };
+  res.json({ loggedIn:!!req.user, user:req.user||null, plan, limits, used:u, remaining });
+});
 
 // ---------- Gated pages ----------
-app.get("/learn-physics.html",(req,res)=>{ ... });
-app.get("/create-planet.html",(req,res)=>{ ... });
+app.get("/learn-physics.html",(req,res)=>{
+  const plan = getPlan(req);
+  if (!PLAN_LIMITS[plan].learnPhysics){
+    return res.send(`<html><body style="font-family:sans-serif;text-align:center;margin-top:50px;">
+      <h2>🚀 Upgrade to the <span style="color:gold">Earth Pack</span> to unlock Learn Physics!</h2>
+      <p><a href="/plans.html">See Plans</a></p></body></html>`);
+  }
+  res.sendFile(path.join(__dirname,"learn-physics.html"));
+});
+app.get("/create-planet.html",(req,res)=>{
+  const plan = getPlan(req);
+  if (!PLAN_LIMITS[plan].createPlanet){
+    return res.send(`<html><body style="font-family:sans-serif;text-align:center;margin-top:50px;">
+      <h2>🌍 Upgrade to the <span style="color:orange">Sun Pack</span> to unlock Create Planet!</h2>
+      <p><a href="/plans.html">See Plans</a></p></body></html>`);
+  }
+  res.sendFile(path.join(__dirname,"create-planet.html"));
+});
 
-// ---------- Select free plan ----------
-app.post("/api/select-free",(req,res)=>{ ... });
+// ---------- Select free plan (no checkout) ----------
+app.post("/api/select-free",(req,res)=>{
+  if (req.user) req.user.plan = "moon";
+  if (req.session) req.session.plan = "moon";
+  res.json({ ok:true, plan:"moon" });
+});
 
 // ---------- Static & Health ----------
 app.use(express.static(__dirname));

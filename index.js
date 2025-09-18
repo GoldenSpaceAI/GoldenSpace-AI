@@ -10,7 +10,6 @@ import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import cookieParser from "cookie-parser";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import bodyParser from "body-parser";
 
 dotenv.config();
 
@@ -52,7 +51,7 @@ const PLAN_LIMITS = {
 };
 
 // ---------- Usage tracking (memory, resets daily) ----------
-const usage = {}; // { userKey: { date, chatAI, advancedChatAI, homeworkSolver, lessonSearcher } }
+const usage = {};
 const today = () => new Date().toISOString().slice(0,10);
 
 function getUserKey(req,res){
@@ -169,6 +168,15 @@ app.post("/api/select-plan/:plan",(req,res)=>{
   if (req.user) req.user.plan = plan;
   if (req.session) req.session.plan = plan;
   res.json({ ok:true, plan });
+});
+
+// ---------- Static & Home ----------
+// Serve static files like index.html
+app.use(express.static(__dirname));
+
+// Default route -> send index.html
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "index.html"));
 });
 
 // ---------- Start ----------

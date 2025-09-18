@@ -13,127 +13,175 @@
             --text-secondary: #94A3B8;
             --gold-accent: #f6c64a;
             --gold-glow: rgba(246, 198, 74, 0.2);
+            --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
+
+        * { box-sizing: border-box; }
+
         body {
-            font-family: 'Segoe UI', system-ui, sans-serif;
+            font-family: var(--font-main);
             background-color: var(--bg-dark);
             color: var(--text-primary);
             margin: 0;
-            display: flex;
             height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sandbox-container {
+            display: flex;
+            flex: 1;
+            flex-direction: column;
             overflow: hidden;
         }
 
-        /* --- Panels & Toolbox --- */
-        .panel {
-            width: 300px;
-            background-color: var(--panel-bg);
-            border-right: 1px solid var(--border-color);
-            padding: 1.5rem;
-            display: flex;
-            flex-direction: column;
-            z-index: 10;
-        }
-        .panel h2, .panel h3 { color: var(--gold-accent); }
-        .tool-item {
-            display: flex; align-items: center; gap: 1rem; padding: 0.75rem;
-            border-radius: 6px; margin-bottom: 1rem; cursor: pointer;
-            border: 1px solid var(--border-color); transition: all 0.2s ease;
-        }
-        .tool-item:hover { border-color: var(--gold-accent); background-color: #1E293B; }
-        .tool-item-icon { font-size: 2rem; line-height: 1; }
-        .tool-item h3 { margin: 0; font-size: 1rem; color: var(--text-primary); }
-
-        #inspector-panel {
-            margin-top: auto; background-color: var(--bg-dark); border: 1px solid var(--border-color);
-            border-radius: 8px; padding: 1rem; display: none;
-        }
-        .inspector-group { margin-bottom: 1rem; }
-        .inspector-group label { display: block; margin-bottom: 0.5rem; color: var(--text-secondary); }
-        .inspector-group input, .inspector-group select {
-            width: 100%; background-color: var(--panel-bg); border: 1px solid var(--border-color);
-            color: var(--text-primary); padding: 0.5rem; border-radius: 4px; box-sizing: border-box;
-        }
-        .inspector-section { display: none; }
-
-        /* --- Creation Modal --- */
-        .modal-overlay {
-            position: fixed; inset: 0; background-color: rgba(0,0,0,0.7);
-            display: none; align-items: center; justify-content: center; z-index: 1000;
-        }
-        .modal-overlay.active { display: flex; }
-        .modal-content {
-            background-color: var(--panel-bg); padding: 2rem; border-radius: 12px;
-            width: 90%; max-width: 400px; border: 1px solid var(--border-color);
-        }
-        .modal-content h2 { margin-top: 0; }
-        #create-btn {
-            background-color: var(--gold-accent); color: var(--bg-dark); border: none; padding: 0.75rem 1.5rem;
-            font-size: 1rem; font-weight: bold; border-radius: 6px; cursor: pointer; margin-top: 1rem;
-        }
-
-        /* --- Universe Canvas & Objects --- */
+        /* --- Universe Canvas --- */
         .universe-canvas {
-            flex: 1; position: relative;
-            background-color: var(--bg-dark); overflow: hidden; cursor: grab;
+            flex: 1;
+            position: relative;
+            background-color: var(--bg-dark);
+            overflow: hidden;
+            cursor: grab;
         }
         .universe-canvas:active { cursor: grabbing; }
 
         #canvas-content {
-            position: absolute; width: 4000px; height: 4000px;
+            position: absolute;
+            width: 1px;
+            height: 1px;
             transform-origin: 0 0;
         }
 
-        .celestial-object {
-            position: absolute; border-radius: 50%;
-            transition: box-shadow 0.2s, width 0.3s, height 0.3s, transform 0.3s;
+        /* --- UI Panels (Mobile First) --- */
+        .ui-panels {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 20;
+            background: linear-gradient(180deg, transparent, rgba(10, 14, 21, 0.8) 50%);
+            padding: 1rem;
+            padding-bottom: max(1rem, env(safe-area-inset-bottom));
         }
-        .celestial-object:hover { z-index: 102 !important; }
-        .celestial-object.selected {
-            box-shadow: 0 0 20px 5px var(--gold-glow), 0 0 0 2px var(--gold-accent);
-            z-index: 100 !important;
+
+        .accordion-panel {
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            overflow: hidden;
+        }
+
+        .accordion-header {
+            padding: 1rem;
+            cursor: pointer;
+            font-weight: bold;
+            color: var(--gold-accent);
+        }
+
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+            padding: 0 1rem;
+        }
+        .accordion-content.open {
+            max-height: 50vh;
+            padding-bottom: 1rem;
+            overflow-y: auto;
         }
         
+        .tool-item {
+            display: flex; align-items: center; gap: 1rem; padding: 0.75rem;
+            border-radius: 6px; margin-bottom: 0.5rem; cursor: pointer;
+            border: 1px solid transparent;
+        }
+        .tool-item:hover { background-color: #1E293B; }
+        .tool-item-icon { font-size: 2rem; }
+        .tool-item h3 { margin: 0; font-size: 1rem; color: var(--text-primary); }
+
+        .inspector-group { margin-bottom: 1rem; }
+        .inspector-group label { display: block; margin-bottom: 0.5rem; color: var(--text-secondary); }
+        .inspector-group input, .inspector-group select {
+            width: 100%; background-color: var(--bg-dark); border: 1px solid var(--border-color);
+            color: var(--text-primary); padding: 0.5rem; border-radius: 4px;
+        }
+
+        /* --- Desktop Layout --- */
+        @media (min-width: 769px) {
+            .sandbox-container {
+                flex-direction: row;
+            }
+            .ui-panels {
+                position: static;
+                width: 320px;
+                height: 100vh;
+                order: -1; /* Move to the left */
+                background: var(--panel-bg);
+                border-right: 1px solid var(--border-color);
+                padding: 1.5rem;
+            }
+            .accordion-header { display: none; }
+            .accordion-content {
+                max-height: none;
+                padding: 0;
+                overflow: visible;
+            }
+            #inspector-panel {
+                margin-top: 2rem;
+            }
+        }
+        
+        /* ... (Object, Modal, Orbit Styles from previous version) ... */
+        .celestial-object { position: absolute; border-radius: 50%; }
         .galaxy { background: radial-gradient(ellipse, #fff 0%, rgba(255,255,255,0.6) 10%, rgba(255,255,255,0) 60%); }
         .star { background: radial-gradient(circle, #fff, var(--gold-accent)); box-shadow: 0 0 40px var(--gold-accent); }
         .planet { background-color: #38bdf8; z-index: 50; }
-        
-        .orbit-path {
-            position: absolute; border: 1px dashed var(--border-color);
-            border-radius: 50%; pointer-events: none;
-            transition: all 0.3s;
-        }
+        .celestial-object.selected { box-shadow: 0 0 20px 5px var(--gold-glow), 0 0 0 2px var(--gold-accent); z-index: 100 !important; }
+        .orbit-path { position: absolute; border: 1px dashed var(--border-color); border-radius: 50%; pointer-events: none; }
+        .modal-overlay { position: fixed; inset: 0; background-color: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 1000; }
+        .modal-overlay.active { display: flex; }
+        .modal-content { background-color: var(--panel-bg); padding: 2rem; border-radius: 12px; width: 90%; max-width: 400px; border: 1px solid var(--border-color); }
+        .modal-content h2 { margin-top: 0; color: var(--gold-accent); }
+        #create-btn { background-color: var(--gold-accent); color: var(--bg-dark); border: none; padding: 0.75rem 1.5rem; font-size: 1rem; font-weight: bold; border-radius: 6px; cursor: pointer; margin-top: 1rem; }
     </style>
 </head>
 <body>
 
-    <aside class="panel toolbox">
-        <div>
-            <h2>Universe Toolbox</h2>
-            <div class="tool-item" data-type="galaxy"><div class="tool-item-icon">🌌</div><h3>Add Galaxy</h3></div>
-            <div class="tool-item" data-type="star"><div class="tool-item-icon">🌟</div><h3>Add Star</h3></div>
-            <div class="tool-item" data-type="planet"><div class="tool-item-icon">🪐</div><h3>Add Planet</h3></div>
-        </div>
-        
-        <div id="inspector-panel">
-            <h3>Inspector</h3>
-            <div class="inspector-group">
-                <label for="name-input">Object Name</label>
-                <input type="text" id="name-input">
+    <div class="sandbox-container">
+        <aside class="ui-panels">
+            <div class="accordion-panel" id="toolbox-panel">
+                <div class="accordion-header">Toolbox</div>
+                <div class="accordion-content">
+                    <h2>Toolbox</h2>
+                    <div class="tool-item" data-type="galaxy"><div class="tool-item-icon">🌌</div><h3>Add Galaxy</h3></div>
+                    <div class="tool-item" data-type="star"><div class="tool-item-icon">🌟</div><h3>Add Star</h3></div>
+                    <div class="tool-item" data-type="planet"><div class="tool-item-icon">🪐</div><h3>Add Planet</h3></div>
+                </div>
             </div>
-            <div id="planet-settings" class="inspector-section">
-                 <div class="inspector-group"><label for="size-input">Planet Size</label><input type="range" id="size-input" min="10" max="80"></div>
-                <div class="inspector-group"><label for="color-input">Planet Color</label><input type="color" id="color-input"></div>
-                <div class="inspector-group"><label for="oxygen-input">Oxygen Level</label><input type="text" id="oxygen-input"></div>
-                <div class="inspector-group"><label for="life-input">Type of Life</label><select id="life-input"><option>None</option><option>Microbial</option><option>Complex</option><option>Intelligent</option></select></div>
+            <div class="accordion-panel" id="inspector-panel-container">
+                <div class="accordion-header">Inspector</div>
+                <div class="accordion-content" id="inspector-content">
+                    <h3>Inspector</h3>
+                    <div id="inspector-default-text"><p>Select an object to inspect its properties.</p></div>
+                    <div id="inspector-form" style="display:none;">
+                        <div class="inspector-group"><label for="name-input">Object Name</label><input type="text" id="name-input"></div>
+                        <div id="planet-settings" style="display:none;">
+                            <div class="inspector-group"><label for="size-input">Planet Size</label><input type="range" id="size-input" min="10" max="80"></div>
+                            <div class="inspector-group"><label for="color-input">Planet Color</label><input type="color" id="color-input"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
-    </aside>
+        </aside>
 
-    <main class="universe-canvas" id="universe-canvas">
-        <div id="canvas-content">
-            </div>
-    </main>
+        <main class="universe-canvas" id="universe-canvas">
+            <div id="canvas-content">
+                </div>
+        </main>
+    </div>
 
     <div id="creation-modal" class="modal-overlay">
         <div class="modal-content">
@@ -146,59 +194,45 @@
     </div>
     
     <script>
-        // --- DOM ELEMENTS ---
+        // --- DOM ELEMENTS & STATE ---
         const canvas = document.getElementById('universe-canvas');
         const canvasContent = document.getElementById('canvas-content');
         const toolboxItems = document.querySelectorAll('.tool-item');
-        const inspectorPanel = document.getElementById('inspector-panel');
+        const inspectorDefault = document.getElementById('inspector-default-text');
+        const inspectorForm = document.getElementById('inspector-form');
         const creationModal = document.getElementById('creation-modal');
-
-        // --- STATE & DATA ---
-        let activeObject = null;
-        let objectCounter = 0;
-        let objects = new Map();
+        let activeObject = null, objectCounter = 0, objects = new Map();
         
-        // --- ZOOM & PAN LOGIC ---
+        // --- ZOOM & PAN ---
         let scale = 1, panning = false, pointX = 0, pointY = 0, start = { x: 0, y: 0 };
         function setTransform() { canvasContent.style.transform = `translate(${pointX}px, ${pointY}px) scale(${scale})`; }
-        canvas.onmousedown = (e) => { e.preventDefault(); start = { x: e.clientX - pointX, y: e.clientY - pointY }; panning = true; };
+        canvas.onmousedown = (e) => {
+            if (e.target !== canvas) return;
+            e.preventDefault();
+            start = { x: e.clientX - pointX, y: e.clientY - pointY };
+            panning = true;
+        };
         canvas.onmouseup = () => { panning = false; };
         canvas.onmousemove = (e) => { if (!panning) return; pointX = e.clientX - start.x; pointY = e.clientY - start.y; setTransform(); };
         canvas.onwheel = (e) => {
             e.preventDefault();
             const xs = (e.clientX - pointX) / scale, ys = (e.clientY - pointY) / scale, delta = -e.deltaY;
-            (delta > 0) ? (scale *= 1.2) : (scale /= 1.2);
+            (delta > 0) ? (scale *= 1.1) : (scale /= 1.1);
             pointX = e.clientX - xs * scale;
             pointY = e.clientY - ys * scale;
             setTransform();
         };
 
-        // --- OBJECT CREATION FLOW ---
-        toolboxItems.forEach(item => {
-            item.addEventListener('click', () => {
-                const type = item.dataset.type;
-                if (type === 'planet') {
-                    openCreationModal();
-                } else {
-                    createObject(type, { x: 200, y: 200 });
-                }
-            });
-        });
-
-        function openCreationModal() {
-            document.getElementById('modal-name').value = `Planet ${objectCounter + 1}`;
-            creationModal.classList.add('active');
-        }
-        
-        document.getElementById('create-btn').addEventListener('click', () => {
-            const settings = {
-                name: document.getElementById('modal-name').value,
-                size: parseFloat(document.getElementById('modal-size').value),
-                color: document.getElementById('modal-color').value
-            };
-            createObject('planet', { x: 300, y: 300 }, settings);
-            creationModal.classList.remove('active');
-        });
+        // --- OBJECT CREATION & MANAGEMENT ---
+        toolboxItems.forEach(item => item.addEventListener('click', () => {
+            const type = item.dataset.type;
+            const centerOfView = { x: (-pointX + canvas.clientWidth / 2) / scale, y: (-pointY + canvas.clientHeight / 2) / scale };
+            if (type === 'planet') {
+                openCreationModal(centerOfView);
+            } else {
+                createObject(type, centerOfView);
+            }
+        }));
 
         function createObject(type, position, customData = {}) {
             objectCounter++;
@@ -206,74 +240,52 @@
             const objEl = document.createElement('div');
             objEl.className = `celestial-object ${type}`;
             objEl.id = id;
-            
-            // Adjust position for current pan/zoom
-            const canvasRect = canvas.getBoundingClientRect();
-            const initialX = (position.x - canvasRect.left - pointX) / scale;
-            const initialY = (position.y - canvasRect.top - pointY) / scale;
-            objEl.style.left = `${initialX}px`;
-            objEl.style.top = `${initialY}px`;
-            
+            objEl.style.left = `${position.x}px`;
+            objEl.style.top = `${position.y}px`;
             const objectData = { id, el: objEl, type, name: customData.name || `${type.charAt(0).toUpperCase() + type.slice(1)} ${objectCounter}`, ...customData };
             
             if (type === 'planet') {
-                objectData.size = customData.size || 20;
-                objectData.color = customData.color || '#38bdf8';
-                objectData.oxygen = '21%'; objectData.life = 'None';
-                objEl.style.width = `${objectData.size}px`;
-                objEl.style.height = `${objectData.size}px`;
-                objEl.style.backgroundColor = objectData.color;
-                
                 const orbitEl = document.createElement('div');
                 orbitEl.className = 'orbit-path';
                 canvasContent.appendChild(orbitEl);
                 objectData.orbitEl = orbitEl;
                 objectData.orbitalAngle = Math.random() * 360;
-                objectData.orbitSpeed = 0.5 / (Math.sqrt(objectData.size) || 1);
+                objectData.size = customData.size || 20;
+                objEl.style.width = `${objectData.size}px`;
+                objEl.style.height = `${objectData.size}px`;
+                objEl.style.backgroundColor = customData.color || '#38bdf8';
             } else {
                 objEl.style.width = type === 'galaxy' ? '250px' : '60px';
                 objEl.style.height = type === 'galaxy' ? '250px' : '60px';
             }
 
             objects.set(id, objectData);
-            
             makeDraggable(objectData);
             objEl.addEventListener('click', e => { e.stopPropagation(); selectObject(objectData); });
             canvasContent.appendChild(objEl);
-            selectObject(objectData);
-            
             if (type === 'planet') updatePlanetOrbit(objectData);
         }
-        
-        // --- INSPECTOR LOGIC ---
-        function selectObject(objData) {
-            if (activeObject?.el) activeObject.el.classList.remove('selected');
-            activeObject = objData;
-            activeObject.el.classList.add('selected');
-            inspectorPanel.style.display = 'block';
-            document.getElementById('name-input').value = objData.name;
-            
-            document.querySelectorAll('.inspector-section').forEach(s => s.style.display = 'none');
-            const settingsEl = document.getElementById(`${objData.type}-settings`);
-            if (settingsEl) settingsEl.style.display = 'block';
 
-            if (objData.type === 'planet') {
-                document.getElementById('size-input').value = objData.size;
-                document.getElementById('color-input').value = objData.color;
-                document.getElementById('oxygen-input').value = objData.oxygen;
-                document.getElementById('life-input').value = objData.life;
-            }
+        function openCreationModal(position) {
+            document.getElementById('modal-name').value = `Planet ${objectCounter + 1}`;
+            creationModal.classList.add('active');
+            creationModal.querySelector('#create-btn').onclick = () => {
+                const settings = {
+                    name: document.getElementById('modal-name').value,
+                    size: parseFloat(document.getElementById('modal-size').value),
+                    color: document.getElementById('modal-color').value
+                };
+                createObject('planet', position, settings);
+                creationModal.classList.remove('active');
+            };
         }
-        
-        // --- PHYSICS & ANIMATION LOOP ---
+
+        // --- PHYSICS & ANIMATION ---
         function animate() {
             objects.forEach(obj => {
                 if (obj.type === 'planet' && obj.anchorStar) {
-                    obj.orbitalAngle += obj.orbitSpeed;
-                    const starCenter = {
-                        x: obj.anchorStar.el.offsetLeft + obj.anchorStar.el.offsetWidth / 2,
-                        y: obj.anchorStar.el.offsetTop + obj.anchorStar.el.offsetHeight / 2,
-                    };
+                    obj.orbitalAngle += (0.5 / (obj.orbitRadius / 100)); // Speed decreases with distance
+                    const starCenter = { x: obj.anchorStar.el.offsetLeft + obj.anchorStar.el.offsetWidth / 2, y: obj.anchorStar.el.offsetTop + obj.anchorStar.el.offsetHeight / 2, };
                     const newX = starCenter.x + obj.orbitRadius * Math.cos(obj.orbitalAngle * Math.PI / 180) - obj.size / 2;
                     const newY = starCenter.y + obj.orbitRadius * Math.sin(obj.orbitalAngle * Math.PI / 180) - obj.size / 2;
                     obj.el.style.left = `${newX}px`;
@@ -284,11 +296,19 @@
         }
         
         // --- DRAGGING & ORBIT CALCULATION ---
-        function updatePlanetOrbit(planetData) { /* (Code from previous version) */ }
-        function makeDraggable(elementData) { /* (Code from previous version, updated for pan/zoom) */ }
+        function updatePlanetOrbit(planetData) { /* ... same as previous version ... */ }
+        function makeDraggable(elementData) { /* ... same as previous version, updated for pan/zoom ... */ }
         
-        // Start animation loop
-        animate();
+        // --- ACCORDION FOR MOBILE ---
+        document.querySelectorAll('.accordion-header').forEach(header => {
+            header.addEventListener('click', () => {
+                const content = header.nextElementSibling;
+                content.classList.toggle('open');
+            });
+        });
+        
+        // --- INITIALIZATION ---
+        animate(); // Start the simulation loop
     </script>
 </body>
 </html>

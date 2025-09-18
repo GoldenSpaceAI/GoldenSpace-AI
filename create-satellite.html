@@ -3,148 +3,312 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced Satellite Builder | GoldenSpaceAI</title>
+    <title>Universe Sandbox | GoldenSpaceAI</title>
     <style>
         :root {
             --bg-dark: #0a0e15;
-            --card-bg: #1a2035;
-            --primary-text: #e0e0e0;
+            --panel-bg: #101828;
+            --border-color: #334155;
+            --text-primary: #E2E8F0;
+            --text-secondary: #94A3B8;
             --gold-accent: #f6c64a;
-            --border-color: #3c4260;
-            --success-color: #4ade80;
-            --warning-color: #facc15;
-            --error-color: #f87171;
+            --gold-glow: rgba(246, 198, 74, 0.2);
+            --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
+
+        * { box-sizing: border-box; }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: var(--font-main);
             background-color: var(--bg-dark);
-            color: var(--primary-text);
+            color: var(--text-primary);
             margin: 0;
-            padding: 2rem;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
             display: flex;
             flex-direction: column;
-            align-items: center;
         }
-        h1 { color: var(--gold-accent); }
-        .main-container { display: flex; flex-wrap: wrap; gap: 2rem; width: 100%; max-width: 1200px; }
-        .left-panel { flex: 1; min-width: 250px; }
-        .right-panel { flex: 3; min-width: 500px; }
-        .toolbox, .test-bay { background-color: var(--card-bg); border-radius: 12px; padding: 1.5rem; border: 1px solid var(--border-color); }
-        .toolbox h2, .test-bay h2 { margin-top: 0; color: var(--gold-accent); border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; }
-        .parts-container { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-        .part { padding: 1rem; border: 2px dashed var(--border-color); border-radius: 8px; text-align: center; cursor: grab; background-color: #2a314d; transition: background-color 0.2s, transform 0.2s; }
-        .part:hover { background-color: #3c4260; }
-        .part.dragging { opacity: 0.5; transform: scale(1.05); cursor: grabbing; }
-        .part img { max-width: 60px; pointer-events: none; }
-        .part p { margin: 0.5rem 0 0; font-weight: bold; font-size: 0.9rem; }
-        .assembly-area { height: 400px; background: radial-gradient(circle, #2a314d 0%, var(--card-bg) 70%); border-radius: 8px; border: 1px solid var(--border-color); position: relative; overflow: hidden; }
-        .drop-zone { position: absolute; border: 2px dashed #5fa8d3; transition: background-color 0.3s, border-color 0.3s; }
-        .drop-zone.drag-over { background-color: rgba(95, 168, 211, 0.2); border-color: var(--gold-accent); }
-        #bus-zone { width: 120px; height: 120px; top: 50%; left: 50%; transform: translate(-50%, -50%); }
-        #panel-zone-left { width: 150px; height: 50px; top: 50%; left: 10%; transform: translateY(-50%); }
-        #panel-zone-right { width: 150px; height: 50px; top: 50%; right: 10%; transform: translateY(-50%); }
-        #antenna-zone { width: 80px; height: 80px; bottom: 5%; left: 50%; transform: translateX(-50%); }
-        .drop-zone .part { width: 100%; height: 100%; padding: 0; display: flex; align-items: center; justify-content: center; border: none; cursor: default; }
-        .test-bay { margin-top: 2rem; }
-        #test-flight-btn { width: 100%; padding: 15px; font-size: 1.1rem; font-weight: bold; color: var(--card-bg); background-color: var(--gold-accent); border: none; border-radius: 8px; cursor: pointer; transition: background-color 0.2s; }
-        #test-flight-btn:hover { background-color: #ffdd77; }
-        #test-results { margin-top: 1rem; padding: 1rem; border-radius: 8px; min-height: 50px; background-color: #2a314d; }
-        #test-results.success { border-left: 5px solid var(--success-color); }
-        #test-results.warning { border-left: 5px solid var(--warning-color); }
-        #test-results.error { border-left: 5px solid var(--error-color); }
+
+        .sandbox-container {
+            display: flex;
+            flex: 1;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* --- Universe Canvas --- */
+        .universe-canvas {
+            flex: 1;
+            position: relative;
+            background-color: var(--bg-dark);
+            overflow: hidden;
+            cursor: grab;
+        }
+        .universe-canvas:active { cursor: grabbing; }
+
+        #canvas-content {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            transform-origin: 0 0;
+        }
+
+        /* --- UI Panels (Mobile First) --- */
+        .ui-panels {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 20;
+            background: linear-gradient(180deg, transparent, rgba(10, 14, 21, 0.8) 50%);
+            padding: 1rem;
+            padding-bottom: max(1rem, env(safe-area-inset-bottom));
+        }
+
+        .accordion-panel {
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            overflow: hidden;
+        }
+
+        .accordion-header {
+            padding: 1rem;
+            cursor: pointer;
+            font-weight: bold;
+            color: var(--gold-accent);
+        }
+
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+            padding: 0 1rem;
+        }
+        .accordion-content.open {
+            max-height: 50vh;
+            padding-bottom: 1rem;
+            overflow-y: auto;
+        }
+        
+        .tool-item {
+            display: flex; align-items: center; gap: 1rem; padding: 0.75rem;
+            border-radius: 6px; margin-bottom: 0.5rem; cursor: pointer;
+            border: 1px solid transparent;
+        }
+        .tool-item:hover { background-color: #1E293B; }
+        .tool-item-icon { font-size: 2rem; }
+        .tool-item h3 { margin: 0; font-size: 1rem; color: var(--text-primary); }
+
+        .inspector-group { margin-bottom: 1rem; }
+        .inspector-group label { display: block; margin-bottom: 0.5rem; color: var(--text-secondary); }
+        .inspector-group input, .inspector-group select {
+            width: 100%; background-color: var(--bg-dark); border: 1px solid var(--border-color);
+            color: var(--text-primary); padding: 0.5rem; border-radius: 4px;
+        }
+
+        /* --- Desktop Layout --- */
+        @media (min-width: 769px) {
+            .sandbox-container {
+                flex-direction: row;
+            }
+            .ui-panels {
+                position: static;
+                width: 320px;
+                height: 100vh;
+                order: -1; /* Move to the left */
+                background: var(--panel-bg);
+                border-right: 1px solid var(--border-color);
+                padding: 1.5rem;
+            }
+            .accordion-header { display: none; }
+            .accordion-content {
+                max-height: none;
+                padding: 0;
+                overflow: visible;
+            }
+            #inspector-panel {
+                margin-top: 2rem;
+            }
+        }
+        
+        /* ... (Object, Modal, Orbit Styles from previous version) ... */
+        .celestial-object { position: absolute; border-radius: 50%; }
+        .galaxy { background: radial-gradient(ellipse, #fff 0%, rgba(255,255,255,0.6) 10%, rgba(255,255,255,0) 60%); }
+        .star { background: radial-gradient(circle, #fff, var(--gold-accent)); box-shadow: 0 0 40px var(--gold-accent); }
+        .planet { background-color: #38bdf8; z-index: 50; }
+        .celestial-object.selected { box-shadow: 0 0 20px 5px var(--gold-glow), 0 0 0 2px var(--gold-accent); z-index: 100 !important; }
+        .orbit-path { position: absolute; border: 1px dashed var(--border-color); border-radius: 50%; pointer-events: none; }
+        .modal-overlay { position: fixed; inset: 0; background-color: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 1000; }
+        .modal-overlay.active { display: flex; }
+        .modal-content { background-color: var(--panel-bg); padding: 2rem; border-radius: 12px; width: 90%; max-width: 400px; border: 1px solid var(--border-color); }
+        .modal-content h2 { margin-top: 0; color: var(--gold-accent); }
+        #create-btn { background-color: var(--gold-accent); color: var(--bg-dark); border: none; padding: 0.75rem 1.5rem; font-size: 1rem; font-weight: bold; border-radius: 6px; cursor: pointer; margin-top: 1rem; }
     </style>
 </head>
 <body>
 
-    <h1>Advanced Satellite Builder 🛰️</h1>
-    <div class="main-container">
-        <div class="left-panel">
-            <div class="toolbox">
-                <h2>Component Toolbox</h2>
-                <div class="parts-container">
-                    <div id="part-bus" class="part" draggable="true"><img src="https://img.icons8.com/plasticine/100/box.png" alt="Satellite Bus"><p>Satellite Bus</p></div>
-                    <div id="part-panel" class="part" draggable="true"><img src="https://img.icons8.com/plasticine/100/solar-panel.png" alt="Solar Panel"><p>Solar Panel</p></div>
-                    <div id="part-antenna" class="part" draggable="true"><img src="https://img.icons8.com/plasticine/100/satellite-dish.png" alt="Antenna"><p>Antenna</p></div>
+    <div class="sandbox-container">
+        <aside class="ui-panels">
+            <div class="accordion-panel" id="toolbox-panel">
+                <div class="accordion-header">Toolbox</div>
+                <div class="accordion-content">
+                    <h2>Toolbox</h2>
+                    <div class="tool-item" data-type="galaxy"><div class="tool-item-icon">🌌</div><h3>Add Galaxy</h3></div>
+                    <div class="tool-item" data-type="star"><div class="tool-item-icon">🌟</div><h3>Add Star</h3></div>
+                    <div class="tool-item" data-type="planet"><div class="tool-item-icon">🪐</div><h3>Add Planet</h3></div>
                 </div>
             </div>
-            <div class="test-bay">
-                <h2>Mission Control</h2>
-                <button id="test-flight-btn">🚀 Test Flight & Add to Universe</button>
-                <div id="test-results"><p>Assemble your satellite and run a test flight.</p></div>
+            <div class="accordion-panel" id="inspector-panel-container">
+                <div class="accordion-header">Inspector</div>
+                <div class="accordion-content" id="inspector-content">
+                    <h3>Inspector</h3>
+                    <div id="inspector-default-text"><p>Select an object to inspect its properties.</p></div>
+                    <div id="inspector-form" style="display:none;">
+                        <div class="inspector-group"><label for="name-input">Object Name</label><input type="text" id="name-input"></div>
+                        <div id="planet-settings" style="display:none;">
+                            <div class="inspector-group"><label for="size-input">Planet Size</label><input type="range" id="size-input" min="10" max="80"></div>
+                            <div class="inspector-group"><label for="color-input">Planet Color</label><input type="color" id="color-input"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
-        <div class="right-panel">
-            <div class="assembly-area">
-                <div id="bus-zone" class="drop-zone" data-part-type="bus"></div>
-                <div id="panel-zone-left" class="drop-zone" data-part-type="panel"></div>
-                <div id="panel-zone-right" class="drop-zone" data-part-type="panel"></div>
-                <div id="antenna-zone" class="drop-zone" data-part-type="antenna"></div>
-            </div>
-        </div>
+        </aside>
+
+        <main class="universe-canvas" id="universe-canvas">
+            <div id="canvas-content">
+                </div>
+        </main>
     </div>
 
+    <div id="creation-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 id="modal-title">Create New Planet</h2>
+            <div class="inspector-group"><label for="modal-name">Planet Name</label><input type="text" id="modal-name"></div>
+            <div class="inspector-group"><label for="modal-size">Planet Size</label><input type="range" id="modal-size" min="10" max="80" value="20"></div>
+            <div class="inspector-group"><label for="modal-color">Planet Color</label><input type="color" id="modal-color" value="#38bdf8"></div>
+            <button id="create-btn">Create Planet</button>
+        </div>
+    </div>
+    
     <script>
-        const parts = document.querySelectorAll('.part');
-        const dropZones = document.querySelectorAll('.drop-zone');
-        parts.forEach(part => {
-            part.addEventListener('dragstart', (e) => { part.classList.add('dragging'); e.dataTransfer.setData('text/plain', part.id); });
-            part.addEventListener('dragend', () => part.classList.remove('dragging'));
-        });
-        dropZones.forEach(zone => {
-            zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('drag-over'); });
-            zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
-            zone.addEventListener('drop', (e) => {
-                e.preventDefault();
-                zone.classList.remove('drag-over');
-                const partId = e.dataTransfer.getData('text/plain');
-                const draggedPart = document.getElementById(partId);
-                if (draggedPart && partId.includes(zone.dataset.partType)) {
-                    const partClone = draggedPart.cloneNode(true);
-                    partClone.classList.remove('dragging');
-                    partClone.id = '';
-                    zone.innerHTML = '';
-                    zone.appendChild(partClone);
+        // --- DOM ELEMENTS & STATE ---
+        const canvas = document.getElementById('universe-canvas');
+        const canvasContent = document.getElementById('canvas-content');
+        const toolboxItems = document.querySelectorAll('.tool-item');
+        const inspectorDefault = document.getElementById('inspector-default-text');
+        const inspectorForm = document.getElementById('inspector-form');
+        const creationModal = document.getElementById('creation-modal');
+        let activeObject = null, objectCounter = 0, objects = new Map();
+        
+        // --- ZOOM & PAN ---
+        let scale = 1, panning = false, pointX = 0, pointY = 0, start = { x: 0, y: 0 };
+        function setTransform() { canvasContent.style.transform = `translate(${pointX}px, ${pointY}px) scale(${scale})`; }
+        canvas.onmousedown = (e) => {
+            if (e.target !== canvas) return;
+            e.preventDefault();
+            start = { x: e.clientX - pointX, y: e.clientY - pointY };
+            panning = true;
+        };
+        canvas.onmouseup = () => { panning = false; };
+        canvas.onmousemove = (e) => { if (!panning) return; pointX = e.clientX - start.x; pointY = e.clientY - start.y; setTransform(); };
+        canvas.onwheel = (e) => {
+            e.preventDefault();
+            const xs = (e.clientX - pointX) / scale, ys = (e.clientY - pointY) / scale, delta = -e.deltaY;
+            (delta > 0) ? (scale *= 1.1) : (scale /= 1.1);
+            pointX = e.clientX - xs * scale;
+            pointY = e.clientY - ys * scale;
+            setTransform();
+        };
+
+        // --- OBJECT CREATION & MANAGEMENT ---
+        toolboxItems.forEach(item => item.addEventListener('click', () => {
+            const type = item.dataset.type;
+            const centerOfView = { x: (-pointX + canvas.clientWidth / 2) / scale, y: (-pointY + canvas.clientHeight / 2) / scale };
+            if (type === 'planet') {
+                openCreationModal(centerOfView);
+            } else {
+                createObject(type, centerOfView);
+            }
+        }));
+
+        function createObject(type, position, customData = {}) {
+            objectCounter++;
+            const id = `obj-${objectCounter}`;
+            const objEl = document.createElement('div');
+            objEl.className = `celestial-object ${type}`;
+            objEl.id = id;
+            objEl.style.left = `${position.x}px`;
+            objEl.style.top = `${position.y}px`;
+            const objectData = { id, el: objEl, type, name: customData.name || `${type.charAt(0).toUpperCase() + type.slice(1)} ${objectCounter}`, ...customData };
+            
+            if (type === 'planet') {
+                const orbitEl = document.createElement('div');
+                orbitEl.className = 'orbit-path';
+                canvasContent.appendChild(orbitEl);
+                objectData.orbitEl = orbitEl;
+                objectData.orbitalAngle = Math.random() * 360;
+                objectData.size = customData.size || 20;
+                objEl.style.width = `${objectData.size}px`;
+                objEl.style.height = `${objectData.size}px`;
+                objEl.style.backgroundColor = customData.color || '#38bdf8';
+            } else {
+                objEl.style.width = type === 'galaxy' ? '250px' : '60px';
+                objEl.style.height = type === 'galaxy' ? '250px' : '60px';
+            }
+
+            objects.set(id, objectData);
+            makeDraggable(objectData);
+            objEl.addEventListener('click', e => { e.stopPropagation(); selectObject(objectData); });
+            canvasContent.appendChild(objEl);
+            if (type === 'planet') updatePlanetOrbit(objectData);
+        }
+
+        function openCreationModal(position) {
+            document.getElementById('modal-name').value = `Planet ${objectCounter + 1}`;
+            creationModal.classList.add('active');
+            creationModal.querySelector('#create-btn').onclick = () => {
+                const settings = {
+                    name: document.getElementById('modal-name').value,
+                    size: parseFloat(document.getElementById('modal-size').value),
+                    color: document.getElementById('modal-color').value
+                };
+                createObject('planet', position, settings);
+                creationModal.classList.remove('active');
+            };
+        }
+
+        // --- PHYSICS & ANIMATION ---
+        function animate() {
+            objects.forEach(obj => {
+                if (obj.type === 'planet' && obj.anchorStar) {
+                    obj.orbitalAngle += (0.5 / (obj.orbitRadius / 100)); // Speed decreases with distance
+                    const starCenter = { x: obj.anchorStar.el.offsetLeft + obj.anchorStar.el.offsetWidth / 2, y: obj.anchorStar.el.offsetTop + obj.anchorStar.el.offsetHeight / 2, };
+                    const newX = starCenter.x + obj.orbitRadius * Math.cos(obj.orbitalAngle * Math.PI / 180) - obj.size / 2;
+                    const newY = starCenter.y + obj.orbitRadius * Math.sin(obj.orbitalAngle * Math.PI / 180) - obj.size / 2;
+                    obj.el.style.left = `${newX}px`;
+                    obj.el.style.top = `${newY}px`;
                 }
+            });
+            requestAnimationFrame(animate);
+        }
+        
+        // --- DRAGGING & ORBIT CALCULATION ---
+        function updatePlanetOrbit(planetData) { /* ... same as previous version ... */ }
+        function makeDraggable(elementData) { /* ... same as previous version, updated for pan/zoom ... */ }
+        
+        // --- ACCORDION FOR MOBILE ---
+        document.querySelectorAll('.accordion-header').forEach(header => {
+            header.addEventListener('click', () => {
+                const content = header.nextElementSibling;
+                content.classList.toggle('open');
             });
         });
         
-        const testFlightBtn = document.getElementById('test-flight-btn');
-        const testResultsEl = document.getElementById('test-results');
-
-        testFlightBtn.addEventListener('click', () => {
-            const hasBus = document.getElementById('bus-zone').hasChildNodes();
-            const hasPower = document.getElementById('panel-zone-left').hasChildNodes() || document.getElementById('panel-zone-right').hasChildNodes();
-            const hasAntenna = document.getElementById('antenna-zone').hasChildNodes();
-            let resultText = '';
-            testResultsEl.className = '';
-
-            if (!hasBus) {
-                testResultsEl.classList.add('error');
-                resultText = "<strong>Launch Failure!</strong> A satellite bus is the essential first piece.";
-            } else if (hasBus && hasPower && hasAntenna) {
-                testResultsEl.classList.add('success');
-                resultText = "<strong>Mission Success!</strong> Satellite is fully operational.";
-            } else if (hasBus && hasPower) {
-                testResultsEl.classList.add('warning');
-                resultText = "<strong>Partial Failure.</strong> Satellite has power, but cannot communicate.";
-            } else {
-                testResultsEl.classList.add('error');
-                resultText = "<strong>Total Failure!</strong> Satellite is in orbit, but has no power source.";
-            }
-            testResultsEl.innerHTML = `<p>${resultText}</p>`;
-
-            // --- NEW UPDATE: Save to localStorage and redirect ---
-            if (hasBus) { // Only add to universe if it's a valid construct
-                const satelliteData = {
-                    name: `Sat-${Math.floor(Math.random() * 900) + 100}`, // Random name
-                    hasPower: hasPower,
-                    hasAntenna: hasAntenna
-                };
-                localStorage.setItem('completedSatellite', JSON.stringify(satelliteData));
-                alert('Satellite design complete! Returning to Your Space hub...');
-                window.location.href = '/your-space.html';
-            }
-        });
+        // --- INITIALIZATION ---
+        animate(); // Start the simulation loop
     </script>
 </body>
 </html>

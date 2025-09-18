@@ -87,10 +87,10 @@
         <ul class="feats">
           <li><span class="ok">✓</span> Unlimited Advanced AI questions</li>
           <li><span class="ok">✓</span> Unlimited info searches and lesson searches</li>
-          <li><span class="ok">✓</span> Unlimeted Homowrk solving</li>          
-            <li><span class="no">✗</span> Planet builder & Physics learning not included</li>
+          <li><span class="ok">✓</span> Unlimited Homework solving</li>          
+          <li><span class="no">✗</span> Planet builder & Physics learning not included</li>
         </ul>
-        <button class="btn gold wide" data-plan="chatai">Subscribe to Chat AI</button>
+        <button class="btn gold wide" data-plan="moon">Subscribe to Chat AI</button>
       </article>
 
       <!-- Your Space / Universe Pack -->
@@ -99,11 +99,11 @@
         <div class="pill">Build your own universe hub</div>
         <ul class="feats">
           <li><span class="ok">✓</span> Create up to 3 galaxies</li>
-          <li><span class="ok">✓</span> Place up to 10 planets (import from Create Planet)</li>
-          <li><span class="ok">✓</span> 2 rockets & 2 satellites to attach to planets</li>
-          <li><span class="no">✗</span> No Learn Physics in this pack (keeps it focused on building)</li>
+          <li><span class="ok">✓</span> Place up to 10 planets</li>
+          <li><span class="ok">✓</span> 2 rockets & 2 satellites</li>
+          <li><span class="no">✗</span> No Learn Physics</li>
         </ul>
-        <button class="btn gold wide" data-plan="yourspace">Unlock Your Space</button>
+        <button class="btn gold wide" data-plan="spade">Unlock Your Space</button>
       </article>
     </section>
 
@@ -118,7 +118,7 @@
           <li><span class="no">✗</span> Learn Physics</li>
           <li><span class="no">✗</span> Create your own planet</li>
         </ul>
-        <button class="btn ghost wide" id="selectFree">Select Free Plan</button>
+        <button class="btn ghost wide" data-plan="moon">Select Free Plan</button>
       </article>
 
       <!-- Earth -->
@@ -159,36 +159,29 @@
   <script>
     document.getElementById('yr').textContent = new Date().getFullYear();
 
-    // Free plan
-    document.getElementById('selectFree')?.addEventListener('click', async ()=>{
-      try{
-        const r = await fetch('/api/select-free', {method:'POST', credentials:'include'});
-        if(!r.ok) throw new Error();
-        location.href = '/';
-      }catch(e){
-        alert('Please sign in first.');
-        location.href = '/auth/google';
-      }
-    });
-
-    // Paid plans
-    async function startCheckout(plan){
-      try{
-        const r = await fetch('/api/checkout?plan='+encodeURIComponent(plan), {
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          credentials:'include'
-        });
-        if(r.status===401){ location.href='/auth/google'; return; }
-        const j = await r.json();
-        if(!j.url) throw new Error('No checkout URL');
-        window.location = j.url; // open Paddle hosted checkout
-      }catch(e){
-        alert('Unable to start checkout. Please sign in and try again.');
-      }
-    }
+    // All plan buttons
     document.querySelectorAll('[data-plan]').forEach(btn=>{
-      btn.addEventListener('click', ()=> startCheckout(btn.dataset.plan));
+      btn.addEventListener('click', async ()=>{
+        const plan = btn.dataset.plan;
+        try{
+          const r = await fetch('/api/select-plan/' + plan, {
+            method:'POST',
+            credentials:'include'
+          });
+          if(r.status===401){ 
+            location.href='/auth/google'; 
+            return; 
+          }
+          const j = await r.json();
+          if(j.ok){
+            alert('✅ Plan set to: ' + plan);
+            location.href = '/';
+          }
+        }catch(e){
+          alert('Please sign in first.');
+          location.href = '/auth/google';
+        }
+      });
     });
   </script>
 </body>

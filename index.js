@@ -1,4 +1,4 @@
-// index.js — GoldenSpaceAI (Login/Signup + Google OAuth + Plan Limits + Free Test Plans)
+// index.js — GoldenSpaceAI (Gemini integration + plan limits + profile info)
 
 import express from "express";
 import cors from "cors";
@@ -42,15 +42,16 @@ app.use(passport.session());
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// ---------- Plan definitions ----------
+// ---------- Plan Limits ----------
 const PLAN_LIMITS = {
-  moon:  { chatAI: 10, advancedChatAI: 1, homeworkSolver: 1, lessonSearcher: 1, special: false },
-  earth: { chatAI: 30, advancedChatAI: 20, homeworkSolver: 5, lessonSearcher: 20, special: false },
-  sun:   { chatAI: Infinity, advancedChatAI: Infinity, homeworkSolver: Infinity, lessonSearcher: Infinity, special: false },
-  spade: { chatAI: 0, advancedChatAI: 0, homeworkSolver: 0, lessonSearcher: 0, special: true },
+  moon:      { chatAI: 20, search: 5, physics: 0 },
+  earth:     { chatAI: 30, search: 20, physics: 5 },
+  sun:       { chatAI: Infinity, search: Infinity, physics: Infinity, createPlanet: true, createAdvancedPlanet: true },
+  chatai:    { chatAI: Infinity, advancedChatAI: Infinity, homeworkSolver: Infinity, lessonSearcher: Infinity },
+  yourspace: { createAdvancedPlanet: true, satellite: true, rocket: true },
 };
 
-// ---------- Usage tracking (memory, resets daily) ----------
+// ---------- Usage Tracking ----------
 const usage = {};
 const today = () => new Date().toISOString().slice(0,10);
 
@@ -67,16 +68,16 @@ function getPlan(req){ return (req.user && req.user.plan) || req.session?.plan |
 function getUsage(req,res){
   const key = getUserKey(req,res);
   const d = today();
-  if (!usage[key] || usage[key].date !== d) usage[key] = { date:d, chatAI:0, advancedChatAI:0, homeworkSolver:0, lessonSearcher:0 };
+  if (!usage[key] || usage[key].date !== d) usage[key] = { date:d, chatAI:0, search:0, physics:0 };
   return usage[key];
 }
 function enforceLimit(kind){
   return (req,res,next)=>{
     const plan = getPlan(req);
-    const limits = PLAN_LIMITS[plan];
+    const limits = PLAN_LIMITS[plan] || {};
     const u = getUsage(req,res);
     const allowed = limits[kind];
-    if (allowed === 0) return res.status(403).json({ error:`Your plan does not allow ${kind}.` });
+    if (!allowed) return res.status(403).json({ error:`Your plan does not allow ${kind}.` });
     if (Number.isFinite(allowed) && u[kind] >= allowed) return res.status(429).json({ error:`Daily ${kind} limit reached for ${plan} plan.` });
     if (Number.isFinite(allowed)) u[kind]++;
     next();
@@ -108,60 +109,77 @@ passport.deserializeUser((obj,done)=>done(null,obj));
 
 // ---------- Gemini ----------
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model:"gemini-1.5-flash" });
 
-// ---------- AI Routes ----------
+// ---------- Chat AI (default Flash) ----------
 app.post("/chat-ai", enforceLimit("chatAI"), async (req,res)=>{
   try{
     const q = req.body?.q || "";
-    const result = await model.generateContent([{ text:`User: ${q}` }]);
+    if(!q) return res.json({ answer:"Ask me something." });
+    const result = await genAI.getGenerativeModel({ model:"gemini-1.5-flash" }).generateContent([{ text:q }]);
     res.json({ answer: result.response.text() });
-  }catch(e){ res.status(500).json({ answer:"ChatAI error" }); }
-});
-app.post("/advanced-chat-ai", enforceLimit("advancedChatAI"), async (req,res)=>{
-  try{
-    const q = req.body?.q || "";
-    const prompt = `You are Advanced GoldenSpaceAI. Answer deeply.\n${q}`;
-    const result = await model.generateContent([{ text:prompt }]);
-    res.json({ answer: result.response.text() });
-  }catch(e){ res.status(500).json({ answer:"Advanced AI error" }); }
-});
-app.post("/homework-solver", enforceLimit("homeworkSolver"), async (req,res)=>{
-  try{
-    const q = req.body?.q || "";
-    const prompt = `Solve the following homework step by step:\n${q}`;
-    const result = await model.generateContent([{ text:prompt }]);
-    res.json({ solution: result.response.text() });
-  }catch(e){ res.status(500).json({ solution:"Homework error" }); }
-});
-app.post("/lesson-searcher", enforceLimit("lessonSearcher"), async (req,res)=>{
-  try{
-    const q = req.body?.q || "";
-    const prompt = `Summarize this lesson clearly with 3 key points:\n${q}`;
-    const result = await model.generateContent([{ text:prompt }]);
-    res.json({ summary: result.response.text() });
-  }catch(e){ res.status(500).json({ summary:"Lesson search error" }); }
+  }catch(e){ console.error(e); res.status(500).json({ answer:"Chat AI error" }); }
 });
 
-// ---------- Spade special routes ----------
-app.get("/castle-your-universe",(req,res)=>{
-  if (getPlan(req)!=="spade") return res.status(403).send("Upgrade to Spade to access Castle Your Universe.");
-  res.send("<h1>🏰 Welcome to Castle Your Universe!</h1>");
-});
-app.get("/satellite",(req,res)=>{
-  if (getPlan(req)!=="spade") return res.status(403).send("Upgrade to Spade to access Satellite.");
-  res.send("<h1>🛰️ Satellite Control</h1>");
-});
-app.get("/rocket",(req,res)=>{
-  if (getPlan(req)!=="spade") return res.status(403).send("Upgrade to Spade to access Rocket.");
-  res.send("<h1>🚀 Rocket Launch</h1>");
-});
-app.get("/planets",(req,res)=>{
-  if (getPlan(req)!=="spade") return res.status(403).send("Upgrade to Spade to access Planets.");
-  res.send("<h1>🪐 Planetary Lab</h1>");
+// ---------- Advanced AI (with model selector) ----------
+app.post("/advanced-chat-ai", async (req,res)=>{
+  const plan = getPlan(req);
+  if (plan !== "chatai") return res.status(403).json({ error:"Only Chat AI Pack users can access Advanced AI." });
+
+  const { q, modelType } = req.body;
+  if (!q) return res.status(400).json({ error:"Missing prompt." });
+
+  const chosenModel = modelType === "pro" ? "gemini-1.5-pro" : "gemini-1.5-flash";
+
+  try {
+    const model = genAI.getGenerativeModel({ model: chosenModel });
+    const result = await model.generateContent([{ text:q }]);
+    const answer = result.response.text() || "No response.";
+    res.json({ model: chosenModel, answer });
+  } catch(e){
+    console.error("Advanced AI error", e);
+    res.status(500).json({ error:"Gemini API error" });
+  }
 });
 
-// ---------- Free Plan Select (no payment) ----------
+// ---------- Info Search ----------
+app.post("/search-info", enforceLimit("search"), async (req,res)=>{
+  try{
+    const q = req.body?.q || "";
+    if(!q) return res.json({ answer:"Type something to search." });
+    const prompt = `Overview with 3 bullet points about: ${q}`;
+    const result = await genAI.getGenerativeModel({ model:"gemini-1.5-flash" }).generateContent([{ text:prompt }]);
+    res.json({ answer: result.response.text() });
+  }catch(e){ console.error(e); res.status(500).json({ answer:"Search error" }); }
+});
+
+// ---------- Physics ----------
+app.post("/learn-physics", enforceLimit("physics"), async (req,res)=>{
+  try{
+    const q = req.body?.q || "";
+    if(!q) return res.json({ reply:"Ask a physics question." });
+    const prompt = `You are GoldenSpace Physics Tutor. Explain clearly.\nQuestion: ${q}`;
+    const result = await genAI.getGenerativeModel({ model:"gemini-1.5-flash" }).generateContent([{ text:prompt }]);
+    res.json({ reply: result.response.text() });
+  }catch(e){ console.error(e); res.status(500).json({ reply:"Physics error" }); }
+});
+
+// ---------- Page Routes ----------
+app.get("/chat-advancedai.html",(req,res)=>{
+  if (getPlan(req)!=="chatai") return res.status(403).send("Only Chat AI Pack can access Advanced AI.");
+  res.sendFile(path.join(__dirname,"chat-advancedai.html"));
+});
+app.get("/create-planet.html",(req,res)=>{
+  if (!PLAN_LIMITS[getPlan(req)]?.createPlanet) return res.status(403).send("Upgrade to Sun Pack to unlock Create Planet.");
+  res.sendFile(path.join(__dirname,"create-planet.html"));
+});
+app.get("/create-advanced-planet.html",(req,res)=>{
+  const plan = getPlan(req);
+  if (!(PLAN_LIMITS[plan]?.createAdvancedPlanet || plan==="yourspace"))
+    return res.status(403).send("Only Sun Pack or Your Space Pack can unlock Create Advanced Planet.");
+  res.sendFile(path.join(__dirname,"create-advanced-planet.html"));
+});
+
+// ---------- Free Plan Select ----------
 app.post("/api/select-plan/:plan",(req,res)=>{
   const plan = req.params.plan;
   if (!PLAN_LIMITS[plan]) return res.status(400).json({ error:"Invalid plan" });
@@ -170,14 +188,30 @@ app.post("/api/select-plan/:plan",(req,res)=>{
   res.json({ ok:true, plan });
 });
 
-// ---------- Static & Home ----------
-// Serve static files like index.html
-app.use(express.static(__dirname));
+// ---------- Profile Info ----------
+app.get("/api/me",(req,res)=>{
+  const plan = getPlan(req);
+  const limits = PLAN_LIMITS[plan];
+  const u = getUsage(req,res);
 
-// Default route -> send index.html
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "index.html"));
+  const remaining = {
+    chatAI: limits.chatAI===Infinity?Infinity:Math.max(0, limits.chatAI-u.chatAI),
+    search: limits.search===Infinity?Infinity:Math.max(0, limits.search-u.search),
+    physics: limits.physics===Infinity?Infinity:Math.max(0, limits.physics-u.physics),
+  };
+
+  res.json({
+    loggedIn: !!req.user,
+    user: req.user || null,
+    plan,
+    used: u,
+    remaining,
+  });
 });
+
+// ---------- Static ----------
+app.use(express.static(__dirname));
+app.get("/", (req,res)=>res.sendFile(path.join(__dirname,"index.html")));
 
 // ---------- Start ----------
 const PORT = process.env.PORT || 3000;

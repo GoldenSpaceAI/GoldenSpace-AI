@@ -1,4 +1,4 @@
-// index.js — Final Corrected Version with Strict Plan Flow
+// index.js — Corrected with Full Code and Strict Plan Flow
 
 import express from "express";
 import cors from "cors";
@@ -62,33 +62,61 @@ const PLAN_LIMITS = {
     createPlanet: true, createRocket: false, createSatellite: false, yourSpace: false,
     homeworkHelper: false, advancedChat: false, searchLessons: false,
   },
-  yourspace: { // This is the "Your Space Pack"
+  yourspace: {
     ask: 0, search: 0, physics: 0, learnPhysics: false,
     createPlanet: true, createRocket: true, createSatellite: true, yourSpace: true,
     homeworkHelper: false, advancedChat: false, searchLessons: false,
   },
-  chatai: { // This is the "ChatAI Pack"
+  chatai: {
     ask: Infinity, search: Infinity, physics: 0, learnPhysics: false,
     createPlanet: false, createRocket: false, createSatellite: false, yourSpace: false,
     homeworkHelper: true, advancedChat: true, searchLessons: true,
   },
 };
 
-// --- <<< UPDATE >>> --- This now returns null if a user has not selected a plan.
-function getPlan(req){ return (req.user && req.user.plan) || null; }
-// ... (Your other usage tracking functions remain unchanged) ...
-const usage = {};
+// ---------- Usage tracking (memory, resets daily) ----------
+const usage = {}; // { userKey: { date, ask, search, physics } }
 const today = () => new Date().toISOString().slice(0,10);
-function getUserKey(req, res){ /* Your original code */ }
-function getUsage(req,res){ /* Your original code */ }
-function enforceLimit(kind){ /* Your original code */ }
 
+function getUserKey(req, res){
+  if (req.user?.id) return `u:${req.user.id}`;
+  if (!req.cookies.gs_uid){
+    const uid = Math.random().toString(36).slice(2) + Date.now().toString(36);
+    res.cookie("gs_uid", uid, { httpOnly:true, sameSite:"lax", secure:process.env.NODE_ENV==="production" });
+    return `g:${uid}`;
+  }
+  return `g:${req.cookies.gs_uid}`;
+}
+// <<< UPDATE >>> This now returns null if a user has not selected a plan.
+function getPlan(req){ return (req.user && req.user.plan) || null; }
+function getUsage(req,res){
+  const key = getUserKey(req,res);
+  const d = today();
+  if (!usage[key] || usage[key].date !== d) usage[key] = { date:d, ask:0, search:0, physics:0 };
+  return usage[key];
+}
+function enforceLimit(kind){
+  return (req,res,next)=>{
+    const plan = getPlan(req) || 'moon'; // Default to moon for limits if no plan
+    const limits = PLAN_LIMITS[plan];
+    const u = getUsage(req,res);
+    const allowed = limits[kind];
+    if (allowed === 0) return res.status(403).json({ error:`Your plan does not allow ${kind}.` });
+    if (Number.isFinite(allowed) && u[kind] >= allowed) return res.status(429).json({ error:`Daily ${kind} limit reached for ${plan} plan.` });
+    if (Number.isFinite(allowed)) u[kind]++;
+    next();
+  };
+}
 
-// ---------- Helper: compute base URL dynamically (Your Original Code) ----------
-function getBaseUrl(req){ /* Your original code */ }
+// ---------- Helper: compute base URL dynamically ----------
+function getBaseUrl(req){
+  const proto = (req.headers["x-forwarded-proto"]||"").toString().split(",")[0] || req.protocol || "https";
+  const host  = (req.headers["x-forwarded-host"] || "").toString().split(",")[0] || req.get("host");
+  return `${proto}://${host}`;
+}
 
 // ---------- Google OAuth --- <<< UPDATE >>> ---
-// New users will have `plan: null` to force them to the plans page after login.
+// A new user's plan is now set to `null` to force them to the plans page.
 passport.use(new GoogleStrategy(
   {
     clientID: process.env.GOOGLE_CLIENT_ID,
@@ -110,7 +138,10 @@ passport.use(new GoogleStrategy(
 passport.serializeUser((user,done)=>done(null,user));
 passport.deserializeUser((obj,done)=>done(null,obj));
 
-app.get("/auth/google",(req,res,next)=>{ const callbackURL = `${getBaseUrl(req)}/auth/google/callback`; passport.authenticate("google",{ scope:["profile","email"], callbackURL })(req,res,next); });
+app.get("/auth/google",(req,res,next)=>{
+  const callbackURL = `${getBaseUrl(req)}/auth/google/callback`;
+  passport.authenticate("google",{ scope:["profile","email"], callbackURL })(req,res,next);
+});
 
 // <<< UPDATE >>> After a user logs in, they are now redirected to the plans page.
 app.get("/auth/google/callback",
@@ -119,11 +150,12 @@ app.get("/auth/google/callback",
         failureRedirect: "/login.html",
     })
 );
-app.post("/logout",(req,res,next)=>{ req.logout(err=>{ if (err) return next(err); req.session.destroy(()=>res.json({ok:true})); }); });
+app.post("/logout",(req,res,next)=>{
+  req.logout(err=>{ if (err) return next(err); req.session.destroy(()=>res.json({ok:true})); });
+});
 
 // ---------- Public Login/Signup Page --- <<< ERROR FIX >>> ---
-// This now safely sends your existing login.html file instead of using res.send().
-// This is the primary fix for the "three dots" error.
+// This now safely sends your existing login.html file.
 app.get("/login.html", (req, res) => {
     res.sendFile(path.join(__dirname, "login.html"));
 });
@@ -148,24 +180,17 @@ app.use((req,res,next) => {
   const publicPaths = ['/login.html', '/auth/google', '/health', '/plans.html', '/api/select-plan'];
   const isPublicFile = /\.(css|js|mjs|map|png|jpg|jpeg|gif|svg|ico|txt|woff2?)$/i.test(req.path);
   
-  // Allow any public path or file to pass through
   if (isPublicFile || publicPaths.some(path => req.path.startsWith(path))) {
     return next();
   }
-  // If the request is not for a public path and the user is not logged in, redirect to login.
   if (!req.isAuthenticated()) {
     return res.redirect("/login.html");
   }
-  // If the user is logged in but has not selected a plan, redirect to the plans page.
   if (!getPlan(req)) {
       return res.redirect('/plans.html');
   }
-  // If the user is logged in and has a plan, they can proceed.
   next();
 });
-
-// ... (Your Paddle Webhook and alias redirects can remain here, unchanged) ...
-
 
 // ---------- GATED PAGES --- <<< UPDATE >>> ---
 // The strict blocking logic is now applied to all feature pages based on the new plan definitions.
@@ -193,7 +218,6 @@ createGatedRoute('homeworkHelper', '/homework-helper.html', 'This feature requir
 createGatedRoute('advancedChat', '/advanced-ai.html', 'This feature requires the ChatAI Pack.');
 createGatedRoute('searchLessons', '/search-lessons.html', 'This feature requires the ChatAI Pack.');
 
-
 // ---------- AI Routes (Your Original Code, now correctly gated and connected to Gemini) ----------
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model:"gemini-1.5-flash" });
@@ -203,36 +227,28 @@ app.post("/ask", enforceLimit("ask"), async (req,res)=>{
     const q = (req.body?.question || "").trim();
     if (!q) return res.json({ answer:"Ask me anything!" });
     const result = await model.generateContent([{ text:`User: ${q}` }]);
-    const answer = result.response.text() || "No response.";
-    res.json({ answer });
+    res.json({ answer: result.response.text() || "No response." });
   }catch(e){ console.error("ask error", e); res.status(500).json({ answer:"Gemini error" }); }
 });
 app.post("/search-info", enforceLimit("search"), async (req,res)=>{
   try{
     const q = (req.body?.query || "").trim();
-    if (!q) return res.json({ answer:"Type something to search." });
     const prompt = `You are GoldenSpace Knowledge. Overview + 3 bullet facts.\nTopic: ${q}`;
     const result = await model.generateContent([{ text: prompt }]);
-    const answer = result.response.text() || "No info found.";
-    res.json({ answer });
+    res.json({ answer: result.response.text() || "No info found." });
   }catch(e){ console.error("search-info error", e); res.status(500).json({ answer:"Search error" }); }
 });
 app.post("/ai/physics-explain", enforceLimit("physics"), async (req,res)=>{
   try{
     const q = (req.body?.question || "").trim();
-    if (!q) return res.json({ reply:"Ask a physics question." });
     const prompt = `You are GoldenSpace Physics Tutor. Explain clearly.\nQuestion: ${q}`;
     const result = await model.generateContent([{ text: prompt }]);
-    const reply = result.response.text() || "No reply.";
-    res.json({ reply });
+    res.json({ reply: result.response.text() || "No reply." });
   }catch(e){ console.error("physics error", e); res.status(500).json({ reply:"Physics error" }); }
 });
 
 // ---------- API /me Route (Your Original Code) ----------
 app.get("/api/me",(req,res)=>{
-  if (req.user?.email){
-    // ... your paddle logic ...
-  }
   const plan = getPlan(req) || 'moon';
   const limits = PLAN_LIMITS[plan];
   const u = getUsage(req,res);
@@ -244,7 +260,6 @@ app.get("/api/me",(req,res)=>{
   res.json({ loggedIn:!!req.user, user:req.user||null, plan, limits, used:u, remaining });
 });
 
-
 // ---------- Static & Health ----------
 app.use(express.static(__dirname));
 app.get("/health",(_req,res)=>res.json({ ok:true }));
@@ -252,4 +267,3 @@ app.get("/health",(_req,res)=>res.json({ ok:true }));
 // ---------- Start ----------
 const PORT = process.env.PORT || 3000;
 app.listen(PORT,()=>console.log(`🚀 GoldenSpaceAI running on ${PORT}`));
-

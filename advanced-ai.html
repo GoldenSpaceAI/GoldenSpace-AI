@@ -1,4 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GoldenSpaceAI Assistant</title>
+    <style>
+        :root {
+            --bg-dark: #0a0e15;
+            --text-primary: #E2E8F0;
+            --text-secondary: #94A3B8;
+            --gold-accent: #f6c64a;
+            --gold-glow: rgba(246, 198, 74, 0.15);
+            --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
 
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-dark);
+            background-image: linear-gradient(rgba(10, 14, 21, 0.8), rgba(10, 14, 21, 0.9)), url('https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?q=80&w=2071&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: var(--text-primary);
+            margin: 0;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* --- Chat Log (Floating Messages) --- */
+        .chat-log {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .welcome-header {
+            text-align: center;
+            margin: auto 0;
+            padding-bottom: 5vh;
+        }
+        .welcome-header h1 {
+            font-size: 2.5rem;
+            color: var(--gold-accent);
+            margin: 0;
+            text-shadow: 0 0 20px var(--gold-glow);
+        }
+        .welcome-header p {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+        }
+
+        .chat-message {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            max-width: 800px;
+            align-self: flex-start;
+            background-color: rgba(16, 24, 40, 0.6);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(246, 198, 74, 0.1);
+            border-radius: 12px;
+            padding: 1rem;
+        }
+        .user-message {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+            background-color: rgba(10, 14, 21, 0.7);
+        }
+        .chat-message .avatar {
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
             background-color: #0a0e15;
             flex-shrink: 0;
@@ -11,7 +89,7 @@
             border-color: var(--gold-accent);
             box-shadow: 0 0 20px var(--gold-glow);
         }
-        .message-content p { margin: 0; line-height: 1.7; }
+        .message-content p { margin: 0; line-height: 1.7; white-space: pre-wrap; }
         
         /* --- Unique "Golden Arc" Input Area --- */
         .chat-input-area {
@@ -29,6 +107,7 @@
             border-bottom: 2px solid var(--gold-accent);
             transition: all 0.2s ease;
         }
+        /* The half-circles on the ends */
         .fancy-input-wrapper::before,
         .fancy-input-wrapper::after {
             content: '';
@@ -59,7 +138,7 @@
             padding: 0.5rem 2rem;
             font-size: 1.2rem;
             resize: none;
-            overflow-y: hidden;
+            overflow-y: hidden; /* Hide scrollbar, size is managed by JS */
             line-height: 1.5;
         }
         #send-btn {
@@ -113,13 +192,22 @@
         const welcomeHeader = document.getElementById('welcome-header');
 
         function appendMessage(sender, text) {
+            // Hide the welcome message on the first message
             if (welcomeHeader) welcomeHeader.style.display = 'none';
+
             const messageDiv = document.createElement('div');
             messageDiv.className = `chat-message ${sender}-message`;
             const avatar = sender === 'user' ? '🧑‍🚀' : '✨';
-            messageDiv.innerHTML = `<div class="avatar">${avatar}</div><div class="message-content"><p>${text}</p></div>`;
+            
+            // Create a paragraph element and set its text content to prevent HTML injection
+            const p = document.createElement('p');
+            p.textContent = text;
+
+            messageDiv.innerHTML = `<div class="avatar">${avatar}</div><div class="message-content"></div>`;
+            messageDiv.querySelector('.message-content').appendChild(p);
+            
             chatLog.appendChild(messageDiv);
-            chatLog.scrollTop = chatLog.scrollHeight;
+            chatLog.scrollTop = chatLog.scrollHeight; // Auto-scroll to the bottom
         }
 
         async function submitQuery(question) {
@@ -127,7 +215,7 @@
 
             appendMessage('user', question);
             chatInput.value = '';
-            chatInput.style.height = 'auto';
+            chatInput.style.height = 'auto'; // Reset height for dynamic sizing
             sendBtn.disabled = true;
             
             const aiMessagePlaceholder = document.createElement('div');
@@ -137,13 +225,14 @@
             chatLog.scrollTop = chatLog.scrollHeight;
 
             try {
-                const response = await fetch('/chat-ai', {   <!-- ✅ fixed endpoint -->
+                const response = await fetch('/ask', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ q: question })   <!-- ✅ correct field -->
+                    body: JSON.stringify({ question })
                 });
 
                 if (!response.ok) throw new Error('Network response failed.');
+                
                 const data = await response.json();
                 aiMessagePlaceholder.querySelector('.message-content p').textContent = data.answer;
 
@@ -160,11 +249,13 @@
             submitQuery(chatInput.value.trim());
         });
         
+        // Auto-resize textarea as user types
         chatInput.addEventListener('input', () => {
-            chatInput.style.height = 'auto';
+            chatInput.style.height = 'auto'; // Temporarily shrink to get the correct scrollHeight
             chatInput.style.height = (chatInput.scrollHeight) + 'px';
         });
 
+        // Submit on Enter, new line on Shift+Enter
         chatInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
@@ -174,3 +265,4 @@
     </script>
 </body>
 </html>
+

@@ -9,10 +9,13 @@ import session from "express-session";
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import cookieParser from "cookie-parser";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI } from "@google/generative-ai"; // <-- Gemini kept
 import bodyParser from "body-parser";
 import crypto from "crypto";
 import multer from "multer";
+
+// === OpenAI (for Advanced Chat AI only) ===
+import OpenAI from "openai";
 
 dotenv.config();
 
@@ -186,12 +189,12 @@ function authRequired(req,res,next){
   return res.status(401).json({ error:"Sign in required" });
 }
 
-// ---------- Gemini ----------
+// ---------- Gemini (kept for search / learn physics / lessons) ----------
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const modelFlash = genAI.getGenerativeModel({ model:"gemini-1.5-flash" });
 const modelPro = genAI.getGenerativeModel({ model:"gemini-1.5-pro" });
 
-// ---------- AI Routes ----------
+// ---------- AI Routes (Gemini stays) ----------
 app.post("/ask", enforceLimit("ask"), async (req,res)=>{
   try{
     const q = (req.body?.question || "").trim();
@@ -224,18 +227,67 @@ app.post("/ai/physics-explain", enforceLimit("physics"), async (req,res)=>{
   }catch(e){ console.error("physics error", e); res.status(500).json({ reply:"Physics error" }); }
 });
 
-// ---------- Advanced Chat AI ----------
+// ---------- Advanced Chat AI (OpenAI only) ----------
 const upload = multer({ dest: "uploads/" });
-app.post("/chat-advanced-ai", upload.single("file"), async (req,res)=>{
+
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+// cheapest GPT-4 family default
+const DEFAULT_OPENAI_MODEL = process.env.DEFAULT_OPENAI_MODEL || "gpt-4o-mini";
+// (Optional) whitelist
+const ALLOWED_OPENAI_MODELS = new Set(["gpt-4o-mini", "gpt-4o", "gpt-4.1"]);
+
+// This is the route your chat-advancedai.html calls in my HTML (preferred)
+app.post("/api/chat", upload.array("files"), enforceLimit("ask"), async (req, res) => {
+  try {
+    const userMessage = (req.body?.message || "").trim();
+    if (!userMessage) return res.json({ reply: "Ask me something." });
+
+    const requestedModel = (req.body?.model || DEFAULT_OPENAI_MODEL).trim();
+    const model = ALLOWED_OPENAI_MODELS.has(requestedModel) ? requestedModel : DEFAULT_OPENAI_MODEL;
+
+    const completion = await openai.chat.completions.create({
+      model,
+      messages: [
+        { role: "system", content: "You are GoldenSpaceAI, a crisp, expert assistant. Keep answers concise and helpful." },
+        { role: "user", content: userMessage }
+      ],
+      temperature: 0.7,
+      max_tokens: 800
+    });
+
+    const reply = completion.choices?.[0]?.message?.content || "No reply.";
+    res.json({ reply, model });
+  } catch (e) {
+    console.error("api/chat error", e);
+    res.status(500).json({ reply: "OpenAI error" });
+  }
+});
+
+// Keep the legacy route name too, but point it to OpenAI
+app.post("/chat-advanced-ai", upload.single("file"), enforceLimit("ask"), async (req,res)=>{
   try{
     const q = (req.body?.q || "").trim();
-    const modelType = (req.body?.modelType || "flash").toLowerCase();
+    const modelType = (req.body?.modelType || "").toLowerCase();
     if (!q) return res.json({ answer:"Ask me something." });
 
-    const useModel = modelType === "pro" ? modelPro : modelFlash;
-    const result = await useModel.generateContent([{ text: q }]);
-    const answer = result?.response?.text?.() || "No response.";
-    res.json({ model: modelType, answer });
+    // simple mapping, cheapest default
+    const map = { pro: "gpt-4.1", flash: "gpt-4o-mini", gpt4: "gpt-4.1" };
+    const requested = map[modelType] || DEFAULT_OPENAI_MODEL;
+    const model = ALLOWED_OPENAI_MODELS.has(requested) ? requested : DEFAULT_OPENAI_MODEL;
+
+    const completion = await openai.chat.completions.create({
+      model,
+      messages: [
+        { role: "system", content: "You are GoldenSpaceAI, a crisp, expert assistant. Keep answers concise and helpful." },
+        { role: "user", content: q }
+      ],
+      temperature: 0.7,
+      max_tokens: 800
+    });
+
+    const answer = completion.choices?.[0]?.message?.content || "No response.";
+    res.json({ model, answer });
   }catch(e){
     console.error("advanced-ai error", e);
     res.status(500).json({ answer:"Advanced AI error" });
@@ -243,6 +295,7 @@ app.post("/chat-advanced-ai", upload.single("file"), async (req,res)=>{
 });
 
 // ---------- Apply Paddle upgrades when user hits API ----------
+const upgradesByEmail = {}; // ensure exists
 app.get("/api/me",(req,res)=>{
   if (req.user?.email){
     const up = upgradesByEmail[req.user.email.toLowerCase()];

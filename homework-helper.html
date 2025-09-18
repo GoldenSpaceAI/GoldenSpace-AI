@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+    <meta name="theme-color" content="#0a0e15" />
+    <title>GoldenSpaceAI • Homework Helper</title>
+    <link rel="icon" href="/favicon.ico" />
+    <style>
+      :root{
+        --bg:#0a0e15; --panel:#0f1624; --panel2:#0b1320; --border:#1f2a40;
+        --text:#e7f4e9; --muted:#cfc6a5; --gold:#f6c64a; --gold2:#eb8b36;
+        --shadow:0 22px 70px rgba(0,0,0,.5); --radius:18px; --max:960px;
+      }
+      *{box-sizing:border-box} html,body{height:100%}
+      body{
+        margin:0;color:var(--text);
+        font:16px/1.6 Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+        background:
+          linear-gradient(180deg,rgba(10,14,21,.55),rgba(10,14,21,.55)),
+          radial-gradient(1400px 800px at 50% -20%,rgba(246,198,74,.30),transparent 70%),
+          url("https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2400&auto=format&fit=crop")
+          center/cover no-repeat fixed;
+        -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
+      }
+      a{color:inherit;text-decoration:none}
+      .top{position:sticky;top:0;z-index:30;backdrop-filter:blur(10px);
+        background:linear-gradient(180deg,rgba(10,14,21,.85),rgba(10,14,21,.5) 60%,transparent);
+        border-bottom:1px solid var(--border);padding:max(12px, env(safe-area-inset-top)) 16px 10px;
+        display:flex;align-items:center;gap:12px;}
+      .brand{display:flex;align-items:center;gap:10px;font-weight:900;color:var(--gold);
+        font-size:clamp(20px,2.2vw,26px);text-shadow:0 0 16px rgba(246,198,74,.25);} 
+      .dot{width:10px;height:10px;border-radius:50%;
+        background:radial-gradient(circle at 30% 30%,#ffd86a,#f6c64a 50%,#eb8b36 90%);
+        box-shadow:0 0 18px rgba(246,198,74,.5);} 
+      .wrap{max-width:var(--max);margin:22px auto;padding:0 16px;}
+
+      .panel{background:linear-gradient(180deg,var(--panel),var(--panel2));
+        border:1px solid var(--border);border-radius:calc(var(--radius)+2px);
+        padding:16px;box-shadow:var(--shadow);} 
+
+      .row{display:grid;grid-template-columns:1fr;gap:12px}
+      @media(min-width:760px){.row{grid-template-columns:1fr 1fr}}
+
+      .capture{
+        display:grid;gap:10px;align-content:start;
+      }
+      .preview{
+        width:100%;aspect-ratio:3/4;background:#0b1220;border:1px dashed var(--border);
+        border-radius:12px;display:grid;place-items:center;overflow:hidden;position:relative;
+      }
+      .preview img{max-width:100%;max-height:100%;object-fit:contain}
+      .hint{font-size:12px;color:#bcd}
+
+      .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 14px;border-radius:12px;font-weight:900;cursor:pointer;border:1px solid rgba(0,0,0,.2)}
+      .btn.gold{background:linear-gradient(180deg,var(--gold),var(--gold2));color:#1b1300;box-shadow:0 10px 26px rgba(246,198,74,.28)}
+      .btn.ghost{background:transparent;color:var(--muted);border:1px solid var(--border)}
+
+      textarea{width:100%;min-height:98px;border-radius:12px;border:1px solid var(--border);background:#0a1120;color:var(--text);padding:12px;font:inherit}
+
+      .out{margin-top:16px;white-space:pre-wrap;background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.01));border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:14px}
+      .small{font-size:12px;color:#9fb0d1}
+      .hide{display:none}
+      .center{display:flex;justify-content:center}
+    </style>
+  </head>
+  <body>
+    <div class="top">
+      <div class="brand"><span class="dot"></span> GoldenSpaceAI</div>
+      <div style="flex:1"></div>
+      <a class="btn ghost" href="/">Home</a>
+    </div>
+
+    <main class="wrap">
+      <div class="panel">
+        <h1 style="margin:6px 0 12px;color:#fff7dc">📸 Homework Helper</h1>
+        <p class="small">Take a clear photo of the exercise, then tell the AI what you need (e.g., "solve step by step" or "hint only").</p>
+
+        <div class="row">
+          <section class="capture">
+            <label for="file" class="small">Homework photo</label>
+            <div class="preview" id="preview"><span class="small">No image yet</span></div>
+            <input id="file" type="file" accept="image/*" capture="environment" style="display:none" />
+            <div class="center" style="gap:10px">
+              <button class="btn gold" id="openCam">Open Camera</button>
+              <button class="btn ghost" id="choosePhoto">Choose from Photos</button>
+            </div>
+            <div class="hint">Tip: good lighting, fill the frame, keep text sharp.</div>
+          </section>
+
+          <section>
+            <label for="msg" class="small">What do you want?</label>
+            <textarea id="msg" placeholder="e.g., Explain steps, don’t give the final answer yet."></textarea>
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:8px">
+              <button class="btn gold" id="send">Solve with AI</button>
+              <span id="status" class="small"></span>
+            </div>
+            <div id="result" class="out hide"></div>
+          </section>
+        </div>
+
+        <p class="small" style="margin-top:14px">By default this uses OpenAI <strong>gpt-4o-mini</strong> (cheap + vision). Your photo and prompt are sent securely to the server.</p>
+      </div>
+    </main>
+
+    <script>
+      const fileInput = document.getElementById('file');
+      const preview = document.getElementById('preview');
+      const msg = document.getElementById('msg');
+      const statusEl = document.getElementById('status');
+      const resultEl = document.getElementById('result');
+
+      function showPreview(file){
+        preview.innerHTML='';
+        const img = document.createElement('img');
+        img.alt = 'preview';
+        img.src = URL.createObjectURL(file);
+        preview.appendChild(img);
+      }
+
+      document.getElementById('openCam').addEventListener('click', ()=> fileInput.click());
+      document.getElementById('choosePhoto').addEventListener('click', ()=> fileInput.click());
+      fileInput.addEventListener('change', ()=>{
+        const f = fileInput.files?.[0];
+        if (f) showPreview(f);
+      });
+
+      document.getElementById('send').addEventListener('click', async ()=>{
+        resultEl.classList.add('hide');
+        statusEl.textContent = 'Sending…';
+        const fd = new FormData();
+        const f = fileInput.files?.[0];
+        if (f) fd.append('files', f); // backend expects `files`
+        fd.append('message', (msg.value || '').trim());
+        fd.append('model', 'gpt-4o-mini'); // vision-capable & cheap
+
+        try{
+          const res = await fetch('/api/chat', {
+            method: 'POST',
+            body: fd,
+            credentials: 'include'
+          });
+          const data = await res.json();
+          if(!res.ok){
+            statusEl.textContent = data?.reply || data?.error || 'Error';
+            return;
+          }
+          statusEl.textContent = `Model: ${data.model || 'gpt-4o-mini'}`;
+          resultEl.textContent = data.reply || data.answer || 'No reply';
+          resultEl.classList.remove('hide');
+        }catch(e){
+          console.error(e);
+          statusEl.textContent = 'Network error';
+        }
+      });
+    </script>
+  </body>
+</html>

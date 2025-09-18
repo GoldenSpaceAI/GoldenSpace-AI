@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Universe Sandbox | GoldenSpaceAI</title>
+    <title>Planetary Genesis | GoldenSpaceAI</title>
     <style>
         :root {
             --bg-dark: #0a0e15;
@@ -12,14 +12,10 @@
             --text-primary: #E2E8F0;
             --text-secondary: #94A3B8;
             --gold-accent: #f6c64a;
-            --gold-glow: rgba(246, 198, 74, 0.2);
-            --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
-
         * { box-sizing: border-box; }
-
         body {
-            font-family: var(--font-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--bg-dark);
             color: var(--text-primary);
             margin: 0;
@@ -30,285 +26,282 @@
             flex-direction: column;
         }
 
-        .sandbox-container {
+        /* --- Layout (Mobile First) --- */
+        .genesis-container {
             display: flex;
-            flex: 1;
             flex-direction: column;
-            overflow: hidden;
+            width: 100%;
+            height: 100%;
         }
-
-        /* --- Universe Canvas --- */
-        .universe-canvas {
+        .viewport {
             flex: 1;
+            display: grid;
+            place-items: center;
             position: relative;
-            background-color: var(--bg-dark);
             overflow: hidden;
-            cursor: grab;
+            background-image: radial-gradient(circle at center, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+            background-size: 10px 10px;
         }
-        .universe-canvas:active { cursor: grabbing; }
-
-        #canvas-content {
-            position: absolute;
-            width: 1px;
-            height: 1px;
-            transform-origin: 0 0;
-        }
-
-        /* --- UI Panels (Mobile First) --- */
-        .ui-panels {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            z-index: 20;
-            background: linear-gradient(180deg, transparent, rgba(10, 14, 21, 0.8) 50%);
-            padding: 1rem;
-            padding-bottom: max(1rem, env(safe-area-inset-bottom));
-        }
-
-        .accordion-panel {
+        .controls {
+            width: 100%;
             background-color: var(--panel-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            margin-bottom: 0.5rem;
-            overflow: hidden;
-        }
-
-        .accordion-header {
+            border-top: 1px solid var(--border-color);
             padding: 1rem;
-            cursor: pointer;
-            font-weight: bold;
-            color: var(--gold-accent);
-        }
-
-        .accordion-content {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease-out;
-            padding: 0 1rem;
-        }
-        .accordion-content.open {
-            max-height: 50vh;
-            padding-bottom: 1rem;
+            max-height: 45vh;
             overflow-y: auto;
         }
+
+        /* --- Planet & Moon Styles --- */
+        #planet-container {
+            position: relative;
+            display: grid;
+            place-items: center;
+        }
+        #planet {
+            width: 250px;
+            height: 250px;
+            border-radius: 50%;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset -25px -15px 40px rgba(0,0,0,0.5), 0 0 80px rgba(246, 198, 74, 0.2);
+            transition: width 0.3s, height 0.3s;
+        }
+        #planet-surface {
+            width: 100%;
+            height: 100%;
+            background-size: 200% 100%;
+            animation: rotate-surface 30s linear infinite;
+        }
+        @keyframes rotate-surface {
+            from { background-position: 0% 50%; }
+            to { background-position: 200% 50%; }
+        }
+        #planet-atmosphere {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0; left: 0;
+            border-radius: 50%;
+        }
+        .moon {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: #aaa;
+            border-radius: 50%;
+            cursor: grab;
+            box-shadow: inset -5px -3px 10px rgba(0,0,0,0.5);
+        }
+        .moon.dragging { cursor: grabbing; z-index: 100; }
         
-        .tool-item {
-            display: flex; align-items: center; gap: 1rem; padding: 0.75rem;
-            border-radius: 6px; margin-bottom: 0.5rem; cursor: pointer;
-            border: 1px solid transparent;
+        /* --- Controls Styling --- */
+        .control-accordion details { margin-bottom: 0.5rem; }
+        .control-accordion summary {
+            padding: 0.75rem;
+            font-weight: bold;
+            color: var(--gold-accent);
+            background-color: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            cursor: pointer;
         }
-        .tool-item:hover { background-color: #1E293B; }
-        .tool-item-icon { font-size: 2rem; }
-        .tool-item h3 { margin: 0; font-size: 1rem; color: var(--text-primary); }
-
-        .inspector-group { margin-bottom: 1rem; }
-        .inspector-group label { display: block; margin-bottom: 0.5rem; color: var(--text-secondary); }
-        .inspector-group input, .inspector-group select {
-            width: 100%; background-color: var(--bg-dark); border: 1px solid var(--border-color);
-            color: var(--text-primary); padding: 0.5rem; border-radius: 4px;
+        .control-group {
+            padding: 1rem;
+            border: 1px solid var(--border-color);
+            border-top: none;
+            border-radius: 0 0 6px 6px;
         }
+        .control-group label { display: block; margin-bottom: 0.5rem; color: var(--text-secondary); }
+        .control-group input { width: 100%; }
 
+        /* --- Finalize Button --- */
+        #finalize-btn {
+            background-color: var(--gold-accent);
+            color: var(--bg-dark);
+            border: none;
+            padding: 1rem;
+            width: 100%;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 1rem;
+        }
+        
         /* --- Desktop Layout --- */
         @media (min-width: 769px) {
-            .sandbox-container {
+            .genesis-container {
                 flex-direction: row;
             }
-            .ui-panels {
-                position: static;
-                width: 320px;
-                height: 100vh;
+            .controls {
                 order: -1; /* Move to the left */
-                background: var(--panel-bg);
+                width: 320px;
+                height: 100%;
+                max-height: 100vh;
+                border-top: none;
                 border-right: 1px solid var(--border-color);
-                padding: 1.5rem;
-            }
-            .accordion-header { display: none; }
-            .accordion-content {
-                max-height: none;
-                padding: 0;
-                overflow: visible;
-            }
-            #inspector-panel {
-                margin-top: 2rem;
             }
         }
-        
-        /* ... (Object, Modal, Orbit Styles from previous version) ... */
-        .celestial-object { position: absolute; border-radius: 50%; }
-        .galaxy { background: radial-gradient(ellipse, #fff 0%, rgba(255,255,255,0.6) 10%, rgba(255,255,255,0) 60%); }
-        .star { background: radial-gradient(circle, #fff, var(--gold-accent)); box-shadow: 0 0 40px var(--gold-accent); }
-        .planet { background-color: #38bdf8; z-index: 50; }
-        .celestial-object.selected { box-shadow: 0 0 20px 5px var(--gold-glow), 0 0 0 2px var(--gold-accent); z-index: 100 !important; }
-        .orbit-path { position: absolute; border: 1px dashed var(--border-color); border-radius: 50%; pointer-events: none; }
-        .modal-overlay { position: fixed; inset: 0; background-color: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 1000; }
-        .modal-overlay.active { display: flex; }
-        .modal-content { background-color: var(--panel-bg); padding: 2rem; border-radius: 12px; width: 90%; max-width: 400px; border: 1px solid var(--border-color); }
-        .modal-content h2 { margin-top: 0; color: var(--gold-accent); }
-        #create-btn { background-color: var(--gold-accent); color: var(--bg-dark); border: none; padding: 0.75rem 1.5rem; font-size: 1rem; font-weight: bold; border-radius: 6px; cursor: pointer; margin-top: 1rem; }
     </style>
 </head>
 <body>
 
-    <div class="sandbox-container">
-        <aside class="ui-panels">
-            <div class="accordion-panel" id="toolbox-panel">
-                <div class="accordion-header">Toolbox</div>
-                <div class="accordion-content">
-                    <h2>Toolbox</h2>
-                    <div class="tool-item" data-type="galaxy"><div class="tool-item-icon">🌌</div><h3>Add Galaxy</h3></div>
-                    <div class="tool-item" data-type="star"><div class="tool-item-icon">🌟</div><h3>Add Star</h3></div>
-                    <div class="tool-item" data-type="planet"><div class="tool-item-icon">🪐</div><h3>Add Planet</h3></div>
-                </div>
+    <div class="genesis-container">
+        <aside class="controls">
+            <h2>Planetary Genesis</h2>
+            <div id="name-group" class="control-group" style="border-radius: 6px;">
+                <label for="planet-name">Planet Name</label>
+                <input type="text" id="planet-name" value="New Eden" style="background-color: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-primary); padding: 0.5rem; border-radius: 4px;">
             </div>
-            <div class="accordion-panel" id="inspector-panel-container">
-                <div class="accordion-header">Inspector</div>
-                <div class="accordion-content" id="inspector-content">
-                    <h3>Inspector</h3>
-                    <div id="inspector-default-text"><p>Select an object to inspect its properties.</p></div>
-                    <div id="inspector-form" style="display:none;">
-                        <div class="inspector-group"><label for="name-input">Object Name</label><input type="text" id="name-input"></div>
-                        <div id="planet-settings" style="display:none;">
-                            <div class="inspector-group"><label for="size-input">Planet Size</label><input type="range" id="size-input" min="10" max="80"></div>
-                            <div class="inspector-group"><label for="color-input">Planet Color</label><input type="color" id="color-input"></div>
-                        </div>
+            <div class="control-accordion">
+                <details open>
+                    <summary>Base & Surface</summary>
+                    <div class="control-group">
+                        <label for="planet-size">Size</label>
+                        <input type="range" id="planet-size" min="150" max="400" value="250">
+                        <label for="land-color">Land Color</label>
+                        <input type="color" id="land-color" value="#4a7852">
+                        <label for="ocean-color">Ocean Color</label>
+                        <input type="color" id="ocean-color" value="#3b82f6">
                     </div>
-                </div>
+                </details>
+                <details>
+                    <summary>Atmosphere & Moons</summary>
+                    <div class="control-group">
+                        <label for="atmosphere-color">Atmosphere Color</label>
+                        <input type="color" id="atmosphere-color" value="#87ceeb">
+                        <label for="atmosphere-density">Atmosphere Density</label>
+                        <input type="range" id="atmosphere-density" min="0" max="100" value="50">
+                        <button id="add-moon-btn" style="width:100%; padding: 0.5rem; margin-top: 1rem;">Add Moon</button>
+                    </div>
+                </details>
             </div>
+            <button id="finalize-btn">Finalize Planet & Add to Universe</button>
         </aside>
 
-        <main class="universe-canvas" id="universe-canvas">
-            <div id="canvas-content">
+        <main class="viewport">
+            <div id="planet-container">
+                <div id="planet">
+                    <div id="planet-surface"></div>
+                    <div id="planet-atmosphere"></div>
                 </div>
+            </div>
         </main>
-    </div>
-
-    <div id="creation-modal" class="modal-overlay">
-        <div class="modal-content">
-            <h2 id="modal-title">Create New Planet</h2>
-            <div class="inspector-group"><label for="modal-name">Planet Name</label><input type="text" id="modal-name"></div>
-            <div class="inspector-group"><label for="modal-size">Planet Size</label><input type="range" id="modal-size" min="10" max="80" value="20"></div>
-            <div class="inspector-group"><label for="modal-color">Planet Color</label><input type="color" id="modal-color" value="#38bdf8"></div>
-            <button id="create-btn">Create Planet</button>
-        </div>
     </div>
     
     <script>
-        // --- DOM ELEMENTS & STATE ---
-        const canvas = document.getElementById('universe-canvas');
-        const canvasContent = document.getElementById('canvas-content');
-        const toolboxItems = document.querySelectorAll('.tool-item');
-        const inspectorDefault = document.getElementById('inspector-default-text');
-        const inspectorForm = document.getElementById('inspector-form');
-        const creationModal = document.getElementById('creation-modal');
-        let activeObject = null, objectCounter = 0, objects = new Map();
+        // --- DOM ELEMENTS ---
+        const planet = document.getElementById('planet');
+        const planetSurface = document.getElementById('planet-surface');
+        const planetAtmosphere = document.getElementById('planet-atmosphere');
+        const planetContainer = document.getElementById('planet-container');
+
+        const controls = {
+            name: document.getElementById('planet-name'),
+            size: document.getElementById('planet-size'),
+            landColor: document.getElementById('land-color'),
+            oceanColor: document.getElementById('ocean-color'),
+            atmosphereColor: document.getElementById('atmosphere-color'),
+            atmosphereDensity: document.getElementById('atmosphere-density'),
+            addMoonBtn: document.getElementById('add-moon-btn'),
+            finalizeBtn: document.getElementById('finalize-btn')
+        };
         
-        // --- ZOOM & PAN ---
-        let scale = 1, panning = false, pointX = 0, pointY = 0, start = { x: 0, y: 0 };
-        function setTransform() { canvasContent.style.transform = `translate(${pointX}px, ${pointY}px) scale(${scale})`; }
-        canvas.onmousedown = (e) => {
-            if (e.target !== canvas) return;
-            e.preventDefault();
-            start = { x: e.clientX - pointX, y: e.clientY - pointY };
-            panning = true;
-        };
-        canvas.onmouseup = () => { panning = false; };
-        canvas.onmousemove = (e) => { if (!panning) return; pointX = e.clientX - start.x; pointY = e.clientY - start.y; setTransform(); };
-        canvas.onwheel = (e) => {
-            e.preventDefault();
-            const xs = (e.clientX - pointX) / scale, ys = (e.clientY - pointY) / scale, delta = -e.deltaY;
-            (delta > 0) ? (scale *= 1.1) : (scale /= 1.1);
-            pointX = e.clientX - xs * scale;
-            pointY = e.clientY - ys * scale;
-            setTransform();
-        };
+        let moons = [];
 
-        // --- OBJECT CREATION & MANAGEMENT ---
-        toolboxItems.forEach(item => item.addEventListener('click', () => {
-            const type = item.dataset.type;
-            const centerOfView = { x: (-pointX + canvas.clientWidth / 2) / scale, y: (-pointY + canvas.clientHeight / 2) / scale };
-            if (type === 'planet') {
-                openCreationModal(centerOfView);
-            } else {
-                createObject(type, centerOfView);
-            }
-        }));
+        // --- UPDATE PLANET FUNCTION ---
+        function updatePlanet() {
+            // Size
+            const size = controls.size.value;
+            planet.style.width = `${size}px`;
+            planet.style.height = `${size}px`;
 
-        function createObject(type, position, customData = {}) {
-            objectCounter++;
-            const id = `obj-${objectCounter}`;
-            const objEl = document.createElement('div');
-            objEl.className = `celestial-object ${type}`;
-            objEl.id = id;
-            objEl.style.left = `${position.x}px`;
-            objEl.style.top = `${position.y}px`;
-            const objectData = { id, el: objEl, type, name: customData.name || `${type.charAt(0).toUpperCase() + type.slice(1)} ${objectCounter}`, ...customData };
+            // Surface Colors
+            const land = controls.landColor.value;
+            const ocean = controls.oceanColor.value;
+            planetSurface.style.backgroundImage = `radial-gradient(circle at 20% 20%, ${land} 15%, transparent 15.5%), radial-gradient(circle at 75% 50%, ${land} 25%, transparent 25.5%), linear-gradient(90deg, ${ocean}, ${ocean})`;
+
+            // Atmosphere
+            const atmosColor = controls.atmosphereColor.value;
+            const atmosDensity = controls.atmosphereDensity.value / 100; // 0 to 1
+            planetAtmosphere.style.boxShadow = `inset 0 0 80px 20px ${atmosColor}, inset -20px -20px 80px 0px rgba(0,0,0,0.5)`;
+            planetAtmosphere.style.opacity = atmosDensity;
+        }
+
+        // --- ADDING & DRAGGING MOONS ---
+        controls.addMoonBtn.addEventListener('click', () => {
+            const moon = document.createElement('div');
+            moon.className = 'moon';
+            const angle = Math.random() * 2 * Math.PI;
+            const radius = (planet.offsetWidth / 2) + 50 + (Math.random() * 50);
+            moon.style.left = `${(planetContainer.offsetWidth / 2) + radius * Math.cos(angle) - 10}px`;
+            moon.style.top = `${(planetContainer.offsetHeight / 2) + radius * Math.sin(angle) - 10}px`;
             
-            if (type === 'planet') {
-                const orbitEl = document.createElement('div');
-                orbitEl.className = 'orbit-path';
-                canvasContent.appendChild(orbitEl);
-                objectData.orbitEl = orbitEl;
-                objectData.orbitalAngle = Math.random() * 360;
-                objectData.size = customData.size || 20;
-                objEl.style.width = `${objectData.size}px`;
-                objEl.style.height = `${objectData.size}px`;
-                objEl.style.backgroundColor = customData.color || '#38bdf8';
-            } else {
-                objEl.style.width = type === 'galaxy' ? '250px' : '60px';
-                objEl.style.height = type === 'galaxy' ? '250px' : '60px';
-            }
-
-            objects.set(id, objectData);
-            makeDraggable(objectData);
-            objEl.addEventListener('click', e => { e.stopPropagation(); selectObject(objectData); });
-            canvasContent.appendChild(objEl);
-            if (type === 'planet') updatePlanetOrbit(objectData);
-        }
-
-        function openCreationModal(position) {
-            document.getElementById('modal-name').value = `Planet ${objectCounter + 1}`;
-            creationModal.classList.add('active');
-            creationModal.querySelector('#create-btn').onclick = () => {
-                const settings = {
-                    name: document.getElementById('modal-name').value,
-                    size: parseFloat(document.getElementById('modal-size').value),
-                    color: document.getElementById('modal-color').value
-                };
-                createObject('planet', position, settings);
-                creationModal.classList.remove('active');
-            };
-        }
-
-        // --- PHYSICS & ANIMATION ---
-        function animate() {
-            objects.forEach(obj => {
-                if (obj.type === 'planet' && obj.anchorStar) {
-                    obj.orbitalAngle += (0.5 / (obj.orbitRadius / 100)); // Speed decreases with distance
-                    const starCenter = { x: obj.anchorStar.el.offsetLeft + obj.anchorStar.el.offsetWidth / 2, y: obj.anchorStar.el.offsetTop + obj.anchorStar.el.offsetHeight / 2, };
-                    const newX = starCenter.x + obj.orbitRadius * Math.cos(obj.orbitalAngle * Math.PI / 180) - obj.size / 2;
-                    const newY = starCenter.y + obj.orbitRadius * Math.sin(obj.orbitalAngle * Math.PI / 180) - obj.size / 2;
-                    obj.el.style.left = `${newX}px`;
-                    obj.el.style.top = `${newY}px`;
-                }
-            });
-            requestAnimationFrame(animate);
-        }
-        
-        // --- DRAGGING & ORBIT CALCULATION ---
-        function updatePlanetOrbit(planetData) { /* ... same as previous version ... */ }
-        function makeDraggable(elementData) { /* ... same as previous version, updated for pan/zoom ... */ }
-        
-        // --- ACCORDION FOR MOBILE ---
-        document.querySelectorAll('.accordion-header').forEach(header => {
-            header.addEventListener('click', () => {
-                const content = header.nextElementSibling;
-                content.classList.toggle('open');
-            });
+            planetContainer.appendChild(moon);
+            makeDraggable(moon);
+            moons.push(moon);
         });
-        
-        // --- INITIALIZATION ---
-        animate(); // Start the simulation loop
+
+        function makeDraggable(element) {
+            let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+            element.onmousedown = dragMouseDown;
+            function dragMouseDown(e) {
+                e.preventDefault();
+                element.classList.add('dragging');
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                document.onmouseup = closeDragElement;
+                document.onmousemove = elementDrag;
+            }
+            function elementDrag(e) {
+                e.preventDefault();
+                pos1 = pos3 - e.clientX;
+                pos2 = pos4 - e.clientY;
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                element.style.top = (element.offsetTop - pos2) + "px";
+                element.style.left = (element.offsetLeft - pos1) + "px";
+            }
+            function closeDragElement() {
+                document.onmouseup = null;
+                document.onmousemove = null;
+                element.classList.remove('dragging');
+            }
+        }
+
+        // --- FINALIZE & SAVE ---
+        controls.finalizeBtn.addEventListener('click', () => {
+            const moonPositions = moons.map(moon => ({ x: moon.style.left, y: moon.style.top }));
+
+            const planetData = {
+                name: controls.name.value,
+                size: controls.size.value,
+                colors: {
+                    land: controls.landColor.value,
+                    ocean: controls.oceanColor.value,
+                    atmosphere: controls.atmosphereColor.value
+                },
+                atmosphereDensity: controls.atmosphereDensity.value,
+                moons: moonPositions
+            };
+            
+            const newConstructKey = `completedConstruct_planet_${Date.now()}`;
+            localStorage.setItem(newConstructKey, JSON.stringify({type: 'planet', data: planetData}));
+            
+            alert(`${planetData.name} has been designed! Returning to Your Space hub...`);
+            window.location.href = '/your-space.html';
+        });
+
+
+        // --- EVENT LISTENERS ---
+        Object.values(controls).forEach(control => {
+            if (control.id !== 'add-moon-btn' && control.id !== 'finalize-btn' && control.id !== 'planet-name') {
+                control.addEventListener('input', updatePlanet);
+            }
+        });
+
+        // Initial render
+        updatePlanet();
     </script>
 </body>
 </html>

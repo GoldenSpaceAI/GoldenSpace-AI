@@ -107,7 +107,6 @@
             border-bottom: 2px solid var(--gold-accent);
             transition: all 0.2s ease;
         }
-        /* The half-circles on the ends */
         .fancy-input-wrapper::before,
         .fancy-input-wrapper::after {
             content: '';
@@ -138,7 +137,7 @@
             padding: 0.5rem 2rem;
             font-size: 1.2rem;
             resize: none;
-            overflow-y: hidden; /* Hide scrollbar, size is managed by JS */
+            overflow-y: hidden;
             line-height: 1.5;
         }
         #send-btn {
@@ -192,15 +191,13 @@
         const welcomeHeader = document.getElementById('welcome-header');
 
         function appendMessage(sender, text) {
-            // Hide the welcome message on the first message
             if (welcomeHeader) welcomeHeader.style.display = 'none';
-
             const messageDiv = document.createElement('div');
             messageDiv.className = `chat-message ${sender}-message`;
             const avatar = sender === 'user' ? '🧑‍🚀' : '✨';
             messageDiv.innerHTML = `<div class="avatar">${avatar}</div><div class="message-content"><p>${text}</p></div>`;
             chatLog.appendChild(messageDiv);
-            chatLog.scrollTop = chatLog.scrollHeight; // Auto-scroll to the bottom
+            chatLog.scrollTop = chatLog.scrollHeight;
         }
 
         async function submitQuery(question) {
@@ -208,7 +205,7 @@
 
             appendMessage('user', question);
             chatInput.value = '';
-            chatInput.style.height = 'auto'; // Reset height for dynamic sizing
+            chatInput.style.height = 'auto';
             sendBtn.disabled = true;
             
             const aiMessagePlaceholder = document.createElement('div');
@@ -218,14 +215,13 @@
             chatLog.scrollTop = chatLog.scrollHeight;
 
             try {
-                const response = await fetch('/ask', {
+                const response = await fetch('/chat-ai', {   <!-- ✅ fixed endpoint -->
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ question })
+                    body: JSON.stringify({ q: question })   <!-- ✅ correct field -->
                 });
 
                 if (!response.ok) throw new Error('Network response failed.');
-                
                 const data = await response.json();
                 aiMessagePlaceholder.querySelector('.message-content p').textContent = data.answer;
 
@@ -242,13 +238,11 @@
             submitQuery(chatInput.value.trim());
         });
         
-        // Auto-resize textarea as user types
         chatInput.addEventListener('input', () => {
-            chatInput.style.height = 'auto'; // Temporarily shrink to get the correct scrollHeight
+            chatInput.style.height = 'auto';
             chatInput.style.height = (chatInput.scrollHeight) + 'px';
         });
 
-        // Submit on Enter, new line on Shift+Enter
         chatInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
@@ -258,4 +252,3 @@
     </script>
 </body>
 </html>
-

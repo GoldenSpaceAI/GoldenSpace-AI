@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>GoldenSpaceAI • Advanced AI</title>
+  <link rel="icon" href="/favicon.ico"/>
+  <style>
+    :root {
+      --bg: #0b0f1a;
+      --card: rgba(255, 255, 255, 0.05);
+      --border: rgba(255, 255, 255, 0.1);
+      --text: #eaf1ff;
+      --muted: #9fb0d1;
+      --gold: #f6c64a;
+      --gold2: #eb8b36;
+      --radius: 18px;
+      --shadow: 0 24px 80px rgba(0,0,0,.55);
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body {
+      font: 16px/1.6 Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color: var(--text);
+      background:
+        linear-gradient(180deg, rgba(7,11,20,.85), rgba(7,11,20,.9)),
+        url("https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1920&auto=format&fit=crop") center/cover fixed no-repeat;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      backdrop-filter: blur(10px);
+      background: rgba(7,11,20,0.6);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 20px;
+      font-weight: 900;
+      font-size: 20px;
+      color: var(--gold);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    main {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 30px 16px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 24px;
+      width: 100%;
+      max-width: 700px;
+    }
+    h1 {
+      font-size: 24px;
+      margin-bottom: 14px;
+      color: #fff6d8;
+    }
+    label {
+      display:block;
+      margin: 10px 0 6px;
+      font-size: 14px;
+      color: var(--muted);
+    }
+    textarea, select, input {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.05);
+      color: var(--text);
+      font-size: 15px;
+      margin-bottom: 12px;
+    }
+    textarea { min-height: 100px; resize: vertical; }
+    .btn-row {
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-bottom: 14px;
+    }
+    button {
+      flex:1;
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 15px;
+      border: none;
+      cursor: pointer;
+      transition: transform .06s ease, box-shadow .2s ease;
+    }
+    button.gold {
+      background: linear-gradient(180deg,var(--gold),var(--gold2));
+      color:#1c1500;
+      box-shadow: 0 8px 24px rgba(246,198,74,.3);
+    }
+    button.gold:hover { transform: translateY(-1px); }
+    .output {
+      margin-top: 16px;
+      padding: 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,0.03);
+      min-height: 80px;
+      white-space: pre-wrap;
+    }
+    img.preview {
+      max-width: 100%;
+      margin-top: 12px;
+      border-radius: 12px;
+      box-shadow: 0 6px 20px rgba(0,0,0,.5);
+    }
+    footer {
+      text-align: center;
+      padding: 14px;
+      font-size: 12px;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    GoldenSpaceAI — Advanced AI
+    <a href="/plans.html" style="color:var(--muted);font-size:14px;">Change Plan</a>
+  </header>
+
+  <main>
+    <div class="card">
+      <h1>Advanced AI Tools</h1>
+
+      <label for="model">Choose Model</label>
+      <select id="model">
+        <option value="flash">Gemini Flash (fast)</option>
+        <option value="pro">Gemini Pro (smarter)</option>
+      </select>
+
+      <label for="question">Your Prompt</label>
+      <textarea id="question" placeholder="Ask Advanced AI..."></textarea>
+
+      <div class="btn-row">
+        <button class="gold" id="btnChat">Chat</button>
+        <button class="gold" id="btnImage">Generate Image</button>
+        <button class="gold" id="btnFile">Download as File</button>
+      </div>
+
+      <div class="output" id="output">✨ Results will appear here...</div>
+      <div id="imageHolder"></div>
+    </div>
+  </main>
+
+  <footer>©️ <span id="yr"></span> GoldenSpaceAI</footer>
+
+  <script>
+    document.getElementById("yr").textContent = new Date().getFullYear();
+
+    const qEl = document.getElementById("question");
+    const modelEl = document.getElementById("model");
+    const outEl = document.getElementById("output");
+    const imgHolder = document.getElementById("imageHolder");
+
+    async function callAPI(endpoint, body) {
+      outEl.textContent = "⏳ Processing...";
+      imgHolder.innerHTML = "";
+      try {
+        const r = await fetch(endpoint, {
+          method:"POST",
+          headers:{"Content-Type":"application/json"},
+          credentials:"include",
+          body: JSON.stringify(body)
+        });
+        const j = await r.json();
+        return j;
+      } catch(e){
+        return { error:"Network error" };
+      }
+    }
+
+    document.getElementById("btnChat").onclick = async ()=>{
+      const j = await callAPI("/advanced-chat-ai", {
+        q: qEl.value,
+        modelType: modelEl.value
+      });
+      outEl.textContent = j.answer || j.error || "No response.";
+    };
+
+    document.getElementById("btnImage").onclick = async ()=>{
+      const j = await callAPI("/advanced-ai/image", { prompt: qEl.value });
+      if(j.url){
+        imgHolder.innerHTML = `<img src="${j.url}" class="preview"/>`;
+        outEl.textContent = "✅ Image generated";
+      } else {
+        outEl.textContent = j.error || "Image failed.";
+      }
+    };
+
+    document.getElementById("btnFile").onclick = async ()=>{
+      // download directly
+      window.location = "/advanced-ai/file?q=" + encodeURIComponent(qEl.value) + "&format=txt";
+    };
+  </script>
+</body>
+</html>

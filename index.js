@@ -1,4 +1,5 @@
-// index.js — GoldenSpaceAI (Login/Signup + Google OAuth + Plan Limits + Paddle Webhook)
+// index.js — GoldenSpaceAI (Google OAuth + Plan Limits)
+// Keeps Gemini for search/physics; OpenAI for advanced chat & homework helper (with images)
 
 import express from "express";
 import cors from "cors";
@@ -9,13 +10,14 @@ import session from "express-session";
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import cookieParser from "cookie-parser";
-import { GoogleGenerativeAI } from "@google/generative-ai"; // <-- Gemini kept
+import { GoogleGenerativeAI } from "@google/generative-ai"; // Gemini kept
 import bodyParser from "body-parser";
 import crypto from "crypto";
 import multer from "multer";
 
-// === OpenAI (for Advanced Chat AI only) ===
+// OpenAI (for Advanced Chat AI + Homework Helper with images)
 import OpenAI from "openai";
+import fs from "fs/promises";
 
 dotenv.config();
 
@@ -56,7 +58,7 @@ const PLAN_LIMITS = {
 };
 
 // ---------- Usage tracking ----------
-const usage = {}; 
+const usage = {};
 const today = () => new Date().toISOString().slice(0,10);
 
 function getUserKey(req, res){
@@ -176,7 +178,7 @@ function isPublicPath(req){
   if (p === "/terms.html") return true;
   if (p === "/privacy.html") return true;
   if (p === "/health") return true;
-  if (p === "/webhooks/paddle") return true; 
+  if (p === "/webhooks/paddle") return true;
   if (p.startsWith("/auth/google")) return true;
   if (PUBLIC_FILE_EXT.test(p)) return true;
   if (p === "/favicon.ico") return true;
@@ -227,69 +229,115 @@ app.post("/ai/physics-explain", enforceLimit("physics"), async (req,res)=>{
   }catch(e){ console.error("physics error", e); res.status(500).json({ reply:"Physics error" }); }
 });
 
-// ---------- Advanced Chat AI (OpenAI only) ----------
+// ---------- Advanced Chat AI (OpenAI) + Homework Helper (images) ----------
 const upload = multer({ dest: "uploads/" });
-
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-// cheapest GPT-4 family default
+// cheapest GPT-4 family default; supports vision
 const DEFAULT_OPENAI_MODEL = process.env.DEFAULT_OPENAI_MODEL || "gpt-4o-mini";
-// (Optional) whitelist
 const ALLOWED_OPENAI_MODELS = new Set(["gpt-4o-mini", "gpt-4o", "gpt-4.1"]);
 
-// This is the route your chat-advancedai.html calls in my HTML (preferred)
-app.post("/api/chat", upload.array("files"), enforceLimit("ask"), async (req, res) => {
-  try {
-    const userMessage = (req.body?.message || "").trim();
-    if (!userMessage) return res.json({ reply: "Ask me something." });
+// helper: convert uploaded image file to data URL
+async function fileToDataUrl(file) {
+  const buf = await fs.readFile(file.path);
+  const b64 = buf.toString("base64");
+  const mime = file.mimetype || "image/jpeg";
+  return `data:${mime};base64,${b64}`;
+}
 
+// Build a vision-capable user message content with text + images
+async function buildUserContentParts(messageText, imageFiles) {
+  const parts = [];
+  if (messageText) {
+    parts.push({ type: "text", text: messageText });
+  }
+  for (const f of imageFiles) {
+    if (!f.mimetype?.startsWith("image/")) continue;
+    const url = await fileToDataUrl(f);
+    parts.push({
+      type: "image_url",
+      image_url: { url }
+    });
+  }
+  return parts;
+}
+
+// Preferred route used by homework-helper.html
+app.post("/api/chat", upload.array("files"), enforceLimit("ask"), async (req, res) => {
+  const cleanup = async () => {
+    // remove temp uploads
+    await Promise.allSettled((req.files || []).map(f => fs.unlink(f.path)));
+  };
+
+  try {
+    const userMessageText = (req.body?.message || "").trim();
     const requestedModel = (req.body?.model || DEFAULT_OPENAI_MODEL).trim();
     const model = ALLOWED_OPENAI_MODELS.has(requestedModel) ? requestedModel : DEFAULT_OPENAI_MODEL;
+
+    const contentParts = await buildUserContentParts(userMessageText, req.files || []);
+
+    if (contentParts.length === 0) {
+      await cleanup();
+      return res.status(400).json({ reply: "Please attach an image or write a message." });
+    }
 
     const completion = await openai.chat.completions.create({
       model,
       messages: [
-        { role: "system", content: "You are GoldenSpaceAI, a crisp, expert assistant. Keep answers concise and helpful." },
-        { role: "user", content: userMessage }
+        { role: "system", content: "You are GoldenSpaceAI. Be clear, step-by-step, and helpful for homework. Show reasoning steps cleanly." },
+        { role: "user", content: contentParts }
       ],
-      temperature: 0.7,
-      max_tokens: 800
+      temperature: 0.4,
+      max_tokens: 900
     });
 
     const reply = completion.choices?.[0]?.message?.content || "No reply.";
+    await cleanup();
     res.json({ reply, model });
   } catch (e) {
     console.error("api/chat error", e);
+    await cleanup();
     res.status(500).json({ reply: "OpenAI error" });
   }
 });
 
-// Keep the legacy route name too, but point it to OpenAI
+// Keep legacy route name too; supports text + single image
 app.post("/chat-advanced-ai", upload.single("file"), enforceLimit("ask"), async (req,res)=>{
+  const cleanup = async () => {
+    if (req.file?.path) {
+      await fs.unlink(req.file.path).catch(()=>{});
+    }
+  };
+
   try{
     const q = (req.body?.q || "").trim();
     const modelType = (req.body?.modelType || "").toLowerCase();
-    if (!q) return res.json({ answer:"Ask me something." });
-
-    // simple mapping, cheapest default
     const map = { pro: "gpt-4.1", flash: "gpt-4o-mini", gpt4: "gpt-4.1" };
     const requested = map[modelType] || DEFAULT_OPENAI_MODEL;
     const model = ALLOWED_OPENAI_MODELS.has(requested) ? requested : DEFAULT_OPENAI_MODEL;
 
+    const parts = await buildUserContentParts(q, req.file ? [req.file] : []);
+    if (parts.length === 0) {
+      await cleanup();
+      return res.json({ model, answer: "Ask me something or attach an image." });
+    }
+
     const completion = await openai.chat.completions.create({
       model,
       messages: [
-        { role: "system", content: "You are GoldenSpaceAI, a crisp, expert assistant. Keep answers concise and helpful." },
-        { role: "user", content: q }
+        { role: "system", content: "You are GoldenSpaceAI. Be concise and expert; if an image is provided, read it carefully." },
+        { role: "user", content: parts }
       ],
-      temperature: 0.7,
-      max_tokens: 800
+      temperature: 0.6,
+      max_tokens: 900
     });
 
     const answer = completion.choices?.[0]?.message?.content || "No response.";
+    await cleanup();
     res.json({ model, answer });
   }catch(e){
     console.error("advanced-ai error", e);
+    await cleanup();
     res.status(500).json({ answer:"Advanced AI error" });
   }
 });

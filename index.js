@@ -1,4 +1,9 @@
-// index.js — GoldenSpaceAI (OAuth + Supabase plan/usage + Gemini + OpenAI Advanced Assistant)
+// index.js — GoldenSpaceAI
+// OAuth + Supabase plans/usage + Gemini (Chat/Search) + OpenAI (Advanced Chat + Homework Vision)
+// - Advanced Chat tries gpt-5-mini if requested; falls back to gpt-4o-mini if unavailable
+// - Homework helper accepts images + prompt and sends to OpenAI vision-capable model
+// - Chat AI & Search Info enforce Moon plan limits via Supabase usage_daily
+// - Session memory keeps last 20 messages for Advanced Chat
 
 import express from "express";
 import cors from "cors";
@@ -58,20 +63,18 @@ const supabase = createClient(
   { auth: { persistSession: false } }
 );
 
-// Tables expected:
-// users(id uuid pk, email text unique, plan text default 'moon', created_at timestamp default now())
+// Tables expected in Supabase:
+// users(id uuid pk, email text unique, plan text default 'moon', created_at timestamptz default now())
 // usage_daily(id uuid pk default gen_random_uuid(), user_id uuid fk, date date default CURRENT_DATE, ask_count int, search_count int)
 // Unique index on (user_id, date)
 
 async function upsertUserByEmail(email, defaults = {}) {
-  // Ensure a row exists in public.users for this email
   const { data: existing, error: findErr } = await supabase
     .from("users")
     .select("*")
     .eq("email", email)
     .maybeSingle();
   if (findErr) throw findErr;
-
   if (existing) return existing;
 
   const { data: inserted, error: insErr } = await supabase
@@ -113,8 +116,9 @@ async function getOrCreateUsageRow(user_id) {
 
 // ---------- Plans & limits ----------
 const LIMITS = {
-  moon: { ask: 40, search: 20 },   // Chat AI / Search Info
+  moon: { ask: 40, search: 20 },             // Chat AI / Search Info
   earth: { ask: Infinity, search: Infinity }, // unlimited
+  // You can add addon flags later if needed (chatAIPack, etc.)
 };
 
 function getPlanLimits(plan) {
@@ -151,11 +155,9 @@ passport.use(
         const photo = profile.photos?.[0]?.value || "";
         if (!email) return done(null, false);
 
-        // Ensure user exists in Supabase
         const userRow = await upsertUserByEmail(email, { plan: "moon" });
-
         const user = {
-          id: userRow.id, // Supabase UUID
+          id: userRow.id,
           email,
           name,
           photo,
@@ -187,7 +189,6 @@ app.get(DEFAULT_CALLBACK_PATH, (req, res, next) => {
     failureRedirect: "/login.html",
     callbackURL,
   })(req, res, async () => {
-    // Refresh plan from DB every login
     try {
       const { data, error } = await supabase
         .from("users")
@@ -219,8 +220,7 @@ function isPublicPath(req) {
   if (p.startsWith("/auth/google")) return true;
   if (p === "/favicon.ico") return true;
   if (PUBLIC_FILE_EXT.test(p)) return true;
-  // Landing/home is public
-  if (p === "/") return true;
+  if (p === "/") return true; // home stays public
   return false;
 }
 function authRequired(req, res, next) {
@@ -238,7 +238,7 @@ function authRequired(req, res, next) {
 }
 app.use(authRequired);
 
-// ---------- Login page (original look) ----------
+// ---------- Login page (original look preserved) ----------
 app.get("/login.html", (req, res) => {
   const appName = "GoldenSpaceAI";
   const base = getBaseUrl(req);
@@ -263,8 +263,8 @@ h1{margin:0 0 6px;font-size:28px}.sub{margin:0 0 18px;font-size:14px;color:var(-
 </style></head><body><div class="wrap"><div class="card">
 <div class="badge">✨ Welcome, explorer</div>
 <h1>Log in or Sign up</h1>
-<p class="sub">Access ${appName}: ask AI about space, learn physics, and create your own planets.</p>
-<ul class="features"><li>🚀 Ask Advanced AI (limits by plan)</li><li>📚 Learn Physics</li><li>🪐 Create custom planets</li></ul>
+<p class="sub">Access ${appName}: ask AI, search info, and solve homework with images.</p>
+<ul class="features"><li>🚀 Advanced Chat (OpenAI)</li><li>🧠 Chat AI & Search (Gemini)</li><li>📸 Homework Solver (images + text)</li></ul>
 <div class="or">continue</div>
 <button class="btn google" onclick="window.location='${base}/auth/google'">
 <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18" height="18" style="display:inline-block"/> Continue with Google
@@ -278,26 +278,26 @@ h1{margin:0 0 6px;font-size:28px}.sub{margin:0 0 18px;font-size:14px;color:var(-
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const geminiFlash = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-// Enforce limit helper
+// Enforce limit helper (for Chat AI & Search Info)
 async function enforceAndCount(req, res, kind) {
   // kind: "ask" or "search"
   if (!req.user?.id) {
-    return res.status(401).json({ error: "Sign in required" });
+    res.status(401).json({ error: "Sign in required" });
+    return { ok: false };
   }
-  // Load user + limits
   const { data: userRow, error: uErr } = await supabase
     .from("users")
     .select("id, plan")
     .eq("id", req.user.id)
     .single();
-  if (uErr || !userRow) return res.status(401).json({ error: "User not found" });
-
-  const limits = getPlanLimits(userRow.plan);
-  if (limits[kind] === Infinity) {
-    return { ok: true, userRow, unlimited: true };
+  if (uErr || !userRow) {
+    res.status(401).json({ error: "User not found" });
+    return { ok: false };
   }
 
-  // Get today's usage
+  const limits = getPlanLimits(userRow.plan);
+  if (limits[kind] === Infinity) return { ok: true, userRow, unlimited: true };
+
   const usage = await getOrCreateUsageRow(userRow.id);
   const current = kind === "ask" ? usage.ask_count : usage.search_count;
 
@@ -308,7 +308,6 @@ async function enforceAndCount(req, res, kind) {
     return { ok: false };
   }
 
-  // Increment
   const updates =
     kind === "ask"
       ? { ask_count: current + 1 }
@@ -325,6 +324,7 @@ async function enforceAndCount(req, res, kind) {
   return { ok: true, userRow, unlimited: false };
 }
 
+// Chat AI (Gemini)
 app.post("/ask", async (req, res) => {
   try {
     const check = await enforceAndCount(req, res, "ask");
@@ -342,6 +342,7 @@ app.post("/ask", async (req, res) => {
   }
 });
 
+// Search Info (Gemini)
 app.post("/search-info", async (req, res) => {
   try {
     const check = await enforceAndCount(req, res, "search");
@@ -360,26 +361,47 @@ app.post("/search-info", async (req, res) => {
   }
 });
 
-// ---------- Advanced Assistant (OpenAI) ----------
-const upload = multer(); // memory storage
+// ---------- Advanced Chat (OpenAI) ----------
+const uploadMem = multer(); // memory storage for small files
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-// Keep last 20 messages in session per user
+// Keep last 20 messages in session per user (advanced chat only)
 function pushHistory(req, role, content) {
   if (!req.session.chatHistory) req.session.chatHistory = [];
   req.session.chatHistory.push({ role, content });
-  // trim to last 20
   if (req.session.chatHistory.length > 20) {
     req.session.chatHistory = req.session.chatHistory.slice(-20);
   }
 }
 
-app.post("/api/chat", upload.array("files"), async (req, res) => {
+// Helper to choose model, with fallback if unavailable
+function desiredOpenAIModel(req) {
+  // Allow front-end to request `?model=gpt-5-mini` or send `model` in body
+  const requested =
+    (req.query?.model || req.body?.model || "").toString().trim().toLowerCase();
+  if (requested) return requested;
+  return "gpt-4o-mini"; // safe default
+}
+
+async function callOpenAIWithFallback(fn) {
+  try {
+    return await fn(); // try as-is (e.g., requested model gpt-5-mini)
+  } catch (e) {
+    // If model is unknown/unavailable, fallback to gpt-4o-mini automatically
+    const msg = (e?.error?.message || e?.message || "").toLowerCase();
+    if (msg.includes("model") && (msg.includes("not found") || msg.includes("unknown") || msg.includes("does not exist"))) {
+      return await fn("gpt-4o-mini");
+    }
+    throw e;
+  }
+}
+
+// Advanced Chat endpoint (text + optional files mentioned, memory preserved)
+app.post("/api/chat", uploadMem.array("files"), async (req, res) => {
   try {
     if (!req.user?.id) {
       return res.status(401).json({ error: "Sign in required" });
     }
-    // No limit for Advanced Assistant here; it’s covered if you put it behind a paid plan later.
 
     const userText = (req.body?.message || "").trim();
     if (!userText && (!req.files || req.files.length === 0)) {
@@ -388,36 +410,38 @@ app.post("/api/chat", upload.array("files"), async (req, res) => {
 
     pushHistory(req, "user", userText || "(file upload)");
 
-    // Build messages with memory
-    const messages = [
-      {
-        role: "system",
-        content:
-          "You are GoldenSpaceAI, a crisp, expert assistant. Keep answers concise and helpful.",
-      },
-      ...(req.session.chatHistory || []).map((m) => ({
-        role: m.role,
-        content: m.content,
-      })),
-    ];
+    const requestedModel = desiredOpenAIModel(req);
 
-    // If you want to include image files as input, you can use the Responses API with content parts.
-    // Here we just mention filenames in the prompt; upgrade later to stream file bytes if needed.
-    if (req.files?.length) {
-      const names = req.files.map((f) => f.originalname).join(", ");
-      messages.push({
-        role: "user",
-        content: `Attached files: ${names}. Consider them while answering.`,
+    const doCall = async (forcedModel) => {
+      const model = forcedModel || requestedModel;
+
+      // We keep files as filenames context here (simpler). If you want true multimodal, use /api/homework below.
+      const fileNote = req.files?.length
+        ? `Attached files: ${req.files.map((f) => f.originalname).join(", ")}`
+        : "";
+
+      const messages = [
+        {
+          role: "system",
+          content:
+            "You are GoldenSpaceAI, a crisp, expert assistant. Keep answers concise and helpful.",
+        },
+        ...(req.session.chatHistory || []).map((m) => ({
+          role: m.role,
+          content: m.content,
+        })),
+        ...(fileNote ? [{ role: "user", content: fileNote }] : []),
+      ];
+
+      const completion = await openai.chat.completions.create({
+        model,
+        messages,
+        temperature: 0.3,
       });
-    }
+      return completion.choices?.[0]?.message?.content || "No reply.";
+    };
 
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini", // cheap default
-      messages,
-      temperature: 0.3,
-    });
-
-    const reply = completion.choices?.[0]?.message?.content || "No reply.";
+    const reply = await callOpenAIWithFallback(doCall);
     pushHistory(req, "assistant", reply);
     res.json({ reply });
   } catch (e) {
@@ -426,12 +450,74 @@ app.post("/api/chat", upload.array("files"), async (req, res) => {
   }
 });
 
+// ---------- Homework Helper (OpenAI Vision) ----------
+const uploadHW = multer({ limits: { fileSize: 20 * 1024 * 1024 } }); // 20MB per file
+
+// Converts Buffer -> data URL for image_url usage
+function toDataUrl(file) {
+  const mime = file.mimetype || "image/png";
+  const base64 = file.buffer.toString("base64");
+  return `data:${mime};base64,${base64}`;
+}
+
+app.post("/api/homework", uploadHW.array("images"), async (req, res) => {
+  try {
+    if (!req.user?.id) {
+      return res.status(401).json({ error: "Sign in required" });
+    }
+    const prompt = (req.body?.prompt || "").trim();
+    const files = req.files || [];
+
+    if (!prompt && files.length === 0) {
+      return res
+        .status(400)
+        .json({ error: "Please attach at least one image or add instructions." });
+    }
+
+    // Build a multimodal user message: text + images
+    const userContent = [];
+    if (prompt) userContent.push({ type: "text", text: prompt });
+    for (const f of files) {
+      // Only use images
+      if (!f.mimetype.startsWith("image/")) continue;
+      userContent.push({
+        type: "image_url",
+        image_url: { url: toDataUrl(f) },
+      });
+    }
+
+    const requestedModel = desiredOpenAIModel(req); // try what you asked (e.g., gpt-5-mini), else fallback
+
+    const doCall = async (forcedModel) => {
+      const model = forcedModel || requestedModel;
+      const completion = await openai.chat.completions.create({
+        model,
+        messages: [
+          {
+            role: "system",
+            content:
+              "You are GoldenSpaceAI Study Helper. Analyze the image(s) and give clear, step-by-step solutions. If multiple interpretations exist, state assumptions.",
+          },
+          { role: "user", content: userContent },
+        ],
+        temperature: 0.2,
+      });
+      return completion.choices?.[0]?.message?.content || "No reply.";
+    };
+
+    const reply = await callOpenAIWithFallback(doCall);
+    res.json({ reply });
+  } catch (e) {
+    console.error("/api/homework error", e);
+    res.status(500).json({ error: "Homework solver error" });
+  }
+});
+
 // ---------- /api/me : expose plan + remaining ----------
 app.get("/api/me", async (req, res) => {
   try {
     if (!req.user?.id) return res.json({ loggedIn: false });
 
-    // Fetch plan
     const { data: userRow, error } = await supabase
       .from("users")
       .select("id, email, plan")
@@ -439,7 +525,6 @@ app.get("/api/me", async (req, res) => {
       .single();
     if (error || !userRow) return res.json({ loggedIn: false });
 
-    // Usage for today
     const usage = await getOrCreateUsageRow(userRow.id);
     const limits = getPlanLimits(userRow.plan);
 
@@ -477,6 +562,4 @@ app.get("/health", (_req, res) => res.json({ ok: true }));
 
 // ---------- Start ----------
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () =>
-  console.log(`🚀 GoldenSpaceAI running on ${PORT}`)
-);
+app.listen(PORT, () => console.log(`🚀 GoldenSpaceAI running on ${PORT}`));

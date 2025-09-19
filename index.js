@@ -1,4 +1,5 @@
-// index.js — GoldenSpaceAI (Google OAuth + Plan Limits + OpenAI everywhere)
+// index.js — GoldenSpaceAI (Google OAuth + Plan Limits)
+// Chat with AI & Search Info via Gemini; Advanced/Physics/Homework via OpenAI
 
 import express from "express";
 import cors from "cors";
@@ -10,9 +11,9 @@ import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import cookieParser from "cookie-parser";
 import bodyParser from "body-parser";
-import crypto from "crypto";
 import multer from "multer";
 import OpenAI from "openai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 dotenv.config();
 
@@ -129,44 +130,6 @@ app.post("/logout",(req,res,next)=>{
   req.logout(err=>{ if (err) return next(err); req.session.destroy(()=>res.json({ok:true})); });
 });
 
-// ---------- Public Login/Signup Page (unchanged) ----------
-app.get("/login.html",(req,res)=>{
-  const appName="GoldenSpaceAI";
-  const base=getBaseUrl(req);
-  res.send(`<!doctype html><html lang="en"><head>
-<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>${appName} — Log in or Sign up</title><link rel="icon" href="/favicon.ico"/>
-<style>
-:root{--bg:#0b0f1a;--card:#12182a;--gold:#f0c419;--text:#e6ecff;--muted:#9fb0d1}
-*{box-sizing:border-box}body{margin:0;font-family:ui-sans-serif,system-ui,Segoe UI,Inter,Arial;background:radial-gradient(1200px 800px at 80% -10%,#1a2340 0%,#0b0f1a 60%,#070a12 100%);color:var(--text)}
-.wrap{min-height:100dvh;display:grid;place-items:center;padding:24px}
-.card{width:100%;max-width:520px;background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.01));border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:28px 24px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
-h1{margin:0 0 6px;font-size:28px}.sub{margin:0 0 18px;font-size:14px;color:var(--muted)}
-.features{margin:12px 0 22px;padding:0;list-style:none;display:grid;gap:10px}
-.badge{display:inline-flex;gap:8px;background:rgba(240,196,25,.1);border:1px solid rgba(240,196,25,.35);padding:6px 10px;border-radius:999px;color:var(--gold);font-weight:600;font-size:12px;margin-bottom:10px}
-.btn{display:flex;align-items:center;gap:10px;justify-content:center;width:100%;padding:12px 16px;border-radius:12px;border:none;font-size:16px;font-weight:700;cursor:pointer;background:var(--gold);color:#1a1a1a;transition:transform .06s ease, box-shadow .2s ease}
-.btn:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(240,196,25,.35)}
-.google{background:#fff;color:#1f2937;border:1px solid rgba(0,0,0,.08)}
-.or{display:flex;align-items:center;gap:12px;color:var(--muted);font-size:12px;margin:12px 0}
-.or:before,.or:after{content:"";flex:1;height:1px;background:rgba(255,255,255,.12)}
-.fine{margin-top:14px;color:var(--muted);font-size:12px}
-.links{display:flex;gap:16px;margin-top:10px}a{color:var(--text)}
-</style></head><body><div class="wrap"><div class="card">
-<div class="badge">✨ Welcome</div>
-<h1>Log in or Sign up</h1>
-<p class="sub">Access ${appName}: ask AI, learn physics, and create your own planets.</p>
-<ul class="features"><li>🚀 Ask Advanced AI (daily limits by plan)</li><li>📚 Learn Physics</li><li>🪐 Create custom planets (Sun Pack)</li></ul>
-<div class="or">continue</div>
-<button class="btn google" onclick="window.location='${base}/auth/google'">
-<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18" height="18" style="display:inline-block"/> Continue with Google
-</button>
-<p class="fine">By continuing, you agree to our
-<a href="/terms.html">Terms</a> and
-<a href="/privacy.html">Privacy</a>.</p>
-<div class="links"><a href="/">Back to home</a><a href="/plans.html">See plans</a></div>
-</div></div></body></html>`);
-});
-
 // ---------- PUBLIC / AUTH GATE ----------
 // Home and legal pages are PUBLIC. Feature pages show "Please sign in" if unauthenticated.
 const PUBLIC_FILE_EXT = /\.(css|js|mjs|map|png|jpg|jpeg|gif|svg|ico|txt|woff2?)$/i;
@@ -189,13 +152,13 @@ function requireSignInOrMessage(filePath){
     if (req.isAuthenticated && req.isAuthenticated()){
       return res.sendFile(path.join(__dirname, filePath));
     }
-    // Not signed in: show friendly message, don't redirect
+    // Not signed in: show friendly message (no redirect)
     return res.status(200).send(`<!doctype html><html><head><meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/><title>Sign in required</title>
 <style>body{margin:0;background:#0b1020;color:#e7f4e9;font-family:Inter,system-ui,sans-serif;display:grid;place-items:center;min-height:100dvh}
 .card{max-width:560px;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:22px;text-align:center}
 a.btn{display:inline-block;margin-top:12px;padding:10px 14px;border-radius:12px;background:linear-gradient(180deg,#f6c64a,#eb8b36);color:#1b1300;font-weight:900;text-decoration:none}
-a.ghost{display:inline-block;margin-top:12px;padding:10px 14px;border-radius:12px;border:1px solid #24314c;color:#cfc6a5;text-decoration:none}
+a.ghost{display:inline-block;margin-top:12px;padding:10px 14px;border:1px solid #24314c;border-radius:12px;color:#cfc6a5;text-decoration:none}
 </style></head><body>
 <div class="card">
   <h2>🔐 Please sign in to use this feature</h2>
@@ -206,12 +169,11 @@ a.ghost{display:inline-block;margin-top:12px;padding:10px 14px;border-radius:12p
   };
 }
 
-// Gate specific feature pages (others remain public/static)
+// Gate key feature pages (others remain public/static)
 app.get("/chat-advancedai.html", requireSignInOrMessage("chat-advancedai.html"));
 app.get("/homework-helper.html", requireSignInOrMessage("homework-helper.html"));
 app.get("/search-info.html", requireSignInOrMessage("search-info.html"));
 app.get("/learn-physics.html", (req,res)=>{
-  // Keep your plan gating behavior + sign-in prompt
   if (!(req.isAuthenticated && req.isAuthenticated())) {
     return requireSignInOrMessage("learn-physics.html")(req,res);
   }
@@ -236,35 +198,39 @@ app.get("/create-planet.html", (req,res)=>{
   res.sendFile(path.join(__dirname,"create-planet.html"));
 });
 
-// ---------- OpenAI (single default across app) ----------
+// ---------- AI Clients ----------
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const DEFAULT_MODEL = process.env.OPENAI_MODEL || "gpt-5-nano";
 
-// ---------- AI Routes (ALL via OpenAI now) ----------
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const geminiFlash = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+// ---------- AI Routes ----------
+
+// Chat with AI → Gemini
 app.post("/ask", enforceLimit("ask"), async (req,res)=>{
   try{
     const q = (req.body?.question || "").trim();
     if (!q) return res.json({ answer:"Ask me anything!" });
-    const r = await openai.responses.create({
-      model: DEFAULT_MODEL,
-      input: `You are GoldenSpaceAI Assistant. Be concise, helpful.\nUser: ${q}`,
-    });
-    const answer = r.output_text || r?.content?.[0]?.text || "No response.";
-    res.json({ model: DEFAULT_MODEL, answer });
-  }catch(e){ console.error("ask error", e); res.status(500).json({ answer:"OpenAI error" }); }
+    const result = await geminiFlash.generateContent([{ text: q }]);
+    const answer = result.response.text() || "No response.";
+    res.json({ model: "gemini-1.5-flash", answer });
+  }catch(e){ console.error("ask error", e); res.status(500).json({ answer:"Gemini error" }); }
 });
 
+// Search Info → Gemini
 app.post("/search-info", enforceLimit("search"), async (req,res)=>{
   try{
     const q = (req.body?.query || "").trim();
     if (!q) return res.json({ answer:"Type something to search." });
-    const prompt = `GoldenSpace Knowledge: Give a short overview + 3 bullet facts.\nTopic: ${q}`;
-    const r = await openai.responses.create({ model: DEFAULT_MODEL, input: prompt });
-    const answer = r.output_text || "No info found.";
-    res.json({ model: DEFAULT_MODEL, answer });
-  }catch(e){ console.error("search-info error", e); res.status(500).json({ answer:"Search error" }); }
+    const prompt = `You are GoldenSpace Knowledge. Overview + 3 bullet facts.\nTopic: ${q}`;
+    const result = await geminiFlash.generateContent([{ text: prompt }]);
+    const answer = result.response.text() || "No info found.";
+    res.json({ model: "gemini-1.5-flash", answer });
+  }catch(e){ console.error("search-info error", e); res.status(500).json({ answer:"Gemini error" }); }
 });
 
+// Physics Tutor → OpenAI
 app.post("/ai/physics-explain", enforceLimit("physics"), async (req,res)=>{
   try{
     const q = (req.body?.question || "").trim();
@@ -276,7 +242,7 @@ app.post("/ai/physics-explain", enforceLimit("physics"), async (req,res)=>{
   }catch(e){ console.error("physics error", e); res.status(500).json({ reply:"Physics error" }); }
 });
 
-// ---------- Advanced Chat AI (text + optional single file) ----------
+// Advanced AI (text + optional single image) → OpenAI
 const upload = multer({ dest: "uploads/" });
 app.post("/chat-advanced-ai", upload.single("file"), async (req,res)=>{
   try{
@@ -286,10 +252,12 @@ app.post("/chat-advanced-ai", upload.single("file"), async (req,res)=>{
     const parts = [];
     if (q) parts.push({ type: "input_text", text: q });
     if (req.file) {
-      const b64 = (await import("fs")).promises.readFile(req.file.path).then(b=>b.toString("base64"));
+      const fs = (await import("fs")).promises;
+      const b64 = await fs.readFile(req.file.path).then(b=>b.toString("base64"));
       const mime = req.file.mimetype || "image/png";
-      const dataUrl = `data:${mime};base64,${await b64}`;
+      const dataUrl = `data:${mime};base64,${b64}`;
       parts.push({ type: "input_image", image_url: dataUrl });
+      fs.unlink(req.file.path).catch(()=>{});
     }
 
     const r = await openai.responses.create({
@@ -304,27 +272,22 @@ app.post("/chat-advanced-ai", upload.single("file"), async (req,res)=>{
   }
 });
 
-// ---------- Vision chat for Homework Solver (multi-image) ----------
+// Homework Solver (multi-image + text) → OpenAI
 const multiUpload = multer({ dest: "uploads/" });
 app.post("/api/chat", multiUpload.array("files"), async (req,res)=>{
   try{
     const message = (req.body?.message || "").trim();
     const files = req.files || [];
-
-    if (!message && files.length === 0){
-      return res.status(400).json({ error: "Add an image or a message." });
-    }
+    if (!message && files.length === 0) return res.status(400).json({ error:"Add an image or a message." });
 
     const fs = (await import("fs")).promises;
     const contents = [];
     if (message) contents.push({ type: "input_text", text: message });
-
     for (const f of files){
       const mime = f.mimetype || "image/png";
       const b64 = await fs.readFile(f.path).then(b=>b.toString("base64"));
       const dataUrl = `data:${mime};base64,${b64}`;
       contents.push({ type: "input_image", image_url: dataUrl });
-      // clean up tmp file (best-effort)
       fs.unlink(f.path).catch(()=>{});
     }
 
@@ -334,14 +297,11 @@ app.post("/api/chat", multiUpload.array("files"), async (req,res)=>{
     });
     const reply = r.output_text || "No reply.";
     res.json({ model: DEFAULT_MODEL, reply });
-  }catch(e){
-    console.error("api/chat error", e);
-    res.status(500).json({ error:"OpenAI error" });
-  }
+  }catch(e){ console.error("api/chat error", e); res.status(500).json({ error:"OpenAI error" }); }
 });
 
-// ---------- (Optional) Paddle upgrades sync on /api/me ----------
-const upgradesByEmail = {}; // your existing impl
+// ---------- /api/me (minimal profile + limits) ----------
+const upgradesByEmail = {}; // plug in your Paddle sync later if needed
 app.get("/api/me",(req,res)=>{
   if (req.user?.email){
     const up = upgradesByEmail[req.user.email.toLowerCase()];
@@ -358,7 +318,6 @@ app.get("/api/me",(req,res)=>{
     search: limits.search===Infinity?Infinity:Math.max(0, limits.search-u.search),
     physics: limits.physics===Infinity?Infinity:Math.max(0, limits.physics-u.physics),
   };
-  // minimal user profile fields used by the UI
   const profile = req.user ? {
     email: req.user.email,
     name: req.user.name,
@@ -369,9 +328,10 @@ app.get("/api/me",(req,res)=>{
 });
 
 // ---------- Static & Health ----------
-app.use(express.static(__dirname)); // serves / (home) publicly
+app.use(express.static(__dirname)); // serves index.html as public home
+app.get("/", (req,res)=>res.sendFile(path.join(__dirname,"index.html")));
 app.get("/health",(_req,res)=>res.json({ ok:true }));
 
 // ---------- Start ----------
 const PORT = process.env.PORT || 3000;
-app.listen(PORT,()=>console.log(`🚀 GoldenSpaceAI running on ${PORT} (model: ${DEFAULT_MODEL})`));
+app.listen(PORT,()=>console.log(`🚀 GoldenSpaceAI running on ${PORT} (OpenAI model: ${DEFAULT_MODEL})`));

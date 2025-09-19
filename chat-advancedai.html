@@ -6,105 +6,94 @@
   <title>GoldenSpaceAI · Advanced Assistant</title>
   <style>
     :root{
-      --gold-1:#ffd700;
-      --gold-2:#e6c200;
-      --gold-3:#b89700;
-      --ink:#0b0e14;
-      --text:#faf7e8;
-      --muted:#c8b88a;
-      --glass: rgba(255, 255, 255, 0.08);
-      --glass-strong: rgba(255, 255, 255, 0.12);
-      --ring: rgba(255, 215, 0, .35);
+      --gold-1:#ffd700; --gold-2:#e6c200; --gold-3:#b89700;
+      --text:#faf7e8; --muted:#c8b88a;
+      --glass: rgba(255,255,255,.08); --ring: rgba(255,215,0,.35);
     }
     *{box-sizing:border-box}
-    html,body{height:100%;}
+    html,body{height:100%}
     body{
-      margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
+      margin:0; font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial;
       color:var(--text);
-      background: radial-gradient(1200px 800px at 75% -20%, rgba(255,215,0,.18), transparent 40%),
-                  radial-gradient(800px 600px at 10% 120%, rgba(255,215,0,.08), transparent 45%),
-                  #05060a;
-      background-attachment: fixed;
-      overflow:hidden;
+      background:
+        radial-gradient(1200px 800px at 75% -20%, rgba(255,215,0,.18), transparent 40%),
+        radial-gradient(800px 600px at 10% 120%, rgba(255,215,0,.08), transparent 45%),
+        #05060a;
+      background-attachment:fixed; overflow:hidden;
     }
-    /* Galaxy background layer */
-    .stars, .twinkle{
-      position:fixed; inset:0; z-index:-2; background-repeat:repeat; pointer-events:none;
+    /* Galaxy bg */
+    .stars,.twinkle{position:fixed; inset:0; z-index:-2; pointer-events:none}
+    .stars{
+      background-image:url("https://images.unsplash.com/photo-1444703686981-a3abbc4d4fe3?q=80&w=1600&auto=format&fit=crop");
+      background-size:cover; filter:saturate(1.05) brightness(.9) contrast(1.1); opacity:.28;
     }
-    .stars{ background-image: url('https://images.unsplash.com/photo-1444703686981-a3abbc4d4fe3?q=80&w=1200&auto=format&fit=crop');
-            background-size: cover; filter: saturate(1.05) brightness(.9) contrast(1.1); opacity:.28; }
-    .twinkle{ background-image: radial-gradient(2px 2px at 20% 30%, rgba(255,255,255,.45), transparent 55%),
-                                 radial-gradient(1.5px 1.5px at 70% 60%, rgba(255,255,255,.35), transparent 55%),
-                                 radial-gradient(1.2px 1.2px at 40% 80%, rgba(255,255,255,.4), transparent 55%),
-                                 radial-gradient(1px 1px at 85% 15%, rgba(255,255,255,.5), transparent 55%);
-              animation: twinkle 8s linear infinite; opacity:.45 }
-    @keyframes twinkle { 0%{filter:brightness(1)} 50%{filter:brightness(1.25)} 100%{filter:brightness(1)} }
+    .twinkle{
+      background-image:
+        radial-gradient(2px 2px at 20% 30%, rgba(255,255,255,.45), transparent 55%),
+        radial-gradient(1.5px 1.5px at 70% 60%, rgba(255,255,255,.35), transparent 55%),
+        radial-gradient(1.2px 1.2px at 40% 80%, rgba(255,255,255,.4), transparent 55%),
+        radial-gradient(1px 1px at 85% 15%, rgba(255,255,255,.5), transparent 55%);
+      animation: twinkle 8s linear infinite; opacity:.45
+    }
+    @keyframes twinkle{0%{filter:brightness(1)}50%{filter:brightness(1.25)}100%{filter:brightness(1)}}
 
-    .wrap{display:grid; grid-template-rows:auto 1fr auto; height:100%;}
-
+    .wrap{display:grid; grid-template-rows:auto 1fr auto; height:100%}
     header{
-      display:flex; align-items:center; gap:.9rem; padding:14px 18px; backdrop-filter: blur(8px); background: linear-gradient(180deg, rgba(10,10,14,.55), rgba(10,10,14,.25)); border-bottom:1px solid rgba(255,255,255,.06);
+      display:flex; align-items:center; gap:.9rem; padding:14px 18px;
+      backdrop-filter:blur(8px);
+      background:linear-gradient(180deg,rgba(10,10,14,.55),rgba(10,10,14,.25));
+      border-bottom:1px solid rgba(255,255,255,.06);
     }
-    .brand{
-      display:flex; align-items:center; gap:.7rem; font-weight:700; letter-spacing:.4px;
+    .brand{display:flex; align-items:center; gap:.7rem; font-weight:800}
+    .logo{
+      width:32px;height:32px;border-radius:50%;
+      background:conic-gradient(from 210deg,var(--gold-1),var(--gold-2),var(--gold-3),var(--gold-1));
+      box-shadow:0 0 0 2px rgba(255,215,0,.25), 0 0 32px rgba(255,215,0,.25) inset;
     }
-    .logo{ width:32px; height:32px; border-radius:50%; background: conic-gradient(from 210deg, var(--gold-1), var(--gold-2), var(--gold-3), var(--gold-1)); box-shadow:0 0 0 2px rgba(255,215,0,.25), 0 0 32px rgba(255,215,0,.25) inset; }
-    .brand span{ font-size:1.05rem; }
-    .badge{ font-size:.75rem; color:#1a1606; background:linear-gradient(180deg, var(--gold-1), var(--gold-2)); padding:4px 8px; border-radius:999px; box-shadow:0 2px 10px rgba(255,215,0,.25); }
+    .badge{font-size:.75rem;color:#1a1606;background:linear-gradient(180deg,var(--gold-1),var(--gold-2));
+      padding:4px 8px;border-radius:999px;box-shadow:0 2px 10px rgba(255,215,0,.25)}
 
-    #chat{
-      position:relative; height:100%; overflow:auto; padding: 18px 18px 160px; scroll-behavior:smooth;
-    }
-
-    .msg{ max-width:min(780px, 92%); padding:14px 16px; border-radius:16px; margin:10px 0; line-height:1.5; box-shadow: 0 2px 18px rgba(0,0,0,.2);
-          border:1px solid rgba(255,255,255,.06); backdrop-filter: blur(6px);
-    }
-    .msg.user{ margin-left:auto; background: linear-gradient(180deg, rgba(255,215,0,.12), rgba(255,215,0,.08)); border-color: rgba(255,215,0,.25); }
-    .msg.ai{ background: rgba(12,12,16,.55); }
-    .msg small{ display:block; opacity:.65; font-size:.75rem; margin-bottom:6px; }
+    main#chat{position:relative;height:100%;overflow:auto;padding:18px 18px 160px;scroll-behavior:smooth}
+    .msg{max-width:min(780px,92%);padding:14px 16px;border-radius:16px;margin:10px 0;line-height:1.55;
+      box-shadow:0 2px 18px rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.06);backdrop-filter:blur(6px)}
+    .msg.user{margin-left:auto;background:linear-gradient(180deg,rgba(255,215,0,.12),rgba(255,215,0,.08));border-color:rgba(255,215,0,.25)}
+    .msg.ai{background:rgba(12,12,16,.55)}
+    .msg small{display:block;opacity:.65;font-size:.75rem;margin-bottom:6px}
+    .spinner{width:20px;height:20px;border-radius:50%;border:2px solid rgba(255,255,255,.2);border-top-color:var(--gold-1);animation:spin 1s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
 
     /* Composer */
-    .composer-wrap{
-      position:fixed; left:0; right:0; bottom:18px; display:flex; justify-content:center; pointer-events:none;
-    }
+    .composer-wrap{position:fixed;left:0;right:0;bottom:18px;display:flex;justify-content:center;pointer-events:none}
     .composer{
-      pointer-events:auto; width:min(980px, 92%); display:flex; align-items:center; gap:10px; padding:10px; border-radius:18px; background: var(--glass); backdrop-filter: blur(10px); border:1px solid rgba(255,255,255,.08); box-shadow: 0 10px 30px rgba(0,0,0,.35), 0 0 0 1px var(--ring);
+      pointer-events:auto;width:min(980px,92%);display:flex;align-items:center;gap:10px;padding:10px;
+      border-radius:18px;background:var(--glass);backdrop-filter:blur(10px);
+      border:1px solid rgba(255,255,255,.08); box-shadow:0 10px 30px rgba(0,0,0,.35), 0 0 0 1px var(--ring)
     }
-    .btn{
-      border:none; outline:none; cursor:pointer; height:44px; width:44px; border-radius:12px; background:rgba(255,255,255,.06); display:grid; place-items:center; transition: .2s transform, .2s background;
+    .btn{border:none;outline:none;cursor:pointer;height:56px;width:56px;border-radius:999px;
+      background:rgba(255,255,255,.06);display:grid;place-items:center;transition:.2s transform,.2s background}
+    .btn:hover{transform:translateY(-1px);background:rgba(255,255,255,.12)}
+    .btn.plus::before{content:"+";font-size:28px;color:var(--gold-1);font-weight:700}
+
+    /* hidden typing area (kept for accessibility/fallback) */
+    .hidden-input{flex:1;height:0;opacity:0;overflow:hidden;pointer-events:none}
+
+    /* Mic waves */
+    .mic{
+      position:relative;background:linear-gradient(180deg,var(--gold-1),var(--gold-2));
+      box-shadow:0 8px 18px rgba(255,215,0,.25)
     }
-    .btn:hover{ transform: translateY(-1px); background:rgba(255,255,255,.12) }
-
-    .plus:before{ content:"+"; font-size:24px; color:var(--gold-1); font-weight:600; }
-    .send:before{ content:"➤"; font-size:18px; color:#141209; font-weight:700; }
-    .send{ background: linear-gradient(180deg, var(--gold-1), var(--gold-2)); box-shadow:0 8px 18px rgba(255,215,0,.25) }
-
-    textarea{
-      flex:1; resize:none; height:44px; max-height:120px; padding:12px 14px; border-radius:12px; background: rgba(255,255,255,.06); color:var(--text); border:1px solid rgba(255,255,255,.09);
-      outline:none; box-shadow:none; font-size:15px; line-height:1.4;
+    .mic::before{content:"🎤";font-size:22px;color:#141209;font-weight:700}
+    .mic.rec::after{
+      content:"";position:absolute;inset:-6px;border-radius:999px;border:2px solid rgba(255,215,0,.6);
+      animation:pulse 1.2s ease-out infinite;
     }
-    textarea::placeholder{ color: rgba(255,255,255,.55) }
+    @keyframes pulse{0%{transform:scale(.9);opacity:.9}100%{transform:scale(1.35);opacity:0}}
 
-    .attachments{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:6px; }
-    .chip{ display:inline-flex; align-items:center; gap:6px; border:1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.06); padding:6px 8px; border-radius:999px; font-size:.8rem }
-    .chip button{ background:none; border:none; color:var(--muted); cursor:pointer; }
-
-    .key-tip{ font-size:.75rem; opacity:.75; margin-left:8px }
-
-    /* Dev key modal */
-    .modal{ position:fixed; inset:0; display:none; place-items:center; background:rgba(0,0,0,.5); }
-    .modal.open{ display:grid }
-    .card{ width:min(520px, 92%); background:#0a0c12; border:1px solid rgba(255,255,255,.08); border-radius:16px; padding:18px; box-shadow:0 20px 40px rgba(0,0,0,.4) }
-    .row{ display:flex; gap:10px; margin-top:10px }
-    .row input{ flex:1; height:42px; border-radius:10px; border:1px solid rgba(255,255,255,.12); background:#0e1118; color:var(--text); padding:0 10px }
-    .row .small{ font-size:.8rem; opacity:.75 }
-
-    .hidden{ display:none }
-    .spinner{ width:20px; height:20px; border-radius:50%; border:2px solid rgba(255,255,255,.2); border-top-color:var(--gold-1); animation: spin 1s linear infinite; }
-    @keyframes spin{ to{ transform: rotate(360deg) } }
-
-    .footer-note{ text-align:center; font-size:.75rem; opacity:.7; padding:10px 0 18px }
-    a{ color:var(--gold-1) }
+    .attachments{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px}
+    .chip{display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,.1);
+      background:rgba(255,255,255,.06);padding:6px 8px;border-radius:999px;font-size:.8rem}
+    .chip button{background:none;border:none;color:var(--muted);cursor:pointer}
+    .hidden{display:none}
   </style>
 </head>
 <body>
@@ -116,220 +105,155 @@
       <div class="brand"><div class="logo"></div><span>GoldenSpaceAI</span></div>
       <span class="badge">Advanced Assistant</span>
       <div style="flex:1"></div>
-      <button id="devKeyBtn" class="btn" title="Dev key (local only)">🔑</button>
     </header>
 
     <main id="chat">
       <div class="msg ai">
         <small>GoldenSpaceAI</small>
-        Welcome to your golden, galaxy-powered assistant. Ask anything — or click the <strong>＋</strong> to add files or photos.
+        Welcome to your golden, galaxy-powered assistant. Tap <strong>＋</strong> to attach a photo, or tap the <strong>mic</strong> to speak.
       </div>
     </main>
 
     <div class="composer-wrap">
       <div class="composer">
-        <button id="plusBtn" class="btn plus" title="Upload files"></button>
-        <div style="flex:1">
-          <textarea id="prompt" placeholder="Type your message… (Shift+Enter for newline)"></textarea>
-          <div class="attachments" id="attachments"></div>
-        </div>
-        <button id="sendBtn" class="btn send" title="Send"></button>
+        <!-- Left: file upload -->
+        <button id="plusBtn" class="btn plus" title="Upload image"></button>
+
+        <!-- Invisible typing box (fallback only) -->
+        <textarea id="prompt" class="hidden-input" placeholder="(hidden)"></textarea>
+
+        <!-- Right: microphone -->
+        <button id="micBtn" class="btn mic" title="Talk"></button>
       </div>
     </div>
-
-    <div class="footer-note">For production, connect this UI to a backend route like <code>/api/chat</code> that calls OpenAI with your server-side <code>OPENAI_API_KEY</code>.</div>
   </div>
 
   <!-- Hidden file input -->
-  <input id="fileInput" class="hidden" type="file" multiple accept="image/*,.pdf,.txt,.md,.json,.csv,.doc,.docx,.ppt,.pptx,.xlsx" />
-
-  <!-- Dev key modal (optional, for local testing only) -->
-  <div id="devModal" class="modal" role="dialog" aria-modal="true">
-    <div class="card">
-      <h3 style="margin:0 0 6px">Developer Testing Key</h3>
-      <p class="small">Paste an <strong>OpenAI API key</strong> to call the API directly from the browser <em>(for local testing only)</em>. <br/>Do <strong>not</strong> deploy with a key in the client. Use a backend in production.</p>
-      <div class="row">
-        <input id="devKey" placeholder="sk-..." autocomplete="off" />
-        <button id="saveKey" class="btn send" title="Save">Save</button>
-      </div>
-      <div class="row small">
-        <span>Tip: This is kept in memory for this tab only.</span>
-        <div style="flex:1"></div>
-        <button id="closeModal" class="btn" title="Close">✕</button>
-      </div>
-    </div>
-  </div>
+  <input id="fileInput" class="hidden" type="file" accept="image/*" />
 
   <script>
-    // ---------- Config ----------
-    const USE_BACKEND = true; // set true for production. The UI will call /api/chat
-    const BACKEND_URL = '/api/chat'; // Your server route
-    let DEV_OPENAI_KEY = null; // in-memory only
+    // ==== Config ====
+    const BACKEND_URL = "/chat-advanced-ai"; // backend route you already have
 
-    // ---------- DOM ----------
-    const chat = document.getElementById('chat');
-    const promptEl = document.getElementById('prompt');
-    const sendBtn = document.getElementById('sendBtn');
-    const plusBtn = document.getElementById('plusBtn');
-    const fileInput = document.getElementById('fileInput');
-    const atts = document.getElementById('attachments');
-    const devBtn = document.getElementById('devKeyBtn');
-    const devModal = document.getElementById('devModal');
-    const devKeyInput = document.getElementById('devKey');
-    const saveKey = document.getElementById('saveKey');
-    const closeModal = document.getElementById('closeModal');
+    // ==== DOM ====
+    const chat = document.getElementById("chat");
+    const plusBtn = document.getElementById("plusBtn");
+    const fileInput = document.getElementById("fileInput");
+    const micBtn = document.getElementById("micBtn");
+    const hiddenPrompt = document.getElementById("prompt");
 
-    const attachments = [];
-
-    // ---------- Utils ----------
+    // ==== Helpers ====
     function el(tag, attrs={}, ...children){
       const n = document.createElement(tag);
       Object.entries(attrs).forEach(([k,v])=>{
-        if(k==='class') n.className=v; else if(k==='html') n.innerHTML=v; else n.setAttribute(k,v);
+        if(k==="class") n.className=v;
+        else if(k==="html") n.innerHTML=v;
+        else n.setAttribute(k,v);
       });
       children.forEach(c=> n.append(c instanceof Node? c : document.createTextNode(c)));
       return n;
     }
     function addMsg(role, text){
-      const m = el('div', {class: `msg ${role}`});
-      m.append(el('small', {}, role==='user'? 'You' : 'GoldenSpaceAI'));
-      m.append(el('div', {html: text.replace(/\n/g,'<br/>')}));
-      chat.append(m);
-      chat.scrollTop = chat.scrollHeight;
-      return m;
+      const m = el("div",{class:`msg ${role}`});
+      m.append(el("small",{}, role==="user"?"You":"GoldenSpaceAI"));
+      m.append(el("div",{html:(text||"").toString().replace(/\n/g,"<br/>")}));
+      chat.append(m); chat.scrollTop = chat.scrollHeight; return m;
     }
     function addSpinner(){
-      const row = el('div', {class: 'msg ai'});
-      row.append(el('small', {}, 'GoldenSpaceAI'));
-      const spin = el('div', {class:'spinner'});
-      row.append(el('div', {}, spin));
-      chat.append(row);
-      chat.scrollTop = chat.scrollHeight;
-      return row;
-    }
-    function bytesToSize(b){
-      if(b===0) return '0B';
-      const k=1024, sizes=['B','KB','MB','GB'];
-      const i=Math.floor(Math.log(b)/Math.log(k));
-      return (b/Math.pow(k,i)).toFixed(1)+' '+sizes[i];
+      const row = el("div",{class:"msg ai"}); row.append(el("small",{},"GoldenSpaceAI")); row.append(el("div",{class:"spinner"}));
+      chat.append(row); chat.scrollTop = chat.scrollHeight; return row;
     }
 
-    // ---------- Attachments ----------
-    plusBtn.addEventListener('click', ()=> fileInput.click());
-    fileInput.addEventListener('change', ()=>{
-      for(const f of fileInput.files){
-        attachments.push(f);
-      }
-      renderAttachments();
-      fileInput.value='';
-    });
-    function renderAttachments(){
-      atts.innerHTML='';
-      attachments.forEach((f, idx)=>{
-        const chip = el('span', {class:'chip'});
-        chip.append(f.name + ' · ' + bytesToSize(f.size));
-        const remove = el('button', {}, '✕');
-        remove.addEventListener('click', ()=>{ attachments.splice(idx,1); renderAttachments(); });
-        chip.append(remove);
-        atts.append(chip);
-      });
-    }
+    // ==== Upload flow ====
+    plusBtn.addEventListener("click", ()=> fileInput.click());
 
-    // ---------- Sending ----------
-    async function send(){
-      const text = promptEl.value.trim();
-      if(!text && attachments.length===0) return;
-      addMsg('user', text || '(file upload)');
-      promptEl.value=''; renderAttachments();
+    fileInput.addEventListener("change", async ()=>{
+      const file = fileInput.files[0];
+      if(!file) return;
 
-      const spinner = addSpinner();
+      const note = ""; // typing area is hidden; send no extra text
+      addMsg("user", "(photo)");
+      const spin = addSpinner();
 
       try{
-        let aiText = '';
-        if(USE_BACKEND){
-          const form = new FormData();
-          form.append('message', text);
-          attachments.forEach(f=> form.append('files', f));
-          const res = await fetch(BACKEND_URL, { method:'POST', body: form });
-          if(!res.ok) throw new Error('Backend error: '+res.status);
-          const data = await res.json();
-          aiText = data.reply || '[No reply]';
-        } else {
-          // Dev-only direct API call (no files)
-          if(!DEV_OPENAI_KEY) throw new Error('No dev key set. Click the key icon.');
-          const payload = {
-            model: 'gpt-4o-mini',
-            messages: [
-              { role:'system', content:'You are GoldenSpaceAI, a crisp, expert assistant. Keep answers concise and helpful.' },
-              { role:'user', content: text }
-            ]
-          };
-          const res = await fetch('https://api.openai.com/v1/chat/completions',{
-            method:'POST',
-            headers:{ 'Content-Type':'application/json', 'Authorization': 'Bearer '+DEV_OPENAI_KEY },
-            body: JSON.stringify(payload)
-          });
-          if(!res.ok) throw new Error('OpenAI error: '+res.status);
-          const data = await res.json();
-          aiText = data.choices?.[0]?.message?.content || '';
-        }
-        chat.removeChild(spinner);
-        addMsg('ai', aiText);
+        const form = new FormData();
+        form.append("q", note);       // backend expects 'q'
+        form.append("file", file);    // single image
+
+        const res = await fetch(BACKEND_URL, {
+          method: "POST",
+          body: form,
+          credentials: "include"      // keep session cookie for memory
+        });
+        if(!res.ok) throw new Error("Backend error: "+res.status);
+        const data = await res.json();
+        chat.removeChild(spin);
+        addMsg("ai", data.answer || data.reply || "[No reply]");
       }catch(err){
-        chat.removeChild(spinner);
-        addMsg('ai', '⚠️ '+err.message);
-      } finally {
-        attachments.length = 0; renderAttachments();
+        chat.removeChild(spin);
+        addMsg("ai", "⚠️ " + err.message);
+      }finally{
+        fileInput.value = "";
+      }
+    });
+
+    // ==== Speech to text (Web Speech API) ====
+    let rec = null, listening = false;
+    (function initSpeech(){
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if(!SR) return; // browser doesn't support mic
+      rec = new SR();
+      rec.lang = "en-US";        // change to "ar-LB" (or any) if you prefer
+      rec.interimResults = false;
+      rec.continuous = false;
+      rec.maxAlternatives = 1;
+
+      rec.onstart = ()=>{ listening = true; micBtn.classList.add("rec"); };
+      rec.onend   = ()=>{ listening = false; micBtn.classList.remove("rec"); };
+      rec.onerror = (e)=> addMsg("ai","⚠️ Mic error: " + (e.error||"unknown"));
+      rec.onresult = async (ev)=>{
+        const text = (ev.results?.[0]?.[0]?.transcript || "").trim();
+        if(!text) return;
+        await sendText(text);
+      };
+    })();
+
+    micBtn.addEventListener("click", ()=>{
+      if(!rec){ addMsg("ai","⚠️ Microphone not supported in this browser."); return; }
+      if(listening){ rec.stop(); return; }
+      rec.start();
+    });
+
+    // Send a text-only message (used by speech)
+    async function sendText(text){
+      addMsg("user", text);
+      const spin = addSpinner();
+      try{
+        const form = new FormData();
+        form.append("q", text);
+        const res = await fetch(BACKEND_URL, {
+          method: "POST",
+          body: form,
+          credentials: "include"
+        });
+        if(!res.ok) throw new Error("Backend error: " + res.status);
+        const data = await res.json();
+        chat.removeChild(spin);
+        addMsg("ai", data.answer || data.reply || "[No reply]");
+      }catch(err){
+        chat.removeChild(spin);
+        addMsg("ai", "⚠️ " + err.message);
       }
     }
 
-    sendBtn.addEventListener('click', send);
-    promptEl.addEventListener('keydown', (e)=>{
-      if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); send(); }
-    });
-
-    // ---------- Dev Key Modal ----------
-    devBtn.addEventListener('click', ()=> devModal.classList.add('open'));
-    closeModal.addEventListener('click', ()=> devModal.classList.remove('open'));
-    saveKey.addEventListener('click', ()=>{
-      DEV_OPENAI_KEY = (devKeyInput.value||'').trim();
-      devModal.classList.remove('open');
-      alert('Dev key set for this tab. Remember: do NOT ship keys in the client.');
+    // Optional keyboard fallback: press Enter in hidden box if you unhide it
+    hiddenPrompt.addEventListener("keydown",(e)=>{
+      if(e.key==="Enter" && !e.shiftKey){
+        e.preventDefault();
+        const t = hiddenPrompt.value.trim();
+        if(t){ hiddenPrompt.value=""; sendText(t); }
+      }
     });
   </script>
-
-  <!--
-  ==================== BACKEND CONTRACT (build this on your server) ====================
-  POST /api/chat
-    - Content-Type: multipart/form-data
-    - fields:
-        message: string (required)
-        files: File[] (optional, any number)
-    - returns: { reply: string }
-
-  Example Node/Express handler:
-
-  import express from 'express';
-  import multer from 'multer';
-  import OpenAI from 'openai';
-  const app = express();
-  const upload = multer();
-  const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-  app.post('/api/chat', upload.array('files'), async (req, res) => {
-    const user = req.body.message || '';
-    // TODO: Optionally process req.files and upload to OpenAI files API / RAG store
-    const completion = await client.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: [
-        { role: 'system', content: 'You are GoldenSpaceAI, a crisp, expert assistant. Keep answers concise and helpful.' },
-        { role: 'user', content: user }
-      ]
-    });
-    res.json({ reply: completion.choices[0].message.content });
-  });
-
-  ===============================================================================
-  -->
 </body>
 </html>

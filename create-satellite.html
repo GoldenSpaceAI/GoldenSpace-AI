@@ -1,314 +1,291 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Universe Sandbox | GoldenSpaceAI</title>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+    <meta name="theme-color" content="#0a0e15" />
+    <title>GoldenSpaceAI • Create Your Satellite</title>
+    <link rel="icon" href="/favicon.ico" />
     <style>
-        :root {
-            --bg-dark: #0a0e15;
-            --panel-bg: #101828;
-            --border-color: #334155;
-            --text-primary: #E2E8F0;
-            --text-secondary: #94A3B8;
-            --gold-accent: #f6c64a;
-            --gold-glow: rgba(246, 198, 74, 0.2);
-            --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        }
+      :root{
+        --bg:#0a0e15; --panel:#0f1624; --panel2:#0b1320; --border:#1f2a40;
+        --text:#e7f4e9; --muted:#cfc6a5; --gold:#f6c64a; --gold2:#eb8b36;
+        --shadow:0 22px 70px rgba(0,0,0,.5); --radius:18px; --max:1080px;
+        --accent:#7dd3fc;
+      }
+      *{box-sizing:border-box} html,body{height:100%}
+      body{
+        margin:0;color:var(--text);
+        font:16px/1.6 Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+        background:
+          linear-gradient(180deg,rgba(10,14,21,.55),rgba(10,14,21,.55)),
+          radial-gradient(1400px 800px at 50% -20%,rgba(246,198,74,.30),transparent 70%),
+          url("https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2400&auto=format&fit=crop")
+          center/cover no-repeat fixed;
+        -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
+      }
+      a{color:inherit;text-decoration:none}
 
-        * { box-sizing: border-box; }
+      /* Top */
+      .top{position:sticky;top:0;z-index:30;backdrop-filter:blur(10px);
+        background:linear-gradient(180deg,rgba(10,14,21,.85),rgba(10,14,21,.5) 60%,transparent);
+        border-bottom:1px solid var(--border);padding:max(12px, env(safe-area-inset-top)) 16px 10px;
+        display:flex;align-items:center;gap:12px}
+      .brand{display:flex;align-items:center;gap:10px;font-weight:900;color:var(--gold);
+        font-size:clamp(20px,2.2vw,26px);text-shadow:0 0 16px rgba(246,198,74,.25)}
+      .dot{width:10px;height:10px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#ffd86a,#f6c64a 50%,#eb8b36 90%);box-shadow:0 0 18px rgba(246,198,74,.5)}
+      .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px;border-radius:12px;font-weight:900;cursor:pointer;border:1px solid rgba(0,0,0,.2)}
+      .btn.gold{background:linear-gradient(180deg,var(--gold),var(--gold2));color:#1b1300;box-shadow:0 10px 26px rgba(246,198,74,.28)}
+      .btn.ghost{background:transparent;color:var(--muted);border:1px solid var(--border)}
 
-        body {
-            font-family: var(--font-main);
-            background-color: var(--bg-dark);
-            color: var(--text-primary);
-            margin: 0;
-            height: 100vh;
-            width: 100vw;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
+      .wrap{max-width:var(--max);margin:22px auto;padding:0 16px}
 
-        .sandbox-container {
-            display: flex;
-            flex: 1;
-            flex-direction: column;
-            overflow: hidden;
-        }
+      .hero{background:linear-gradient(180deg,rgba(14,21,34,.9),rgba(11,17,28,.9));border:1px solid var(--border);
+        border-radius:calc(var(--radius)+2px);padding:clamp(18px,3.6vw,26px);box-shadow:var(--shadow)}
+      .hero h1{margin:6px 0 8px;font-size:clamp(26px,5vw,48px);line-height:1.08;color:#fff7dc}
+      .tag{display:inline-block;margin-top:6px;padding:6px 10px;border-radius:999px;border:1px solid var(--border);color:#c9d1e6;font-weight:800;font-size:12px}
 
-        /* --- Universe Canvas --- */
-        .universe-canvas {
-            flex: 1;
-            position: relative;
-            background-color: var(--bg-dark);
-            overflow: hidden;
-            cursor: grab;
-        }
-        .universe-canvas:active { cursor: grabbing; }
+      .grid{display:grid;gap:14px;grid-template-columns:1.2fr 1fr}
+      @media(max-width:940px){.grid{grid-template-columns:1fr}}
 
-        #canvas-content {
-            position: absolute;
-            width: 1px;
-            height: 1px;
-            transform-origin: 0 0;
-        }
+      .panel{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--border);border-radius:16px;padding:14px;box-shadow:var(--shadow)}
+      .panel h2{margin:0 0 8px;font-size:18px;color:var(--gold)}
+      .panel p{margin:0 0 10px;color:#dfe7f1;font-size:14px}
 
-        /* --- UI Panels (Mobile First) --- */
-        .ui-panels {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            z-index: 20;
-            background: linear-gradient(180deg, transparent, rgba(10, 14, 21, 0.8) 50%);
-            padding: 1rem;
-            padding-bottom: max(1rem, env(safe-area-inset-bottom));
-        }
+      .field{display:grid;gap:6px;margin-bottom:10px}
+      .field label{font-size:12px;color:#c9d1e6}
+      .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+      .choice{padding:8px 10px;border:1px solid var(--border);border-radius:12px;background:rgba(255,255,255,.03);cursor:pointer;font-weight:800;color:#dfe7f1}
+      .choice[data-active="true"]{outline:2px solid rgba(246,198,74,.5);background:linear-gradient(180deg,rgba(246,198,74,.08),rgba(255,255,255,.03))}
+      input[type="range"]{width:100%}
+      input[type="text"], select{width:100%;border-radius:10px;border:1px solid var(--border);background:#0a1120;color:var(--text);padding:10px;font:inherit}
 
-        .accordion-panel {
-            background-color: var(--panel-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            margin-bottom: 0.5rem;
-            overflow: hidden;
-        }
+      .craft{display:grid;gap:10px}
+      .preview{position:relative;height:320px;border-radius:14px;overflow:hidden;background:radial-gradient(600px 320px at 110% -10%,rgba(125,211,252,.12),transparent 60%),linear-gradient(180deg,#0c1322,#0a1120)}
+      .sky{position:absolute;inset:0;background:radial-gradient(1200px 600px at 10% -20%,rgba(246,198,74,.16),transparent 60%)}
+      .orb{position:absolute;left:50%;top:50%;width:38px;height:38px;background:linear-gradient(145deg,#8bdcff,#0ea5e9);border-radius:50%;transform:translate(-50%,-50%);box-shadow:0 0 18px rgba(125,211,252,.6)}
+      .panel-solar{position:absolute;left:calc(50% - 110px);top:calc(50% - 6px);width:90px;height:12px;background:linear-gradient(180deg,#1e2a46,#111a2f);border:1px solid #223354;border-radius:6px}
+      .panel-solar.r{left:calc(50% + 20px)}
+      .antenna{position:absolute;left:50%;top:calc(50% + 26px);width:2px;height:34px;background:#cbd5e1;transform:translateX(-50%)}
+      .beep{position:absolute;left:50%;top:calc(50% + 60px);width:6px;height:6px;background:#f6c64a;border-radius:50%;transform:translateX(-50%);box-shadow:0 0 16px rgba(246,198,74,.7)}
 
-        .accordion-header {
-            padding: 1rem;
-            cursor: pointer;
-            font-weight: bold;
-            color: var(--gold-accent);
-        }
+      .facts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+      .fact{background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.01));border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:10px}
+      .fact b{color:#fff7dc}
 
-        .accordion-content {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease-out;
-            padding: 0 1rem;
-        }
-        .accordion-content.open {
-            max-height: 50vh;
-            padding-bottom: 1rem;
-            overflow-y: auto;
-        }
-        
-        .tool-item {
-            display: flex; align-items: center; gap: 1rem; padding: 0.75rem;
-            border-radius: 6px; margin-bottom: 0.5rem; cursor: pointer;
-            border: 1px solid transparent;
-        }
-        .tool-item:hover { background-color: #1E293B; }
-        .tool-item-icon { font-size: 2rem; }
-        .tool-item h3 { margin: 0; font-size: 1rem; color: var(--text-primary); }
+      .launch{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+      .note{font-size:12px;color:#aeb7c5}
 
-        .inspector-group { margin-bottom: 1rem; }
-        .inspector-group label { display: block; margin-bottom: 0.5rem; color: var(--text-secondary); }
-        .inspector-group input, .inspector-group select {
-            width: 100%; background-color: var(--bg-dark); border: 1px solid var(--border-color);
-            color: var(--text-primary); padding: 0.5rem; border-radius: 4px;
-        }
-
-        /* --- Desktop Layout --- */
-        @media (min-width: 769px) {
-            .sandbox-container {
-                flex-direction: row;
-            }
-            .ui-panels {
-                position: static;
-                width: 320px;
-                height: 100vh;
-                order: -1; /* Move to the left */
-                background: var(--panel-bg);
-                border-right: 1px solid var(--border-color);
-                padding: 1.5rem;
-            }
-            .accordion-header { display: none; }
-            .accordion-content {
-                max-height: none;
-                padding: 0;
-                overflow: visible;
-            }
-            #inspector-panel {
-                margin-top: 2rem;
-            }
-        }
-        
-        /* ... (Object, Modal, Orbit Styles from previous version) ... */
-        .celestial-object { position: absolute; border-radius: 50%; }
-        .galaxy { background: radial-gradient(ellipse, #fff 0%, rgba(255,255,255,0.6) 10%, rgba(255,255,255,0) 60%); }
-        .star { background: radial-gradient(circle, #fff, var(--gold-accent)); box-shadow: 0 0 40px var(--gold-accent); }
-        .planet { background-color: #38bdf8; z-index: 50; }
-        .celestial-object.selected { box-shadow: 0 0 20px 5px var(--gold-glow), 0 0 0 2px var(--gold-accent); z-index: 100 !important; }
-        .orbit-path { position: absolute; border: 1px dashed var(--border-color); border-radius: 50%; pointer-events: none; }
-        .modal-overlay { position: fixed; inset: 0; background-color: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 1000; }
-        .modal-overlay.active { display: flex; }
-        .modal-content { background-color: var(--panel-bg); padding: 2rem; border-radius: 12px; width: 90%; max-width: 400px; border: 1px solid var(--border-color); }
-        .modal-content h2 { margin-top: 0; color: var(--gold-accent); }
-        #create-btn { background-color: var(--gold-accent); color: var(--bg-dark); border: none; padding: 0.75rem 1.5rem; font-size: 1rem; font-weight: bold; border-radius: 6px; cursor: pointer; margin-top: 1rem; }
+      /* Launch animation */
+      .launch-scene{position:fixed;inset:0;display:none;place-items:center;background:rgba(0,0,0,.55);backdrop-filter:blur(3px);z-index:1000}
+      .launch-scene.on{display:grid}
+      .ship{width:220px;height:220px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#0ea5e9,transparent 70%),radial-gradient(circle at 65% 65%,rgba(246,198,74,.5),transparent 70%),linear-gradient(180deg,#0f172a,#020617);position:relative;box-shadow:0 8px 40px rgba(14,165,233,.45) inset,0 22px 70px rgba(0,0,0,.6)}
+      .ship::after{content:"";position:absolute;left:50%;bottom:-10px;transform:translateX(-50%);width:16px;height:30px;background:linear-gradient(180deg,#fff7dc,#f6c64a,#eb8b36,#ef4444);filter:blur(4px);border-radius:10px}
+      .stars{position:absolute;inset:0;background-image:radial-gradient(#fff7dc 1px,transparent 1px);background-size:3px 3px;opacity:.6;animation:twinkle 1.8s linear infinite}
+      @keyframes twinkle{0%{opacity:.3}50%{opacity:.7}100%{opacity:.3}}
+      .count{margin-top:14px;font-size:20px;color:#fff7dc;font-weight:900;text-shadow:0 0 18px rgba(246,198,74,.4)}
     </style>
-</head>
-<body>
-
-    <div class="sandbox-container">
-        <aside class="ui-panels">
-            <div class="accordion-panel" id="toolbox-panel">
-                <div class="accordion-header">Toolbox</div>
-                <div class="accordion-content">
-                    <h2>Toolbox</h2>
-                    <div class="tool-item" data-type="galaxy"><div class="tool-item-icon">🌌</div><h3>Add Galaxy</h3></div>
-                    <div class="tool-item" data-type="star"><div class="tool-item-icon">🌟</div><h3>Add Star</h3></div>
-                    <div class="tool-item" data-type="planet"><div class="tool-item-icon">🪐</div><h3>Add Planet</h3></div>
-                </div>
-            </div>
-            <div class="accordion-panel" id="inspector-panel-container">
-                <div class="accordion-header">Inspector</div>
-                <div class="accordion-content" id="inspector-content">
-                    <h3>Inspector</h3>
-                    <div id="inspector-default-text"><p>Select an object to inspect its properties.</p></div>
-                    <div id="inspector-form" style="display:none;">
-                        <div class="inspector-group"><label for="name-input">Object Name</label><input type="text" id="name-input"></div>
-                        <div id="planet-settings" style="display:none;">
-                            <div class="inspector-group"><label for="size-input">Planet Size</label><input type="range" id="size-input" min="10" max="80"></div>
-                            <div class="inspector-group"><label for="color-input">Planet Color</label><input type="color" id="color-input"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </aside>
-
-        <main class="universe-canvas" id="universe-canvas">
-            <div id="canvas-content">
-                </div>
-        </main>
+  </head>
+  <body>
+    <div class="top">
+      <div class="brand"><span class="dot"></span> GoldenSpaceAI</div>
+      <div style="flex:1"></div>
+      <a class="btn ghost" href="/">Home</a>
+      <a class="btn gold" href="/your-space.html">Your Universe</a>
     </div>
 
-    <div id="creation-modal" class="modal-overlay">
-        <div class="modal-content">
-            <h2 id="modal-title">Create New Planet</h2>
-            <div class="inspector-group"><label for="modal-name">Planet Name</label><input type="text" id="modal-name"></div>
-            <div class="inspector-group"><label for="modal-size">Planet Size</label><input type="range" id="modal-size" min="10" max="80" value="20"></div>
-            <div class="inspector-group"><label for="modal-color">Planet Color</label><input type="color" id="modal-color" value="#38bdf8"></div>
-            <button id="create-btn">Create Planet</button>
+    <main class="wrap">
+      <section class="hero">
+        <h1>🛰️ Create Your Satellite</h1>
+        <p class="tag">Futuristic builder • Adds to <b>Your Universe</b></p>
+        <p>
+          A <b>satellite</b> is any object that orbits a planet or star. Natural satellites are moons; 
+          <b>artificial satellites</b> are human-made spacecraft that circle Earth or other worlds. They carry a
+          <i>payload</i> (camera, antenna, sensors) on a <i>bus</i> (power, structure, thermal, comms) and fly in a chosen
+          <i>orbit</i> (LEO, MEO, GEO, or beyond).
+        </p>
+        <p>Below, you'll design a satellite — name it, pick its bus & payload, choose an orbit, tune its power, and then <b>launch</b> it into <i>Your Universe</i>.</p>
+      </section>
+
+      <section class="grid" style="margin-top:14px">
+        <!-- Builder -->
+        <div class="panel">
+          <h2>🧩 Build Module</h2>
+          <div class="field">
+            <label for="satName">Satellite name</label>
+            <input id="satName" type="text" placeholder="e.g., Aurora-1" maxlength="28" />
+          </div>
+
+          <div class="field">
+            <label>Bus</label>
+            <div class="row" id="busRow">
+              <button class="choice" data-group="bus" data-val="CubeSat">CubeSat</button>
+              <button class="choice" data-group="bus" data-val="SmallSat">SmallSat</button>
+              <button class="choice" data-group="bus" data-val="GeoBus">GeoBus</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Payload</label>
+            <div class="row" id="payloadRow">
+              <button class="choice" data-group="payload" data-val="Imager">Imager</button>
+              <button class="choice" data-group="payload" data-val="Antenna">Antenna</button>
+              <button class="choice" data-group="payload" data-val="Science Pack">Science Pack</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Orbit</label>
+            <div class="row" id="orbitRow">
+              <button class="choice" data-group="orbit" data-val="LEO">LEO</button>
+              <button class="choice" data-group="orbit" data-val="MEO">MEO</button>
+              <button class="choice" data-group="orbit" data-val="GEO">GEO</button>
+              <button class="choice" data-group="orbit" data-val="HEO">HEO</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Solar power (W)</label>
+            <input type="range" id="power" min="50" max="2000" value="400" />
+            <div class="row small"><span>50W</span><span style="flex:1"></span><span>2000W</span></div>
+          </div>
+
+          <div class="field">
+            <label>Downlink rate</label>
+            <select id="downlink">
+              <option>Low (32 kbps)</option>
+              <option selected>Medium (2 Mbps)</option>
+              <option>High (50 Mbps)</option>
+            </select>
+          </div>
+
+          <div class="launch">
+            <button id="launchBtn" class="btn gold">🚀 Send to My Universe</button>
+            <span class="note">You can edit later from <a href="/your-space.html">Your Universe</a>.</span>
+          </div>
         </div>
+
+        <!-- Preview & Facts -->
+        <div class="panel craft">
+          <h2>✨ Live Preview</h2>
+          <div class="preview" id="preview">
+            <div class="sky"></div>
+            <div class="panel-solar"></div>
+            <div class="orb" id="orb"></div>
+            <div class="panel-solar r"></div>
+            <div class="antenna"></div>
+            <div class="beep"></div>
+          </div>
+
+          <div class="facts">
+            <div class="fact"><b>Name:</b> <span id="fName">—</span></div>
+            <div class="fact"><b>Bus:</b> <span id="fBus">—</span></div>
+            <div class="fact"><b>Payload:</b> <span id="fPayload">—</span></div>
+            <div class="fact"><b>Orbit:</b> <span id="fOrbit">—</span></div>
+            <div class="fact"><b>Power:</b> <span id="fPower">400 W</span></div>
+            <div class="fact"><b>Downlink:</b> <span id="fDown">Medium (2 Mbps)</span></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Launch scene overlay -->
+    <div class="launch-scene" id="launchScene" aria-hidden="true">
+      <div>
+        <div class="ship">
+          <div class="stars"></div>
+        </div>
+        <div class="count" id="count">Preparing…</div>
+      </div>
     </div>
-    
+
     <script>
-        // --- DOM ELEMENTS & STATE ---
-        const canvas = document.getElementById('universe-canvas');
-        const canvasContent = document.getElementById('canvas-content');
-        const toolboxItems = document.querySelectorAll('.tool-item');
-        const inspectorDefault = document.getElementById('inspector-default-text');
-        const inspectorForm = document.getElementById('inspector-form');
-        const creationModal = document.getElementById('creation-modal');
-        let activeObject = null, objectCounter = 0, objects = new Map();
-        
-        // --- ZOOM & PAN ---
-        let scale = 1, panning = false, pointX = 0, pointY = 0, start = { x: 0, y: 0 };
-        function setTransform() { canvasContent.style.transform = `translate(${pointX}px, ${pointY}px) scale(${scale})`; }
-        canvas.onmousedown = (e) => {
-            if (e.target !== canvas) return;
-            e.preventDefault();
-            start = { x: e.clientX - pointX, y: e.clientY - pointY };
-            panning = true;
-        };
-        canvas.onmouseup = () => { panning = false; };
-        canvas.onmousemove = (e) => { if (!panning) return; pointX = e.clientX - start.x; pointY = e.clientY - start.y; setTransform(); };
-        canvas.onwheel = (e) => {
-            e.preventDefault();
-            const xs = (e.clientX - pointX) / scale, ys = (e.clientY - pointY) / scale, delta = -e.deltaY;
-            (delta > 0) ? (scale *= 1.1) : (scale /= 1.1);
-            pointX = e.clientX - xs * scale;
-            pointY = e.clientY - ys * scale;
-            setTransform();
-        };
+      // --- State ---
+      const state = { name:"", bus:"", payload:"", orbit:"", power:400, down:"Medium (2 Mbps)" };
 
-        // --- OBJECT CREATION & MANAGEMENT ---
-        toolboxItems.forEach(item => item.addEventListener('click', () => {
-            const type = item.dataset.type;
-            const centerOfView = { x: (-pointX + canvas.clientWidth / 2) / scale, y: (-pointY + canvas.clientHeight / 2) / scale };
-            if (type === 'planet') {
-                openCreationModal(centerOfView);
-            } else {
-                createObject(type, centerOfView);
-            }
-        }));
+      // --- Helpers ---
+      const $ = (s, root=document) => root.querySelector(s);
+      const $$ = (s, root=document) => Array.from(root.querySelectorAll(s));
 
-        function createObject(type, position, customData = {}) {
-            objectCounter++;
-            const id = `obj-${objectCounter}`;
-            const objEl = document.createElement('div');
-            objEl.className = `celestial-object ${type}`;
-            objEl.id = id;
-            objEl.style.left = `${position.x}px`;
-            objEl.style.top = `${position.y}px`;
-            const objectData = { id, el: objEl, type, name: customData.name || `${type.charAt(0).toUpperCase() + type.slice(1)} ${objectCounter}`, ...customData };
-            
-            if (type === 'planet') {
-                const orbitEl = document.createElement('div');
-                orbitEl.className = 'orbit-path';
-                canvasContent.appendChild(orbitEl);
-                objectData.orbitEl = orbitEl;
-                objectData.orbitalAngle = Math.random() * 360;
-                objectData.size = customData.size || 20;
-                objEl.style.width = `${objectData.size}px`;
-                objEl.style.height = `${objectData.size}px`;
-                objEl.style.backgroundColor = customData.color || '#38bdf8';
-            } else {
-                objEl.style.width = type === 'galaxy' ? '250px' : '60px';
-                objEl.style.height = type === 'galaxy' ? '250px' : '60px';
-            }
-
-            objects.set(id, objectData);
-            makeDraggable(objectData);
-            objEl.addEventListener('click', e => { e.stopPropagation(); selectObject(objectData); });
-            canvasContent.appendChild(objEl);
-            if (type === 'planet') updatePlanetOrbit(objectData);
-        }
-
-        function openCreationModal(position) {
-            document.getElementById('modal-name').value = `Planet ${objectCounter + 1}`;
-            creationModal.classList.add('active');
-            creationModal.querySelector('#create-btn').onclick = () => {
-                const settings = {
-                    name: document.getElementById('modal-name').value,
-                    size: parseFloat(document.getElementById('modal-size').value),
-                    color: document.getElementById('modal-color').value
-                };
-                createObject('planet', position, settings);
-                creationModal.classList.remove('active');
-            };
-        }
-
-        // --- PHYSICS & ANIMATION ---
-        function animate() {
-            objects.forEach(obj => {
-                if (obj.type === 'planet' && obj.anchorStar) {
-                    obj.orbitalAngle += (0.5 / (obj.orbitRadius / 100)); // Speed decreases with distance
-                    const starCenter = { x: obj.anchorStar.el.offsetLeft + obj.anchorStar.el.offsetWidth / 2, y: obj.anchorStar.el.offsetTop + obj.anchorStar.el.offsetHeight / 2, };
-                    const newX = starCenter.x + obj.orbitRadius * Math.cos(obj.orbitalAngle * Math.PI / 180) - obj.size / 2;
-                    const newY = starCenter.y + obj.orbitRadius * Math.sin(obj.orbitalAngle * Math.PI / 180) - obj.size / 2;
-                    obj.el.style.left = `${newX}px`;
-                    obj.el.style.top = `${newY}px`;
-                }
-            });
-            requestAnimationFrame(animate);
-        }
-        
-        // --- DRAGGING & ORBIT CALCULATION ---
-        function updatePlanetOrbit(planetData) { /* ... same as previous version ... */ }
-        function makeDraggable(elementData) { /* ... same as previous version, updated for pan/zoom ... */ }
-        
-        // --- ACCORDION FOR MOBILE ---
-        document.querySelectorAll('.accordion-header').forEach(header => {
-            header.addEventListener('click', () => {
-                const content = header.nextElementSibling;
-                content.classList.toggle('open');
-            });
+      function setChoice(group, val){
+        $$(`.choice[data-group="${group}"]`).forEach(el=>{
+          el.dataset.active = (el.dataset.val === val);
         });
-        
-        // --- INITIALIZATION ---
-        animate(); // Start the simulation loop
+        state[group] = val;
+        updateFacts();
+        tweakPreview();
+      }
+
+      function updateFacts(){
+        $('#fName').textContent = state.name || '—';
+        $('#fBus').textContent = state.bus || '—';
+        $('#fPayload').textContent = state.payload || '—';
+        $('#fOrbit').textContent = state.orbit || '—';
+        $('#fPower').textContent = `${state.power} W`;
+        $('#fDown').textContent = state.down;
+      }
+
+      function tweakPreview(){
+        // Change color/size a bit based on choices
+        const orb = $('#orb');
+        let hue = 200;
+        if(state.payload === 'Imager') hue = 195;
+        if(state.payload === 'Antenna') hue = 40;
+        if(state.payload === 'Science Pack') hue = 140;
+        const color = `linear-gradient(145deg, hsl(${hue} 90% 70%), hsl(${hue} 85% 45%))`;
+        orb.style.background = color;
+
+        const scale = state.bus==='GeoBus' ? 1.25 : state.bus==='SmallSat' ? 1.1 : 0.95;
+        orb.style.transform = `translate(-50%,-50%) scale(${scale})`;
+      }
+
+      // Attach events
+      $('#satName').addEventListener('input', e=>{ state.name = e.target.value.trim(); updateFacts(); });
+      $('#power').addEventListener('input', e=>{ state.power = +e.target.value; updateFacts(); });
+      $('#downlink').addEventListener('change', e=>{ state.down = e.target.value; updateFacts(); });
+
+      $$('#busRow .choice').forEach(b=> b.addEventListener('click', ()=> setChoice('bus', b.dataset.val)));
+      $$('#payloadRow .choice').forEach(b=> b.addEventListener('click', ()=> setChoice('payload', b.dataset.val)));
+      $$('#orbitRow .choice').forEach(b=> b.addEventListener('click', ()=> setChoice('orbit', b.dataset.val)));
+
+      // Default selections
+      setChoice('bus','CubeSat');
+      setChoice('payload','Imager');
+      setChoice('orbit','LEO');
+      updateFacts();
+
+      // Launch button -> save to localStorage and animate then redirect
+      $('#launchBtn').addEventListener('click', ()=>{
+        if(!state.name || !state.bus || !state.payload || !state.orbit){
+          alert('Please complete the name, bus, payload, and orbit.');
+          return;
+        }
+        const sat = {
+          id: `sat_${Date.now()}`,
+          ...state,
+          createdAt: new Date().toISOString()
+        };
+        try{
+          const key = 'gs_universe_satellites';
+          const arr = JSON.parse(localStorage.getItem(key) || '[]');
+          arr.push(sat);
+          localStorage.setItem(key, JSON.stringify(arr));
+        }catch(e){ /* ignore quota errors */ }
+
+        // Fun launch sequence
+        const scene = $('#launchScene');
+        const count = $('#count');
+        scene.classList.add('on');
+        let n = 3;
+        const tick = setInterval(()=>{
+          count.textContent = n>0 ? `Launching in ${n}…` : 'LAUNCH!';
+          if(n===0){
+            clearInterval(tick);
+            setTimeout(()=>{ window.location.href = '/your-space.html#satellites'; }, 600);
+          }
+          n--;
+        }, 700);
+      });
     </script>
-</body>
+  </body>
 </html>

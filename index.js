@@ -1,5 +1,4 @@
-// index.js — GoldenSpaceAI (Google OAuth + Plan Limits)
-// Keeps Gemini for search/physics; OpenAI for advanced chat & homework helper (with images)
+// index.js — GoldenSpaceAI (Google OAuth + Plan Limits + OpenAI everywhere)
 
 import express from "express";
 import cors from "cors";
@@ -10,14 +9,10 @@ import session from "express-session";
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import cookieParser from "cookie-parser";
-import { GoogleGenerativeAI } from "@google/generative-ai"; // Gemini kept
 import bodyParser from "body-parser";
 import crypto from "crypto";
 import multer from "multer";
-
-// OpenAI (for Advanced Chat AI + Homework Helper with images)
 import OpenAI from "openai";
-import fs from "fs/promises";
 
 dotenv.config();
 
@@ -25,7 +20,8 @@ const app = express();
 app.set("trust proxy", 1);
 
 app.use(cors({ origin: true, credentials: true }));
-app.use(express.json());
+app.use(express.json({ limit: "25mb" }));
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // ---------- Sessions ----------
@@ -90,7 +86,7 @@ function enforceLimit(kind){
   };
 }
 
-// ---------- Helper: compute base URL ----------
+// ---------- Helper: base URL ----------
 function getBaseUrl(req){
   const proto = (req.headers["x-forwarded-proto"]||"").toString().split(",")[0] || req.protocol || "https";
   const host  = (req.headers["x-forwarded-host"] || "").toString().split(",")[0] || req.get("host");
@@ -110,8 +106,9 @@ passport.use(new GoogleStrategy(
     const user = {
       id: profile.id,
       name: profile.displayName,
+      given_name: profile.name?.givenName,
       email: profile.emails?.[0]?.value || "",
-      photo: profile.photos?.[0]?.value || "",
+      picture: profile.photos?.[0]?.value || "",
       plan: "moon",
     };
     return done(null, user);
@@ -132,7 +129,7 @@ app.post("/logout",(req,res,next)=>{
   req.logout(err=>{ if (err) return next(err); req.session.destroy(()=>res.json({ok:true})); });
 });
 
-// ---------- Public Login/Signup Page ----------
+// ---------- Public Login/Signup Page (unchanged) ----------
 app.get("/login.html",(req,res)=>{
   const appName="GoldenSpaceAI";
   const base=getBaseUrl(req);
@@ -155,28 +152,31 @@ h1{margin:0 0 6px;font-size:28px}.sub{margin:0 0 18px;font-size:14px;color:var(-
 .fine{margin-top:14px;color:var(--muted);font-size:12px}
 .links{display:flex;gap:16px;margin-top:10px}a{color:var(--text)}
 </style></head><body><div class="wrap"><div class="card">
-<div class="badge">✨ Welcome, explorer</div>
+<div class="badge">✨ Welcome</div>
 <h1>Log in or Sign up</h1>
-<p class="sub">Access ${appName}: ask AI about space, learn physics, and create your own planets.</p>
-<ul class="features"><li>🚀 Ask Advanced AI (daily limits based on your plan)</li><li>📚 Learn Physics</li><li>🪐 Create custom planets (Sun Pack)</li></ul>
+<p class="sub">Access ${appName}: ask AI, learn physics, and create your own planets.</p>
+<ul class="features"><li>🚀 Ask Advanced AI (daily limits by plan)</li><li>📚 Learn Physics</li><li>🪐 Create custom planets (Sun Pack)</li></ul>
 <div class="or">continue</div>
 <button class="btn google" onclick="window.location='${base}/auth/google'">
 <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18" height="18" style="display:inline-block"/> Continue with Google
 </button>
 <p class="fine">By continuing, you agree to our
-<a href="https://www.goldenspaceai.space/terms-of-service" target="_blank" rel="noopener">Terms</a> and
-<a href="https://www.goldenspaceai.space/privacy" target="_blank" rel="noopener">Privacy</a>.</p>
+<a href="/terms.html">Terms</a> and
+<a href="/privacy.html">Privacy</a>.</p>
 <div class="links"><a href="/">Back to home</a><a href="/plans.html">See plans</a></div>
 </div></div></body></html>`);
 });
 
 // ---------- PUBLIC / AUTH GATE ----------
+// Home and legal pages are PUBLIC. Feature pages show "Please sign in" if unauthenticated.
 const PUBLIC_FILE_EXT = /\.(css|js|mjs|map|png|jpg|jpeg|gif|svg|ico|txt|woff2?)$/i;
 function isPublicPath(req){
   const p = req.path;
+  if (p === "/") return true;                     // Home is public
   if (p === "/login.html") return true;
   if (p === "/terms.html") return true;
   if (p === "/privacy.html") return true;
+  if (p === "/refund.html") return true;
   if (p === "/health") return true;
   if (p === "/webhooks/paddle") return true;
   if (p.startsWith("/auth/google")) return true;
@@ -184,37 +184,84 @@ function isPublicPath(req){
   if (p === "/favicon.ico") return true;
   return false;
 }
-function authRequired(req,res,next){
-  if (isPublicPath(req)) return next();
-  if (req.isAuthenticated && req.isAuthenticated()) return next();
-  if (req.accepts("html")) return res.redirect("/login.html");
-  return res.status(401).json({ error:"Sign in required" });
+function requireSignInOrMessage(filePath){
+  return (req,res)=>{
+    if (req.isAuthenticated && req.isAuthenticated()){
+      return res.sendFile(path.join(__dirname, filePath));
+    }
+    // Not signed in: show friendly message, don't redirect
+    return res.status(200).send(`<!doctype html><html><head><meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/><title>Sign in required</title>
+<style>body{margin:0;background:#0b1020;color:#e7f4e9;font-family:Inter,system-ui,sans-serif;display:grid;place-items:center;min-height:100dvh}
+.card{max-width:560px;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:22px;text-align:center}
+a.btn{display:inline-block;margin-top:12px;padding:10px 14px;border-radius:12px;background:linear-gradient(180deg,#f6c64a,#eb8b36);color:#1b1300;font-weight:900;text-decoration:none}
+a.ghost{display:inline-block;margin-top:12px;padding:10px 14px;border-radius:12px;border:1px solid #24314c;color:#cfc6a5;text-decoration:none}
+</style></head><body>
+<div class="card">
+  <h2>🔐 Please sign in to use this feature</h2>
+  <p>You can browse the homepage and legal pages without signing in.</p>
+  <p><a class="btn" href="/auth/google">Continue with Google</a></p>
+  <p><a class="ghost" href="/">Back to Home</a></p>
+</div></body></html>`);
+  };
 }
 
-// ---------- Gemini (kept for search / learn physics / lessons) ----------
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const modelFlash = genAI.getGenerativeModel({ model:"gemini-1.5-flash" });
-const modelPro = genAI.getGenerativeModel({ model:"gemini-1.5-pro" });
+// Gate specific feature pages (others remain public/static)
+app.get("/chat-advancedai.html", requireSignInOrMessage("chat-advancedai.html"));
+app.get("/homework-helper.html", requireSignInOrMessage("homework-helper.html"));
+app.get("/search-info.html", requireSignInOrMessage("search-info.html"));
+app.get("/learn-physics.html", (req,res)=>{
+  // Keep your plan gating behavior + sign-in prompt
+  if (!(req.isAuthenticated && req.isAuthenticated())) {
+    return requireSignInOrMessage("learn-physics.html")(req,res);
+  }
+  const plan = getPlan(req);
+  if (!PLAN_LIMITS[plan].learnPhysics){
+    return res.send(`<html><body style="font-family:sans-serif;text-align:center;margin-top:50px;">
+      <h2>🚀 Upgrade to the <span style="color:gold">Earth Pack</span> to unlock Learn Physics!</h2>
+      <p><a href="/plans.html">See Plans</a></p></body></html>`);
+  }
+  res.sendFile(path.join(__dirname,"learn-physics.html"));
+});
+app.get("/create-planet.html", (req,res)=>{
+  if (!(req.isAuthenticated && req.isAuthenticated())) {
+    return requireSignInOrMessage("create-planet.html")(req,res);
+  }
+  const plan = getPlan(req);
+  if (!PLAN_LIMITS[plan].createPlanet){
+    return res.send(`<html><body style="font-family:sans-serif;text-align:center;margin-top:50px;">
+      <h2>🌍 Upgrade to the <span style="color:orange">Sun Pack</span> to unlock Create Planet!</h2>
+      <p><a href="/plans.html">See Plans</a></p></body></html>`);
+  }
+  res.sendFile(path.join(__dirname,"create-planet.html"));
+});
 
-// ---------- AI Routes (Gemini stays) ----------
+// ---------- OpenAI (single default across app) ----------
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const DEFAULT_MODEL = process.env.OPENAI_MODEL || "gpt-5-nano";
+
+// ---------- AI Routes (ALL via OpenAI now) ----------
 app.post("/ask", enforceLimit("ask"), async (req,res)=>{
   try{
     const q = (req.body?.question || "").trim();
     if (!q) return res.json({ answer:"Ask me anything!" });
-    const result = await modelFlash.generateContent([{ text:`User: ${q}` }]);
-    const answer = result.response.text() || "No response.";
-    res.json({ answer });
-  }catch(e){ console.error("ask error", e); res.status(500).json({ answer:"Gemini error" }); }
+    const r = await openai.responses.create({
+      model: DEFAULT_MODEL,
+      input: `You are GoldenSpaceAI Assistant. Be concise, helpful.\nUser: ${q}`,
+    });
+    const answer = r.output_text || r?.content?.[0]?.text || "No response.";
+    res.json({ model: DEFAULT_MODEL, answer });
+  }catch(e){ console.error("ask error", e); res.status(500).json({ answer:"OpenAI error" }); }
 });
 
 app.post("/search-info", enforceLimit("search"), async (req,res)=>{
   try{
     const q = (req.body?.query || "").trim();
     if (!q) return res.json({ answer:"Type something to search." });
-    const prompt = `You are GoldenSpace Knowledge. Overview + 3 bullet facts.\nTopic: ${q}`;
-    const result = await modelFlash.generateContent([{ text: prompt }]);
-    const answer = result.response.text() || "No info found.";
-    res.json({ answer });
+    const prompt = `GoldenSpace Knowledge: Give a short overview + 3 bullet facts.\nTopic: ${q}`;
+    const r = await openai.responses.create({ model: DEFAULT_MODEL, input: prompt });
+    const answer = r.output_text || "No info found.";
+    res.json({ model: DEFAULT_MODEL, answer });
   }catch(e){ console.error("search-info error", e); res.status(500).json({ answer:"Search error" }); }
 });
 
@@ -222,128 +269,79 @@ app.post("/ai/physics-explain", enforceLimit("physics"), async (req,res)=>{
   try{
     const q = (req.body?.question || "").trim();
     if (!q) return res.json({ reply:"Ask a physics question." });
-    const prompt = `You are GoldenSpace Physics Tutor. Explain clearly.\nQuestion: ${q}`;
-    const result = await modelFlash.generateContent([{ text: prompt }]);
-    const reply = result.response.text() || "No reply.";
-    res.json({ reply });
+    const prompt = `You are GoldenSpace Physics Tutor. Explain clearly for a student.\nQuestion: ${q}`;
+    const r = await openai.responses.create({ model: DEFAULT_MODEL, input: prompt });
+    const reply = r.output_text || "No reply.";
+    res.json({ model: DEFAULT_MODEL, reply });
   }catch(e){ console.error("physics error", e); res.status(500).json({ reply:"Physics error" }); }
 });
 
-// ---------- Advanced Chat AI (OpenAI) + Homework Helper (images) ----------
+// ---------- Advanced Chat AI (text + optional single file) ----------
 const upload = multer({ dest: "uploads/" });
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-// cheapest GPT-4 family default; supports vision
-const DEFAULT_OPENAI_MODEL = process.env.DEFAULT_OPENAI_MODEL || "gpt-4o-mini";
-const ALLOWED_OPENAI_MODELS = new Set(["gpt-4o-mini", "gpt-4o", "gpt-4.1"]);
-
-// helper: convert uploaded image file to data URL
-async function fileToDataUrl(file) {
-  const buf = await fs.readFile(file.path);
-  const b64 = buf.toString("base64");
-  const mime = file.mimetype || "image/jpeg";
-  return `data:${mime};base64,${b64}`;
-}
-
-// Build a vision-capable user message content with text + images
-async function buildUserContentParts(messageText, imageFiles) {
-  const parts = [];
-  if (messageText) {
-    parts.push({ type: "text", text: messageText });
-  }
-  for (const f of imageFiles) {
-    if (!f.mimetype?.startsWith("image/")) continue;
-    const url = await fileToDataUrl(f);
-    parts.push({
-      type: "image_url",
-      image_url: { url }
-    });
-  }
-  return parts;
-}
-
-// Preferred route used by homework-helper.html
-app.post("/api/chat", upload.array("files"), enforceLimit("ask"), async (req, res) => {
-  const cleanup = async () => {
-    // remove temp uploads
-    await Promise.allSettled((req.files || []).map(f => fs.unlink(f.path)));
-  };
-
-  try {
-    const userMessageText = (req.body?.message || "").trim();
-    const requestedModel = (req.body?.model || DEFAULT_OPENAI_MODEL).trim();
-    const model = ALLOWED_OPENAI_MODELS.has(requestedModel) ? requestedModel : DEFAULT_OPENAI_MODEL;
-
-    const contentParts = await buildUserContentParts(userMessageText, req.files || []);
-
-    if (contentParts.length === 0) {
-      await cleanup();
-      return res.status(400).json({ reply: "Please attach an image or write a message." });
-    }
-
-    const completion = await openai.chat.completions.create({
-      model,
-      messages: [
-        { role: "system", content: "You are GoldenSpaceAI. Be clear, step-by-step, and helpful for homework. Show reasoning steps cleanly." },
-        { role: "user", content: contentParts }
-      ],
-      temperature: 0.4,
-      max_tokens: 900
-    });
-
-    const reply = completion.choices?.[0]?.message?.content || "No reply.";
-    await cleanup();
-    res.json({ reply, model });
-  } catch (e) {
-    console.error("api/chat error", e);
-    await cleanup();
-    res.status(500).json({ reply: "OpenAI error" });
-  }
-});
-
-// Keep legacy route name too; supports text + single image
-app.post("/chat-advanced-ai", upload.single("file"), enforceLimit("ask"), async (req,res)=>{
-  const cleanup = async () => {
-    if (req.file?.path) {
-      await fs.unlink(req.file.path).catch(()=>{});
-    }
-  };
-
+app.post("/chat-advanced-ai", upload.single("file"), async (req,res)=>{
   try{
     const q = (req.body?.q || "").trim();
-    const modelType = (req.body?.modelType || "").toLowerCase();
-    const map = { pro: "gpt-4.1", flash: "gpt-4o-mini", gpt4: "gpt-4.1" };
-    const requested = map[modelType] || DEFAULT_OPENAI_MODEL;
-    const model = ALLOWED_OPENAI_MODELS.has(requested) ? requested : DEFAULT_OPENAI_MODEL;
+    if (!q && !req.file) return res.json({ answer:"Ask me something." });
 
-    const parts = await buildUserContentParts(q, req.file ? [req.file] : []);
-    if (parts.length === 0) {
-      await cleanup();
-      return res.json({ model, answer: "Ask me something or attach an image." });
+    const parts = [];
+    if (q) parts.push({ type: "input_text", text: q });
+    if (req.file) {
+      const b64 = (await import("fs")).promises.readFile(req.file.path).then(b=>b.toString("base64"));
+      const mime = req.file.mimetype || "image/png";
+      const dataUrl = `data:${mime};base64,${await b64}`;
+      parts.push({ type: "input_image", image_url: dataUrl });
     }
 
-    const completion = await openai.chat.completions.create({
-      model,
-      messages: [
-        { role: "system", content: "You are GoldenSpaceAI. Be concise and expert; if an image is provided, read it carefully." },
-        { role: "user", content: parts }
-      ],
-      temperature: 0.6,
-      max_tokens: 900
+    const r = await openai.responses.create({
+      model: DEFAULT_MODEL,
+      input: [{ role: "user", content: parts }],
     });
-
-    const answer = completion.choices?.[0]?.message?.content || "No response.";
-    await cleanup();
-    res.json({ model, answer });
+    const answer = r.output_text || "No response.";
+    res.json({ model: DEFAULT_MODEL, answer });
   }catch(e){
     console.error("advanced-ai error", e);
-    await cleanup();
     res.status(500).json({ answer:"Advanced AI error" });
   }
 });
 
-// ---------- Apply Paddle upgrades when user hits API ----------
-const upgradesByEmail = {}; // ensure exists
+// ---------- Vision chat for Homework Solver (multi-image) ----------
+const multiUpload = multer({ dest: "uploads/" });
+app.post("/api/chat", multiUpload.array("files"), async (req,res)=>{
+  try{
+    const message = (req.body?.message || "").trim();
+    const files = req.files || [];
+
+    if (!message && files.length === 0){
+      return res.status(400).json({ error: "Add an image or a message." });
+    }
+
+    const fs = (await import("fs")).promises;
+    const contents = [];
+    if (message) contents.push({ type: "input_text", text: message });
+
+    for (const f of files){
+      const mime = f.mimetype || "image/png";
+      const b64 = await fs.readFile(f.path).then(b=>b.toString("base64"));
+      const dataUrl = `data:${mime};base64,${b64}`;
+      contents.push({ type: "input_image", image_url: dataUrl });
+      // clean up tmp file (best-effort)
+      fs.unlink(f.path).catch(()=>{});
+    }
+
+    const r = await openai.responses.create({
+      model: DEFAULT_MODEL,
+      input: [{ role: "user", content: contents }],
+    });
+    const reply = r.output_text || "No reply.";
+    res.json({ model: DEFAULT_MODEL, reply });
+  }catch(e){
+    console.error("api/chat error", e);
+    res.status(500).json({ error:"OpenAI error" });
+  }
+});
+
+// ---------- (Optional) Paddle upgrades sync on /api/me ----------
+const upgradesByEmail = {}; // your existing impl
 app.get("/api/me",(req,res)=>{
   if (req.user?.email){
     const up = upgradesByEmail[req.user.email.toLowerCase()];
@@ -360,41 +358,20 @@ app.get("/api/me",(req,res)=>{
     search: limits.search===Infinity?Infinity:Math.max(0, limits.search-u.search),
     physics: limits.physics===Infinity?Infinity:Math.max(0, limits.physics-u.physics),
   };
-  res.json({ loggedIn:!!req.user, user:req.user||null, plan, limits, used:u, remaining });
-});
-
-// ---------- Gated pages ----------
-app.get("/learn-physics.html",(req,res)=>{
-  const plan = getPlan(req);
-  if (!PLAN_LIMITS[plan].learnPhysics){
-    return res.send(`<html><body style="font-family:sans-serif;text-align:center;margin-top:50px;">
-      <h2>🚀 Upgrade to the <span style="color:gold">Earth Pack</span> to unlock Learn Physics!</h2>
-      <p><a href="/plans.html">See Plans</a></p></body></html>`);
-  }
-  res.sendFile(path.join(__dirname,"learn-physics.html"));
-});
-
-app.get("/create-planet.html",(req,res)=>{
-  const plan = getPlan(req);
-  if (!PLAN_LIMITS[plan].createPlanet){
-    return res.send(`<html><body style="font-family:sans-serif;text-align:center;margin-top:50px;">
-      <h2>🌍 Upgrade to the <span style="color:orange">Sun Pack</span> to unlock Create Planet!</h2>
-      <p><a href="/plans.html">See Plans</a></p></body></html>`);
-  }
-  res.sendFile(path.join(__dirname,"create-planet.html"));
-});
-
-// ---------- Select free plan ----------
-app.post("/api/select-free",(req,res)=>{
-  if (req.user) req.user.plan = "moon";
-  if (req.session) req.session.plan = "moon";
-  res.json({ ok:true, plan:"moon" });
+  // minimal user profile fields used by the UI
+  const profile = req.user ? {
+    email: req.user.email,
+    name: req.user.name,
+    given_name: req.user.given_name,
+    picture: req.user.picture,
+  } : null;
+  res.json({ loggedIn:!!req.user, user:profile, plan, limits, used:u, remaining });
 });
 
 // ---------- Static & Health ----------
-app.use(express.static(__dirname));
+app.use(express.static(__dirname)); // serves / (home) publicly
 app.get("/health",(_req,res)=>res.json({ ok:true }));
 
 // ---------- Start ----------
 const PORT = process.env.PORT || 3000;
-app.listen(PORT,()=>console.log(`🚀 GoldenSpaceAI running on ${PORT}`));
+app.listen(PORT,()=>console.log(`🚀 GoldenSpaceAI running on ${PORT} (model: ${DEFAULT_MODEL})`));

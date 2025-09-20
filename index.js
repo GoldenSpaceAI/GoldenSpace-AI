@@ -192,7 +192,7 @@ app.use(express.static(__dirname));
 
 app.get("/", (req, res) => {
   if (req.isAuthenticated && req.isAuthenticated()) return res.sendFile(path.join(__dirname, "index.html"));
-  return res.sendFile(path.join(__dirname, "login.html"));
+  return res.sendFile(path.join(__dirname, "index.html"));
 });
 
 app.get("/login.html", (req, res) => res.sendFile(path.join(__dirname, "login.html")));

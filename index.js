@@ -1,4 +1,4 @@
-// index.js — GoldenSpaceAI (Fix 404s for OpenAI endpoints; no other changes)
+// index.js — GoldenSpaceAI (Home-first, Supabase plans, Gemini + OpenAI, robust file handling)
 
 import express from "express";
 import cors from "cors";
@@ -10,6 +10,7 @@ import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import cookieParser from "cookie-parser";
 import multer from "multer";
+import fs from "fs/promises";
 
 import { createClient } from "@supabase/supabase-js";
 import OpenAI from "openai";
@@ -26,11 +27,15 @@ const {
   SUPABASE_SERVICE_ROLE_KEY,
   GEMINI_API_KEY,
   OPENAI_API_KEY,
+  NODE_ENV,
+  PORT
 } = process.env;
 
 if (!SESSION_SECRET) throw new Error("SESSION_SECRET missing");
 if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) throw new Error("Google OAuth envs missing");
 if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) throw new Error("Supabase envs missing");
+if (!GEMINI_API_KEY) console.warn("⚠ GEMINI_API_KEY missing (Gemini endpoints will fail)");
+if (!OPENAI_API_KEY) console.warn("⚠ OPENAI_API_KEY missing (OpenAI endpoints will fail)");
 
 // ---------- SDKs ----------
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
@@ -43,6 +48,7 @@ const app = express();
 app.set("trust proxy", 1);
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json({ limit: "25mb" }));
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 const __filename = fileURLToPath(import.meta.url);
@@ -57,7 +63,7 @@ app.use(
     cookie: {
       httpOnly: true,
       sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
+      secure: NODE_ENV === "production",
       maxAge: 1000 * 60 * 60 * 24 * 14,
     },
   })
@@ -71,8 +77,9 @@ const PLAN_LIMITS = {
   moon: { ask: 40, search: 20 },
   earth: { ask: Infinity, search: Infinity },
   chatai: { ask: Infinity, search: Infinity }, // ChatAI pack
-  spacepack: { ask: 40, search: 20 },         // no change to chat/search
+  spacepack: { ask: 40, search: 20 },
 };
+
 const today = () => new Date().toISOString().slice(0, 10);
 
 // ---------- Supabase helpers ----------
@@ -127,6 +134,7 @@ async function getOrInitUsage(user_id) {
   return row;
 }
 async function bumpUsage(user_id, field) {
+  const d = today();
   const cur = await getOrInitUsage(user_id);
   const next = (cur[field] || 0) + 1;
   const { error } = await supabase.from("usage_daily").update({ [field]: next }).eq("id", cur.id);
@@ -163,7 +171,6 @@ function requireAuth(req, res, next) {
   if (req.accepts("html")) return res.redirect("/login.html");
   return res.status(401).json({ error: "Sign in required" });
 }
-
 function enforceLimit(kind) {
   return async (req, res, next) => {
     try {
@@ -187,21 +194,13 @@ function enforceLimit(kind) {
 // ---------- Static & root ----------
 app.use(express.static(__dirname));
 
-app.get("/", (req, res) => {
-  // Keep your current behavior: show login if not authenticated; otherwise home
-  if (req.isAuthenticated && req.isAuthenticated()) return res.sendFile(path.join(__dirname, "index.html"));
-  return res.sendFile(path.join(__dirname, "login.html"));
-});
+// Show HOME first (not login)
+app.get("/", (_req, res) => res.sendFile(path.join(__dirname, "index.html")));
+app.get("/login.html", (_req, res) => res.sendFile(path.join(__dirname, "login.html")));
 
-app.get("/login.html", (req, res) => res.sendFile(path.join(__dirname, "login.html")));
-
+// ---------- Auth routes ----------
 app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
-app.get(
-  OAUTH_CALLBACK,
-  passport.authenticate("google", { failureRedirect: "/login.html" }),
-  (_req, res) => res.redirect("/")
-);
-
+app.get(OAUTH_CALLBACK, passport.authenticate("google", { failureRedirect: "/login.html" }), (req, res) => res.redirect("/"));
 app.post("/logout", (req, res, next) => {
   req.logout(err => {
     if (err) return next(err);
@@ -226,6 +225,59 @@ app.get("/api/me", async (req, res) => {
     today: today(),
   });
 });
+
+// ================= SHARED FILE -> MESSAGE BUILDER =================
+
+const uploadMem = multer({ storage: multer.memoryStorage() });
+
+/**
+ * Turn form-data fields (message + files[]) into a Chat API "messages" array
+ * that ALWAYS matches the expected schema (fixes "string did not match the expected pattern").
+ */
+async function buildUserMessageBlocks({ text, files }) {
+  const blocks = [];
+
+  if (text && text.trim()) {
+    blocks.push({ type: "text", text: text.trim() });
+  }
+
+  if (files && files.length) {
+    for (const f of files) {
+      const mime = f.mimetype || "application/octet-stream";
+      if (mime.startsWith("image/")) {
+        // Vision supports images via URL or data URL. We'll send a data URL.
+        const b64 = f.buffer.toString("base64");
+        const dataUrl = `data:${mime};base64,${b64}`;
+        blocks.push({ type: "image_url", image_url: { url: dataUrl } });
+      } else if (
+        mime.startsWith("text/") ||
+        mime === "application/json" ||
+        mime === "application/xml"
+      ) {
+        // Small text-like files: include their content directly
+        const content = f.buffer.toString("utf8").slice(0, 12000);
+        blocks.push({
+          type: "text",
+          text: `File "${f.originalname}" (${mime}), first content bytes:\n\n${content}`,
+        });
+      } else {
+        // Binary docs (pdf, pptx, docx, xlsx, etc.) — Chat Completions cannot ingest them directly.
+        // Provide a short descriptor so the model can still answer based on the user's text.
+        blocks.push({
+          type: "text",
+          text: `User attached a file: "${f.originalname}" (${mime}, ${f.size} bytes). I cannot read binary docs here. Use the user's text for context.`,
+        });
+      }
+    }
+  }
+
+  // If nothing at all, ensure we still send *a* text block
+  if (blocks.length === 0) {
+    blocks.push({ type: "text", text: "Hello" });
+  }
+
+  return blocks;
+}
 
 // ================= FEATURES =================
 
@@ -256,88 +308,53 @@ app.post("/search-info", requireAuth, enforceLimit("search"), async (req, res) =
   }
 });
 
-// ---------- OpenAI: Advanced Chat & Homework (Fix 404s) ----------
-
-const uploadMem = multer({ storage: multer.memoryStorage() });
-
-/**
- * Unified handler that:
- * - accepts text and optional file(s)
- * - includes first image as vision input
- * - remembers last 20 messages in the user's session
- */
-async function handleAdvancedChat(req, res) {
+// ---------- Advanced Chat (OpenAI) — remembers last 20 msgs; supports files ----------
+app.post("/api/chat", requireAuth, uploadMem.array("files"), async (req, res) => {
   try {
-    // Ensure session history exists
+    // Build multi-modal user content
+    const userBlocks = await buildUserMessageBlocks({
+      text: req.body?.message || "",
+      files: req.files || [],
+    });
+
+    // Session memory
     req.session.chatHistory ||= [];
-
-    // Text from front-end
-    const userText = (req.body?.message || req.body?.q || "").trim() || "Hello";
-
-    // Find first image/* file to include as vision input
-    let imagePart = null;
-    for (const f of req.files || []) {
-      if ((f.mimetype || "").startsWith("image/")) {
-        const b64 = f.buffer.toString("base64");
-        const dataUrl = `data:${f.mimetype};base64,${b64}`;
-        imagePart = { type: "image_url", image_url: { url: dataUrl } };
-        break;
-      }
-    }
-
-    // Build latest user content block
-    const latestUserContent = imagePart
-      ? [{ type: "text", text: userText }, imagePart]
-      : [{ type: "text", text: userText }];
-
-    // Keep only the last 20 turns (text-only) in session history for continuity
-    req.session.chatHistory.push({ role: "user", content: userText });
+    req.session.chatHistory.push({ role: "user", content: userBlocks });
     req.session.chatHistory = req.session.chatHistory.slice(-20);
 
-    // Call OpenAI
+    const model = (req.body?.model || "gpt-4o-mini").trim() || "gpt-4o-mini";
+
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model,
       messages: [
         { role: "system", content: "You are GoldenSpaceAI, concise and helpful." },
         ...req.session.chatHistory,
-        // include the current message again, with the image if present
-        { role: "user", content: latestUserContent }
       ],
-      temperature: 0.3,
+      temperature: 0.2,
     });
 
     const reply = completion.choices?.[0]?.message?.content || "No reply.";
     req.session.chatHistory.push({ role: "assistant", content: reply });
-
-    req.session.save(() => res.json({ reply, model: "gpt-4o-mini" }));
+    req.session.save(() => res.json({ reply, model }));
   } catch (e) {
     console.error("/api/chat error", e);
     res.status(500).json({ error: e?.message || "Chat error" });
   }
-}
+});
 
-/**
- * Homework Vision (kept for compatibility with pages calling /api/homework)
- */
-async function handleHomework(req, res) {
+// ---------- Homework Solver (OpenAI Vision) ----------
+app.post("/api/homework", requireAuth, uploadMem.single("image"), async (req, res) => {
   try {
-    const prompt = (req.body?.prompt || req.body?.message || "Solve this step by step.").slice(0, 4000);
-    if (!req.file) return res.status(400).json({ error: "No image received" });
+    const prompt = (req.body?.prompt || "Solve this step by step.").slice(0, 4000);
 
-    const b64 = req.file.buffer.toString("base64");
-    const dataUrl = `data:${req.file.mimetype};base64,${b64}`;
+    const files = [];
+    if (req.file) files.push(req.file);
+
+    const blocks = await buildUserMessageBlocks({ text: prompt, files });
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "user",
-          content: [
-            { type: "text", text: prompt },
-            { type: "image_url", image_url: { url: dataUrl } },
-          ],
-        },
-      ],
+      messages: [{ role: "user", content: blocks }],
       temperature: 0.2,
     });
 
@@ -347,21 +364,28 @@ async function handleHomework(req, res) {
     console.error("/api/homework error", e);
     res.status(500).json({ error: e?.message || "Homework solver error" });
   }
-}
+});
 
-// ---- ROUTES (add both canonical paths and aliases to prevent 404) ----
+// ---------- Voice+Camera text endpoint (still HTTP; no websockets) ----------
+app.post("/api/live-text", requireAuth, uploadMem.single("frame"), async (req, res) => {
+  try {
+    const text = (req.body?.message || "").toString();
+    const files = req.file ? [req.file] : [];
+    const blocks = await buildUserMessageBlocks({ text, files });
 
-// Canonical OpenAI chat endpoint used by chat-advancedai.html and other pages
-app.post("/api/chat", requireAuth, uploadMem.array("files"), handleAdvancedChat);
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [{ role: "user", content: blocks }],
+      temperature: 0.3,
+    });
 
-// Backwards/alt alias some front-ends used
-app.post("/chat-advanced-ai", requireAuth, uploadMem.array("files"), handleAdvancedChat);
-
-// Canonical homework vision endpoint
-app.post("/api/homework", requireAuth, uploadMem.single("image"), handleHomework);
-
-// Backwards/alt alias
-app.post("/homework", requireAuth, uploadMem.single("image"), handleHomework);
+    const reply = completion.choices?.[0]?.message?.content || "No reply.";
+    res.json({ reply, model: "gpt-4o-mini" });
+  } catch (e) {
+    console.error("/api/live-text error", e);
+    res.status(500).json({ error: e?.message || "Live text error" });
+  }
+});
 
 // --------- Gate pages (html files) ----------
 function gate(file) {
@@ -373,6 +397,7 @@ function gate(file) {
 }
 app.get("/advanced-ai.html", gate("advanced-ai.html"));
 app.get("/chat-advancedai.html", gate("chat-advancedai.html"));
+app.get("/chat-advancedai-voice.html", gate("chat-advancedai-voice.html"));
 app.get("/homework-helper.html", gate("homework-helper.html"));
 app.get("/learn-physics.html", gate("learn-physics.html"));
 app.get("/create-planet.html", gate("create-planet.html"));
@@ -384,5 +409,5 @@ app.get("/your-space.html", gate("your-space.html"));
 app.get("/health", (_req, res) => res.json({ ok: true }));
 
 // Start
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 GoldenSpaceAI running on ${PORT}`));
+const APP_PORT = PORT || 3000;
+app.listen(APP_PORT, () => console.log(`🚀 GoldenSpaceAI running on ${APP_PORT}`));

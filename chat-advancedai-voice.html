@@ -1,1 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>GoldenSpaceAI · Live Voice + Camera</title>
+<meta name="theme-color" content="#e9f3ff" />
+<style>
+  :root{
+    --bg:#e9f3ff; --bg2:#d9ebff; --line:#c6dbfb;
+    --card:#ffffffee; --ink:#0a1a2b; --muted:#5c7091;
+    --accent:#2e6df6; --ok:#12b981; --warn:#f59e0b; --err:#ef4444;
+    --ring: rgba(46,109,246,.25); --shadow:0 18px 50px rgba(14,45,76,.20); --radius:16px;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; color:var(--ink);
+    font:15px/1.6 ui-sans-serif,system-ui,-apple-system,Segoe UI,Inter,Roboto,Arial;
+    background:
+      radial-gradient(1000px 600px at 10% -10%, var(--bg2), transparent 60%),
+      radial-gradient(1200px 800px at 90% 120%, #f2f8ff, var(--bg) 60%);
+    overflow:hidden;
+  }
+  .lines{
+    position:fixed; inset:0; pointer-events:none; z-index:-1;
+    background-image:
+      linear-gradient(to right, var(--line) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--line) 1px, transparent 1px);
+    background-size:48px 48px,48px 48px; opacity:.6;
+  }
+  .wrap{display:grid; grid-template-rows:auto 1fr auto; height:100%}
+  header{
+    display:flex; align-items:center; gap:10px; padding:12px 14px;
+    background:linear-gradient(180deg,#f6faff,#edf4ff);
+    border-bottom:1px solid #d2e3ff;
+  }
+  .logo{width:28px;height:28px;border-radius:50%;
+        background:conic-gradient(from 210deg,#ffd86a,#f6c64a,#eb8b36,#ffd86a);
+        box-shadow:0 0 0 2px rgba(246,198,74,.25) inset}
+  .brand{font-weight:800}
+  .tag{margin-left:6px; font-size:12px; color:#245; background:#e6f0ff; border:1px solid #d3e2ff; padding:3px 8px; border-radius:999px}
 
+  .center{display:grid; place-items:center; padding:16px}
+  .panel{
+    width:min(1100px, 95vw);
+    height:min(84vh, 940px);
+    background:var(--card);
+    border:1px solid #dbe6ff; border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    display:grid; grid-template-columns:380px 1fr; overflow:hidden;
+  }
+  @media (max-width: 980px){ .panel{ grid-template-columns:1fr; height:auto; min-height:88vh } }
+
+  /* left: camera */
+  .cam-col{background:linear-gradient(180deg,#f8fbff,#eef5ff); border-right:1px solid #e1ecff;
+           display:grid; grid-template-rows:auto 1fr auto}
+  .cam-head{padding:12px 14px; display:flex; align-items:center; gap:10px}
+  .cam-head h2{margin:0; font-size:16px}
+  .cam-body{padding:12px; display:grid; gap:12px}
+  .video-box{position:relative; border:1px solid #d9e7ff; border-radius:12px; overflow:hidden; background:#eaf3ff; aspect-ratio:4/3; display:grid; place-items:center}
+  video{width:100%; height:100%; object-fit:cover; background:#eaf3ff}
+  .status-chip{position:absolute; left:8px; top:8px; font-size:12px; color:#245; background:#ffffffd9; padding:4px 8px; border-radius:999px; border:1px solid #d9e7ff}
+  .snap-note{position:absolute; right:8px; bottom:8px; font-size:12px; color:#245; background:#ffffffcc; padding:4px 8px; border-radius:999px; border:1px solid #d9e7ff}
+  .cam-controls{display:flex; flex-wrap:wrap; gap:8px}
+  .btn{display:inline-flex; align-items:center; justify-content:center; gap:8px; height:40px; padding:0 12px; border-radius:10px; border:1px solid #cfe0ff; background:#fff; color:#123; font-weight:700; cursor:pointer}
+  .btn.primary{ background:#2e6df6; color:#fff; border-color:#2e6df6; box-shadow:0 6px 16px rgba(46,109,246,.28) }
+  .btn.good{ background:#12b981; color:#fff; border-color:#12b981 }
+  .btn.warn{ background:#f59e0b; color:#fff; border-color:#f59e0b }
+  .btn.ghost{ background:#f7fbff }
+  .row{display:flex; align-items:center; gap:8px}
+  .small{font-size:12px; color:var(--muted)}
+  .toggle{display:inline-flex; align-items:center; gap:6px; font-size:13px}
+  .toggle input{width:18px; height:18px}
+
+  /* right: chat */
+  .chat-col{display:grid; grid-template-rows:auto 1fr auto}
+  .chat-head{padding:12px 14px; display:flex; align-items:center; gap:10px}
+  .chat-head .live-dot{ width:10px; height:10px; border-radius:50%; background:#ccc }
+  .chat-head .live-dot.on{ background:#12b981; box-shadow:0 0 0 4px rgba(18,185,129,.18) }
+  .model{ margin-left:auto }
+  select{ height:36px; border-radius:10px; border:1px solid #cfe0ff; background:#fff; padding:0 10px; font-weight:700; color:#113 }
+
+  .chat-log{ padding:12px 14px 130px; overflow:auto; background:linear-gradient(180deg,#fbfdff,#f5faff) }
+  .msg{ max-width:min(760px, 92%); background:#fff; border:1px solid #e3ecff; border-radius:12px; padding:12px 14px; margin:8px 0; box-shadow:0 2px 10px rgba(17,45,90,.06) }
+  .msg.user{ margin-left:auto; border-color:#d7e8ff; background:#f8fbff }
+  .msg .who{ font-size:12px; color:#5a6f95; margin-bottom:6px }
+  .msg .txt{ white-space:pre-wrap; word-wrap:break-word }
+  .spinner{ width:18px; height:18px; border-radius:50%; border:2px solid #cfe0ff; border-top-color:#2e6df6; animation:spin 1s linear infinite; display:inline-block }
+  @keyframes spin{ to{ transform: rotate(360deg) } }
+
+  .composer-wrap{ position:relative }
+  .composer{
+    position:absolute; left:0; right:0; bottom:12px; margin:0 14px;
+    display:flex; align-items:center; gap:8px; padding:10px;
+    background:#ffffffd9; backdrop-filter: blur(6px);
+    border:1px solid #d3e4ff; border-radius:14px; box-shadow:0 8px 26px rgba(15,54,104,.12);
+  }
+  textarea{
+    flex:1; resize:none; height:44px; max-height:120px; border:1px solid #d7e8ff; border-radius:10px; padding:10px 12px;
+    font:inherit; color:#123; outline:none;
+  }
+  textarea:focus{ box-shadow: 0 0 0 3px var(--ring) }
+  .send{ height:44px; min-width:56px; border-radius:10px; border:none; cursor:pointer; font-weight:800; color:#fff; background:#2e6df6; box-shadow:0 8px 18px rgba(46,109,246,.28) }
+  .mic{ height:44px; width:44px; border-radius:999px; border:1px solid #cfe0ff; background:#fff; cursor:pointer }
+  .mic.rec{ outline:3px solid rgba(46,109,246,.25) }
+
+  footer{ padding:10px 14px; color:#6b84ad; border-top:1px solid #d8e6ff; font-size:12px; background:#f7fbff }
+</style>
+</head>
+<body>
+<div class="lines"></div>
+
+<div class="wrap">
+  <header>
+    <div class="logo" aria-hidden="true"></div>
+    <div class="brand">GoldenSpaceAI</div>
+    <span class="tag">Live Voice + Camera</span>
+    <div style="flex:1"></div>
+    <a class="small" href="/" aria-label="Back to Home">← Home</a>
+  </header>
+
+  <div class="center">
+    <section class="panel" aria-label="Live Voice and Camera Chat">
+      <!-- Left: Camera -->
+      <aside class="cam-col" aria-label="Camera">
+        <div class="cam-head">
+          <h2>Camera</h2>
+          <span id="camStatus" class="small">Not started</span>
+        </div>
+        <div class="cam-body">
+          <div class="video-box">
+            <video id="video" playsinline muted></video>
+            <div id="camChip" class="status-chip">Idle</div>
+            <div id="snapNote" class="snap-note" style="display:none">Live auto-snap</div>
+          </div>
+
+          <div class="cam-controls">
+            <button id="startCam" class="btn primary" type="button">Enable Camera</button>
+            <button id="stopCam" class="btn ghost" type="button" disabled>Disable</button>
+            <button id="flipCam" class="btn ghost" type="button" disabled>Flip</button>
+          </div>
+
+          <div class="row">
+            <label class="toggle" for="liveToggle">
+              <input id="liveToggle" type="checkbox" />
+              Go Live (auto-capture every 2s)
+            </label>
+          </div>
+
+          <div class="small">Tip: When “Go Live” is ON, a frame is captured every 2 seconds and sent with your current prompt.</div>
+        </div>
+      </aside>
+
+      <!-- Right: Chat -->
+      <section class="chat-col" aria-label="Chat">
+        <div class="chat-head">
+          <div class="live-dot" id="liveDot" title="Live status"></div>
+          <div>Assistant</div>
+          <div style="flex:1"></div>
+          <label class="small" for="model">Model</label>
+          <select id="model" class="model" aria-label="Model">
+            <option value="gpt-4o-mini" selected>gpt-4o-mini (Vision)</option>
+          </select>
+        </div>
+
+        <div id="chat" class="chat-log" aria-live="polite" aria-relevant="additions">
+          <div class="msg ai">
+            <div class="who">GoldenSpaceAI</div>
+            <div class="txt">Hi! Enable the camera. You can type a prompt and press <b>Send</b> (captures one frame), or turn on <b>Go Live</b> to auto-capture every 2s while you move the scene.</div>
+          </div>
+        </div>
+
+        <div class="composer-wrap">
+          <div class="composer">
+            <button id="micBtn" class="mic" type="button" aria-label="Speak your prompt">🎙️</button>
+            <textarea id="prompt" placeholder="Your live prompt… (Shift+Enter for newline). Example: 'Solve the visible problem step-by-step'"></textarea>
+            <button id="sendBtn" class="send" type="button" aria-label="Send message">Send</button>
+          </div>
+        </div>
+      </section>
+    </section>
+  </div>
+
+  <footer>
+    Live uses your browser camera & mic. For true low-latency streaming, you can later upgrade your backend to WebSockets + OpenAI Realtime — this page is designed to drop into that model too.
+  </footer>
+</div>
+
+<!-- Hidden canvas for snapshots -->
+<canvas id="snapshotCanvas" style="display:none"></canvas>
+
+<script>
+  // ===== Config & DOM =====
+  const BACKEND_URL = "/voice/ask"; // Your backend route: returns { ok, text }
+  const CAPTURE_INTERVAL_MS = 2000;  // live capture cadence
+
+  const video = document.getElementById("video");
+  const camChip = document.getElementById("camChip");
+  const snapNote = document.getElementById("snapNote");
+  const camStatus = document.getElementById("camStatus");
+  const startBtn = document.getElementById("startCam");
+  const stopBtn = document.getElementById("stopCam");
+  const flipBtn = document.getElementById("flipCam");
+  const liveToggle = document.getElementById("liveToggle");
+  const liveDot = document.getElementById("liveDot");
+
+  const chat = document.getElementById("chat");
+  const promptEl = document.getElementById("prompt");
+  const sendBtn = document.getElementById("sendBtn");
+  const micBtn = document.getElementById("micBtn");
+  const modelSel = document.getElementById("model");
+  const canvas = document.getElementById("snapshotCanvas");
+
+  // ===== State =====
+  let currentStream = null;
+  let usingRear = true;
+  let liveTimer = null;
+  let requestInFlight = false;
+  let rec = null, listening = false;
+
+  function addMsg(role, text){
+    const div = document.createElement("div");
+    div.className = "msg " + role;
+    const who = document.createElement("div");
+    who.className = "who";
+    who.textContent = role === "user" ? "You" : "GoldenSpaceAI";
+    const body = document.createElement("div");
+    body.className = "txt";
+    body.textContent = text;
+    div.append(who, body);
+    chat.append(div);
+    chat.scrollTop = chat.scrollHeight;
+  }
+  function addSpinner(){
+    const div = document.createElement("div");
+    div.className = "msg ai";
+    const who = document.createElement("div");
+    who.className = "who";
+    who.textContent = "GoldenSpaceAI";
+    const body = document.createElement("div");
+    body.className = "txt";
+    const sp = document.createElement("span");
+    sp.className = "spinner";
+    body.append(sp, document.createTextNode(" Thinking…"));
+    div.append(who, body);
+    chat.append(div);
+    chat.scrollTop = chat.scrollHeight;
+    return div;
+  }
+
+  // ===== Camera control =====
+  async function startCamera(){
+    try{
+      stopCamera();
+      const constraints = {
+        audio: false,
+        video: {
+          facingMode: usingRear ? { ideal: "environment" } : "user",
+          width: { ideal: 1280 }, height: { ideal: 720 }
+        }
+      };
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      currentStream = stream;
+      video.srcObject = stream;
+      await video.play();
+      camStatus.textContent = "Live";
+      camChip.textContent = "Live";
+      startBtn.disabled = true; stopBtn.disabled = false; flipBtn.disabled = false;
+    } catch (err) {
+      camStatus.textContent = "Camera unavailable";
+      camChip.textContent = "Error";
+      alert("Could not start camera: " + (err.message || err));
+    }
+  }
+  function stopCamera(){
+    if (currentStream){
+      currentStream.getTracks().forEach(t => t.stop());
+      currentStream = null;
+    }
+    video.srcObject = null;
+    camStatus.textContent = "Not started";
+    camChip.textContent = "Idle";
+    startBtn.disabled = false; stopBtn.disabled = true; flipBtn.disabled = true;
+  }
+  startBtn.addEventListener("click", startCamera);
+  stopBtn.addEventListener("click", stopCamera);
+  flipBtn.addEventListener("click", async () => { usingRear = !usingRear; await startCamera(); });
+
+  // ===== Snapshot helper (WebP) =====
+  function captureFrame(){
+    if (!video.videoWidth || !video.videoHeight) return null;
+    const maxW = 1280, maxH = 720;
+    const w = video.videoWidth, h = video.videoHeight;
+    const r = Math.min(maxW / w, maxH / h, 1);
+    const outW = Math.round(w * r), outH = Math.round(h * r);
+
+    canvas.width = outW; canvas.height = outH;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(video, 0, 0, outW, outH);
+    return new Promise(resolve => {
+      canvas.toBlob(b => resolve(b), "image/webp", 0.85);
+    });
+  }
+
+  // ===== Sending =====
+  async function sendOnce(text, includeSnapshot=true){
+    const message = (text || "").trim();
+    const model = modelSel.value || "gpt-4o-mini";
+
+    // prevent overlap in live mode
+    if (requestInFlight) return;
+    requestInFlight = true;
+
+    const thinking = addSpinner();
+
+    try{
+      const form = new FormData();
+      form.append("message", message || "Describe the scene and help me step-by-step.");
+      form.append("model", model);
+
+      if (includeSnapshot && currentStream){
+        const blob = await captureFrame();
+        if (blob) form.append("image", new File([blob], "frame.webp", { type: "image/webp" }));
+      }
+
+      const res = await fetch(BACKEND_URL, { method:"POST", body: form, credentials:"include" });
+      let data = {};
+      try { data = await res.json(); } catch {}
+      chat.removeChild(thinking);
+
+      if (!res.ok) {
+        addMsg("ai", "⚠️ " + (data?.error || `Backend error (${res.status})`));
+        requestInFlight = false;
+        return;
+      }
+      const reply = data?.text || data?.reply || "No reply.";
+      addMsg("ai", reply);
+      speak(reply);
+    } catch (err) {
+      chat.removeChild(thinking);
+      addMsg("ai", "⚠️ " + (err.message || "Network error"));
+    } finally {
+      requestInFlight = false;
+    }
+  }
+
+  // manual send (captures one frame)
+  sendBtn.addEventListener("click", async ()=>{
+    const txt = promptEl.value;
+    if (txt) addMsg("user", txt);
+    await sendOnce(txt, true);
+    promptEl.value = "";
+  });
+  promptEl.addEventListener("keydown", async (e)=>{
+    if (e.key === "Enter" && !e.shiftKey){
+      e.preventDefault();
+      const txt = promptEl.value;
+      if (txt) addMsg("user", txt);
+      await sendOnce(txt, true);
+      promptEl.value = "";
+    }
+  });
+
+  // ===== Live loop =====
+  function startLive(){
+    if (!currentStream){
+      alert("Enable the camera first.");
+      liveToggle.checked = false;
+      return;
+    }
+    liveDot.classList.add("on");
+    snapNote.style.display = "inline-block";
+    camChip.textContent = "Live • Auto";
+    // kick off immediately, then at interval
+    loopOnce();
+    liveTimer = setInterval(loopOnce, CAPTURE_INTERVAL_MS);
+  }
+  function stopLive(){
+    liveDot.classList.remove("on");
+    snapNote.style.display = "none";
+    camChip.textContent = "Live";
+    if (liveTimer){ clearInterval(liveTimer); liveTimer = null; }
+  }
+  async function loopOnce(){
+    // use current prompt text (do not add user bubble every 2s to avoid spam)
+    const prompt = (promptEl.value || "").trim();
+    await sendOnce(prompt || "Describe what you see and guide me.", true);
+  }
+  liveToggle.addEventListener("change", ()=>{
+    if (liveToggle.checked) startLive(); else stopLive();
+  });
+
+  // ===== Speech input (Web Speech API) + speech output (SpeechSynthesis) =====
+  (function initSpeech(){
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SR){
+      const r = new SR();
+      r.lang = "en-US"; r.interimResults = false; r.continuous = false; r.maxAlternatives = 1;
+      r.onstart = ()=>{ listening = true; micBtn.classList.add("rec"); };
+      r.onend   = ()=>{ listening = false; micBtn.classList.remove("rec"); };
+      r.onerror = (e)=> addMsg("ai", "⚠️ Mic error: " + (e.error || "unknown"));
+      r.onresult = async (ev)=>{
+        const text = (ev.results?.[0]?.[0]?.transcript || "").trim();
+        if (!text) return;
+        promptEl.value = text;
+        addMsg("user", text);
+        await sendOnce(text, true);
+        promptEl.value = "";
+      };
+      rec = r;
+    } else {
+      micBtn.title = "Speech input not supported";
+    }
+  })();
+  micBtn.addEventListener("click", ()=>{
+    if (!rec){ addMsg("ai", "⚠️ Microphone not supported in this browser."); return; }
+    if (listening){ try{ rec.stop(); }catch{} return; }
+    try{ rec.start(); }catch{}
+  });
+
+  function speak(text){
+    try{
+      if (!("speechSynthesis" in window)) return;
+      const u = new SpeechSynthesisUtterance(text);
+      u.rate = 1.0; u.pitch = 1.0; u.lang = "en-US";
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(u);
+    }catch{}
+  }
+</script>
+</body>
+</html>

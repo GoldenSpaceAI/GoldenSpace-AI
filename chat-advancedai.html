@@ -22,10 +22,8 @@
       background-attachment:fixed; overflow:hidden;
     }
     .stars,.twinkle{position:fixed; inset:0; z-index:-2; pointer-events:none}
-    .stars{
-      background-image:url("https://images.unsplash.com/photo-1444703686981-a3abbc4d4fe3?q=80&w=1600&auto=format&fit=crop");
-      background-size:cover; filter:saturate(1.05) brightness(.9) contrast(1.1); opacity:.28;
-    }
+    .stars{background-image:url("https://images.unsplash.com/photo-1444703686981-a3abbc4d4fe3?q=80&w=1600&auto=format&fit=crop");
+      background-size:cover; filter:saturate(1.05) brightness(.9) contrast(1.1); opacity:.28}
     .twinkle{
       background-image:
         radial-gradient(2px 2px at 20% 30%, rgba(255,255,255,.45), transparent 55%),
@@ -51,16 +49,9 @@
     }
     .badge{font-size:.75rem;color:#1a1606;background:linear-gradient(180deg,var(--gold-1),var(--gold-2));
       padding:4px 8px;border-radius:999px;box-shadow:0 2px 10px rgba(255,215,0,.25)}
-
-    /* model selector */
-    .model-select{
-      display:flex; align-items:center; gap:8px;
-      padding:6px 10px; border-radius:999px;
-      background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1);
-      font-size:.9rem;
-    }
-    .model-select select{
-      background:transparent; color:var(--text); border:none; outline:none; font-weight:700;
+    .model{
+      margin-left:12px; height:36px; border-radius:10px; background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.12); color:var(--text); padding:0 10px
     }
 
     main#chat{position:relative;height:100%;overflow:auto;padding:18px 18px 160px;scroll-behavior:smooth}
@@ -72,10 +63,9 @@
     .spinner{width:20px;height:20px;border-radius:50%;border:2px solid rgba(255,255,255,.2);border-top-color:var(--gold-1);animation:spin 1s linear infinite}
     @keyframes spin{to{transform:rotate(360deg)}}
 
-    /* Composer */
     .composer-wrap{position:fixed;left:0;right:0;bottom:18px;display:flex;justify-content:center;pointer-events:none}
     .composer{
-      pointer-events:auto;width:min(980px,92%);display:grid;grid-template-columns:56px 1fr 56px 56px;gap:10px;padding:10px;
+      pointer-events:auto;width:min(980px,92%);display:flex;align-items:center;gap:10px;padding:10px;
       border-radius:18px;background:var(--glass);backdrop-filter:blur(10px);
       border:1px solid rgba(255,255,255,.08); box-shadow:0 10px 30px rgba(0,0,0,.35), 0 0 0 1px var(--ring)
     }
@@ -83,99 +73,74 @@
       background:rgba(255,255,255,.06);display:grid;place-items:center;transition:.2s transform,.2s background}
     .btn:hover{transform:translateY(-1px);background:rgba(255,255,255,.12)}
     .btn.plus::before{content:"+";font-size:28px;color:var(--gold-1);font-weight:700}
-    .btn.mic{background:linear-gradient(180deg,var(--gold-1),var(--gold-2)); box-shadow:0 8px 18px rgba(255,215,0,.25)}
-    .btn.mic::before{content:"🎤";font-size:22px;color:#141209;font-weight:700}
-    .btn.send{background:linear-gradient(180deg,var(--gold-1),var(--gold-2)); box-shadow:0 8px 18px rgba(255,215,0,.25)}
     .btn.send::before{content:"➤";font-size:18px;color:#141209;font-weight:700}
+    .btn.send{background:linear-gradient(180deg,var(--gold-1),var(--gold-2));box-shadow:0 8px 18px rgba(255,215,0,.25)}
 
-    textarea{
-      width:100%; resize:none; min-height:56px; max-height:140px; padding:14px; border-radius:14px;
-      background:rgba(255,255,255,.06); color:var(--text); border:1px solid rgba(255,255,255,.1);
-      font-size:15px; line-height:1.4; outline:none;
-    }
-    textarea::placeholder{color:rgba(255,255,255,.6)}
+    .mic{position:relative;background:linear-gradient(180deg,var(--gold-1),var(--gold-2));box-shadow:0 8px 18px rgba(255,215,0,.25)}
+    .mic::before{content:"🎤";font-size:22px;color:#141209;font-weight:700}
 
-    .attachments{grid-column:1 / -1; display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:6px}
+    textarea{flex:1;resize:none;height:56px;max-height:140px;padding:12px 14px;border-radius:12px;
+      background:rgba(255,255,255,.06);color:var(--text);border:1px solid rgba(255,255,255,.09);outline:none;font-size:15px}
+
+    .hidden{display:none}
+    .attachments{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px}
     .chip{display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,.1);
       background:rgba(255,255,255,.06);padding:6px 8px;border-radius:999px;font-size:.8rem}
     .chip button{background:none;border:none;color:var(--muted);cursor:pointer}
-    .hidden{display:none}
   </style>
 </head>
 <body>
-  <div class="stars"></div>
-  <div class="twinkle"></div>
+  <div class="stars"></div><div class="twinkle"></div>
 
   <div class="wrap">
     <header>
       <div class="brand"><div class="logo"></div><span>GoldenSpaceAI</span></div>
       <span class="badge">Advanced Assistant</span>
+      <select id="modelSel" class="model" title="Model">
+        <option value="gpt-5">gpt-5</option>
+        <option value="gpt-5-nano">gpt-5-nano</option>
+        <option value="gpt-4o-mini" selected>gpt-4o-mini</option>
+        <option value="gpt-4">gpt-4</option>
+      </select>
       <div style="flex:1"></div>
-      <div class="model-select" title="Choose model">
-        <span style="opacity:.8">Model</span>
-        <select id="model">
-          <option value="gpt-5">gpt-5</option>
-          <option value="gpt-5-nano">gpt-5-nano</option>
-          <option value="gpt-4o-mini" selected>gpt-4o-mini</option>
-          <option value="gpt-4">gpt-4</option>
-        </select>
-      </div>
     </header>
 
     <main id="chat">
       <div class="msg ai">
         <small>GoldenSpaceAI</small>
-        Welcome to your golden, galaxy-powered assistant. Attach a <strong>document</strong> with the ＋ button, type your request in the middle box, then press ➤ Send. Use the mic to speak if you like.
+        Welcome to your golden, galaxy-powered assistant. Attach a document with the <strong>＋</strong> button, type your request in the middle box, then press <strong>Send</strong>. Use the mic to speak if you like.
       </div>
     </main>
 
     <div class="composer-wrap">
       <div class="composer">
-        <!-- Left: file upload -->
         <button id="plusBtn" class="btn plus" title="Attach file"></button>
-
-        <!-- Middle: visible typing area -->
         <textarea id="prompt" placeholder="Type your message… (Shift+Enter for newline)"></textarea>
-
-        <!-- Right: microphone -->
         <button id="micBtn" class="btn mic" title="Talk"></button>
-
-        <!-- Send -->
         <button id="sendBtn" class="btn send" title="Send"></button>
-
-        <div id="attachments" class="attachments hidden"></div>
       </div>
     </div>
+    <div class="attachments" id="attachments" style="width:min(980px,92%);margin:6px auto 0"></div>
   </div>
 
-  <!-- Hidden file input (documents; you can widen as needed) -->
+  <!-- Hidden file input -->
   <input id="fileInput" class="hidden" type="file"
-         accept=".pdf,.txt,.md,.json,.csv,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.rtf,.html,.xml,.epub,.odt,.ods,.odp,*/*" />
+         accept=".txt,.md,.json,.csv,.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,image/*"/>
 
   <script>
-    // ==== Config ====
-    const BACKEND_URL = "/chat-advanced-ai"; // your server route
+    const BACKEND_URL = "/chat-advanced-ai";
 
-    // ==== DOM ====
     const chat = document.getElementById("chat");
     const plusBtn = document.getElementById("plusBtn");
     const fileInput = document.getElementById("fileInput");
     const micBtn = document.getElementById("micBtn");
     const sendBtn = document.getElementById("sendBtn");
     const promptEl = document.getElementById("prompt");
-    const attsEl = document.getElementById("attachments");
-    const modelEl = document.getElementById("model");
+    const modelSel = document.getElementById("modelSel");
+    const atts = document.getElementById("attachments");
 
-    // Preselect model from ?model= query if provided
-    const urlModel = new URLSearchParams(location.search).get("model");
-    if (urlModel) {
-      const opt = [...modelEl.options].find(o => o.value === urlModel);
-      if (opt) modelEl.value = urlModel;
-    }
+    let currentFile = null;
 
-    let attachedFile = null;
-
-    // ==== Helpers ====
     function el(tag, attrs={}, ...children){
       const n = document.createElement(tag);
       Object.entries(attrs).forEach(([k,v])=>{
@@ -189,104 +154,83 @@
     function addMsg(role, text){
       const m = el("div",{class:`msg ${role}`});
       m.append(el("small",{}, role==="user"?"You":"GoldenSpaceAI"));
-      m.append(el("div",{html:(text||"").toString().replace(/\n/g,"<br/>")}));
+      m.append(el("div",{html:String(text||"").replace(/\n/g,"<br/>")}));
       chat.append(m); chat.scrollTop = chat.scrollHeight; return m;
     }
     function addSpinner(){
-      const row = el("div",{class:"msg ai"}); row.append(el("small",{},"GoldenSpaceAI")); row.append(el("div",{class:"spinner"}));
+      const row = el("div",{class:"msg ai"});
+      row.append(el("small",{},"GoldenSpaceAI"));
+      const s = el("div",{class:"spinner"});
+      row.append(s);
       chat.append(row); chat.scrollTop = chat.scrollHeight; return row;
     }
-    function bytesToSize(b){ if(b===0) return "0B"; const k=1024,s=['B','KB','MB','GB']; const i=Math.floor(Math.log(b)/Math.log(k)); return (b/Math.pow(k,i)).toFixed(1)+' '+s[i]; }
+
+    // attachments UI
     function renderAttachment(){
-      attsEl.innerHTML = "";
-      if(!attachedFile){ attsEl.classList.add("hidden"); return; }
-      const chip = el("span",{class:"chip"});
-      chip.append(`${attachedFile.name} · ${bytesToSize(attachedFile.size)}`);
-      const rm = el("button",{},"✕");
-      rm.addEventListener("click", ()=>{ attachedFile = null; renderAttachment(); });
-      chip.append(rm);
-      attsEl.append(chip);
-      attsEl.classList.remove("hidden");
+      atts.innerHTML = "";
+      if(!currentFile) return;
+      const chip = el("span",{class:"chip"},
+        `${currentFile.name} · ${(currentFile.size/1024/1024).toFixed(2)} MB `
+      );
+      const x = el("button",{},"✕");
+      x.onclick = ()=>{ currentFile=null; renderAttachment(); };
+      chip.append(x); atts.append(chip);
     }
 
-    // ==== Attach documents ====
-    plusBtn.addEventListener("click", ()=> fileInput.click());
-    fileInput.addEventListener("change", ()=>{
-      const f = fileInput.files?.[0];
-      if(!f){ attachedFile = null; renderAttachment(); return; }
-      attachedFile = f;
-      renderAttachment();
-      // clear the input so the same file can be re-chosen later
-      fileInput.value = "";
-    });
+    plusBtn.onclick = ()=> fileInput.click();
+    fileInput.onchange = ()=>{ currentFile = fileInput.files?.[0] || null; fileInput.value=""; renderAttachment(); };
 
-    // ==== Send flow ====
-    async function send(){
-      const text = (promptEl.value||"").trim();
-      if(!text && !attachedFile) return;
+    // send flow
+    async function send(){ 
+      const text = promptEl.value.trim();
+      if(!text && !currentFile){ addMsg("ai","⚠️ Add a message or attach a file."); return; }
 
-      // show user message summary
-      addMsg("user", text || (attachedFile ? `(sent file: ${attachedFile.name})` : "(empty)"));
+      addMsg("user", text || (currentFile? `(sent file: ${currentFile.name})` : ""));
       promptEl.value = "";
       const spin = addSpinner();
 
       try{
         const form = new FormData();
         form.append("q", text);
-        form.append("model", modelEl.value);
-        if(attachedFile) form.append("file", attachedFile);
+        form.append("model", modelSel.value);
+        if(currentFile) form.append("file", currentFile);
 
-        const res = await fetch(BACKEND_URL, {
-          method: "POST",
-          body: form,
-          credentials: "include"
-        });
-        let data = null;
-        try { data = await res.json(); } catch(e){ /* ignore */ }
-        if(!res.ok) throw new Error(data?.error || ("Backend error: " + res.status));
+        const res = await fetch(BACKEND_URL, { method:"POST", body: form, credentials:"include" });
 
-        chat.removeChild(spin);
-        addMsg("ai", data.answer || data.reply || "[No reply]");
+        let dataText = await res.text(); // robust: read as text first
+        let data;
+        try { data = JSON.parse(dataText); } catch { data = { error: dataText || "Invalid JSON" }; }
+
+        const ok = res.ok && !data.error;
+        const reply = data.reply || data.answer || (!ok ? `Error ${res.status}: ${data.error||"Unknown error"}` : "[No reply]");
+
+        spin.remove();
+        addMsg("ai", reply);
       }catch(err){
-        chat.removeChild(spin);
-        addMsg("ai","⚠️ " + err.message);
+        spin.remove();
+        addMsg("ai", "⚠️ " + err.message);
       }finally{
-        attachedFile = null; renderAttachment();
+        currentFile = null; renderAttachment();
       }
     }
 
-    sendBtn.addEventListener("click", send);
-    promptEl.addEventListener("keydown", (e)=>{
+    sendBtn.onclick = send;
+    promptEl.addEventListener("keydown",(e)=>{
       if(e.key==="Enter" && !e.shiftKey){ e.preventDefault(); send(); }
     });
 
-    // ==== Speech to text (Web Speech API) ====
-    let rec = null, listening = false;
-    (function initSpeech(){
-      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if(!SR) return;
-      rec = new SR();
-      rec.lang = "en-US";
-      rec.interimResults = false;
-      rec.continuous = false;
-      rec.maxAlternatives = 1;
-
-      rec.onstart = ()=>{ listening = true; micBtn.classList.add("pulse"); };
-      rec.onend   = ()=>{ listening = false; micBtn.classList.remove("pulse"); };
-      rec.onerror = (e)=> addMsg("ai","⚠️ Mic error: " + (e.error||"unknown"));
-      rec.onresult = async (ev)=>{
-        const text = (ev.results?.[0]?.[0]?.transcript || "").trim();
-        if(text){ promptEl.value = text; send(); }
-      };
-    })();
-
-    micBtn.addEventListener("click", ()=>{
-      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if(!SR) { addMsg("ai","⚠️ Microphone not supported in this browser."); return; }
-      if(!rec) return;
-      if(listening){ rec.stop(); return; }
-      rec.start();
-    });
+    // simple mic (speech to text) – optional
+    let rec=null, listening=false;
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if(SR){
+      rec = new SR(); rec.lang="en-US"; rec.interimResults=false; rec.continuous=false;
+      rec.onstart = ()=>{ listening=true; };
+      rec.onend = ()=>{ listening=false; };
+      rec.onresult = (ev)=>{ const t = ev.results?.[0]?.[0]?.transcript || ""; promptEl.value = (promptEl.value+" "+t).trim(); };
+      micBtn.onclick = ()=> listening ? rec.stop() : rec.start();
+    } else {
+      micBtn.onclick = ()=> addMsg("ai","⚠️ Microphone not supported in this browser.");
+    }
   </script>
 </body>
 </html>

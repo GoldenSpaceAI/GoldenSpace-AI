@@ -130,15 +130,15 @@
     <main id="chat">
       <div class="msg ai">
         <small>GoldenSpaceAI</small>
-        Welcome to your golden, galaxy-powered assistant. Attach a document with the <strong>＋</strong> button, type your
-        message in the middle box, then press <strong>Send</strong>. Use the mic to speak if you like.
+        Attach a document with the <strong>＋</strong> button, type your message in the box, then press <strong>Send</strong>.
+        The mic opens voice mode.
       </div>
     </main>
 
     <div class="composer-wrap">
       <div class="composer">
         <!-- Left: file upload -->
-        <button id="plusBtn" class="btn plus" title="Upload file"></button>
+        <button id="plusBtn" type="button" class="btn plus" title="Upload file"></button>
 
         <!-- Center: typing box -->
         <div style="flex:1">
@@ -147,17 +147,17 @@
         </div>
 
         <!-- Right: microphone (navigates) -->
-        <button id="micBtn" class="btn mic" title="Voice mode"></button>
+        <button id="micBtn" type="button" class="btn mic" title="Voice mode"></button>
 
         <!-- Send -->
-        <button id="sendBtn" class="btn send" title="Send"></button>
+        <button id="sendBtn" type="button" class="btn send" title="Send"></button>
       </div>
     </div>
   </div>
 
   <!-- Hidden file input (documents + images) -->
   <input id="fileInput" class="hidden" type="file"
-         accept=".pdf,.txt,.md,.json,.csv,.doc,.docx,.ppt,.pptx,.xlsx,image/*" />
+         accept=".pdf,.txt,.md,.json,.csv,.doc,.docx,.ppt,.pptx,.xlsx,image/*" multiple />
 
   <script>
     // ==== Config ====
@@ -167,7 +167,7 @@
     const MODEL_MAP = {
       "gpt-5": "gpt-4o-mini",
       "gpt-5-nano": "gpt-4o-mini",
-      "gpt-4": "gpt-4o",          // if you prefer 4.1, change here
+      "gpt-4": "gpt-4o",
       "gpt-4o-mini": "gpt-4o-mini"
     };
 
@@ -229,12 +229,11 @@
       renderAttachments();
     });
 
-    // ==== Mic -> navigate to voice page ====
-    micBtn.addEventListener("click", ()=>{
+    // ==== Mic -> navigate to voice page (works each press) ====
+    micBtn.addEventListener("click", () => {
       const uiModel = modelSel.value;
       const apiModel = MODEL_MAP[uiModel] || "gpt-4o-mini";
-      // pass current model as a query param so voice page can reuse
-      location.href = `/chat-advancedai-voice.html?model=${encodeURIComponent(uiModel)}&api=${encodeURIComponent(apiModel)}`;
+      window.location.href = `/chat-advancedai-voice.html?model=${encodeURIComponent(uiModel)}&api=${encodeURIComponent(apiModel)}`;
     });
 
     // ==== Send ====

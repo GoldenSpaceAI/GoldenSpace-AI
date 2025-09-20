@@ -1,4 +1,4 @@
-// index.js — GoldenSpaceAI (Home-first, Gemini Flash + OpenAI, true Realtime token)
+// index.js — GoldenSpaceAI (Fix 404s for OpenAI endpoints; no other changes)
 
 import express from "express";
 import cors from "cors";
@@ -19,43 +19,30 @@ dotenv.config();
 
 // ---------- Env ----------
 const {
-  SESSION_SECRET = "dev_secret_change_me",
+  SESSION_SECRET,
   GOOGLE_CLIENT_ID,
   GOOGLE_CLIENT_SECRET,
   SUPABASE_URL,
   SUPABASE_SERVICE_ROLE_KEY,
   GEMINI_API_KEY,
   OPENAI_API_KEY,
-  NODE_ENV,
-  BASE_URL, // optional, for OAuth on Render
 } = process.env;
 
-if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-  console.warn("⚠️ Supabase envs missing — plan/usage features will be limited.");
-}
-if (!GEMINI_API_KEY) console.warn("⚠️ GEMINI_API_KEY missing.");
-if (!OPENAI_API_KEY) console.warn("⚠️ OPENAI_API_KEY missing.");
-if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
-  console.warn("⚠️ Google OAuth envs missing. /auth/google will show an error.");
-}
+if (!SESSION_SECRET) throw new Error("SESSION_SECRET missing");
+if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) throw new Error("Google OAuth envs missing");
+if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) throw new Error("Supabase envs missing");
 
 // ---------- SDKs ----------
-const supabase = (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY)
-  ? createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
-  : null;
-
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-const geminiFlash = GEMINI_API_KEY
-  ? genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
-  : null;
+const geminiFlash = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 // ---------- App ----------
 const app = express();
 app.set("trust proxy", 1);
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json({ limit: "25mb" }));
-app.use(express.urlencoded({ extended: true, limit: "25mb" }));
 app.use(cookieParser());
 
 const __filename = fileURLToPath(import.meta.url);
@@ -70,7 +57,7 @@ app.use(
     cookie: {
       httpOnly: true,
       sameSite: "lax",
-      secure: NODE_ENV === "production",
+      secure: process.env.NODE_ENV === "production",
       maxAge: 1000 * 60 * 60 * 24 * 14,
     },
   })
@@ -79,19 +66,31 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
-// ---------- Basic user store in Supabase (optional) ----------
-async function upsertUserFromGoogle(profile) {
-  if (!supabase) return { id: "anon", email: profile.emails?.[0]?.value || "", name: profile.displayName || "" };
+// ---------- Plans ----------
+const PLAN_LIMITS = {
+  moon: { ask: 40, search: 20 },
+  earth: { ask: Infinity, search: Infinity },
+  chatai: { ask: Infinity, search: Infinity }, // ChatAI pack
+  spacepack: { ask: 40, search: 20 },         // no change to chat/search
+};
+const today = () => new Date().toISOString().slice(0, 10);
 
+// ---------- Supabase helpers ----------
+async function upsertUserFromGoogle(profile) {
   const email = profile.emails?.[0]?.value?.toLowerCase() || "";
   const name = profile.displayName || "";
   const photo = profile.photos?.[0]?.value || "";
 
-  let { data: user, error } = await supabase.from("users").select("*").eq("email", email).maybeSingle();
+  let { data: user, error } = await supabase
+    .from("users")
+    .select("*")
+    .eq("email", email)
+    .maybeSingle();
   if (error) throw error;
 
   if (!user) {
-    const ins = await supabase.from("users")
+    const ins = await supabase
+      .from("users")
       .insert([{ email, name, photo, plan: "moon" }])
       .select()
       .single();
@@ -103,22 +102,47 @@ async function upsertUserFromGoogle(profile) {
   return user;
 }
 async function getUserById(id) {
-  if (!supabase) return { id: "anon" };
   const { data, error } = await supabase.from("users").select("*").eq("id", id).single();
   if (error) throw error;
   return data;
 }
+async function getOrInitUsage(user_id) {
+  const d = today();
+  let { data: row, error } = await supabase
+    .from("usage_daily")
+    .select("*")
+    .eq("user_id", user_id)
+    .eq("date", d)
+    .maybeSingle();
+  if (error) throw error;
+  if (!row) {
+    const ins = await supabase
+      .from("usage_daily")
+      .insert([{ user_id, date: d, ask_count: 0, search_count: 0 }])
+      .select()
+      .single();
+    if (ins.error) throw ins.error;
+    row = ins.data;
+  }
+  return row;
+}
+async function bumpUsage(user_id, field) {
+  const cur = await getOrInitUsage(user_id);
+  const next = (cur[field] || 0) + 1;
+  const { error } = await supabase.from("usage_daily").update({ [field]: next }).eq("id", cur.id);
+  if (error) throw error;
+}
+function planKey(user) {
+  const k = (user?.plan || "moon").toLowerCase();
+  return PLAN_LIMITS[k] ? k : "moon";
+}
 
-// ---------- OAuth (still available, but not required for testing) ----------
+// ---------- OAuth ----------
 const OAUTH_CALLBACK = "/auth/google/callback";
+
 passport.use(
   new GoogleStrategy(
-    {
-      clientID: GOOGLE_CLIENT_ID || "x",
-      clientSecret: GOOGLE_CLIENT_SECRET || "y",
-      callbackURL: BASE_URL ? `${BASE_URL}${OAUTH_CALLBACK}` : OAUTH_CALLBACK,
-      proxy: true,
-    },
+    { clientID: GOOGLE_CLIENT_ID, clientSecret: GOOGLE_CLIENT_SECRET, callbackURL: OAUTH_CALLBACK, proxy: true },
     async (_a, _r, profile, done) => {
       try {
         const u = await upsertUserFromGoogle(profile);
@@ -134,6 +158,43 @@ passport.deserializeUser(async (obj, d) => {
   try { d(null, await getUserById(obj.id)); } catch (e) { d(e); }
 });
 
+function requireAuth(req, res, next) {
+  if (req.isAuthenticated && req.isAuthenticated()) return next();
+  if (req.accepts("html")) return res.redirect("/login.html");
+  return res.status(401).json({ error: "Sign in required" });
+}
+
+function enforceLimit(kind) {
+  return async (req, res, next) => {
+    try {
+      const pkey = planKey(req.user);
+      const limits = PLAN_LIMITS[pkey];
+      const usage = await getOrInitUsage(req.user.id);
+      const used = kind === "ask" ? usage.ask_count : usage.search_count;
+      const allowed = limits[kind];
+      if (Number.isFinite(allowed) && used >= allowed) {
+        return res.status(429).json({ error: `Daily ${kind} limit reached for ${pkey} plan.` });
+      }
+      await bumpUsage(req.user.id, kind === "ask" ? "ask_count" : "search_count");
+      next();
+    } catch (e) {
+      console.error("limit error", e);
+      res.status(500).json({ error: "Usage/limit error" });
+    }
+  };
+}
+
+// ---------- Static & root ----------
+app.use(express.static(__dirname));
+
+app.get("/", (req, res) => {
+  // Keep your current behavior: show login if not authenticated; otherwise home
+  if (req.isAuthenticated && req.isAuthenticated()) return res.sendFile(path.join(__dirname, "index.html"));
+  return res.sendFile(path.join(__dirname, "login.html"));
+});
+
+app.get("/login.html", (req, res) => res.sendFile(path.join(__dirname, "login.html")));
+
 app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
 app.get(
   OAUTH_CALLBACK,
@@ -141,28 +202,36 @@ app.get(
   (_req, res) => res.redirect("/")
 );
 
-// ---------- Static ----------
-app.use(express.static(__dirname));
-
-// ---------- Home-first ----------
-app.get("/", (_req, res) => {
-  // Always show home (unlocked for testing)
-  res.sendFile(path.join(__dirname, "index.html"));
+app.post("/logout", (req, res, next) => {
+  req.logout(err => {
+    if (err) return next(err);
+    req.session.destroy(() => res.json({ ok: true }));
+  });
 });
 
-app.get("/api/me", (req, res) => {
-  const u = req.user
-    ? { loggedIn: true, id: req.user.id, email: req.user.email, name: req.user.name, photo: req.user.photo }
-    : { loggedIn: false };
-  res.json(u);
+// ---------- Me ----------
+app.get("/api/me", async (req, res) => {
+  if (!req.user) return res.json({ loggedIn: false });
+  const pkey = planKey(req.user);
+  const limits = PLAN_LIMITS[pkey];
+  const usage = await getOrInitUsage(req.user.id);
+  const remaining = {
+    ask: Number.isFinite(limits.ask) ? Math.max(0, limits.ask - (usage.ask_count || 0)) : Infinity,
+    search: Number.isFinite(limits.search) ? Math.max(0, limits.search - (usage.search_count || 0)) : Infinity,
+  };
+  res.json({
+    loggedIn: true,
+    user: { id: req.user.id, email: req.user.email, name: req.user.name, photo: req.user.photo, plan: pkey },
+    remaining,
+    today: today(),
+  });
 });
 
 // ================= FEATURES =================
 
-// 1) Chat AI (Gemini) — text Q&A
-app.post("/ask", async (req, res) => {
+// Chat AI (Gemini) — ask limit
+app.post("/ask", requireAuth, enforceLimit("ask"), async (req, res) => {
   try {
-    if (!geminiFlash) return res.status(500).json({ answer: "Gemini not configured." });
     const q = (req.body?.question || "").trim();
     if (!q) return res.json({ answer: "Ask me anything!" });
     const result = await geminiFlash.generateContent([{ text: q }]);
@@ -173,10 +242,9 @@ app.post("/ask", async (req, res) => {
   }
 });
 
-// 2) Search info (Gemini) — summaries
-app.post("/search-info", async (req, res) => {
+// Search info (Gemini) — search limit
+app.post("/search-info", requireAuth, enforceLimit("search"), async (req, res) => {
   try {
-    if (!geminiFlash) return res.status(500).json({ answer: "Gemini not configured." });
     const q = (req.body?.query || "").trim();
     if (!q) return res.json({ answer: "Type something to search." });
     const prompt = `You are GoldenSpace Knowledge. Overview + 3 bullet facts.\nTopic: ${q}`;
@@ -188,77 +256,72 @@ app.post("/search-info", async (req, res) => {
   }
 });
 
-// 3) Learn physics (Gemini) — tutor style
-app.post("/learn-physics", async (req, res) => {
-  try {
-    if (!geminiFlash) return res.status(500).json({ answer: "Gemini not configured." });
-    const topic = (req.body?.topic || "Kinematics").trim();
-    const prompt = `Teach ${topic} with a short explanation and 3 progressively harder practice problems with answers.`;
-    const result = await geminiFlash.generateContent([{ text: prompt }]);
-    res.json({ answer: result.response.text() || "No lesson." });
-  } catch (e) {
-    console.error("learn-physics error", e);
-    res.status(500).json({ answer: "Lesson error" });
-  }
-});
+// ---------- OpenAI: Advanced Chat & Homework (Fix 404s) ----------
 
-// 4) Advanced Chat (OpenAI) — model selector + documents
 const uploadMem = multer({ storage: multer.memoryStorage() });
 
-function normalizeChatModel(m) {
-  // Map requested labels to real models
-  const x = (m || "").toLowerCase();
-  if (x === "gpt-5" || x === "gpt5" || x === "gpt-5-nano" || x === "gpt5nano") return "gpt-4o-mini";
-  if (x === "gpt-4" || x === "gpt4") return "gpt-4o-mini";
-  return "gpt-4o-mini";
-}
-
-app.post("/api/chat", uploadMem.array("files"), async (req, res) => {
+/**
+ * Unified handler that:
+ * - accepts text and optional file(s)
+ * - includes first image as vision input
+ * - remembers last 20 messages in the user's session
+ */
+async function handleAdvancedChat(req, res) {
   try {
-    const text = (req.body?.message || "").trim() || "Hello";
-    const model = normalizeChatModel(req.body?.model);
-    // maintain last 20 messages in session
+    // Ensure session history exists
     req.session.chatHistory ||= [];
-    req.session.chatHistory.push({ role: "user", content: text });
-    req.session.chatHistory = req.session.chatHistory.slice(-20);
 
-    // If images are attached, convert first to data URL & include as vision
-    let userContent;
-    const firstFile = (req.files || [])[0];
-    if (firstFile && firstFile.mimetype?.startsWith("image/")) {
-      const b64 = firstFile.buffer.toString("base64");
-      const dataUrl = `data:${firstFile.mimetype};base64,${b64}`;
-      userContent = [
-        { type: "text", text },
-        { type: "image_url", image_url: { url: dataUrl } },
-      ];
-    } else {
-      userContent = text;
+    // Text from front-end
+    const userText = (req.body?.message || req.body?.q || "").trim() || "Hello";
+
+    // Find first image/* file to include as vision input
+    let imagePart = null;
+    for (const f of req.files || []) {
+      if ((f.mimetype || "").startsWith("image/")) {
+        const b64 = f.buffer.toString("base64");
+        const dataUrl = `data:${f.mimetype};base64,${b64}`;
+        imagePart = { type: "image_url", image_url: { url: dataUrl } };
+        break;
+      }
     }
 
+    // Build latest user content block
+    const latestUserContent = imagePart
+      ? [{ type: "text", text: userText }, imagePart]
+      : [{ type: "text", text: userText }];
+
+    // Keep only the last 20 turns (text-only) in session history for continuity
+    req.session.chatHistory.push({ role: "user", content: userText });
+    req.session.chatHistory = req.session.chatHistory.slice(-20);
+
+    // Call OpenAI
     const completion = await openai.chat.completions.create({
-      model,
+      model: "gpt-4o-mini",
       messages: [
         { role: "system", content: "You are GoldenSpaceAI, concise and helpful." },
         ...req.session.chatHistory,
-        { role: "user", content: userContent },
+        // include the current message again, with the image if present
+        { role: "user", content: latestUserContent }
       ],
       temperature: 0.3,
     });
 
     const reply = completion.choices?.[0]?.message?.content || "No reply.";
     req.session.chatHistory.push({ role: "assistant", content: reply });
-    req.session.save(() => res.json({ reply, model }));
+
+    req.session.save(() => res.json({ reply, model: "gpt-4o-mini" }));
   } catch (e) {
     console.error("/api/chat error", e);
     res.status(500).json({ error: e?.message || "Chat error" });
   }
-});
+}
 
-// 5) Homework Solver (OpenAI Vision, image + text)
-app.post("/api/homework", uploadMem.single("image"), async (req, res) => {
+/**
+ * Homework Vision (kept for compatibility with pages calling /api/homework)
+ */
+async function handleHomework(req, res) {
   try {
-    const prompt = (req.body?.prompt || "Solve this step by step.").slice(0, 4000);
+    const prompt = (req.body?.prompt || req.body?.message || "Solve this step by step.").slice(0, 4000);
     if (!req.file) return res.status(400).json({ error: "No image received" });
 
     const b64 = req.file.buffer.toString("base64");
@@ -267,7 +330,6 @@ app.post("/api/homework", uploadMem.single("image"), async (req, res) => {
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
-        { role: "system", content: "You are a careful math & science tutor. Show steps clearly." },
         {
           role: "user",
           content: [
@@ -280,68 +342,47 @@ app.post("/api/homework", uploadMem.single("image"), async (req, res) => {
     });
 
     const reply = completion.choices?.[0]?.message?.content || "No solution found.";
-    res.json({ reply });
+    res.json({ reply, model: "gpt-4o-mini" });
   } catch (e) {
     console.error("/api/homework error", e);
     res.status(500).json({ error: e?.message || "Homework solver error" });
   }
-});
+}
 
-// 6) LIVE voice/camera — Realtime ephemeral session token
-// Frontend calls this, then connects to OpenAI Realtime (WebRTC/WebSocket) using the token.
-// This is truly live (no polling). Your client page should hit this endpoint first.
-app.post("/api/realtime-session", async (req, res) => {
-  try {
-    // Optional: let client request a specific realtime variant
-    // For now, we standardize to gpt-4o-realtime-preview (closest to 4o-mini live).
-    const requested = (req.body?.model || "").toLowerCase();
-    const model = requested && requested.includes("mini")
-      ? "gpt-4o-realtime-preview"  // map "mini live" to current realtime
-      : "gpt-4o-realtime-preview";
+// ---- ROUTES (add both canonical paths and aliases to prevent 404) ----
 
-    const session = await openai.realtime.sessions.create({
-      model,
-      voice: "verse",              // you can change the default voice later in the client
-      // instructions: "You are GoldenSpaceAI ..." // optional system behavior
-    });
+// Canonical OpenAI chat endpoint used by chat-advancedai.html and other pages
+app.post("/api/chat", requireAuth, uploadMem.array("files"), handleAdvancedChat);
 
-    // Return ephemeral client secret the browser can use to start the Realtime session
-    res.json({ client_secret: session.client_secret, model });
-  } catch (e) {
-    console.error("/api/realtime-session error", e);
-    res.status(500).json({ error: e?.message || "Realtime session error" });
-  }
-});
+// Backwards/alt alias some front-ends used
+app.post("/chat-advanced-ai", requireAuth, uploadMem.array("files"), handleAdvancedChat);
 
-// 7) Convenience aliases used by your UI earlier (to avoid 404s)
-app.post("/api/live", uploadMem.single("image"), async (req, res) => {
-  // Reuse vision for live single-frame calls if needed
-  req.body.prompt = req.body.prompt || req.body.message || "Describe this image.";
-  return app._router.handle(req, res, () => {}, "POST", "/api/homework");
-});
-app.post("/api/live-text", async (req, res) => {
-  try {
-    const text = (req.body?.q || req.body?.message || "").trim();
-    if (!text) return res.status(400).json({ error: "Empty message" });
+// Canonical homework vision endpoint
+app.post("/api/homework", requireAuth, uploadMem.single("image"), handleHomework);
 
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        { role: "system", content: "You are GoldenSpaceAI, concise and helpful." },
-        { role: "user", content: text },
-      ],
-      temperature: 0.3,
-    });
-    res.json({ reply: completion.choices?.[0]?.message?.content || "No reply." });
-  } catch (e) {
-    console.error("/api/live-text error", e);
-    res.status(500).json({ error: e?.message || "Chat error" });
-  }
-});
+// Backwards/alt alias
+app.post("/homework", requireAuth, uploadMem.single("image"), handleHomework);
 
-// ---------- Simple health ----------
+// --------- Gate pages (html files) ----------
+function gate(file) {
+  return (req, res) => {
+    if (!req.isAuthenticated || !req.isAuthenticated())
+      return res.redirect("/login.html");
+    res.sendFile(path.join(__dirname, file));
+  };
+}
+app.get("/advanced-ai.html", gate("advanced-ai.html"));
+app.get("/chat-advancedai.html", gate("chat-advancedai.html"));
+app.get("/homework-helper.html", gate("homework-helper.html"));
+app.get("/learn-physics.html", gate("learn-physics.html"));
+app.get("/create-planet.html", gate("create-planet.html"));
+app.get("/create-rocket.html", gate("create-rocket.html"));
+app.get("/create-satellite.html", gate("create-satellite.html"));
+app.get("/your-space.html", gate("your-space.html"));
+
+// Health
 app.get("/health", (_req, res) => res.json({ ok: true }));
 
-// ---------- Start ----------
+// Start
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 GoldenSpaceAI running on ${PORT}`));

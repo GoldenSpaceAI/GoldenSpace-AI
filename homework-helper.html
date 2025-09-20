@@ -1,5 +1,4 @@
 <!doctype html>
-
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -24,42 +23,44 @@
           url("https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?q=80&w=2400&auto=format&fit=crop") center/cover fixed no-repeat;
         -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
       }
-      a{color:inherit;text-decoration:none}.top{position:sticky;top:0;z-index:50;backdrop-filter:blur(12px);
-    background:linear-gradient(180deg,rgba(10,14,21,.9),rgba(10,14,21,.65) 60%,transparent);
-    border-bottom:1px solid var(--border);padding:max(12px, env(safe-area-inset-top)) 16px 12px;
-    display:flex;align-items:center;gap:12px}
-  .brand{display:flex;align-items:center;gap:10px;font-weight:900;color:var(--gold);
-    font-size:clamp(18px,2.2vw,22px);text-shadow:0 0 16px rgba(246,198,74,.25)}
-  .dot{width:10px;height:10px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#ffd86a,#f6c64a 50%,#eb8b36 90%);box-shadow:0 0 18px rgba(246,198,74,.5)}
-  .spacer{flex:1}
-  .pill{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;border:1px solid var(--border);background:rgba(255,255,255,.04);font-weight:800;color:#d7e2f4}
+      a{color:inherit;text-decoration:none}
+      .top{position:sticky;top:0;z-index:50;backdrop-filter:blur(12px);
+        background:linear-gradient(180deg,rgba(10,14,21,.9),rgba(10,14,21,.65) 60%,transparent);
+        border-bottom:1px solid var(--border);padding:max(12px, env(safe-area-inset-top)) 16px 12px;
+        display:flex;align-items:center;gap:12px}
+      .brand{display:flex;align-items:center;gap:10px;font-weight:900;color:var(--gold);
+        font-size:clamp(18px,2.2vw,22px);text-shadow:0 0 16px rgba(246,198,74,.25)}
+      .dot{width:10px;height:10px;border-radius:50%;
+        background:radial-gradient(circle at 30% 30%,#ffd86a,#f6c64a 50%,#eb8b36 90%);
+        box-shadow:0 0 18px rgba(246,198,74,.5)}
+      .spacer{flex:1}
+      .pill{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;border:1px solid var(--border);background:rgba(255,255,255,.04);font-weight:800;color:#d7e2f4}
 
-  .wrap{max-width:var(--max);margin:18px auto; padding:0 16px 160px}
+      .wrap{max-width:var(--max);margin:18px auto; padding:0 16px 160px}
 
-  .card{background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02));
-    border:1px solid rgba(255,255,255,.08);border-radius:18px;box-shadow:var(--shadow);overflow:hidden}
-  .head{display:flex;align-items:center;justify-content:space-between;padding:14px;border-bottom:1px solid rgba(255,255,255,.08)}
-  .head h1{margin:0;color:#fff7dc;font-size:18px}
-  .body{padding:16px}
+      .card{background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02));
+        border:1px solid rgba(255,255,255,.08);border-radius:18px;box-shadow:var(--shadow);overflow:hidden}
+      .head{display:flex;align-items:center;justify-content:space-between;padding:14px;border-bottom:1px solid rgba(255,255,255,.08)}
+      .head h1{margin:0;color:#fff7dc;font-size:18px}
+      .body{padding:16px}
 
-  .uploader{display:grid;gap:10px}
-  .preview{position:relative;border:1px dashed var(--border);border-radius:14px;background:linear-gradient(180deg,#0b1320,#0a1120);min-height:280px;display:grid;place-items:center;overflow:hidden}
-  .preview img{max-width:100%;max-height:420px;object-fit:contain;display:block}
-  .controls{display:flex;gap:10px;flex-wrap:wrap}
+      .uploader{display:grid;gap:10px}
+      .preview{position:relative;border:1px dashed var(--border);border-radius:14px;background:linear-gradient(180deg,#0b1320,#0a1120);min-height:280px;display:grid;place-items:center;overflow:hidden}
+      .preview img{max-width:100%;max-height:420px;object-fit:contain;display:block}
+      .controls{display:flex;gap:10px;flex-wrap:wrap}
 
-  .btn{display:inline-flex;align-items:center;gap:8px;padding:12px 14px;border-radius:12px;font-weight:900;cursor:pointer;border:1px solid rgba(0,0,0,.2)}
-  .btn.gold{background:linear-gradient(180deg,var(--gold),var(--gold2));color:#1b1300;box-shadow:0 10px 26px rgba(246,198,74,.28)}
-  .btn.ghost{background:transparent;color:#cfc6a5;border:1px solid var(--border)}
+      .btn{display:inline-flex;align-items:center;gap:8px;padding:12px 14px;border-radius:12px;font-weight:900;cursor:pointer;border:1px solid rgba(0,0,0,.2)}
+      .btn.gold{background:linear-gradient(180deg,var(--gold),var(--gold2));color:#1b1300;box-shadow:0 10px 26px rgba(246,198,74,.28)}
+      .btn.ghost{background:transparent;color:#cfc6a5;border:1px solid var(--border)}
 
-  textarea{width:100%;min-height:96px;border-radius:12px;border:1px solid var(--border);background:#0a1120;color:#e7f4e9;padding:12px;font:inherit}
+      textarea{width:100%;min-height:96px;border-radius:12px;border:1px solid var(--border);background:#0a1120;color:#e7f4e9;padding:12px;font:inherit}
 
-  .status{font-size:12px;color:#9fb0d1;margin-top:8px}
-  .result{margin-top:14px;border:1px solid var(--border);border-radius:14px;background:linear-gradient(180deg,#0b1320,#0a0f1b);padding:14px;white-space:pre-wrap}
+      .status{font-size:12px;color:#9fb0d1;margin-top:8px}
+      .result{margin-top:14px;border:1px solid var(--border);border-radius:14px;background:linear-gradient(180deg,#0b1320,#0a0f1b);padding:14px;white-space:pre-wrap}
 
-  .spinner{width:18px;height:18px;border:3px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:spin .9s linear infinite;display:inline-block}
-  @keyframes spin{to{transform:rotate(360deg)}}
-</style>
-
+      .spinner{width:18px;height:18px;border:3px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:spin .9s linear infinite;display:inline-block}
+      @keyframes spin{to{transform:rotate(360deg)}}
+    </style>
   </head>
   <body>
     <div class="top">
@@ -67,105 +68,106 @@
       <div class="spacer"></div>
       <a class="pill" href="/">Home</a>
       <a class="pill" href="/plans.html">Plans</a>
-    </div><main class="wrap">
-  <div class="card">
-    <div class="head"><h1>📘 Homework Solver</h1><span style="font-size:12px;color:#c9d1e6">OpenAI • gpt-4o-mini</span></div>
-    <div class="body">
-      <div class="uploader">
-        <label class="status">1) Add a clear photo of your homework (single image)</label>
-        <div class="preview" id="preview"><div class="status">No image yet</div></div>
-        <input id="file" type="file" accept="image/*" capture="environment" style="display:none">
-        <div class="controls">
-          <button class="btn gold" id="openCam">Open Camera</button>
-          <button class="btn ghost" id="choose">Choose Image</button>
-          <button class="btn ghost" id="removeImg" style="display:none">Remove</button>
-        </div>
-
-        <label class="status">2) Tell the AI what you need</label>
-        <textarea id="msg" placeholder="e.g., Explain step-by-step and check my final answer."></textarea>
-
-        <div class="controls">
-          <button class="btn gold" id="send">Send</button>
-          <span id="status" class="status"></span>
-        </div>
-
-        <div id="result" class="result" style="display:none"></div>
-      </div>
     </div>
-  </div>
-</main>
 
-<script>
-  const fileInput = document.getElementById('file');
-  const preview = document.getElementById('preview');
-  const removeBtn = document.getElementById('removeImg');
-  const msg = document.getElementById('msg');
-  const statusEl = document.getElementById('status');
-  const resultEl = document.getElementById('result');
+    <main class="wrap">
+      <div class="card">
+        <div class="head"><h1>📘 Homework Solver</h1><span style="font-size:12px;color:#c9d1e6">OpenAI • gpt-4o-mini</span></div>
+        <div class="body">
+          <div class="uploader">
+            <label class="status">1) Add a clear photo of your homework (single image)</label>
+            <div class="preview" id="preview"><div class="status">No image yet</div></div>
+            <input id="file" type="file" accept="image/*" capture="environment" style="display:none">
+            <div class="controls">
+              <button class="btn gold" id="openCam">Open Camera</button>
+              <button class="btn ghost" id="choose">Choose Image</button>
+              <button class="btn ghost" id="removeImg" style="display:none">Remove</button>
+            </div>
 
-  let currentFile = null;
+            <label class="status">2) Tell the AI what you need</label>
+            <textarea id="msg" placeholder="e.g., Explain step-by-step and check my final answer."></textarea>
 
-  function renderPreview(){
-    preview.innerHTML = '';
-    if(!currentFile){
-      const d = document.createElement('div');
-      d.className = 'status';
-      d.textContent = 'No image yet';
-      preview.appendChild(d);
-      removeBtn.style.display = 'none';
-      return;
-    }
-    const img = document.createElement('img');
-    img.alt = 'preview';
-    img.src = URL.createObjectURL(currentFile);
-    preview.appendChild(img);
-    removeBtn.style.display = 'inline-flex';
-  }
+            <div class="controls">
+              <button class="btn gold" id="send">Send</button>
+              <span id="status" class="status"></span>
+            </div>
 
-  document.getElementById('openCam').addEventListener('click', ()=> fileInput.click());
-  document.getElementById('choose').addEventListener('click', ()=> fileInput.click());
-  removeBtn.addEventListener('click', ()=>{ currentFile = null; renderPreview(); });
+            <div id="result" class="result" style="display:none"></div>
+          </div>
+        </div>
+      </div>
+    </main>
 
-  fileInput.addEventListener('change', ()=>{
-    const f = fileInput.files?.[0];
-    if (f && f.type.startsWith('image/')) currentFile = f;
-    renderPreview();
-  });
+    <script>
+      // === Keep same UI; only wiring changed to /api/homework with fields: image + prompt ===
+      const fileInput = document.getElementById('file');
+      const preview = document.getElementById('preview');
+      const removeBtn = document.getElementById('removeImg');
+      const msg = document.getElementById('msg');
+      const statusEl = document.getElementById('status');
+      const resultEl = document.getElementById('result');
 
-  document.getElementById('send').addEventListener('click', async ()=>{
-    const text = (msg.value||'').trim();
-    if(!text && !currentFile){
-      statusEl.textContent = 'Add an image or write a message';
-      return;
-    }
-    statusEl.innerHTML = '<span class="spinner"></span> Sending…';
-    resultEl.style.display = 'none';
-    resultEl.textContent = '';
+      let currentFile = null;
 
-    const fd = new FormData();
-    if (currentFile) fd.append('files', currentFile);
-    fd.append('message', text);
-    fd.append('model', 'gpt-4o-mini');
-
-    try{
-      const res = await fetch('/api/chat', { method:'POST', body: fd, credentials: 'include' });
-      const data = await res.json();
-      if(!res.ok){
-        statusEl.textContent = data?.reply || data?.error || 'Error';
-        return;
+      function renderPreview(){
+        preview.innerHTML = '';
+        if(!currentFile){
+          const d = document.createElement('div');
+          d.className = 'status';
+          d.textContent = 'No image yet';
+          preview.appendChild(d);
+          removeBtn.style.display = 'none';
+          return;
+        }
+        const img = document.createElement('img');
+        img.alt = 'preview';
+        img.src = URL.createObjectURL(currentFile);
+        preview.appendChild(img);
+        removeBtn.style.display = 'inline-flex';
       }
-      statusEl.textContent = `Model: ${data.model || 'gpt-4o-mini'}`;
-      resultEl.textContent = data.reply || data.answer || 'No reply';
-      resultEl.style.display = 'block';
-    }catch(e){
-      console.error(e);
-      statusEl.textContent = 'Network error';
-    }
-  });
 
-  // initial render
-  renderPreview();
-</script>
+      document.getElementById('openCam').addEventListener('click', ()=> fileInput.click());
+      document.getElementById('choose').addEventListener('click', ()=> fileInput.click());
+      removeBtn.addEventListener('click', ()=>{ currentFile = null; renderPreview(); });
 
+      fileInput.addEventListener('change', ()=>{
+        const f = fileInput.files?.[0];
+        if (f && f.type.startsWith('image/')) currentFile = f;
+        renderPreview();
+      });
+
+      document.getElementById('send').addEventListener('click', async ()=>{
+        const text = (msg.value||'').trim();
+        if(!currentFile){
+          statusEl.textContent = 'Please add an image';
+          return;
+        }
+        statusEl.innerHTML = '<span class="spinner"></span> Sending…';
+        resultEl.style.display = 'none';
+        resultEl.textContent = '';
+
+        const fd = new FormData();
+        fd.append('image', currentFile);      // <-- field name expected by backend
+        fd.append('prompt', text || 'Solve this step by step.'); // <-- text field
+
+        try{
+          const res = await fetch('/api/homework', { method:'POST', body: fd, credentials: 'include' });
+          const data = await res.json().catch(()=> ({}));
+
+          if(!res.ok){
+            statusEl.textContent = data?.error ? ('Error: ' + data.error) : ('Server error ('+res.status+')');
+            return;
+          }
+          statusEl.textContent = 'Solved';
+          resultEl.textContent = data.reply || 'No reply';
+          resultEl.style.display = 'block';
+        }catch(e){
+          console.error(e);
+          statusEl.textContent = 'Request failed: ' + (e?.message || e);
+        }
+      });
+
+      renderPreview();
+    </script>
   </body>
 </html>

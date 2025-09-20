@@ -1,4 +1,4 @@
-// index.js — GoldenSpaceAI (Login-first, Supabase plans, Gemini + OpenAI, Homework Vision route)
+// index.js — GoldenSpaceAI (Supabase + Plans + Auth + Blocks)
 
 import express from "express";
 import cors from "cors";
@@ -6,331 +6,189 @@ import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
 import session from "express-session";
-import passport from "passport";
-import { Strategy as GoogleStrategy } from "passport-google-oauth20";
-import cookieParser from "cookie-parser";
 import multer from "multer";
-
 import { createClient } from "@supabase/supabase-js";
 import OpenAI from "openai";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 dotenv.config();
-
-// ---------- Env ----------
-const {
-  SESSION_SECRET,
-  GOOGLE_CLIENT_ID,
-  GOOGLE_CLIENT_SECRET,
-  SUPABASE_URL,
-  SUPABASE_SERVICE_ROLE_KEY,
-  GEMINI_API_KEY,
-  OPENAI_API_KEY,
-} = process.env;
-
-if (!SESSION_SECRET) throw new Error("SESSION_SECRET missing");
-if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) throw new Error("Google OAuth envs missing");
-if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) throw new Error("Supabase envs missing");
-
-// ---------- SDKs ----------
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
-const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-const geminiFlash = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-// ---------- App ----------
 const app = express();
 app.set("trust proxy", 1);
-app.use(cors({ origin: true, credentials: true }));
-app.use(express.json({ limit: "25mb" }));
-app.use(cookieParser());
 
+app.use(cors({ origin: true, credentials: true }));
+app.use(express.json());
+
+// ---------- Supabase ----------
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE
+);
+
+// ---------- Paths ----------
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// ---------- Sessions ----------
-app.use(
-  session({
-    secret: SESSION_SECRET,
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 1000 * 60 * 60 * 24 * 14,
-    },
-  })
-);
+// ---------- AI Clients ----------
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const geminiFlash = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-app.use(passport.initialize());
-app.use(passport.session());
-
-// ---------- Plans ----------
+// ---------- Plan definitions ----------
 const PLAN_LIMITS = {
-  moon: { ask: 40, search: 20 },
-  earth: { ask: Infinity, search: Infinity },
-  chatai: { ask: Infinity, search: Infinity }, // ChatAI pack (for advanced chat, uploads, lessons)
-  spacepack: { ask: 40, search: 20 }, // Your Space Pack doesn't change chat/search
+  moon: { ask: 40, search: 20, chatAdvanced: 0, homework: 0, space: false },
+  earth: { ask: Infinity, search: Infinity, chatAdvanced: 0, homework: 0, space: false },
+  chatpack: { ask: Infinity, search: Infinity, chatAdvanced: Infinity, homework: Infinity, space: false },
+  yourspace: { ask: 40, search: 20, chatAdvanced: 0, homework: 0, space: true },
 };
 
-const today = () => new Date().toISOString().slice(0, 10);
+// ---------- Helpers ----------
+function today() {
+  return new Date().toISOString().slice(0, 10);
+}
 
-// ---------- Supabase helpers ----------
-async function upsertUserFromGoogle(profile) {
-  const email = profile.emails?.[0]?.value?.toLowerCase() || "";
-  const name = profile.displayName || "";
-  const photo = profile.photos?.[0]?.value || "";
+async function getUserPlan(userId) {
+  const { data, error } = await supabase.from("users").select("plan").eq("id", userId).single();
+  if (error || !data) return "moon";
+  return data.plan || "moon";
+}
 
-  let { data: user, error } = await supabase
-    .from("users")
-    .select("*")
-    .eq("email", email)
-    .maybeSingle();
-  if (error) throw error;
+async function checkAllowed(userId, kind) {
+  const plan = await getUserPlan(userId);
+  const limits = PLAN_LIMITS[plan] || PLAN_LIMITS["moon"];
+  const allowed = limits[kind];
 
-  if (!user) {
-    const ins = await supabase
-      .from("users")
-      .insert([{ email, name, photo, plan: "moon" }])
-      .select()
-      .single();
-    if (ins.error) throw ins.error;
-    user = ins.data;
+  if (allowed === 0) return { ok: false, reason: `Your plan does not allow ${kind}.` };
+  if (allowed === Infinity) return { ok: true };
+
+  // Count usage from DB
+  const { data } = await supabase.from("use_daily").select("*").eq("user_id", userId).eq("date", today()).single();
+
+  const current = data || { date: today(), ask: 0, search: 0 };
+  if (current[kind] >= allowed) return { ok: false, reason: `Daily ${kind} limit reached.` };
+
+  // Update count
+  current[kind] = (current[kind] || 0) + 1;
+  if (data) {
+    await supabase.from("use_daily").update(current).eq("user_id", userId).eq("date", today());
   } else {
-    await supabase.from("users").update({ name, photo }).eq("id", user.id);
+    await supabase.from("use_daily").insert({ user_id: userId, date: today(), ...current });
   }
-  return user;
-}
-async function getUserById(id) {
-  const { data, error } = await supabase.from("users").select("*").eq("id", id).single();
-  if (error) throw error;
-  return data;
-}
-async function getOrInitUsage(user_id) {
-  const d = today();
-  let { data: row, error } = await supabase
-    .from("usage_daily")
-    .select("*")
-    .eq("user_id", user_id)
-    .eq("date", d)
-    .maybeSingle();
-  if (error) throw error;
-  if (!row) {
-    const ins = await supabase
-      .from("usage_daily")
-      .insert([{ user_id, date: d, ask_count: 0, search_count: 0 }])
-      .select()
-      .single();
-    if (ins.error) throw ins.error;
-    row = ins.data;
-  }
-  return row;
-}
-async function bumpUsage(user_id, field) {
-  const d = today();
-  const cur = await getOrInitUsage(user_id);
-  const next = (cur[field] || 0) + 1;
-  const { error } = await supabase.from("usage_daily").update({ [field]: next }).eq("id", cur.id);
-  if (error) throw error;
+  return { ok: true };
 }
 
-function planKey(user) {
-  const k = (user?.plan || "moon").toLowerCase();
-  return PLAN_LIMITS[k] ? k : "moon";
-}
-
-// ---------- OAuth ----------
-const OAUTH_CALLBACK = "/auth/google/callback";
-
-passport.use(
-  new GoogleStrategy(
-    { clientID: GOOGLE_CLIENT_ID, clientSecret: GOOGLE_CLIENT_SECRET, callbackURL: OAUTH_CALLBACK, proxy: true },
-    async (_a, _r, profile, done) => {
-      try {
-        const u = await upsertUserFromGoogle(profile);
-        done(null, { id: u.id });
-      } catch (e) {
-        done(e);
-      }
-    }
-  )
-);
-passport.serializeUser((u, d) => d(null, u));
-passport.deserializeUser(async (obj, d) => {
-  try { d(null, await getUserById(obj.id)); } catch (e) { d(e); }
+// ---------- Auth Routes ----------
+app.get("/login.html", (_req, res) => {
+  res.sendFile(path.join(__dirname, "login.html"));
 });
 
-function requireAuth(req, res, next) {
-  if (req.isAuthenticated && req.isAuthenticated()) return next();
-  if (req.accepts("html")) return res.redirect("/login.html");
-  return res.status(401).json({ error: "Sign in required" });
-}
-
-function enforceLimit(kind) {
-  return async (req, res, next) => {
-    try {
-      const pkey = planKey(req.user);
-      const limits = PLAN_LIMITS[pkey];
-      const usage = await getOrInitUsage(req.user.id);
-      const used = kind === "ask" ? usage.ask_count : usage.search_count;
-      const allowed = limits[kind];
-      if (Number.isFinite(allowed) && used >= allowed) {
-        return res.status(429).json({ error: `Daily ${kind} limit reached for ${pkey} plan.` });
-      }
-      await bumpUsage(req.user.id, kind === "ask" ? "ask_count" : "search_count");
-      next();
-    } catch (e) {
-      console.error("limit error", e);
-      res.status(500).json({ error: "Usage/limit error" });
-    }
-  };
-}
-
-// ---------- Static & root ----------
-app.use(express.static(__dirname));
-
-app.get("/", (req, res) => {
-  if (req.isAuthenticated && req.isAuthenticated()) return res.sendFile(path.join(__dirname, "index.html"));
-  return res.sendFile(path.join(__dirname, "login.html"));
+app.get("/", async (req, res) => {
+  // Always redirect root to login first
+  res.redirect("/login.html");
 });
 
-app.get("/login.html", (req, res) => res.sendFile(path.join(__dirname, "login.html")));
-
-app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
-app.get(OAUTH_CALLBACK, passport.authenticate("google", { failureRedirect: "/login.html" }), (req, res) => res.redirect("/"));
-
-app.post("/logout", (req, res, next) => {
-  req.logout(err => {
-    if (err) return next(err);
-    req.session.destroy(() => res.json({ ok: true }));
-  });
-});
-
-// ---------- Me ----------
+// ---------- API: User info ----------
 app.get("/api/me", async (req, res) => {
-  if (!req.user) return res.json({ loggedIn: false });
-  const pkey = planKey(req.user);
-  const limits = PLAN_LIMITS[pkey];
-  const usage = await getOrInitUsage(req.user.id);
-  const remaining = {
-    ask: Number.isFinite(limits.ask) ? Math.max(0, limits.ask - (usage.ask_count || 0)) : Infinity,
-    search: Number.isFinite(limits.search) ? Math.max(0, limits.search - (usage.search_count || 0)) : Infinity,
-  };
-  res.json({
-    loggedIn: true,
-    user: { id: req.user.id, email: req.user.email, name: req.user.name, photo: req.user.photo, plan: pkey },
-    remaining,
-    today: today(),
-  });
+  const token = req.headers["authorization"]?.replace("Bearer ", "");
+  if (!token) return res.json({ loggedIn: false });
+
+  const { data: { user }, error } = await supabase.auth.getUser(token);
+  if (error || !user) return res.json({ loggedIn: false });
+
+  const plan = await getUserPlan(user.id);
+  res.json({ loggedIn: true, user, plan });
 });
 
-// ================= FEATURES =================
+// ---------- AI Routes ----------
+const upload = multer({ dest: "uploads/" });
 
-// Chat AI (Gemini) — ask limit
-app.post("/ask", requireAuth, enforceLimit("ask"), async (req, res) => {
+app.post("/api/chat", upload.array("files"), async (req, res) => {
+  const token = req.headers["authorization"]?.replace("Bearer ", "");
+  const { data: { user } } = await supabase.auth.getUser(token);
+  if (!user) return res.status(401).json({ error: "Sign in required" });
+
+  const check = await checkAllowed(user.id, "ask");
+  if (!check.ok) return res.status(403).json({ error: check.reason });
+
+  const message = (req.body?.message || "").trim();
+  if (!message && (!req.files || req.files.length === 0)) {
+    return res.json({ reply: "Send me a question or upload a file." });
+  }
+
   try {
-    const q = (req.body?.question || "").trim();
-    if (!q) return res.json({ answer: "Ask me anything!" });
-    const result = await geminiFlash.generateContent([{ text: q }]);
-    res.json({ answer: result.response.text() || "No response." });
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "system", content: "You are GoldenSpaceAI, a crisp assistant." },
+        { role: "user", content: message },
+      ],
+    });
+    res.json({ model: "gpt-4o-mini", reply: completion.choices[0].message.content });
   } catch (e) {
-    console.error("ask error", e);
-    res.status(500).json({ answer: "Gemini error" });
+    console.error(e);
+    res.status(500).json({ error: "OpenAI error" });
   }
 });
 
-// Search info (Gemini) — search limit
-app.post("/search-info", requireAuth, enforceLimit("search"), async (req, res) => {
+app.post("/api/search-info", async (req, res) => {
+  const token = req.headers["authorization"]?.replace("Bearer ", "");
+  const { data: { user } } = await supabase.auth.getUser(token);
+  if (!user) return res.status(401).json({ error: "Sign in required" });
+
+  const check = await checkAllowed(user.id, "search");
+  if (!check.ok) return res.status(403).json({ error: check.reason });
+
+  const q = (req.body?.query || "").trim();
+  if (!q) return res.json({ answer: "Type something to search." });
+
   try {
-    const q = (req.body?.query || "").trim();
-    if (!q) return res.json({ answer: "Type something to search." });
-    const prompt = `You are GoldenSpace Knowledge. Overview + 3 bullet facts.\nTopic: ${q}`;
-    const result = await geminiFlash.generateContent([{ text: prompt }]);
-    res.json({ answer: result.response.text() || "No info found." });
+    const result = await geminiFlash.generateContent([{ text: `Overview + 3 bullet facts about: ${q}` }]);
+    const answer = result.response.text() || "No info found.";
+    res.json({ answer });
   } catch (e) {
-    console.error("search-info error", e);
+    console.error(e);
     res.status(500).json({ answer: "Search error" });
   }
 });
 
-// Advanced Chat (OpenAI) — remembers last 20 msgs in session
-const uploadMem = multer({ storage: multer.memoryStorage() });
-app.post("/api/chat", requireAuth, uploadMem.array("files"), async (req, res) => {
+// Homework route (OpenAI vision)
+app.post("/api/homework", upload.single("file"), async (req, res) => {
+  const token = req.headers["authorization"]?.replace("Bearer ", "");
+  const { data: { user } } = await supabase.auth.getUser(token);
+  if (!user) return res.status(401).json({ error: "Sign in required" });
+
+  const plan = await getUserPlan(user.id);
+  if (PLAN_LIMITS[plan].homework === 0) {
+    return res.status(403).json({ error: "Your plan does not allow homework solving." });
+  }
+
+  const text = req.body?.message || "";
+  const file = req.file;
+
   try {
-    const text = (req.body?.message || "").trim() || "Hello";
-    req.session.chatHistory ||= [];
-    req.session.chatHistory.push({ role: "user", content: text });
-    req.session.chatHistory = req.session.chatHistory.slice(-20);
+    if (!file) return res.status(400).json({ error: "No file uploaded" });
+
+    const base64Image = Buffer.from(await fs.promises.readFile(file.path)).toString("base64");
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
-        { role: "system", content: "You are GoldenSpaceAI, concise and helpful." },
-        ...req.session.chatHistory,
+        { role: "system", content: "You are a homework solving assistant." },
+        { role: "user", content: text },
+        { role: "user", content: [{ type: "image_url", image_url: { url: `data:image/png;base64,${base64Image}` } }] },
       ],
     });
-    const reply = completion.choices?.[0]?.message?.content || "No reply.";
-    req.session.chatHistory.push({ role: "assistant", content: reply });
-    req.session.save(() => res.json({ reply }));
+
+    res.json({ reply: completion.choices[0].message.content });
   } catch (e) {
-    console.error("/api/chat error", e);
-    res.status(500).json({ error: "Chat error" });
+    console.error(e);
+    res.status(500).json({ error: "Homework error" });
   }
 });
 
-// Homework Solver (OpenAI Vision)
-app.post("/api/homework", requireAuth, uploadMem.single("image"), async (req, res) => {
-  try {
-    const prompt = (req.body?.prompt || "Solve this step by step.").slice(0, 4000);
-    if (!req.file) return res.status(400).json({ error: "No image received" });
-
-    const b64 = req.file.buffer.toString("base64");
-    const dataUrl = `data:${req.file.mimetype};base64,${b64}`;
-
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "user",
-          content: [
-            { type: "text", text: prompt },
-            { type: "image_url", image_url: { url: dataUrl } },
-          ],
-        },
-      ],
-      temperature: 0.2,
-    });
-
-    const reply = completion.choices?.[0]?.message?.content || "No solution found.";
-    res.json({ reply });
-  } catch (e) {
-    console.error("/api/homework error", e);
-    // Send readable error, not a generic “offline”
-    res.status(500).json({ error: e?.message || "Homework solver error" });
-  }
-});
-
-// --------- Gate pages (html files) ----------
-function gate(file) {
-  return (req, res) => {
-    if (!req.isAuthenticated || !req.isAuthenticated())
-      return res.redirect("/login.html");
-    res.sendFile(path.join(__dirname, file));
-  };
-}
-app.get("/advanced-ai.html", gate("advanced-ai.html"));
-app.get("/chat-advancedai.html", gate("chat-advancedai.html"));
-app.get("/homework-helper.html", gate("homework-helper.html"));
-app.get("/learn-physics.html", gate("learn-physics.html"));
-app.get("/create-planet.html", gate("create-planet.html"));
-app.get("/create-rocket.html", gate("create-rocket.html"));
-app.get("/create-satellite.html", gate("create-satellite.html"));
-app.get("/your-space.html", gate("your-space.html"));
-
-// Health
+// ---------- Static ----------
+app.use(express.static(__dirname));
 app.get("/health", (_req, res) => res.json({ ok: true }));
 
-// Start
+// ---------- Start ----------
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 GoldenSpaceAI running on ${PORT}`));

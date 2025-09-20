@@ -1,292 +1,307 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>GoldenSpaceAI · Advanced Assistant</title>
-  <style>
-    :root{
-      --gold-1:#ffd700; --gold-2:#e6c200; --gold-3:#b89700;
-      --text:#faf7e8; --muted:#c8b88a;
-      --glass: rgba(255,255,255,.08); --ring: rgba(255,215,0,.35);
+// index.js — GoldenSpaceAI (Home-first, Gemini + OpenAI, Model selector, Memory 20, File upload)
+
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
+import session from "express-session";
+import passport from "passport";
+import { Strategy as GoogleStrategy } from "passport-google-oauth20";
+import cookieParser from "cookie-parser";
+import bodyParser from "body-parser";
+import multer from "multer";
+import fs from "fs";
+import OpenAI from "openai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
+dotenv.config();
+
+const app = express();
+app.set("trust proxy", 1);
+
+// ---------- Core middleware ----------
+app.use(cors({ origin: true, credentials: true }));
+app.use(express.json({ limit: "10mb" }));
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(cookieParser());
+
+// ---------- Sessions ----------
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || "super-secret",
+    resave: false,
+    saveUninitialized: true,
+    cookie: {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+    },
+  }),
+);
+
+// Passport (Google) – still available, but NOT required for access right now
+app.use(passport.initialize());
+app.use(passport.session());
+
+// ---------- Paths ----------
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// ---------- Simple plan map (not enforced for now; pages unlocked) ----------
+const PLAN_LIMITS = {
+  moon:  { ask: 40, search: 20 },
+  earth: { ask: Infinity, search: Infinity },
+  chatai:{ ask: Infinity, search: Infinity }, // ChatAI pack (Advanced too)
+};
+
+// ---------- Helper: compute base URL ----------
+function getBaseUrl(req) {
+  const proto = (req.headers["x-forwarded-proto"] || "").toString().split(",")[0] || req.protocol || "https";
+  const host = (req.headers["x-forwarded-host"] || "").toString().split(",")[0] || req.get("host");
+  return `${proto}://${host}`;
+}
+
+// ---------- Google OAuth (kept; optional) ----------
+const DEFAULT_CALLBACK_PATH = "/auth/google/callback";
+passport.use(new GoogleStrategy(
+  {
+    clientID: process.env.GOOGLE_CLIENT_ID || "none",
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET || "none",
+    callbackURL: DEFAULT_CALLBACK_PATH,
+    proxy: true,
+  },
+  (accessToken, refreshToken, profile, done) => {
+    const user = {
+      id: profile.id,
+      name: profile.displayName,
+      email: profile.emails?.[0]?.value || "",
+      photo: profile.photos?.[0]?.value || "",
+      plan: "moon",
+    };
+    return done(null, user);
+  }
+));
+passport.serializeUser((user, done) => done(null, user));
+passport.deserializeUser((obj, done) => done(null, obj));
+
+app.get("/auth/google", (req, res, next) => {
+  const callbackURL = `${getBaseUrl(req)}${DEFAULT_CALLBACK_PATH}`;
+  passport.authenticate("google", { scope: ["profile", "email"], callbackURL })(req, res, next);
+});
+app.get(DEFAULT_CALLBACK_PATH, (req, res, next) => {
+  const callbackURL = `${getBaseUrl(req)}${DEFAULT_CALLBACK_PATH}`;
+  passport.authenticate("google", { failureRedirect: "/login.html", callbackURL })(req, res, () => res.redirect("/"));
+});
+app.post("/logout", (req, res, next) => {
+  req.logout(err => { if (err) return next(err); req.session.destroy(() => res.json({ ok: true })); });
+});
+
+// ---------- PUBLIC / AUTH GATE ----------
+// For testing: everything is open. (Keep legal pages public too.)
+const PUBLIC_FILE_EXT = /\.(css|js|mjs|map|png|jpg|jpeg|gif|svg|ico|txt|woff2?|html)$/i;
+function isPublicPath(req) {
+  return true; // <- UNLOCK EVERYTHING FOR NOW (testing)
+}
+// Leave middleware here for future re-locking
+function authRequired(req, res, next) {
+  if (isPublicPath(req)) return next();
+  if (req.isAuthenticated && req.isAuthenticated()) return next();
+  if (req.accepts("html")) return res.redirect("/login.html");
+  return res.status(401).json({ error: "Sign in required" });
+}
+
+// ---------- Static & Health ----------
+app.use(express.static(__dirname));
+app.get("/health", (_req, res) => res.json({ ok: true }));
+
+// ---------- Gemini ----------
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
+const modelFlash = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+const modelPro = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+
+// ---------- OpenAI ----------
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || "" });
+
+// ---------- Memory helpers (session-scoped) ----------
+function pushHistory(req, role, content) {
+  if (!req.session.advHistory) req.session.advHistory = [];
+  req.session.advHistory.push({ role, content });
+  if (req.session.advHistory.length > 20) {
+    req.session.advHistory = req.session.advHistory.slice(-20);
+  }
+}
+function getHistory(req) {
+  return (req.session.advHistory || []).map(m => ({ role: m.role, content: m.content }));
+}
+
+// ---------- Utility: read small text-like docs to string ----------
+async function readTextIfPossible(filePath, mimetype) {
+  try {
+    const t = mimetype || "";
+    if (t.startsWith("text/") || /\/(json|csv|html|xml)/i.test(t)) {
+      return fs.readFileSync(filePath, "utf8").slice(0, 30000); // cap to 30k chars
     }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0; font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial;
-      color:var(--text);
-      background:
-        radial-gradient(1200px 800px at 75% -20%, rgba(255,215,0,.18), transparent 40%),
-        radial-gradient(800px 600px at 10% 120%, rgba(255,215,0,.08), transparent 45%),
-        #05060a;
-      background-attachment:fixed; overflow:hidden;
-    }
-    .stars,.twinkle{position:fixed; inset:0; z-index:-2; pointer-events:none}
-    .stars{
-      background-image:url("https://images.unsplash.com/photo-1444703686981-a3abbc4d4fe3?q=80&w=1600&auto=format&fit=crop");
-      background-size:cover; filter:saturate(1.05) brightness(.9) contrast(1.1); opacity:.28;
-    }
-    .twinkle{
-      background-image:
-        radial-gradient(2px 2px at 20% 30%, rgba(255,255,255,.45), transparent 55%),
-        radial-gradient(1.5px 1.5px at 70% 60%, rgba(255,255,255,.35), transparent 55%),
-        radial-gradient(1.2px 1.2px at 40% 80%, rgba(255,255,255,.4), transparent 55%),
-        radial-gradient(1px 1px at 85% 15%, rgba(255,255,255,.5), transparent 55%);
-      animation: twinkle 8s linear infinite; opacity:.45
-    }
-    @keyframes twinkle{0%{filter:brightness(1)}50%{filter:brightness(1.25)}100%{filter:brightness(1)}}
+    return null;
+  } catch {
+    return null;
+  }
+}
 
-    .wrap{display:grid; grid-template-rows:auto 1fr auto; height:100%}
-    header{
-      display:flex; align-items:center; gap:.9rem; padding:14px 18px;
-      backdrop-filter:blur(8px);
-      background:linear-gradient(180deg,rgba(10,10,14,.55),rgba(10,10,14,.25));
-      border-bottom:1px solid rgba(255,255,255,.06);
-    }
-    .brand{display:flex; align-items:center; gap:.7rem; font-weight:800}
-    .logo{
-      width:32px;height:32px;border-radius:50%;
-      background:conic-gradient(from 210deg,var(--gold-1),var(--gold-2),var(--gold-3),var(--gold-1));
-      box-shadow:0 0 0 2px rgba(255,215,0,.25), 0 0 32px rgba(255,215,0,.25) inset;
-    }
-    .badge{font-size:.75rem;color:#1a1606;background:linear-gradient(180deg,var(--gold-1),var(--gold-2));
-      padding:4px 8px;border-radius:999px;box-shadow:0 2px 10px rgba(255,215,0,.25)}
+// ---------- ROUTES (Gemini) ----------
+app.post("/ask", async (req, res) => {
+  try {
+    const q = (req.body?.question || "").trim();
+    if (!q) return res.json({ answer: "Ask me anything!" });
+    const result = await modelFlash.generateContent([{ text: `User: ${q}` }]);
+    const answer = result.response.text() || "No response.";
+    res.json({ answer });
+  } catch (e) { console.error("ask error", e); res.status(500).json({ answer: "Gemini error" }); }
+});
 
-    /* model selector */
-    .model-select{
-      display:flex; align-items:center; gap:8px;
-      padding:6px 10px; border-radius:999px;
-      background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1);
-      font-size:.9rem;
-    }
-    .model-select select{
-      background:transparent; color:var(--text); border:none; outline:none; font-weight:700;
-    }
+app.post("/search-info", async (req, res) => {
+  try {
+    const q = (req.body?.query || "").trim();
+    if (!q) return res.json({ answer: "Type something to search." });
+    const prompt = `You are GoldenSpace Knowledge. Overview + 3 bullet facts.\nTopic: ${q}`;
+    const result = await modelFlash.generateContent([{ text: prompt }]);
+    const answer = result.response.text() || "No info found.";
+    res.json({ answer });
+  } catch (e) { console.error("search-info error", e); res.status(500).json({ answer: "Search error" }); }
+});
 
-    main#chat{position:relative;height:100%;overflow:auto;padding:18px 18px 160px;scroll-behavior:smooth}
-    .msg{max-width:min(780px,92%);padding:14px 16px;border-radius:16px;margin:10px 0;line-height:1.55;
-      box-shadow:0 2px 18px rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.06);backdrop-filter:blur(6px)}
-    .msg.user{margin-left:auto;background:linear-gradient(180deg,rgba(255,215,0,.12),rgba(255,215,0,.08));border-color:rgba(255,215,0,.25)}
-    .msg.ai{background:rgba(12,12,16,.55)}
-    .msg small{display:block;opacity:.65;font-size:.75rem;margin-bottom:6px}
-    .spinner{width:20px;height:20px;border-radius:50%;border:2px solid rgba(255,255,255,.2);border-top-color:var(--gold-1);animation:spin 1s linear infinite}
-    @keyframes spin{to{transform:rotate(360deg)}}
+app.post("/ai/physics-explain", async (req, res) => {
+  try {
+    const q = (req.body?.question || "").trim();
+    if (!q) return res.json({ reply: "Ask a physics question." });
+    const prompt = `You are GoldenSpace Physics Tutor. Explain clearly.\nQuestion: ${q}`;
+    const result = await modelFlash.generateContent([{ text: prompt }]);
+    const reply = result.response.text() || "No reply.";
+    res.json({ reply });
+  } catch (e) { console.error("physics error", e); res.status(500).json({ reply: "Physics error" }); }
+});
 
-    /* Composer */
-    .composer-wrap{position:fixed;left:0;right:0;bottom:18px;display:flex;justify-content:center;pointer-events:none}
-    .composer{
-      pointer-events:auto;width:min(980px,92%);display:grid;grid-template-columns:56px 1fr 56px 56px;gap:10px;padding:10px;
-      border-radius:18px;background:var(--glass);backdrop-filter:blur(10px);
-      border:1px solid rgba(255,255,255,.08); box-shadow:0 10px 30px rgba(0,0,0,.35), 0 0 0 1px var(--ring)
-    }
-    .btn{border:none;outline:none;cursor:pointer;height:56px;width:56px;border-radius:999px;
-      background:rgba(255,255,255,.06);display:grid;place-items:center;transition:.2s transform,.2s background}
-    .btn:hover{transform:translateY(-1px);background:rgba(255,255,255,.12)}
-    .btn.plus::before{content:"+";font-size:28px;color:var(--gold-1);font-weight:700}
-    .btn.mic{background:linear-gradient(180deg,var(--gold-1),var(--gold-2)); box-shadow:0 8px 18px rgba(255,215,0,.25)}
-    .btn.mic::before{content:"🎤";font-size:22px;color:#141209;font-weight:700}
-    .btn.send{background:linear-gradient(180deg,var(--gold-1),var(--gold-2)); box-shadow:0 8px 18px rgba(255,215,0,.25)}
-    .btn.send::before{content:"➤";font-size:18px;color:#141209;font-weight:700}
+// ---------- Advanced Chat AI (OpenAI) ----------
+const upload = multer({ dest: "uploads/" });
 
-    textarea{
-      width:100%; resize:none; min-height:56px; max-height:140px; padding:14px; border-radius:14px;
-      background:rgba(255,255,255,.06); color:var(--text); border:1px solid rgba(255,255,255,.1);
-      font-size:15px; line-height:1.4; outline:none;
-    }
-    textarea::placeholder{color:rgba(255,255,255,.6)}
+// NOTE: this route is used by chat-advancedai.html
+app.post("/chat-advanced-ai", upload.single("file"), async (req, res) => {
+  try {
+    const q = (req.body?.q || "").trim();
+    const model = (req.body?.model || "gpt-4o-mini").trim();
 
-    .attachments{grid-column:1 / -1; display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:6px}
-    .chip{display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,.1);
-      background:rgba(255,255,255,.06);padding:6px 8px;border-radius:999px;font-size:.8rem}
-    .chip button{background:none;border:none;color:var(--muted);cursor:pointer}
-    .hidden{display:none}
-  </style>
-</head>
-<body>
-  <div class="stars"></div>
-  <div class="twinkle"></div>
-
-  <div class="wrap">
-    <header>
-      <div class="brand"><div class="logo"></div><span>GoldenSpaceAI</span></div>
-      <span class="badge">Advanced Assistant</span>
-      <div style="flex:1"></div>
-      <div class="model-select" title="Choose model">
-        <span style="opacity:.8">Model</span>
-        <select id="model">
-          <option value="gpt-5">gpt-5</option>
-          <option value="gpt-5-nano">gpt-5-nano</option>
-          <option value="gpt-4o-mini" selected>gpt-4o-mini</option>
-          <option value="gpt-4">gpt-4</option>
-        </select>
-      </div>
-    </header>
-
-    <main id="chat">
-      <div class="msg ai">
-        <small>GoldenSpaceAI</small>
-        Welcome to your golden, galaxy-powered assistant. Attach a <strong>document</strong> with the ＋ button, type your request in the middle box, then press ➤ Send. Use the mic to speak if you like.
-      </div>
-    </main>
-
-    <div class="composer-wrap">
-      <div class="composer">
-        <!-- Left: file upload -->
-        <button id="plusBtn" class="btn plus" title="Attach file"></button>
-
-        <!-- Middle: visible typing area -->
-        <textarea id="prompt" placeholder="Type your message… (Shift+Enter for newline)"></textarea>
-
-        <!-- Right: microphone -->
-        <button id="micBtn" class="btn mic" title="Talk"></button>
-
-        <!-- Send -->
-        <button id="sendBtn" class="btn send" title="Send"></button>
-
-        <div id="attachments" class="attachments hidden"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Hidden file input (documents; you can widen as needed) -->
-  <input id="fileInput" class="hidden" type="file"
-         accept=".pdf,.txt,.md,.json,.csv,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.rtf,.html,.xml,.epub,.odt,.ods,.odp,*/*" />
-
-  <script>
-    // ==== Config ====
-    const BACKEND_URL = "/chat-advanced-ai"; // your server route
-
-    // ==== DOM ====
-    const chat = document.getElementById("chat");
-    const plusBtn = document.getElementById("plusBtn");
-    const fileInput = document.getElementById("fileInput");
-    const micBtn = document.getElementById("micBtn");
-    const sendBtn = document.getElementById("sendBtn");
-    const promptEl = document.getElementById("prompt");
-    const attsEl = document.getElementById("attachments");
-    const modelEl = document.getElementById("model");
-
-    // Preselect model from ?model= query if provided
-    const urlModel = new URLSearchParams(location.search).get("model");
-    if (urlModel) {
-      const opt = [...modelEl.options].find(o => o.value === urlModel);
-      if (opt) modelEl.value = urlModel;
-    }
-
-    let attachedFile = null;
-
-    // ==== Helpers ====
-    function el(tag, attrs={}, ...children){
-      const n = document.createElement(tag);
-      Object.entries(attrs).forEach(([k,v])=>{
-        if(k==="class") n.className=v;
-        else if(k==="html") n.innerHTML=v;
-        else n.setAttribute(k,v);
-      });
-      children.forEach(c=> n.append(c instanceof Node? c : document.createTextNode(c)));
-      return n;
-    }
-    function addMsg(role, text){
-      const m = el("div",{class:`msg ${role}`});
-      m.append(el("small",{}, role==="user"?"You":"GoldenSpaceAI"));
-      m.append(el("div",{html:(text||"").toString().replace(/\n/g,"<br/>")}));
-      chat.append(m); chat.scrollTop = chat.scrollHeight; return m;
-    }
-    function addSpinner(){
-      const row = el("div",{class:"msg ai"}); row.append(el("small",{},"GoldenSpaceAI")); row.append(el("div",{class:"spinner"}));
-      chat.append(row); chat.scrollTop = chat.scrollHeight; return row;
-    }
-    function bytesToSize(b){ if(b===0) return "0B"; const k=1024,s=['B','KB','MB','GB']; const i=Math.floor(Math.log(b)/Math.log(k)); return (b/Math.pow(k,i)).toFixed(1)+' '+s[i]; }
-    function renderAttachment(){
-      attsEl.innerHTML = "";
-      if(!attachedFile){ attsEl.classList.add("hidden"); return; }
-      const chip = el("span",{class:"chip"});
-      chip.append(`${attachedFile.name} · ${bytesToSize(attachedFile.size)}`);
-      const rm = el("button",{},"✕");
-      rm.addEventListener("click", ()=>{ attachedFile = null; renderAttachment(); });
-      chip.append(rm);
-      attsEl.append(chip);
-      attsEl.classList.remove("hidden");
+    // Build message list with memory
+    const messages = [
+      { role: "system", content: "You are GoldenSpaceAI, a crisp expert assistant. Be concise and helpful." },
+      ...getHistory(req),
+    ];
+    if (q) {
+      messages.push({ role: "user", content: q });
+      pushHistory(req, "user", q);
     }
 
-    // ==== Attach documents ====
-    plusBtn.addEventListener("click", ()=> fileInput.click());
-    fileInput.addEventListener("change", ()=>{
-      const f = fileInput.files?.[0];
-      if(!f){ attachedFile = null; renderAttachment(); return; }
-      attachedFile = f;
-      renderAttachment();
-      // clear the input so the same file can be re-chosen later
-      fileInput.value = "";
-    });
+    // If there's a file, attach it (image → vision; text-like → inline)
+    let fileNote = "";
+    if (req.file) {
+      const filePath = req.file.path;
+      const mime = req.file.mimetype || "application/octet-stream";
 
-    // ==== Send flow ====
-    async function send(){
-      const text = (promptEl.value||"").trim();
-      if(!text && !attachedFile) return;
-
-      // show user message summary
-      addMsg("user", text || (attachedFile ? `(sent file: ${attachedFile.name})` : "(empty)"));
-      promptEl.value = "";
-      const spin = addSpinner();
-
-      try{
-        const form = new FormData();
-        form.append("q", text);
-        form.append("model", modelEl.value);
-        if(attachedFile) form.append("file", attachedFile);
-
-        const res = await fetch(BACKEND_URL, {
-          method: "POST",
-          body: form,
-          credentials: "include"
+      if (mime.startsWith("image/")) {
+        const b64 = fs.readFileSync(filePath).toString("base64");
+        messages.push({
+          role: "user",
+          content: [
+            { type: "text", text: q || "Please analyze this image together with my request." },
+            { type: "image_url", image_url: { url: `data:${mime};base64,${b64}` } },
+          ],
         });
-        let data = null;
-        try { data = await res.json(); } catch(e){ /* ignore */ }
-        if(!res.ok) throw new Error(data?.error || ("Backend error: " + res.status));
-
-        chat.removeChild(spin);
-        addMsg("ai", data.answer || data.reply || "[No reply]");
-      }catch(err){
-        chat.removeChild(spin);
-        addMsg("ai","⚠️ " + err.message);
-      }finally{
-        attachedFile = null; renderAttachment();
+        fileNote = ` (image: ${req.file.originalname})`;
+      } else {
+        const text = await readTextIfPossible(filePath, mime);
+        if (text) {
+          messages.push({ role: "user", content: `Attached file "${req.file.originalname}" content (truncated):\n\n${text}` });
+          fileNote = ` (doc: ${req.file.originalname})`;
+        } else {
+          messages.push({ role: "user", content: `Attached file "${req.file.originalname}" (${mime}). If you need to reference it, ask me to upload as text or image.` });
+          fileNote = ` (file: ${req.file.originalname})`;
+        }
       }
+      // cleanup temp file
+      fs.unlink(filePath, () => {});
     }
 
-    sendBtn.addEventListener("click", send);
-    promptEl.addEventListener("keydown", (e)=>{
-      if(e.key==="Enter" && !e.shiftKey){ e.preventDefault(); send(); }
+    // Call OpenAI
+    const completion = await openai.chat.completions.create({
+      model,
+      messages,
+      temperature: 0.3,
     });
 
-    // ==== Speech to text (Web Speech API) ====
-    let rec = null, listening = false;
-    (function initSpeech(){
-      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if(!SR) return;
-      rec = new SR();
-      rec.lang = "en-US";
-      rec.interimResults = false;
-      rec.continuous = false;
-      rec.maxAlternatives = 1;
+    const reply = completion.choices?.[0]?.message?.content || "No reply.";
+    pushHistory(req, "assistant", reply);
 
-      rec.onstart = ()=>{ listening = true; micBtn.classList.add("pulse"); };
-      rec.onend   = ()=>{ listening = false; micBtn.classList.remove("pulse"); };
-      rec.onerror = (e)=> addMsg("ai","⚠️ Mic error: " + (e.error||"unknown"));
-      rec.onresult = async (ev)=>{
-        const text = (ev.results?.[0]?.[0]?.transcript || "").trim();
-        if(text){ promptEl.value = text; send(); }
-      };
-    })();
+    res.json({ model, reply, note: fileNote });
+  } catch (e) {
+    console.error("advanced-ai error", e);
+    res.status(500).json({ error: "Advanced AI error" });
+  }
+});
 
-    micBtn.addEventListener("click", ()=>{
-      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if(!SR) { addMsg("ai","⚠️ Microphone not supported in this browser."); return; }
-      if(!rec) return;
-      if(listening){ rec.stop(); return; }
-      rec.start();
+// ---------- Homework Solver (OpenAI vision) ----------
+// Your homework-helper.html posts to /api/chat with fields:
+// - message (string)
+// - files (first image) optional
+// - model optional (defaults gpt-4o-mini)
+app.post("/api/chat", upload.array("files"), async (req, res) => {
+  try {
+    const message = (req.body?.message || "").trim();
+    const model = (req.body?.model || "gpt-4o-mini").trim();
+
+    const parts = [];
+    if (message) parts.push({ type: "text", text: message });
+
+    // Accept a single image (first file)
+    const f = (req.files && req.files[0]) ? req.files[0] : null;
+    if (f && f.mimetype && f.mimetype.startsWith("image/")) {
+      const b64 = fs.readFileSync(f.path).toString("base64");
+      parts.push({ type: "image_url", image_url: { url: `data:${f.mimetype};base64,${b64}` } });
+      fs.unlink(f.path, () => {});
+    }
+
+    // If no image and no text, return
+    if (parts.length === 0) return res.status(400).json({ error: "Provide an image or a message." });
+
+    const completion = await openai.chat.completions.create({
+      model,
+      messages: [
+        { role: "system", content: "You are GoldenSpaceAI Homework Helper. Explain step-by-step, show working, and verify the final answer." },
+        { role: "user", content: parts },
+      ],
+      temperature: 0.2,
     });
-  </script>
-</body>
-</html>
+
+    const reply = completion.choices?.[0]?.message?.content || "No reply.";
+    res.json({ model, reply });
+  } catch (e) {
+    console.error("homework api error", e);
+    res.status(500).json({ error: "Homework error" });
+  }
+});
+
+// ---------- /api/me (basic info for header pills, etc.) ----------
+app.get("/api/me", (req, res) => {
+  const plan = req.user?.plan || "moon";
+  res.json({
+    loggedIn: !!req.user,
+    email: req.user?.email || null,
+    name: req.user?.name || null,
+    given_name: req.user?.name?.split(" ")?.[0] || null,
+    picture: req.user?.photo || null,
+    plan,
+  });
+});
+
+// ---------- Start ----------
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`🚀 GoldenSpaceAI running on ${PORT}`));

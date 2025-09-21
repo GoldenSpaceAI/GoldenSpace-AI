@@ -247,35 +247,53 @@ app.post("/chat-advanced-ai", upload.single("file"), async (req, res) => {
     res.status(500).json({ error: "Advanced AI error" });
   }
 });
-
 // ---------- Homework Solver (OpenAI vision) ----------
-// Your homework-helper.html posts to /api/chat with fields:
-// - message (string)
-// - files (first image) optional
-// - model optional (defaults gpt-4o-mini)
-app.post("/api/chat", upload.array("files"), async (req, res) => {
+// Accepts:
+//  - POST /api/chat           (legacy from your page)
+//  - POST /api/homework       (alias to avoid 404)
+// Fields:
+//  - message or prompt (text)
+//  - files[] OR image (first image used)
+// Default model: gpt-4o-mini
+
+async function handleHomework(req, res) {
   try {
-    const message = (req.body?.message || "").trim();
+    const message = (req.body?.message || req.body?.prompt || "").trim();
     const model = (req.body?.model || "gpt-4o-mini").trim();
+
+    // Gather files from any field name
+    const allFiles = [];
+    if (req.files && Array.isArray(req.files)) allFiles.push(...req.files);
+    if (req.file) allFiles.push(req.file); // in case of single("image")
 
     const parts = [];
     if (message) parts.push({ type: "text", text: message });
 
-    // Accept a single image (first file)
-    const f = (req.files && req.files[0]) ? req.files[0] : null;
-    if (f && f.mimetype && f.mimetype.startsWith("image/")) {
-      const b64 = fs.readFileSync(f.path).toString("base64");
-      parts.push({ type: "image_url", image_url: { url: `data:${f.mimetype};base64,${b64}` } });
-      fs.unlink(f.path, () => {});
+    // Pick first image if present
+    const img = allFiles.find(f => (f.mimetype || "").startsWith("image/"));
+    if (img) {
+      const b64 = fs.readFileSync(img.path).toString("base64");
+      parts.push({
+        type: "image_url",
+        image_url: { url: `data:${img.mimetype};base64,${b64}` },
+      });
     }
 
-    // If no image and no text, return
-    if (parts.length === 0) return res.status(400).json({ error: "Provide an image or a message." });
+    // Cleanup temp files
+    for (const f of allFiles) { try { fs.unlinkSync(f.path); } catch {} }
+
+    if (parts.length === 0) {
+      return res.status(400).json({ error: "Provide an image or a message." });
+    }
 
     const completion = await openai.chat.completions.create({
       model,
       messages: [
-        { role: "system", content: "You are GoldenSpaceAI Homework Helper. Explain step-by-step, show working, and verify the final answer." },
+        {
+          role: "system",
+          content:
+            "You are GoldenSpaceAI Homework Helper. Explain step-by-step, show working, and verify the final answer.",
+        },
         { role: "user", content: parts },
       ],
       temperature: 0.2,
@@ -287,8 +305,11 @@ app.post("/api/chat", upload.array("files"), async (req, res) => {
     console.error("homework api error", e);
     res.status(500).json({ error: "Homework error" });
   }
-});
+}
 
+// Accept any file field names on both endpoints
+app.post("/api/chat",      upload.any(), handleHomework);
+app.post("/api/homework",  upload.any(), handleHomework);
 // ---------- /api/me (basic info for header pills, etc.) ----------
 app.get("/api/me", (req, res) => {
   const plan = req.user?.plan || "moon";

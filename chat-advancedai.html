@@ -99,100 +99,7 @@
   <input id="fileInput" class="hidden" type="file"
          accept=".pdf,.txt,.md,.json,.csv,.doc,.docx,.ppt,.pptx,.xlsx,image/*" multiple />
 
-  <script>
-    // ==== Config ====
-    const BACKEND_URL = "/chat-advanced-ai";
-
-    // UI label -> real API model
-    const MODEL_MAP = {
-      "gpt-4": "gpt-4o",
-      "gpt-4o-mini": "gpt-4o-mini"
-    };
-
-    // ==== DOM ====
-    const chat = document.getElementById("chat");
-    const plusBtn = document.getElementById("plusBtn");
-    const fileInput = document.getElementById("fileInput");
-    const micBtn = document.getElementById("micBtn");
-    const promptEl = document.getElementById("prompt");
-    const sendBtn = document.getElementById("sendBtn");
-    const modelSel = document.getElementById("modelSel");
-    const atts = document.getElementById("attachments");
-
-    const attachments = [];
-
-    function el(tag, attrs={}, ...children){
-      const n = document.createElement(tag);
-      Object.entries(attrs).forEach(([k,v])=>{
-        if(k==="class") n.className=v;
-        else if(k==="html") n.innerHTML=v;
-        else n.setAttribute(k,v);
-      });
-      children.forEach(c=> n.append(c instanceof Node? c : document.createTextNode(c)));
-      return n;
-    }
-    function addMsg(role, text){
-      const m = el("div",{class:`msg ${role}`});
-      m.append(el("small",{}, role==="user"?"You":"GoldenSpaceAI"));
-      m.append(el("div",{html:(text||"").toString().replace(/\n/g,"<br/>")}));
-      chat.append(m); chat.scrollTop = chat.scrollHeight; return m;
-    }
-    function addSpinner(){
-      const row = el("div",{class:"msg ai"}); row.append(el("small",{},"GoldenSpaceAI")); row.append(el("div",{class:"spinner"}));
-      chat.append(row); chat.scrollTop = chat.scrollHeight; return row;
-    }
-    function bytesToSize(b){
-      if(!b) return "0B";
-      const k=1024, s=["B","KB","MB","GB"]; const i=Math.floor(Math.log(b)/Math.log(k));
-      return (b/Math.pow(k,i)).toFixed(1)+" "+s[i];
-    }
-    function renderAttachments(){
-      atts.innerHTML="";
-      attachments.forEach((f, idx)=>{
-        const chip = el("span",{class:"chip"});
-        chip.append(`${f.name} · ${bytesToSize(f.size)}`);
-        const remove = el("button",{},"✕");
-        remove.addEventListener("click",()=>{ attachments.splice(idx,1); renderAttachments(); });
-        chip.append(remove);
-        atts.append(chip);
-      });
-    }
-
-    plusBtn.addEventListener("click", ()=> fileInput.click());
-    fileInput.addEventListener("change", ()=>{
-      for(const f of fileInput.files){ attachments.push(f); }
-      fileInput.value = "";
-      renderAttachments();
-    });
-
-    micBtn.addEventListener("click", () => {
-      const uiModel = modelSel.value;
-      const apiModel = MODEL_MAP[uiModel] || "gpt-4o-mini";
-      window.location.href = `/chat-advancedai-voice.html?model=${encodeURIComponent(uiModel)}&api=${encodeURIComponent(apiModel)}`;
-    });
-
-    async function send(){
-      const text = (promptEl.value||"").trim();
-      if(!text && attachments.length===0) return;
-
-      const uiModel = modelSel.value;
-      const apiModel = MODEL_MAP[uiModel] || "gpt-4o-mini";
-
-      addMsg("user", text || "(file upload)");
-      const spin = addSpinner();
-
-      try{
-        const form = new FormData();
-        form.append("q", text);
-        form.append("model", uiModel);
-        form.append("apiModel", apiModel);
-        attachments.forEach(f=> form.append("file", f));
-
-        const res = await fetch(BACKEND_URL, { method:"POST", body:form, credentials:"include" });
-        if(!res.ok) throw new Error("Backend error: "+res.status);
-        const data = await res.json();
-        chat.removeChild(spin);
-        addMsg("ai", data.answer || data.reply || "[No reply]");
+ 
       }catch(err){
         chat.removeChild(spin);
         addMsg("ai","⚠️ "+err.message);
@@ -209,3 +116,153 @@
   </script>
 </body>
 </html>
+
+<script>
+  // ==== Config ====
+  const BACKEND_URL = "/chat-advanced-ai";     // existing backend route
+  const TRANSCRIBE_URL = "/api/transcribe";    // new endpoint below
+
+  const MODEL_MAP = {
+    "gpt-4": "gpt-4o",
+    "gpt-4o-mini": "gpt-4o-mini"
+  };
+
+  // ==== DOM ====
+  const chat = document.getElementById("chat");
+  const plusBtn = document.getElementById("plusBtn");
+  const fileInput = document.getElementById("fileInput");
+  const micBtn = document.getElementById("micBtn");
+  const promptEl = document.getElementById("prompt");
+  const sendBtn = document.getElementById("sendBtn");
+  const modelSel = document.getElementById("modelSel");
+  const atts = document.getElementById("attachments");
+
+  const attachments = [];
+
+  function el(tag, attrs={}, ...children){
+    const n = document.createElement(tag);
+    Object.entries(attrs).forEach(([k,v])=>{
+      if(k==="class") n.className=v;
+      else if(k==="html") n.innerHTML=v;
+      else n.setAttribute(k,v);
+    });
+    children.forEach(c=> n.append(c instanceof Node? c : document.createTextNode(c)));
+    return n;
+  }
+  function addMsg(role, text){
+    const m = el("div",{class:`msg ${role}`});
+    m.append(el("small",{}, role==="user"?"You":"GoldenSpaceAI"));
+    m.append(el("div",{html:(text||"").toString().replace(/\n/g,"<br/>")}));
+    chat.append(m); chat.scrollTop = chat.scrollHeight; return m;
+  }
+  function addSpinner(){
+    const row = el("div",{class:"msg ai"}); row.append(el("small",{},"GoldenSpaceAI")); row.append(el("div",{class:"spinner"}));
+    chat.append(row); chat.scrollTop = chat.scrollHeight; return row;
+  }
+  function bytesToSize(b){
+    if(!b) return "0B";
+    const k=1024, s=["B","KB","MB","GB"]; const i=Math.floor(Math.log(b)/Math.log(k));
+    return (b/Math.pow(k,i)).toFixed(1)+" "+s[i];
+  }
+  function renderAttachments(){
+    atts.innerHTML="";
+    attachments.forEach((f, idx)=>{
+      const chip = el("span",{class:"chip"});
+      chip.append(`${f.name} · ${bytesToSize(f.size)}`);
+      const remove = el("button",{},"✕");
+      remove.addEventListener("click",()=>{ attachments.splice(idx,1); renderAttachments(); });
+      chip.append(remove);
+      atts.append(chip);
+    });
+  }
+
+  // ==== Upload UI ====
+  plusBtn.addEventListener("click", ()=> fileInput.click());
+  fileInput.addEventListener("change", ()=>{
+    for(const f of fileInput.files){ attachments.push(f); }
+    fileInput.value = "";
+    renderAttachments();
+  });
+
+  // ==== Mic: record in-page, transcribe, drop text into input ====
+  let mediaRecorder, audioChunks = [];
+  micBtn.addEventListener("click", async () => {
+    try{
+      if(!mediaRecorder || mediaRecorder.state === "inactive"){
+        const stream = await navigator.mediaDevices.getUserMedia({ audio:true });
+        mediaRecorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
+        audioChunks = [];
+        mediaRecorder.ondataavailable = e => { if(e.data.size) audioChunks.push(e.data); };
+        mediaRecorder.onstop = async () => {
+          const blob = new Blob(audioChunks, { type: "audio/webm" });
+          const fd = new FormData();
+          fd.append("audio", blob, "speech.webm");
+          const r = await fetch(TRANSCRIBE_URL, { method:"POST", body:fd, credentials:"include" });
+          const j = await r.json();
+          if(j?.text){
+            // append transcript into the input (don’t send yet)
+            promptEl.value = (promptEl.value ? promptEl.value + " " : "") + j.text.trim();
+            promptEl.focus();
+          }
+        };
+        mediaRecorder.start();
+        micBtn.title = "Recording… click to stop";
+        micBtn.style.filter = "brightness(1.15)";
+      }else{
+        mediaRecorder.stop();
+        micBtn.title = "Voice mode";
+        micBtn.style.filter = "";
+      }
+    }catch(err){
+      alert("Microphone error: "+err.message);
+    }
+  });
+
+  // ==== Send ====
+  async function send(){
+    const text = (promptEl.value||"").trim();
+    if(!text && attachments.length===0) return;
+
+    const uiModel = modelSel.value;
+    const apiModel = MODEL_MAP[uiModel] || "gpt-4o-mini";
+
+    // Show user bubble
+    const userRow = addMsg("user", text || "(file upload)");
+    // If there are documents, list them under the same user message
+    if(attachments.length){
+      const list = el("div",{style:"margin-top:6px;opacity:.85;font-size:.82rem"});
+      attachments.forEach(f=>{
+        const row = el("div",{}, `📎 ${f.name} · ${bytesToSize(f.size)}`);
+        list.append(row);
+      });
+      userRow.append(list);
+    }
+
+    const spin = addSpinner();
+
+    try{
+      const form = new FormData();
+      form.append("q", text);
+      form.append("model", uiModel);
+      form.append("apiModel", apiModel);
+      attachments.forEach(f=> form.append("file", f));
+
+      const res = await fetch(BACKEND_URL, { method:"POST", body:form, credentials:"include" });
+      if(!res.ok) throw new Error("Backend error: "+res.status);
+      const data = await res.json();
+      chat.removeChild(spin);
+      addMsg("ai", data.answer || data.reply || "[No reply]");
+    }catch(err){
+      chat.removeChild(spin);
+      addMsg("ai","⚠️ "+err.message);
+    }finally{
+      promptEl.value = "";
+      attachments.length = 0; renderAttachments();
+    }
+  }
+
+  sendBtn.addEventListener("click", send);
+  promptEl.addEventListener("keydown", (e)=>{
+    if(e.key==="Enter" && !e.shiftKey){ e.preventDefault(); send(); }
+  });
+</script>

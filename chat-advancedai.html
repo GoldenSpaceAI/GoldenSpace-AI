@@ -5,103 +5,53 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>GoldenSpaceAI · Advanced Assistant</title>
   <style>
-    :root{
-      --gold-1:#ffd700; --gold-2:#e6c200; --gold-3:#b89700;
-      --text:#faf7e8; --muted:#c8b88a;
-      --glass: rgba(255,255,255,.08); --ring: rgba(255,215,0,.35);
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0; font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial;
-      color:var(--text);
-      background:
-        radial-gradient(1200px 800px at 75% -20%, rgba(255,215,0,.18), transparent 40%),
-        radial-gradient(800px 600px at 10% 120%, rgba(255,215,0,.08), transparent 45%),
-        #05060a;
-      background-attachment:fixed; overflow:hidden;
-    }
+    :root{ --gold-1:#ffd700; --gold-2:#e6c200; --gold-3:#b89700; --text:#faf7e8; --muted:#c8b88a; --glass: rgba(255,255,255,.08); --ring: rgba(255,215,0,.35); }
+    *{box-sizing:border-box} html,body{height:100%}
+    body{ margin:0; font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial; color:var(--text);
+      background: radial-gradient(1200px 800px at 75% -20%, rgba(255,215,0,.18), transparent 40%),
+                 radial-gradient(800px 600px at 10% 120%, rgba(255,215,0,.08), transparent 45%), #05060a;
+      background-attachment:fixed; overflow:hidden;}
     .stars,.twinkle{position:fixed; inset:0; z-index:-2; pointer-events:none}
-    .stars{
-      background-image:url("https://images.unsplash.com/photo-1444703686981-a3abbc4d4fe3?q=80&w=1600&auto=format&fit=crop");
-      background-size:cover; filter:saturate(1.05) brightness(.9) contrast(1.1); opacity:.28;
-    }
-    .twinkle{
-      background-image:
-        radial-gradient(2px 2px at 20% 30%, rgba(255,255,255,.45), transparent 55%),
-        radial-gradient(1.5px 1.5px at 70% 60%, rgba(255,255,255,.35), transparent 55%),
-        radial-gradient(1.2px 1.2px at 40% 80%, rgba(255,255,255,.4), transparent 55%),
-        radial-gradient(1px 1px at 85% 15%, rgba(255,255,255,.5), transparent 55%);
-      animation: twinkle 8s linear infinite; opacity:.45
-    }
+    .stars{background-image:url("https://images.unsplash.com/photo-1444703686981-a3abbc4d4fe3?q=80&w=1600&auto=format&fit=crop"); background-size:cover; filter:saturate(1.05) brightness(.9) contrast(1.1); opacity:.28;}
+    .twinkle{background-image: radial-gradient(2px 2px at 20% 30%, rgba(255,255,255,.45), transparent 55%),
+                                radial-gradient(1.5px 1.5px at 70% 60%, rgba(255,255,255,.35), transparent 55%),
+                                radial-gradient(1.2px 1.2px at 40% 80%, rgba(255,255,255,.4), transparent 55%),
+                                radial-gradient(1px 1px at 85% 15%, rgba(255,255,255,.5), transparent 55%);
+             animation: twinkle 8s linear infinite; opacity:.45}
     @keyframes twinkle{0%{filter:brightness(1)}50%{filter:brightness(1.25)}100%{filter:brightness(1)}}
-
     .wrap{display:grid; grid-template-rows:auto 1fr auto; height:100%}
-    header{
-      display:flex; align-items:center; gap:.9rem; padding:14px 18px;
-      backdrop-filter:blur(8px);
-      background:linear-gradient(180deg,rgba(10,10,14,.55),rgba(10,10,14,.25));
-      border-bottom:1px solid rgba(255,255,255,.06);
-    }
+    header{ display:flex; align-items:center; gap:.9rem; padding:14px 18px; backdrop-filter:blur(8px);
+      background:linear-gradient(180deg,rgba(10,10,14,.55),rgba(10,10,14,.25)); border-bottom:1px solid rgba(255,255,255,.06);}
     .brand{display:flex; align-items:center; gap:.7rem; font-weight:800}
-    .logo{
-      width:32px;height:32px;border-radius:50%;
+    .logo{ width:32px;height:32px;border-radius:50%;
       background:conic-gradient(from 210deg,var(--gold-1),var(--gold-2),var(--gold-3),var(--gold-1));
-      box-shadow:0 0 0 2px rgba(255,215,0,.25), 0 0 32px rgba(255,215,0,.25) inset;
-    }
-    .badge{font-size:.75rem;color:#1a1606;background:linear-gradient(180deg,var(--gold-1),var(--gold-2));
-      padding:4px 8px;border-radius:999px;box-shadow:0 2px 10px rgba(255,215,0,.25)}
-    .model-box{
-      margin-left:auto; display:flex; align-items:center; gap:8px;
-      font-size:.85rem; color:#ddd;
-    }
-    select#modelSel{
-      appearance:none; -webkit-appearance:none;
-      padding:8px 10px; border-radius:10px; border:1px solid rgba(255,255,255,.12);
-      background:#0e1118; color:var(--text);
-    }
-
+      box-shadow:0 0 0 2px rgba(255,215,0,.25), 0 0 32px rgba(255,215,0,.25) inset;}
+    .badge{font-size:.75rem;color:#1a1606;background:linear-gradient(180deg,var(--gold-1),var(--gold-2)); padding:4px 8px;border-radius:999px;box-shadow:0 2px 10px rgba(255,215,0,.25)}
+    .model-box{ margin-left:auto; display:flex; align-items:center; gap:8px; font-size:.85rem; color:#ddd;}
+    select#modelSel{ appearance:none; -webkit-appearance:none; padding:8px 10px; border-radius:10px; border:1px solid rgba(255,255,255,.12); background:#0e1118; color:var(--text); }
     main#chat{position:relative;height:100%;overflow:auto;padding:18px 18px 160px;scroll-behavior:smooth}
-    .msg{max-width:min(780px,92%);padding:14px 16px;border-radius:16px;margin:10px 0;line-height:1.55;
-      box-shadow:0 2px 18px rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.06);backdrop-filter:blur(6px)}
+    .msg{max-width:min(780px,92%);padding:14px 16px;border-radius:16px;margin:10px 0;line-height:1.55; box-shadow:0 2px 18px rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.06);backdrop-filter:blur(6px)}
     .msg.user{margin-left:auto;background:linear-gradient(180deg,rgba(255,215,0,.12),rgba(255,215,0,.08));border-color:rgba(255,215,0,.25)}
     .msg.ai{background:rgba(12,12,16,.55)}
     .msg small{display:block;opacity:.65;font-size:.75rem;margin-bottom:6px}
     .spinner{width:20px;height:20px;border-radius:50%;border:2px solid rgba(255,255,255,.2);border-top-color:var(--gold-1);animation:spin 1s linear infinite}
     @keyframes spin{to{transform:rotate(360deg)}}
-
-    /* Composer */
     .composer-wrap{position:fixed;left:0;right:0;bottom:18px;display:flex;justify-content:center;pointer-events:none}
-    .composer{
-      pointer-events:auto;width:min(980px,92%);display:flex;align-items:center;gap:10px;padding:10px;
+    .composer{ pointer-events:auto;width:min(980px,92%);display:flex;align-items:center;gap:10px;padding:10px;
       border-radius:18px;background:var(--glass);backdrop-filter:blur(10px);
-      border:1px solid rgba(255,255,255,.08); box-shadow:0 10px 30px rgba(0,0,0,.35), 0 0 0 1px var(--ring)
-    }
-    .btn{border:none;outline:none;cursor:pointer;height:56px;width:56px;border-radius:999px;
-      background:rgba(255,255,255,.06);display:grid;place-items:center;transition:.2s transform,.2s background}
+      border:1px solid rgba(255,255,255,.08); box-shadow:0 10px 30px rgba(0,0,0,.35), 0 0 0 1px var(--ring)}
+    .btn{border:none;outline:none;cursor:pointer;height:56px;width:56px;border-radius:999px; background:rgba(255,255,255,.06);display:grid;place-items:center;transition:.2s transform,.2s background}
     .btn:hover{transform:translateY(-1px);background:rgba(255,255,255,.12)}
     .btn.plus::before{content:"+";font-size:28px;color:var(--gold-1);font-weight:700}
     .btn.send::before{content:"➤";font-size:20px;color:#141209;font-weight:800}
     .btn.send{background:linear-gradient(180deg,var(--gold-1),var(--gold-2)); box-shadow:0 8px 18px rgba(255,215,0,.25)}
-
-    /* mic button navigates */
-    .mic{
-      position:relative;background:linear-gradient(180deg,var(--gold-1),var(--gold-2));
-      box-shadow:0 8px 18px rgba(255,215,0,.25)
-    }
+    .mic{ position:relative;background:linear-gradient(180deg,var(--gold-1),var(--gold-2)); box-shadow:0 8px 18px rgba(255,215,0,.25)}
     .mic::before{content:"🎤";font-size:22px;color:#141209;font-weight:700}
-
-    /* visible input between plus and mic */
-    textarea#prompt{
-      flex:1; resize:none; min-height:56px; max-height:140px;
-      padding:12px 14px; border-radius:12px; background:rgba(255,255,255,.06);
-      color:var(--text); border:1px solid rgba(255,255,255,.09); outline:none; font-size:15px; line-height:1.4;
-    }
+    textarea#prompt{ flex:1; resize:none; min-height:56px; max-height:140px; padding:12px 14px; border-radius:12px; background:rgba(255,255,255,.06);
+      color:var(--text); border:1px solid rgba(255,255,255,.09); outline:none; font-size:15px; line-height:1.4;}
     textarea#prompt::placeholder{ color: rgba(255,255,255,.55) }
-
     .attachments{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px}
-    .chip{display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,.1);
-      background:rgba(255,255,255,.06);padding:6px 8px;border-radius:999px;font-size:.8rem}
+    .chip{display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,.1); background:rgba(255,255,255,.06);padding:6px 8px;border-radius:999px;font-size:.8rem}
     .chip button{background:none;border:none;color:var(--muted);cursor:pointer}
     .hidden{display:none}
   </style>
@@ -135,31 +85,23 @@
 
     <div class="composer-wrap">
       <div class="composer">
-        <!-- Left: file upload -->
         <button id="plusBtn" type="button" class="btn plus" title="Upload file"></button>
-
-        <!-- Center: typing box -->
         <div style="flex:1">
           <textarea id="prompt" placeholder="Type your message… (Shift+Enter for newline)"></textarea>
           <div class="attachments" id="attachments"></div>
         </div>
-
-        <!-- Right: microphone (navigates) -->
         <button id="micBtn" type="button" class="btn mic" title="Voice mode"></button>
-
-        <!-- Send -->
         <button id="sendBtn" type="button" class="btn send" title="Send"></button>
       </div>
     </div>
   </div>
 
-  <!-- Hidden file input (documents + images) -->
   <input id="fileInput" class="hidden" type="file"
          accept=".pdf,.txt,.md,.json,.csv,.doc,.docx,.ppt,.pptx,.xlsx,image/*" multiple />
 
   <script>
     // ==== Config ====
-    const BACKEND_URL = "/chat-advanced-ai"; // your existing backend route
+    const BACKEND_URL = "/chat-advanced-ai";
 
     // UI label -> real API model
     const MODEL_MAP = {
@@ -179,7 +121,6 @@
 
     const attachments = [];
 
-    // ==== Helpers ====
     function el(tag, attrs={}, ...children){
       const n = document.createElement(tag);
       Object.entries(attrs).forEach(([k,v])=>{
@@ -217,7 +158,6 @@
       });
     }
 
-    // ==== Upload UI ====
     plusBtn.addEventListener("click", ()=> fileInput.click());
     fileInput.addEventListener("change", ()=>{
       for(const f of fileInput.files){ attachments.push(f); }
@@ -225,14 +165,12 @@
       renderAttachments();
     });
 
-    // ==== Mic -> navigate to voice page (works each press) ====
     micBtn.addEventListener("click", () => {
       const uiModel = modelSel.value;
       const apiModel = MODEL_MAP[uiModel] || "gpt-4o-mini";
       window.location.href = `/chat-advancedai-voice.html?model=${encodeURIComponent(uiModel)}&api=${encodeURIComponent(apiModel)}`;
     });
 
-    // ==== Send ====
     async function send(){
       const text = (promptEl.value||"").trim();
       if(!text && attachments.length===0) return;
@@ -246,9 +184,9 @@
       try{
         const form = new FormData();
         form.append("q", text);
-        form.append("model", uiModel);      // what the user picked (label)
-        form.append("apiModel", apiModel);  // real model id (server may use either)
-        attachments.forEach(f=> form.append("file", f)); // multiple files
+        form.append("model", uiModel);
+        form.append("apiModel", apiModel);
+        attachments.forEach(f=> form.append("file", f));
 
         const res = await fetch(BACKEND_URL, { method:"POST", body:form, credentials:"include" });
         if(!res.ok) throw new Error("Backend error: "+res.status);
@@ -271,4 +209,3 @@
   </script>
 </body>
 </html>
-```0

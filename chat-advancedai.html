@@ -119,10 +119,8 @@
       <div class="model-box">
         Model
         <select id="modelSel" aria-label="Model">
-          <option value="gpt-5" selected>GPT-5 (alias)</option>
-          <option value="gpt-5-nano">GPT-5-nano (alias)</option>
+          <option value="gpt-4o-mini" selected>GPT-4o-mini</option>
           <option value="gpt-4">GPT-4</option>
-          <option value="gpt-4o-mini">GPT-4o-mini</option>
         </select>
       </div>
     </header>
@@ -163,7 +161,7 @@
     // ==== Config ====
     const BACKEND_URL = "/chat-advanced-ai"; // your existing backend route
 
-    // UI label -> real API model (aliases: GPT-5 → gpt-4o-mini, GPT-5-nano → gpt-4o-mini)
+    // UI label -> real API model
     const MODEL_MAP = {
       "gpt-4": "gpt-4o",
       "gpt-4o-mini": "gpt-4o-mini"
@@ -273,3 +271,4 @@
   </script>
 </body>
 </html>
+```0

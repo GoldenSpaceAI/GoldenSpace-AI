@@ -1,4 +1,4 @@
-// index.js — GoldenSpaceAI (stable responses, Gemini for search/lessons, OpenAI for chat/homework)
+// index.js — GoldenSpaceAI (Home-first, Gemini + OpenAI, Model selector, Memory 20, File upload)
 
 import express from "express";
 import cors from "cors";
@@ -9,397 +9,299 @@ import session from "express-session";
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import cookieParser from "cookie-parser";
+import bodyParser from "body-parser";
 import multer from "multer";
-
-import { createClient } from "@supabase/supabase-js";
+import fs from "fs";
 import OpenAI from "openai";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 dotenv.config();
 
-// ---------- Env ----------
-const {
-  SESSION_SECRET,
-  GOOGLE_CLIENT_ID,
-  GOOGLE_CLIENT_SECRET,
-  SUPABASE_URL,
-  SUPABASE_SERVICE_ROLE_KEY,
-  GEMINI_API_KEY,
-  OPENAI_API_KEY,
-  NODE_ENV,
-  PORT,
-} = process.env;
-
-if (!SESSION_SECRET) throw new Error("SESSION_SECRET missing");
-if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) throw new Error("Google OAuth envs missing");
-if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) throw new Error("Supabase envs missing");
-if (!GEMINI_API_KEY) console.warn("⚠ GEMINI_API_KEY missing");
-if (!OPENAI_API_KEY) console.warn("⚠ OPENAI_API_KEY missing");
-
-// ---------- SDKs ----------
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
-const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-const geminiFlash = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-// ---------- App ----------
 const app = express();
 app.set("trust proxy", 1);
-app.use(cors({ origin: true, credentials: true }));
-app.use(express.json({ limit: "25mb" }));
-app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// ---------- Core middleware ----------
+app.use(cors({ origin: true, credentials: true }));
+app.use(express.json({ limit: "10mb" }));
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 // ---------- Sessions ----------
 app.use(
   session({
-    secret: SESSION_SECRET,
+    secret: process.env.SESSION_SECRET || "super-secret",
     resave: false,
-    saveUninitialized: false,
+    saveUninitialized: true,
     cookie: {
       httpOnly: true,
       sameSite: "lax",
-      secure: NODE_ENV === "production",
-      maxAge: 1000 * 60 * 60 * 24 * 14,
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
     },
-  })
+  }),
 );
 
+// Passport (Google) – still available, but NOT required for access right now
 app.use(passport.initialize());
 app.use(passport.session());
 
-// ---------- Plans/usage ----------
+// ---------- Paths ----------
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// ---------- Simple plan map (not enforced for now; pages unlocked) ----------
 const PLAN_LIMITS = {
-  moon: { ask: 40, search: 20 },
+  moon:  { ask: 40, search: 20 },
   earth: { ask: Infinity, search: Infinity },
-  chatai: { ask: Infinity, search: Infinity },
-  spacepack: { ask: 40, search: 20 },
+  chatai:{ ask: Infinity, search: Infinity }, // ChatAI pack (Advanced too)
 };
-const today = () => new Date().toISOString().slice(0, 10);
 
-async function upsertUserFromGoogle(profile) {
-  const email = profile.emails?.[0]?.value?.toLowerCase() || "";
-  const name = profile.displayName || "";
-  const photo = profile.photos?.[0]?.value || "";
-  let { data: user, error } = await supabase.from("users").select("*").eq("email", email).maybeSingle();
-  if (error) throw error;
-  if (!user) {
-    const ins = await supabase.from("users").insert([{ email, name, photo, plan: "moon" }]).select().single();
-    if (ins.error) throw ins.error;
-    user = ins.data;
-  } else {
-    await supabase.from("users").update({ name, photo }).eq("id", user.id);
-  }
-  return user;
-}
-async function getUserById(id) {
-  const { data, error } = await supabase.from("users").select("*").eq("id", id).single();
-  if (error) throw error;
-  return data;
-}
-async function getOrInitUsage(user_id) {
-  const d = today();
-  let { data: row, error } = await supabase
-    .from("usage_daily")
-    .select("*")
-    .eq("user_id", user_id)
-    .eq("date", d)
-    .maybeSingle();
-  if (error) throw error;
-  if (!row) {
-    const ins = await supabase
-      .from("usage_daily")
-      .insert([{ user_id, date: d, ask_count: 0, search_count: 0 }])
-      .select()
-      .single();
-    if (ins.error) throw ins.error;
-    row = ins.data;
-  }
-  return row;
-}
-async function bumpUsage(user_id, field) {
-  const cur = await getOrInitUsage(user_id);
-  const next = (cur[field] || 0) + 1;
-  const { error } = await supabase.from("usage_daily").update({ [field]: next }).eq("id", cur.id);
-  if (error) throw error;
-}
-function planKey(user) {
-  const k = (user?.plan || "moon").toLowerCase();
-  return PLAN_LIMITS[k] ? k : "moon";
+// ---------- Helper: compute base URL ----------
+function getBaseUrl(req) {
+  const proto = (req.headers["x-forwarded-proto"] || "").toString().split(",")[0] || req.protocol || "https";
+  const host = (req.headers["x-forwarded-host"] || "").toString().split(",")[0] || req.get("host");
+  return `${proto}://${host}`;
 }
 
-// ---------- OAuth ----------
-const OAUTH_CALLBACK = "/auth/google/callback";
-passport.use(
-  new GoogleStrategy(
-    { clientID: GOOGLE_CLIENT_ID, clientSecret: GOOGLE_CLIENT_SECRET, callbackURL: OAUTH_CALLBACK, proxy: true },
-    async (_a, _r, profile, done) => {
-      try {
-        const u = await upsertUserFromGoogle(profile);
-        done(null, { id: u.id });
-      } catch (e) {
-        done(e);
-      }
-    }
-  )
-);
-passport.serializeUser((u, d) => d(null, u));
-passport.deserializeUser(async (obj, d) => {
-  try { d(null, await getUserById(obj.id)); } catch (e) { d(e); }
+// ---------- Google OAuth (kept; optional) ----------
+const DEFAULT_CALLBACK_PATH = "/auth/google/callback";
+passport.use(new GoogleStrategy(
+  {
+    clientID: process.env.GOOGLE_CLIENT_ID || "none",
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET || "none",
+    callbackURL: DEFAULT_CALLBACK_PATH,
+    proxy: true,
+  },
+  (accessToken, refreshToken, profile, done) => {
+    const user = {
+      id: profile.id,
+      name: profile.displayName,
+      email: profile.emails?.[0]?.value || "",
+      photo: profile.photos?.[0]?.value || "",
+      plan: "moon",
+    };
+    return done(null, user);
+  }
+));
+passport.serializeUser((user, done) => done(null, user));
+passport.deserializeUser((obj, done) => done(null, obj));
+
+app.get("/auth/google", (req, res, next) => {
+  const callbackURL = `${getBaseUrl(req)}${DEFAULT_CALLBACK_PATH}`;
+  passport.authenticate("google", { scope: ["profile", "email"], callbackURL })(req, res, next);
+});
+app.get(DEFAULT_CALLBACK_PATH, (req, res, next) => {
+  const callbackURL = `${getBaseUrl(req)}${DEFAULT_CALLBACK_PATH}`;
+  passport.authenticate("google", { failureRedirect: "/login.html", callbackURL })(req, res, () => res.redirect("/"));
+});
+app.post("/logout", (req, res, next) => {
+  req.logout(err => { if (err) return next(err); req.session.destroy(() => res.json({ ok: true })); });
 });
 
-function requireAuth(req, res, next) {
+// ---------- PUBLIC / AUTH GATE ----------
+// For testing: everything is open. (Keep legal pages public too.)
+const PUBLIC_FILE_EXT = /\.(css|js|mjs|map|png|jpg|jpeg|gif|svg|ico|txt|woff2?|html)$/i;
+function isPublicPath(req) {
+  return true; // <- UNLOCK EVERYTHING FOR NOW (testing)
+}
+// Leave middleware here for future re-locking
+function authRequired(req, res, next) {
+  if (isPublicPath(req)) return next();
   if (req.isAuthenticated && req.isAuthenticated()) return next();
   if (req.accepts("html")) return res.redirect("/login.html");
   return res.status(401).json({ error: "Sign in required" });
 }
-function enforceLimit(kind) {
-  return async (req, res, next) => {
-    try {
-      const pkey = planKey(req.user);
-      const limits = PLAN_LIMITS[pkey];
-      const usage = await getOrInitUsage(req.user.id);
-      const used = kind === "ask" ? usage.ask_count : usage.search_count;
-      const allowed = limits[kind];
-      if (Number.isFinite(allowed) && used >= allowed) {
-        return res.status(429).json({ error: `Daily ${kind} limit reached for ${pkey} plan.` });
-      }
-      await bumpUsage(req.user.id, kind === "ask" ? "ask_count" : "search_count");
-      next();
-    } catch (e) {
-      console.error("limit error", e);
-      res.status(500).json({ error: "Usage/limit error" });
-    }
-  };
-}
 
-// ---------- Static ----------
+// ---------- Static & Health ----------
 app.use(express.static(__dirname));
-app.get("/", (_req, res) => res.sendFile(path.join(__dirname, "index.html")));
-app.get("/login.html", (_req, res) => res.sendFile(path.join(__dirname, "login.html")));
+app.get("/health", (_req, res) => res.json({ ok: true }));
 
-// ---------- Auth routes ----------
-app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
-app.get(OAUTH_CALLBACK, passport.authenticate("google", { failureRedirect: "/login.html" }), (req, res) => res.redirect("/"));
-app.post("/logout", (req, res, next) => {
-  req.logout(err => {
-    if (err) return next(err);
-    req.session.destroy(() => res.json({ ok: true }));
-  });
-});
+// ---------- Gemini ----------
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
+const modelFlash = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+const modelPro = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
 
-// ---------- Me ----------
-app.get("/api/me", async (req, res) => {
-  if (!req.user) return res.json({ loggedIn: false });
-  const pkey = planKey(req.user);
-  const limits = PLAN_LIMITS[pkey];
-  const usage = await getOrInitUsage(req.user.id);
-  const remaining = {
-    ask: Number.isFinite(limits.ask) ? Math.max(0, limits.ask - (usage.ask_count || 0)) : Infinity,
-    search: Number.isFinite(limits.search) ? Math.max(0, limits.search - (usage.search_count || 0)) : Infinity,
-  };
-  res.json({
-    loggedIn: true,
-    user: { id: req.user.id, email: req.user.email, name: req.user.name, photo: req.user.photo, plan: pkey },
-    remaining,
-    today: today(),
-  });
-});
+// ---------- OpenAI ----------
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || "" });
 
-// ================= Upload helper =================
-const uploadMem = multer({ storage: multer.memoryStorage() });
-
-function ensureString(x, fallback = "") {
-  if (typeof x === "string") return x;
-  if (x == null) return fallback;
-  return String(x);
+// ---------- Memory helpers (session-scoped) ----------
+function pushHistory(req, role, content) {
+  if (!req.session.advHistory) req.session.advHistory = [];
+  req.session.advHistory.push({ role, content });
+  if (req.session.advHistory.length > 20) {
+    req.session.advHistory = req.session.advHistory.slice(-20);
+  }
+}
+function getHistory(req) {
+  return (req.session.advHistory || []).map(m => ({ role: m.role, content: m.content }));
 }
 
-async function buildUserMessageBlocks({ text, files }) {
-  const blocks = [];
-  const t = ensureString(text, "").trim();
-  if (t) blocks.push({ type: "text", text: t });
-
-  if (files && files.length) {
-    for (const f of files) {
-      const mime = f.mimetype || "application/octet-stream";
-      if (mime.startsWith("image/")) {
-        const b64 = f.buffer.toString("base64");
-        blocks.push({ type: "image_url", image_url: { url: `data:${mime};base64,${b64}` } });
-      } else if (mime.startsWith("text/") || mime === "application/json" || mime === "application/xml") {
-        const content = f.buffer.toString("utf8").slice(0, 12000);
-        blocks.push({ type: "text", text: `File "${f.originalname}" (${mime}) — preview:\n\n${content}` });
-      } else {
-        blocks.push({ type: "text", text: `Attached "${f.originalname}" (${mime}, ${f.size} bytes). Provide guidance based on the user's request.` });
-      }
+// ---------- Utility: read small text-like docs to string ----------
+async function readTextIfPossible(filePath, mimetype) {
+  try {
+    const t = mimetype || "";
+    if (t.startsWith("text/") || /\/(json|csv|html|xml)/i.test(t)) {
+      return fs.readFileSync(filePath, "utf8").slice(0, 30000); // cap to 30k chars
     }
+    return null;
+  } catch {
+    return null;
   }
-  if (blocks.length === 0) blocks.push({ type: "text", text: "Please respond helpfully to the user or analyze the attachment." });
-  return blocks;
 }
 
-// ================ GEMINI ROUTES (return {answer}) =================
-
-async function geminiText(prompt) {
+// ---------- ROUTES (Gemini) ----------
+app.post("/ask", async (req, res) => {
   try {
-    const result = await geminiFlash.generateContent([{ text: prompt }]);
-    const text = result?.response?.text ? result.response.text() : "";
-    return ensureString(text, "").trim();
+    const q = (req.body?.question || "").trim();
+    if (!q) return res.json({ answer: "Ask me anything!" });
+    const result = await modelFlash.generateContent([{ text: `User: ${q}` }]);
+    const answer = result.response.text() || "No response.";
+    res.json({ answer });
+  } catch (e) { console.error("ask error", e); res.status(500).json({ answer: "Gemini error" }); }
+});
+
+app.post("/search-info", async (req, res) => {
+  try {
+    const q = (req.body?.query || "").trim();
+    if (!q) return res.json({ answer: "Type something to search." });
+    const prompt = `You are GoldenSpace Knowledge. Overview + 3 bullet facts.\nTopic: ${q}`;
+    const result = await modelFlash.generateContent([{ text: prompt }]);
+    const answer = result.response.text() || "No info found.";
+    res.json({ answer });
+  } catch (e) { console.error("search-info error", e); res.status(500).json({ answer: "Search error" }); }
+});
+
+app.post("/ai/physics-explain", async (req, res) => {
+  try {
+    const q = (req.body?.question || "").trim();
+    if (!q) return res.json({ reply: "Ask a physics question." });
+    const prompt = `You are GoldenSpace Physics Tutor. Explain clearly.\nQuestion: ${q}`;
+    const result = await modelFlash.generateContent([{ text: prompt }]);
+    const reply = result.response.text() || "No reply.";
+    res.json({ reply });
+  } catch (e) { console.error("physics error", e); res.status(500).json({ reply: "Physics error" }); }
+});
+
+// ---------- Advanced Chat AI (OpenAI) ----------
+const upload = multer({ dest: "uploads/" });
+
+// NOTE: this route is used by chat-advancedai.html
+app.post("/chat-advanced-ai", upload.single("file"), async (req, res) => {
+  try {
+    const q = (req.body?.q || "").trim();
+    const model = (req.body?.model || "gpt-4o-mini").trim();
+
+    // Build message list with memory
+    const messages = [
+      { role: "system", content: "You are GoldenSpaceAI, a crisp expert assistant. Be concise and helpful." },
+      ...getHistory(req),
+    ];
+    if (q) {
+      messages.push({ role: "user", content: q });
+      pushHistory(req, "user", q);
+    }
+
+    // If there's a file, attach it (image → vision; text-like → inline)
+    let fileNote = "";
+    if (req.file) {
+      const filePath = req.file.path;
+      const mime = req.file.mimetype || "application/octet-stream";
+
+      if (mime.startsWith("image/")) {
+        const b64 = fs.readFileSync(filePath).toString("base64");
+        messages.push({
+          role: "user",
+          content: [
+            { type: "text", text: q || "Please analyze this image together with my request." },
+            { type: "image_url", image_url: { url: `data:${mime};base64,${b64}` } },
+          ],
+        });
+        fileNote = ` (image: ${req.file.originalname})`;
+      } else {
+        const text = await readTextIfPossible(filePath, mime);
+        if (text) {
+          messages.push({ role: "user", content: `Attached file "${req.file.originalname}" content (truncated):\n\n${text}` });
+          fileNote = ` (doc: ${req.file.originalname})`;
+        } else {
+          messages.push({ role: "user", content: `Attached file "${req.file.originalname}" (${mime}). If you need to reference it, ask me to upload as text or image.` });
+          fileNote = ` (file: ${req.file.originalname})`;
+        }
+      }
+      // cleanup temp file
+      fs.unlink(filePath, () => {});
+    }
+
+    // Call OpenAI
+    const completion = await openai.chat.completions.create({
+      model,
+      messages,
+      temperature: 0.3,
+    });
+
+    const reply = completion.choices?.[0]?.message?.content || "No reply.";
+    pushHistory(req, "assistant", reply);
+
+    res.json({ model, reply, note: fileNote });
   } catch (e) {
-    console.error("Gemini error:", e?.message || e);
-    return "";
+    console.error("advanced-ai error", e);
+    res.status(500).json({ error: "Advanced AI error" });
   }
-}
-
-// /ask (and alias /api/advanced-ai) — ALWAYS returns {answer}
-async function handleAsk(req, res) {
-  const q = ensureString(req.body?.question || req.body?.prompt || req.body?.q, "").trim();
-  if (!q) return res.json({ answer: "Ask me anything!" });
-  const out = await geminiText(q);
-  const answer = out || "Sorry—no response available right now.";
-  return res.json({ answer });
-}
-app.post("/ask", requireAuth, enforceLimit("ask"), handleAsk);
-app.post("/api/advanced-ai", requireAuth, enforceLimit("ask"), handleAsk); // alias for pages expecting /api/advanced-ai
-
-// Search info — ALWAYS returns {answer}
-app.post("/search-info", requireAuth, enforceLimit("search"), async (req, res) => {
-  const q = ensureString(req.body?.query || req.body?.q, "").trim();
-  if (!q) return res.json({ answer: "Type something to search." });
-  const prompt = `You are GoldenSpace Knowledge. Give an overview + 3 concise bullet facts.\nTopic: ${q}`;
-  const out = await geminiText(prompt);
-  res.json({ answer: out || "No info found." });
 });
 
-// Search lessons — ALWAYS returns {answer}
-app.post("/search-lessons", requireAuth, enforceLimit("search"), async (req, res) => {
-  const topic = ensureString(req.body?.topic || req.body?.query || req.body?.q, "").trim();
-  if (!topic) return res.json({ answer: "Give me a topic to build lessons." });
-  const prompt = `Create 5 short lesson ideas for students about "${topic}". 
-Return each with: title, a 2-sentence summary, and 3 bullet learning steps. Keep it concise.`;
-  const out = await geminiText(prompt);
-  res.json({ answer: out || "No lessons found." });
-});
-
-// Back-compat GET (some old frontends might try GET)
-app.get("/search-lessons", requireAuth, async (req, res) => {
-  res.status(405).json({ answer: "Use POST /search-lessons with { topic }." });
-});
-
-// ================ OPENAI ROUTES =====================
-
-// Chat — returns {reply}; supports files or text-only
-app.post("/api/chat", requireAuth, uploadMem.array("files"), async (req, res) => {
+// ---------- Homework Solver (OpenAI vision) ----------
+// Your homework-helper.html posts to /api/chat with fields:
+// - message (string)
+// - files (first image) optional
+// - model optional (defaults gpt-4o-mini)
+app.post("/api/chat", upload.array("files"), async (req, res) => {
   try {
-    const blocks = await buildUserMessageBlocks({ text: req.body?.message || "", files: req.files || [] });
+    const message = (req.body?.message || "").trim();
+    const model = (req.body?.model || "gpt-4o-mini").trim();
 
-    req.session.chatHistory ||= [];
-    req.session.chatHistory.push({ role: "user", content: blocks });
-    req.session.chatHistory = req.session.chatHistory.slice(-20);
+    const parts = [];
+    if (message) parts.push({ type: "text", text: message });
 
-    const model = ensureString(req.body?.model, "gpt-4o-mini") || "gpt-4o-mini";
+    // Accept a single image (first file)
+    const f = (req.files && req.files[0]) ? req.files[0] : null;
+    if (f && f.mimetype && f.mimetype.startsWith("image/")) {
+      const b64 = fs.readFileSync(f.path).toString("base64");
+      parts.push({ type: "image_url", image_url: { url: `data:${f.mimetype};base64,${b64}` } });
+      fs.unlink(f.path, () => {});
+    }
+
+    // If no image and no text, return
+    if (parts.length === 0) return res.status(400).json({ error: "Provide an image or a message." });
+
     const completion = await openai.chat.completions.create({
       model,
       messages: [
-        { role: "system", content: "You are GoldenSpaceAI. Be concise and robust with attachments. If only a file is sent, analyze it directly." },
-        ...req.session.chatHistory,
-      ],
-      temperature: 0.25,
-    });
-
-    const reply = ensureString(completion?.choices?.[0]?.message?.content, "").trim() || "No reply.";
-    req.session.chatHistory.push({ role: "assistant", content: reply });
-    req.session.save(() => res.json({ reply, model }));
-  } catch (e) {
-    console.error("/api/chat error", e);
-    res.status(500).json({ reply: "Chat error. Please try again." });
-  }
-});
-
-// Homework — returns {reply}; accepts image (field "image") + optional prompt
-app.post("/api/homework", requireAuth, uploadMem.single("image"), async (req, res) => {
-  try {
-    const prompt = ensureString(req.body?.prompt, "Solve this step by step and explain clearly.").slice(0, 4000);
-    const files = req.file ? [req.file] : [];
-    const blocks = await buildUserMessageBlocks({ text: prompt, files });
-
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        { role: "system", content: "You are a careful tutor. Read any image first, then solve clearly with steps." },
-        { role: "user", content: blocks },
+        { role: "system", content: "You are GoldenSpaceAI Homework Helper. Explain step-by-step, show working, and verify the final answer." },
+        { role: "user", content: parts },
       ],
       temperature: 0.2,
     });
 
-    const reply = ensureString(completion?.choices?.[0]?.message?.content, "").trim() || "No solution found.";
-    res.json({ reply, model: "gpt-4o-mini" });
+    const reply = completion.choices?.[0]?.message?.content || "No reply.";
+    res.json({ model, reply });
   } catch (e) {
-    console.error("/api/homework error", e);
-    res.status(500).json({ reply: "Homework solver error. Please try again." });
+    console.error("homework api error", e);
+    res.status(500).json({ error: "Homework error" });
   }
 });
 
-// Lightweight text/optional image
-app.post("/api/live-text", requireAuth, uploadMem.single("frame"), async (req, res) => {
-  try {
-    const text = ensureString(req.body?.message, "");
-    const files = req.file ? [req.file] : [];
-    const blocks = await buildUserMessageBlocks({ text, files });
-
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [{ role: "user", content: blocks }],
-      temperature: 0.3,
-    });
-
-    const reply = ensureString(completion?.choices?.[0]?.message?.content, "").trim() || "No reply.";
-    res.json({ reply, model: "gpt-4o-mini" });
-  } catch (e) {
-    console.error("/api/live-text error", e);
-    res.status(500).json({ reply: "Live text error. Please try again." });
-  }
+// ---------- /api/me (basic info for header pills, etc.) ----------
+app.get("/api/me", (req, res) => {
+  const plan = req.user?.plan || "moon";
+  res.json({
+    loggedIn: !!req.user,
+    email: req.user?.email || null,
+    name: req.user?.name || null,
+    given_name: req.user?.name?.split(" ")?.[0] || null,
+    picture: req.user?.photo || null,
+    plan,
+  });
 });
 
-// --------- Gate pages (html files) ----------
-function gate(file) {
-  return (req, res) => {
-    if (!req.isAuthenticated || !req.isAuthenticated()) return res.redirect("/login.html");
-    res.sendFile(path.join(__dirname, file));
-  };
-}
-app.get("/advanced-ai.html", gate("advanced-ai.html"));
-app.get("/chat-advancedai.html", gate("chat-advancedai.html"));
-app.get("/chat-advancedai-voice.html", gate("chat-advancedai-voice.html"));
-app.get("/homework-helper.html", gate("homework-helper.html"));
-app.get("/learn-physics.html", gate("learn-physics.html"));
-app.get("/create-planet.html", gate("create-planet.html"));
-app.get("/create-rocket.html", gate("create-rocket.html"));
-app.get("/create-satellite.html", gate("create-satellite.html"));
-app.get("/your-space.html", gate("your-space.html"));
-app.get("/search-lessons.html", gate("search-lessons.html"));
-
-// Health
-app.get("/health", (_req, res) => res.json({ ok: true }));
-app.head("/health", (_req, res) => res.status(200).end());
-
-// ---------- Global 404 for API (helps debugging pages that hit wrong paths)
-app.use((req, res, next) => {
-  if (req.path.startsWith("/api") || req.path.startsWith("/ask") || req.path.startsWith("/search-")) {
-    return res.status(404).json({ error: `Route not found: ${req.method} ${req.path}` });
-  }
-  next();
-});
-
-// ---------- Error handler (prevents "Sorry, an error occurred")
-app.use((err, _req, res, _next) => {
-  console.error("Unhandled error:", err);
-  res.status(500).json({ error: "Server error" });
-});
-
-// Start
-const APP_PORT = PORT || 3000;
-app.listen(APP_PORT, () => console.log(`🚀 GoldenSpaceAI running on ${APP_PORT}`));
+// ---------- Start ----------
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`🚀 GoldenSpaceAI running on ${PORT}`));

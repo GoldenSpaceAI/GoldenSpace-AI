@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GoldenY — Memory Chat</title>
+  <style>
+    :root { --gold:#f5c542; --bg:#0b0f16; --panel:#111827; --text:#e5e7eb; }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:Inter,system-ui,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column}
+    header{padding:16px;text-align:center;background:linear-gradient(180deg, rgba(245,197,66,.08), transparent);border-bottom:1px solid #1f2937}
+    h1{margin:0;font-size:1.4rem;font-weight:700;color:var(--gold)}
+    #chatLog{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px}
+    .row{display:flex}
+    .row.user{justify-content:flex-end}
+    .bubble{max-width:70%;padding:10px 14px;border-radius:14px;line-height:1.4}
+    .row.user .bubble{background:var(--gold);color:#000;border-bottom-right-radius:2px}
+    .row.bot .bubble{background:var(--panel);border:1px solid #374151;border-bottom-left-radius:2px}
+    footer{display:flex;padding:10px;border-top:1px solid #1f2937;gap:6px}
+    #userInput{flex:1;padding:10px;border-radius:8px;border:1px solid #374151;background:#0f172a;color:var(--text)}
+    #sendBtn,#resetBtn{padding:10px 16px;border:none;border-radius:8px;font-weight:600;cursor:pointer}
+    #sendBtn{background:var(--gold);color:#000}
+    #resetBtn{background:#374151;color:#e5e7eb}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>GoldenY — Minimal Memory Chat</h1>
+  </header>
+  <div id="chatLog"></div>
+  <footer>
+    <input id="userInput" placeholder="Type a message..." autocomplete="off">
+    <button id="sendBtn">Send</button>
+    <button id="resetBtn">Reset</button>
+  </footer>
+
+  <script src="goldeny.js"></script>
+</body>
+</html>

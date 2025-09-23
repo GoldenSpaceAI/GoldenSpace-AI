@@ -56,7 +56,12 @@
         padding: clamp(18px,3vw,26px); box-shadow:var(--shadow);
       }
       h1 { margin:6px 0 12px; font-size: clamp(24px,4vw,34px); color:#fff7dc; }
-      p { margin:10px 0; color:#dfe7f1; }
+      h2 { margin:20px 0 8px; font-size:18px; color:var(--gold); }
+      p, li { color:#dfe7f1; }
+      ul { margin: 8px 0 12px 18px; }
+      a { color: var(--gold); text-decoration: none; }
+      .muted { color:#cfc6a5; font-size:14px; }
+      .note { background:#10192b; border:1px solid var(--border); border-radius:12px; padding:12px; }
       .footer {
         margin:20px 0 0; padding-top:12px;
         border-top:1px solid var(--border); color:#aeb7c5; font-size:12px;
@@ -67,7 +72,7 @@
   </head>
   <body>
     <div class="top">
-      <div class="brand"><span class="dot"></span> GoldenSpaceAI</div>
+      <div class="brand"><span class="dot" aria-hidden="true"></span> GoldenSpaceAI</div>
       <div style="flex:1"></div>
       <div class="links" style="display:flex; gap:10px;">
         <a href="/">Home</a>
@@ -78,22 +83,68 @@
     <main class="wrap">
       <div class="card">
         <h1>Refund Policy</h1>
-        <p><i>Last updated: <span id="lastUpdated"></span></i></p>
+        <p class="muted">Last updated: <span id="lastUpdated"></span></p>
 
+        <h2>1) Merchant of Record (Payments)</h2>
         <p>
-          At GoldenSpaceAI, we strive to deliver value through our subscription plans and features.
-          Please note that <b>all sales are final</b>. Once a subscription or digital product has
-          been purchased, we do not offer refunds or credits, regardless of usage.
+          Purchases for GoldenSpaceAI are processed by <strong>Paddle.com Market Limited</strong> and affiliates (“Paddle”), who act as the
+          <em>Merchant of Record</em> for your transaction. Paddle handles payment processing, invoicing, tax (VAT/GST) calculation and collection, compliance, and chargebacks on our behalf.
         </p>
 
+        <h2>2) No Refunds</h2>
+        <p class="note">
+          <strong>All sales are final.</strong> GoldenSpaceAI does not offer refunds or credits once a subscription or digital product has been purchased, regardless of usage.
+        </p>
         <p>
-          By completing a purchase, you acknowledge and agree to this no-refund policy.
-          We encourage all users to explore our free plan before upgrading to a paid plan.
+          By completing a purchase, you acknowledge and agree to this <strong>no-refund policy</strong>.
+          We encourage you to evaluate our free tier or materials before upgrading.
         </p>
 
+        <h2>3) Limited Exceptions (via Paddle)</h2>
         <p>
-          If you believe you were charged in error, please contact our support team at
-          <a href="mailto:support@goldenspaceai.space">goldenspaceais@gmail.com</a>.
+          While our policy is no refunds, Paddle may, at its discretion and subject to law, issue a refund in limited cases such as:
+        </p>
+        <ul>
+          <li>Duplicate payment or accidental multiple charges</li>
+          <li>Confirmed fraudulent/unauthorized payment</li>
+          <li>Clear, provable technical failure preventing access immediately after purchase</li>
+        </ul>
+        <p>
+          If you believe one of these applies, contact us first at
+          <a href="mailto:goldenspaceais@gmail.com">goldenspaceais@gmail.com</a> with your order number, or use the link in your Paddle receipt to manage the purchase.
+        </p>
+
+        <h2>4) Cancellations & Renewals</h2>
+        <ul>
+          <li><strong>Cancel anytime:</strong> You can cancel your subscription at any time. Your access continues until the end of the current billing period.</li>
+          <li><strong>No pro-rata credits:</strong> We don’t offer partial or pro-rated refunds for unused time in a billing cycle.</li>
+          <li><strong>Auto-renewal:</strong> Subscriptions renew automatically unless cancelled before the renewal date shown on your Paddle receipt.</li>
+          <li><strong>Manage billing:</strong> Use the “Manage Subscription” link in your Paddle email receipt/Invoice to update payment details, cancel, or view invoices.</li>
+        </ul>
+
+        <h2>5) Trials, Coupons, & One-time Purchases</h2>
+        <ul>
+          <li><strong>Trials:</strong> If a free trial is offered, you won’t be charged until the trial ends. Cancel before the trial ends to avoid being charged.</li>
+          <li><strong>Coupons/Promos:</strong> Discounts apply only to the specified term. Renewals occur at then-current pricing unless stated otherwise.</li>
+          <li><strong>One-time items:</strong> Digital one-time purchases are non-refundable once delivered/activated.</li>
+        </ul>
+
+        <h2>6) Taxes & Invoices</h2>
+        <p>
+          Paddle calculates and collects applicable taxes (e.g., VAT/GST) based on your location and provides compliant invoices/receipts. Tax amounts are shown at checkout and on your receipt.
+        </p>
+
+        <h2>7) Legal Rights</h2>
+        <p>
+          This policy applies to the maximum extent permitted by applicable law and does not limit any <em>mandatory consumer rights</em> you may have in your jurisdiction.
+          Where the law provides a non-waivable right of withdrawal or refund, Paddle will handle such requests in accordance with those laws.
+        </p>
+
+        <h2>8) How to Contact Us</h2>
+        <p>
+          If you have questions about a charge, billing, or believe you were charged in error, contact us:
+          <br />
+          <strong>Email:</strong> <a href="mailto:goldenspaceais@gmail.com">goldenspaceais@gmail.com</a>
         </p>
 
         <div class="footer">
@@ -108,6 +159,7 @@
     </main>
 
     <script>
+      // Footer year & last-updated stamp
       document.getElementById('yr').textContent = new Date().getFullYear();
       const d = new Date();
       const mm = String(d.getMonth()+1).padStart(2,'0');
@@ -116,3 +168,4 @@
     </script>
   </body>
 </html>
+```0

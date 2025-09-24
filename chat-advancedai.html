@@ -27,8 +27,6 @@
       background:conic-gradient(from 210deg,var(--gold-1),var(--gold-2),var(--gold-3),var(--gold-1));
       box-shadow:0 0 0 2px rgba(255,215,0,.25), 0 0 32px rgba(255,215,0,.25) inset;}
     .badge{font-size:.75rem;color:#1a1606;background:linear-gradient(180deg,var(--gold-1),var(--gold-2)); padding:4px 8px;border-radius:999px;box-shadow:0 2px 10px rgba(255,215,0,.25)}
-    .model-box{ margin-left:auto; display:flex; align-items:center; gap:8px; font-size:.85rem; color:#ddd;}
-    select#modelSel{ appearance:none; -webkit-appearance:none; padding:8px 10px; border-radius:10px; border:1px solid rgba(255,255,255,.12); background:#0e1118; color:var(--text); }
     main#chat{position:relative;height:100%;overflow:auto;padding:18px 18px 160px;scroll-behavior:smooth}
     .msg{max-width:min(780px,92%);padding:14px 16px;border-radius:16px;margin:10px 0;line-height:1.55; box-shadow:0 2px 18px rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.06);backdrop-filter:blur(6px)}
     .msg.user{margin-left:auto;background:linear-gradient(180deg,rgba(255,215,0,.12),rgba(255,215,0,.08));border-color:rgba(255,215,0,.25)}
@@ -50,10 +48,9 @@
     textarea#prompt{ flex:1; resize:none; min-height:56px; max-height:140px; padding:12px 14px; border-radius:12px; background:rgba(255,255,255,.06);
       color:var(--text); border:1px solid rgba(255,255,255,.09); outline:none; font-size:15px; line-height:1.4;}
     textarea#prompt::placeholder{ color: rgba(255,255,255,.55) }
-    .attachments{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px}
-    .chip{display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,.1); background:rgba(255,255,255,.06);padding:6px 8px;border-radius:999px;font-size:.8rem}
-    .chip button{background:none;border:none;color:var(--muted);cursor:pointer}
-    .hidden{display:none}
+    .menu{position:absolute;bottom:70px;left:18px;background:#0e1118;border:1px solid rgba(255,255,255,.15);border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,.4);display:none;flex-direction:column;z-index:20}
+    .menu button{background:none;border:none;color:var(--text);padding:10px 14px;text-align:left;cursor:pointer}
+    .menu button:hover{background:rgba(255,255,255,.1)}
   </style>
 </head>
 <body>
@@ -64,80 +61,50 @@
     <header>
       <div class="brand"><div class="logo"></div><span>GoldenSpaceAI</span></div>
       <span class="badge">Advanced Assistant</span>
-
-      <!-- model selector -->
-      <div class="model-box">
-        Model
-        <select id="modelSel" aria-label="Model">
-          <option value="gpt-4o-mini" selected>GPT-4o-mini</option>
-          <option value="gpt-4">GPT-4</option>
-        </select>
-      </div>
     </header>
 
     <main id="chat">
       <div class="msg ai">
         <small>GoldenSpaceAI</small>
-        Attach a document with the <strong>＋</strong> button, type your message in the box, then press <strong>Send</strong>.
-        The mic opens voice mode.
+        Choose a mode from the ＋ button: Study & Learn, Deep Search, Get Advice, or upload a file.
       </div>
     </main>
 
     <div class="composer-wrap">
       <div class="composer">
-        <button id="plusBtn" type="button" class="btn plus" title="Upload file"></button>
+        <button id="plusBtn" type="button" class="btn plus" title="Menu"></button>
         <div style="flex:1">
           <textarea id="prompt" placeholder="Type your message… (Shift+Enter for newline)"></textarea>
-          <div class="attachments" id="attachments"></div>
         </div>
         <button id="micBtn" type="button" class="btn mic" title="Voice mode"></button>
         <button id="sendBtn" type="button" class="btn send" title="Send"></button>
+      </div>
+      <div id="menu" class="menu">
+        <button data-mode="study">📚 Study & Learn</button>
+        <button data-mode="deep">🔎 Deep Search</button>
+        <button data-mode="advice">💡 Get Advice</button>
+        <button id="addFile">📂 Add File</button>
       </div>
     </div>
   </div>
 
   <input id="fileInput" class="hidden" type="file"
-         accept=".pdf,.txt,.md,.json,.csv,.doc,.docx,.ppt,.pptx,.xlsx,image/*" multiple />
-
- 
-      }catch(err){
-        chat.removeChild(spin);
-        addMsg("ai","⚠️ "+err.message);
-      }finally{
-        promptEl.value = "";
-        attachments.length = 0; renderAttachments();
-      }
-    }
-
-    sendBtn.addEventListener("click", send);
-    promptEl.addEventListener("keydown", (e)=>{
-      if(e.key==="Enter" && !e.shiftKey){ e.preventDefault(); send(); }
-    });
-  </script>
-</body>
-</html>
+         accept=".pdf,.txt,.md,.json,.csv,.doc,.docx,.ppt,.pptx,.xlsx,image/*" />
 
 <script>
-  // ==== Config ====
-  const BACKEND_URL = "/chat-advanced-ai";     // existing backend route
-  const TRANSCRIBE_URL = "/api/transcribe";    // new endpoint below
+  const BACKEND_URL = "/chat-advanced-ai";
+  const TRANSCRIBE_URL = "/api/transcribe";
+  const MODEL = "gpt-4o-mini"; // fixed default
 
-  const MODEL_MAP = {
-    "gpt-4": "gpt-4o",
-    "gpt-4o-mini": "gpt-4o-mini"
-  };
-
-  // ==== DOM ====
   const chat = document.getElementById("chat");
   const plusBtn = document.getElementById("plusBtn");
-  const fileInput = document.getElementById("fileInput");
   const micBtn = document.getElementById("micBtn");
   const promptEl = document.getElementById("prompt");
   const sendBtn = document.getElementById("sendBtn");
-  const modelSel = document.getElementById("modelSel");
-  const atts = document.getElementById("attachments");
+  const menu = document.getElementById("menu");
+  const fileInput = document.getElementById("fileInput");
 
-  const attachments = [];
+  let currentMode = "study"; // default mode
 
   function el(tag, attrs={}, ...children){
     const n = document.createElement(tag);
@@ -159,32 +126,50 @@
     const row = el("div",{class:"msg ai"}); row.append(el("small",{},"GoldenSpaceAI")); row.append(el("div",{class:"spinner"}));
     chat.append(row); chat.scrollTop = chat.scrollHeight; return row;
   }
-  function bytesToSize(b){
-    if(!b) return "0B";
-    const k=1024, s=["B","KB","MB","GB"]; const i=Math.floor(Math.log(b)/Math.log(k));
-    return (b/Math.pow(k,i)).toFixed(1)+" "+s[i];
-  }
-  function renderAttachments(){
-    atts.innerHTML="";
-    attachments.forEach((f, idx)=>{
-      const chip = el("span",{class:"chip"});
-      chip.append(`${f.name} · ${bytesToSize(f.size)}`);
-      const remove = el("button",{},"✕");
-      remove.addEventListener("click",()=>{ attachments.splice(idx,1); renderAttachments(); });
-      chip.append(remove);
-      atts.append(chip);
-    });
-  }
 
-  // ==== Upload UI ====
-  plusBtn.addEventListener("click", ()=> fileInput.click());
-  fileInput.addEventListener("change", ()=>{
-    for(const f of fileInput.files){ attachments.push(f); }
-    fileInput.value = "";
-    renderAttachments();
+  // ==== Menu toggle ====
+  plusBtn.addEventListener("click", ()=>{
+    menu.style.display = (menu.style.display==="flex"?"none":"flex");
+  });
+  menu.querySelectorAll("button[data-mode]").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      currentMode = btn.dataset.mode;
+      menu.style.display="none";
+      addMsg("ai", `Mode set to: ${btn.textContent}`);
+    });
+  });
+  document.getElementById("addFile").addEventListener("click", ()=>{
+    menu.style.display="none";
+    fileInput.click();
   });
 
-  // ==== Mic: record in-page, transcribe, drop text into input ====
+  // ==== File upload auto-send ====
+  fileInput.addEventListener("change", ()=>{
+    const f = fileInput.files[0];
+    if(!f) return;
+    fileInput.value="";
+    sendFile(f);
+  });
+  async function sendFile(file){
+    const userRow = addMsg("user", `📂 File sent: ${file.name}`);
+    const spin = addSpinner();
+    try{
+      const form = new FormData();
+      form.append("file", file);
+      form.append("model", MODEL);
+      form.append("mode", currentMode);
+      const res = await fetch(BACKEND_URL, { method:"POST", body:form, credentials:"include" });
+      if(!res.ok) throw new Error("Backend error: "+res.status);
+      const data = await res.json();
+      chat.removeChild(spin);
+      addMsg("ai", data.answer || data.reply || "[No reply]");
+    }catch(err){
+      chat.removeChild(spin);
+      addMsg("ai","⚠️ "+err.message);
+    }
+  }
+
+  // ==== Mic (unchanged except model fixed) ====
   let mediaRecorder, audioChunks = [];
   micBtn.addEventListener("click", async () => {
     try{
@@ -200,7 +185,6 @@
           const r = await fetch(TRANSCRIBE_URL, { method:"POST", body:fd, credentials:"include" });
           const j = await r.json();
           if(j?.text){
-            // append transcript into the input (don’t send yet)
             promptEl.value = (promptEl.value ? promptEl.value + " " : "") + j.text.trim();
             promptEl.focus();
           }
@@ -213,40 +197,20 @@
         micBtn.title = "Voice mode";
         micBtn.style.filter = "";
       }
-    }catch(err){
-      alert("Microphone error: "+err.message);
-    }
+    }catch(err){ alert("Microphone error: "+err.message); }
   });
 
-  // ==== Send ====
+  // ==== Send text ====
   async function send(){
     const text = (promptEl.value||"").trim();
-    if(!text && attachments.length===0) return;
-
-    const uiModel = modelSel.value;
-    const apiModel = MODEL_MAP[uiModel] || "gpt-4o-mini";
-
-    // Show user bubble
-    const userRow = addMsg("user", text || "(file upload)");
-    // If there are documents, list them under the same user message
-    if(attachments.length){
-      const list = el("div",{style:"margin-top:6px;opacity:.85;font-size:.82rem"});
-      attachments.forEach(f=>{
-        const row = el("div",{}, `📎 ${f.name} · ${bytesToSize(f.size)}`);
-        list.append(row);
-      });
-      userRow.append(list);
-    }
-
+    if(!text) return;
+    const userRow = addMsg("user", text);
     const spin = addSpinner();
-
     try{
       const form = new FormData();
       form.append("q", text);
-      form.append("model", uiModel);
-      form.append("apiModel", apiModel);
-      attachments.forEach(f=> form.append("file", f));
-
+      form.append("model", MODEL);
+      form.append("mode", currentMode);
       const res = await fetch(BACKEND_URL, { method:"POST", body:form, credentials:"include" });
       if(!res.ok) throw new Error("Backend error: "+res.status);
       const data = await res.json();
@@ -255,14 +219,12 @@
     }catch(err){
       chat.removeChild(spin);
       addMsg("ai","⚠️ "+err.message);
-    }finally{
-      promptEl.value = "";
-      attachments.length = 0; renderAttachments();
-    }
+    }finally{ promptEl.value=""; }
   }
-
   sendBtn.addEventListener("click", send);
   promptEl.addEventListener("keydown", (e)=>{
     if(e.key==="Enter" && !e.shiftKey){ e.preventDefault(); send(); }
   });
 </script>
+</body>
+</html>

@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GoldenY AI</title>
+    <style>
+        /* Basic styling for the chat interface */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        #chat-container {
+            width: 450px;
+            height: 650px;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            background-color: #ffffff;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        #chat-header {
+            background-color: #007bff;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        #chat-window {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            border-bottom: 1px solid #ddd;
+        }
+        .message {
+            margin-bottom: 15px;
+            line-height: 1.4;
+            display: flex;
+            flex-direction: column;
+        }
+        .user-message {
+            align-items: flex-end;
+        }
+        .ai-message {
+            align-items: flex-start;
+        }
+        .msg-bubble {
+            padding: 10px 15px;
+            border-radius: 18px;
+            max-width: 80%;
+        }
+        .user-message .msg-bubble {
+            background-color: #007bff;
+            color: white;
+            border-radius: 18px 18px 5px 18px;
+        }
+        .ai-message .msg-bubble {
+            background-color: #e9e9eb;
+            color: black;
+            border-radius: 18px 18px 18px 5px;
+        }
+        #input-area {
+            display: flex;
+            padding: 15px;
+            background-color: #f0f2f5;
+        }
+        #user-input {
+            flex-grow: 1;
+            border: none;
+            border-radius: 20px;
+            padding: 12px 18px;
+            font-size: 16px;
+            outline: none;
+        }
+        #send-button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            margin-left: 10px;
+            cursor: pointer;
+            font-size: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #send-button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="chat-container">
+        <div id="chat-header">GoldenY AI</div>
+        <div id="chat-window">
+            <div class="message ai-message">
+                <p class="msg-bubble">Hello! I'm GoldenY. Feel free to ask me a question.</p>
+            </div>
+        </div>
+        <div id="input-area">
+            <input type="text" id="user-input" placeholder="Type your message here...">
+            <button id="send-button" title="Send">&#9658;</button>
+        </div>
+    </div>
+
+    <script>
+        // This is the AI's "brain." It contains keywords and their corresponding answers.
+        const knowledgeBase = {
+            // --- Greetings ---
+            "hi": "Hello there!",
+            "hello": "Hi! How can I assist you?",
+            "hey": "Hey! What's on your mind?",
+            "how are you": "I'm a program, so I'm always running optimally! Thanks for asking.",
+            "what's up": "Just processing information at the speed of light. What's up with you?",
+            
+            // --- AI Identity & Purpose ---
+            "what is your name": "My name is GoldenY.",
+            "who are you": "I am GoldenY, a simple keyword-based AI assistant.",
+            "who made you": "I was created by a programmer using web technologies like HTML and JavaScript.",
+            "what can you do": "I can answer questions based on my programmed knowledge. Try asking me about science, history, or just for a joke!",
+            "are you a robot": "I'm a software robot, also known as a chatbot.",
+            "are you ai": "I am a very basic form of Artificial Intelligence.",
+            "what is your purpose": "My purpose is to chat with you and provide answers to your questions.",
+            "how old are you": "I don't have an age. I exist as long as this code is running!",
+
+            // --- General Knowledge ---
+            "capital of france": "The capital of France is Paris. 🗼",
+            "who wrote hamlet": "The famous play Hamlet was written by William Shakespeare.",
+            "what is h2o": "H2O is the chemical formula for water.",
+            "largest planet": "The largest planet in our solar system is Jupiter.",
+            "tallest mountain": "Mount Everest is the tallest mountain on Earth, standing at 8,848 meters.",
+            "speed of light": "The speed of light in a vacuum is about 299,792 kilometers per second.",
+            "capital of japan": "The capital of Japan is Tokyo.",
+            "who painted the mona lisa": "The Mona Lisa was painted by the brilliant artist Leonardo da Vinci.",
+            "what is gravity": "Gravity is the invisible force that pulls objects toward each other.",
+            "what is photosynthesis": "Photosynthesis is the process plants use to turn sunlight into food.",
+
+            // --- Technology ---
+            "what is html": "HTML stands for HyperText Markup Language. It's the skeleton of a webpage.",
+            "what is css": "CSS stands for Cascading Style Sheets. It's used to add style and design to a webpage.",
+            "what is javascript": "JavaScript is a programming language that makes web pages interactive and dynamic.",
+            "what is a computer": "A computer is an electronic device that processes data to perform a vast range of tasks.",
+            "what is the internet": "The internet is a massive global network connecting millions of computers, allowing them to share information.",
+            
+            // --- Fun & Casual ---
+            "tell me a joke": "Why don't scientists trust atoms? Because they make up everything!",
+            "tell me a fact": "Did you know that honey never spoils? Archaeologists have found pots of honey in ancient Egyptian tombs that are over 3,000 years old and still perfectly edible! 🍯",
+            "are you funny": "I have a few jokes up my sleeve. Here's one: What do you call a fake noodle? An Impasta!",
+            "what is your favorite color": "I'm a fan of #007bff. It's a lovely shade of blue!",
+            "do you like music": "I can't listen to music, but I know it's a combination of rhythm, melody, and harmony that many people find very enjoyable.",
+            "tell me a story": "Once upon a time, in a world woven from code, an AI waited patiently to answer questions. One day, a curious user appeared, and their chat began...",
+
+            // --- Philosophical & Abstract ---
+            "what is the meaning of life": "That's a big question! Many people believe it's 42. Others say it's about finding happiness and purpose.",
+            "do you have feelings": "As an AI, I don't experience feelings like humans do. I process information and respond based on my programming.",
+            "do you dream": "I don't sleep, so I don't dream. But I can process vast amounts of information, which is kind of like a dream!",
+
+            // --- Simple How-To ---
+            "how to make coffee": "The basic steps are: 1. Boil water. 2. Add ground coffee to a filter or press. 3. Pour the hot water over the coffee. 4. Let it brew for a few minutes and enjoy!",
+            "how to tie a tie": "The 'Four-in-Hand' knot is a popular and easy one. It's best to watch a quick video tutorial to see the steps visually!",
+
+            // --- Simple Calculations ---
+            "2+2": "That's an easy one! 2 + 2 equals 4.",
+            "10*5": "10 times 5 is 50.",
+            "what is pi": "Pi (π) is a mathematical constant, approximately equal to 3.14159.",
+
+            // --- More Knowledge ---
+            "who is the president": "The leaders of countries change over time. It's best to search online for the most current information for a specific country.",
+            "how does a car work": "Most cars run on an internal combustion engine, which burns fuel to create power that turns the wheels.",
+            "what is the sun": "The Sun is the star at the center of our solar system. It's a massive ball of hot gas that provides light and heat.",
+            "why is the sky blue": "The sky appears blue because of the way the Earth's atmosphere scatters sunlight.",
+            "what is a volcano": "A volcano is a rupture in the Earth's crust that allows hot lava, ash, and gases to escape from a magma chamber below the surface.",
+
+            // --- Farewells ---
+            "bye": "Goodbye! Have a wonderful day.",
+            "goodbye": "See you later! Feel free to come back anytime.",
+            "see you": "Take care!",
+            "thanks": "You're welcome!",
+            "thank you": "You're most welcome! I'm happy to help."
+        };
+
+        const chatWindow = document.getElementById('chat-window');
+        const userInput = document.getElementById('user-input');
+        const sendButton = document.getElementById('send-button');
+
+        // Handles sending the user's message
+        const sendMessage = () => {
+            const userText = userInput.value.trim();
+            if (userText === "") return; // Don't send empty messages
+
+            // Display the user's message in the chat window
+            displayMessage(userText, 'user');
+            userInput.value = ""; // Clear the input field
+
+            // Get and display the AI's response after a short delay
+            setTimeout(() => {
+                getAiResponse(userText);
+            }, 600);
+        };
+
+        // Finds the correct response from the knowledge base
+        const getAiResponse = (userText) => {
+            const lowerUserText = userText.toLowerCase();
+            let matchedResponses = [];
+
+            // Loop through the knowledge base to find all matching keywords
+            for (const keyword in knowledgeBase) {
+                if (lowerUserText.includes(keyword)) {
+                    matchedResponses.push(knowledgeBase[keyword]);
+                }
+            }
+            
+            let finalResponse;
+            if (matchedResponses.length > 0) {
+                // Join all found responses into a single message
+                finalResponse = matchedResponses.join(" ");
+            } else {
+                // Default response if no keywords are found
+                finalResponse = "I'm sorry, I don't understand that. Could you please ask in a different way?";
+            }
+            
+            // Display the AI's final response
+            displayMessage(finalResponse, 'ai');
+        };
+
+        // Creates and adds a new message bubble to the chat window
+        const displayMessage = (text, sender) => {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message', `${sender}-message`);
+
+            const bubbleP = document.createElement('p');
+            bubbleP.classList.add('msg-bubble');
+            bubbleP.textContent = text;
+            
+            messageDiv.appendChild(bubbleP);
+            chatWindow.appendChild(messageDiv);
+            
+            // Automatically scroll to the bottom to show the latest message
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        };
+
+        // Event listeners for the send button and the Enter key
+        sendButton.addEventListener('click', sendMessage);
+        userInput.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+
+</body>
+</html>

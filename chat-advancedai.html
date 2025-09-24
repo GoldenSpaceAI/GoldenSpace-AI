@@ -94,7 +94,7 @@
 <script>
   const BACKEND_URL = "/chat-advanced-ai";
   const TRANSCRIBE_URL = "/api/transcribe";
-  const MODEL = "gpt-4o-mini"; // fixed default
+  const MODEL = "gpt-4o-mini"; 
 
   const chat = document.getElementById("chat");
   const plusBtn = document.getElementById("plusBtn");
@@ -104,7 +104,7 @@
   const menu = document.getElementById("menu");
   const fileInput = document.getElementById("fileInput");
 
-  let currentMode = "study"; // default mode
+  let currentMode = "study"; 
 
   function el(tag, attrs={}, ...children){
     const n = document.createElement(tag);
@@ -131,13 +131,17 @@
   plusBtn.addEventListener("click", ()=>{
     menu.style.display = (menu.style.display==="flex"?"none":"flex");
   });
+
+  // Mode buttons
   menu.querySelectorAll("button[data-mode]").forEach(btn=>{
     btn.addEventListener("click",()=>{
       currentMode = btn.dataset.mode;
-      menu.style.display="none";
       addMsg("ai", `Mode set to: ${btn.textContent}`);
+      menu.style.display="none";
     });
   });
+
+  // File button
   document.getElementById("addFile").addEventListener("click", ()=>{
     menu.style.display="none";
     fileInput.click();
@@ -169,7 +173,7 @@
     }
   }
 
-  // ==== Mic (unchanged except model fixed) ====
+  // ==== Mic (same) ====
   let mediaRecorder, audioChunks = [];
   micBtn.addEventListener("click", async () => {
     try{

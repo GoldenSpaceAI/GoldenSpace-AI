@@ -123,7 +123,7 @@ const modelPro = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
 
 // ---------- OpenAI ----------
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || "" });
-
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 // ---------- Memory helpers (session-scoped) ----------
 function pushHistory(req, role, content) {
   if (!req.session.advHistory) req.session.advHistory = [];

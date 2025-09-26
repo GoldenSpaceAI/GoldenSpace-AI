@@ -122,12 +122,27 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 // ---------- OpenAI ----------
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import OpenAI from "openai";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const client = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-// ---------- Memory helpers (session-scoped) ----------
+const model = "gpt-4o-mini"; // ✅ OpenAI model name
+
+async function askAI() {
+  const response = await client.chat.completions.create({
+    model,
+    messages: [
+      { role: "system", content: "You are a helpful assistant." },
+      { role: "user", content: "Hello, can you explain GoldenSpaceAI?" }
+    ],
+  });
+
+  console.log(response.choices[0].message.content);
+}
+
+askAI();
 function pushHistory(req, role, content) {
   if (!req.session.advHistory) req.session.advHistory = [];
   req.session.advHistory.push({ role, content });

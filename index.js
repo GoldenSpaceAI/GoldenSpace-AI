@@ -117,10 +117,10 @@ app.use(express.static(__dirname));
 app.get("/health", (_req, res) => res.json({ ok: true }));
 
 // ---------- Gemini ----------
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
-const modelFlash = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-const modelPro = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 // ---------- OpenAI ----------
 import { GoogleGenerativeAI } from "@google/generative-ai";
 

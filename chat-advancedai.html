@@ -51,6 +51,41 @@
     .menu{position:absolute;bottom:70px;left:18px;background:#0e1118;border:1px solid rgba(255,255,255,.15);border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,.4);display:none;flex-direction:column;z-index:20}
     .menu button{background:none;border:none;color:var(--text);padding:10px 14px;text-align:left;cursor:pointer}
     .menu button:hover{background:rgba(255,255,255,.1)}
+
+    /* === additions (non-breaking) === */
+    .powered{font-size:.75rem; color:var(--muted); padding:4px 8px; border:1px solid rgba(255,255,255,.12); border-radius:999px}
+    .spacer{margin-left:auto}
+    #chatHistoryBtn{
+      height:auto; width:auto; padding:8px 12px; border-radius:10px; border:1px solid rgba(255,255,255,.15);
+      background:rgba(255,255,255,.06); color:var(--text); cursor:pointer; font-weight:700;
+    }
+    #chatHistoryBtn:hover{ background:rgba(255,255,255,.12) }
+    #chatHistory{
+      position:fixed; top:0; right:0; height:100%; width:280px; z-index:50;
+      background:rgba(8,10,16,.9); backdrop-filter: blur(10px);
+      border-left:1px solid rgba(255,255,255,.1);
+      transform: translateX(100%); transition: transform .28s ease;
+      display:flex; flex-direction:column;
+    }
+    #chatHistory.open{ transform: translateX(0) }
+    #chatHistory header{
+      display:flex; align-items:center; justify-content:space-between; gap:.5rem;
+      padding:14px; border-bottom:1px solid rgba(255,255,255,.08);
+      background:linear-gradient(180deg,rgba(10,10,14,.65),rgba(10,10,14,.25));
+    }
+    #chatList{ flex:1; overflow:auto; padding:10px 10px 80px }
+    .chatItem{
+      width:100%; text-align:left; padding:10px 12px; margin:6px 0;
+      border-radius:10px; border:1px solid rgba(255,255,255,.1);
+      background:rgba(255,255,255,.04); color:var(--text); cursor:pointer; font-weight:600;
+    }
+    .chatItem.active{ outline:2px solid var(--ring); }
+    #newChatBtn{
+      position:sticky; bottom:0; width:calc(100% - 20px); margin:10px; padding:10px 12px;
+      border-radius:12px; border:none; cursor:pointer; font-weight:800;
+      background:linear-gradient(180deg,var(--gold-1),var(--gold-2));
+      color:#141209; box-shadow:0 8px 18px rgba(255,215,0,.25);
+    }
   </style>
 </head>
 <body>
@@ -61,6 +96,12 @@
     <header>
       <div class="brand"><div class="logo"></div><span>GoldenSpaceAI</span></div>
       <span class="badge">Advanced Assistant</span>
+
+      <!-- additions -->
+      <span class="powered">Powered by GPT-5</span>
+      <div class="spacer"></div>
+      <button id="chatHistoryBtn" type="button" title="Open chats">Chats</button>
+      <!-- /additions -->
     </header>
 
     <main id="chat">
@@ -88,6 +129,17 @@
     </div>
   </div>
 
+  <!-- additions: slide-in chat history -->
+  <aside id="chatHistory" aria-hidden="true">
+    <header>
+      <strong>Your Chats</strong>
+      <button id="closeHistory" type="button" title="Close">✕</button>
+    </header>
+    <div id="chatList"></div>
+    <button id="newChatBtn" type="button">＋ New Chat</button>
+  </aside>
+  <!-- /additions -->
+
   <input id="fileInput" class="hidden" type="file"
          accept=".pdf,.txt,.md,.json,.csv,.doc,.docx,.ppt,.pptx,.xlsx,image/*" />
 
@@ -104,8 +156,17 @@
   const menu = document.getElementById("menu");
   const fileInput = document.getElementById("fileInput");
 
+  /* additions – chat history refs */
+  const chatHistory = document.getElementById("chatHistory");
+  const chatHistoryBtn = document.getElementById("chatHistoryBtn");
+  const closeHistoryBtn = document.getElementById("closeHistory");
+  const chatListEl = document.getElementById("chatList");
+  const newChatBtn = document.getElementById("newChatBtn");
+  /* /additions */
+
   let currentMode = "study"; 
 
+  /* === small helpers === */
   function el(tag, attrs={}, ...children){
     const n = document.createElement(tag);
     Object.entries(attrs).forEach(([k,v])=>{
@@ -120,11 +181,15 @@
     const m = el("div",{class:`msg ${role}`});
     m.append(el("small",{}, role==="user"?"You":"GoldenSpaceAI"));
     m.append(el("div",{html:(text||"").toString().replace(/\n/g,"<br/>")}));
-    chat.append(m); chat.scrollTop = chat.scrollHeight; return m;
+    chat.append(m); chat.scrollTop = chat.scrollHeight; 
+    saveActiveChat();  // addition
+    return m;
   }
   function addSpinner(){
     const row = el("div",{class:"msg ai"}); row.append(el("small",{},"GoldenSpaceAI")); row.append(el("div",{class:"spinner"}));
-    chat.append(row); chat.scrollTop = chat.scrollHeight; return row;
+    chat.append(row); chat.scrollTop = chat.scrollHeight; 
+    saveActiveChat(); // addition
+    return row;
   }
 
   // ==== Menu toggle ====
@@ -155,7 +220,7 @@
     sendFile(f);
   });
   async function sendFile(file){
-    const userRow = addMsg("user", `📂 File sent: ${file.name}`);
+    addMsg("user", `📂 File sent: ${file.name}`);
     const spin = addSpinner();
     try{
       const form = new FormData();
@@ -170,7 +235,7 @@
     }catch(err){
       chat.removeChild(spin);
       addMsg("ai","⚠️ "+err.message);
-    }
+    }finally{ saveActiveChat(); }
   }
 
   // ==== Mic (same) ====
@@ -208,7 +273,7 @@
   async function send(){
     const text = (promptEl.value||"").trim();
     if(!text) return;
-    const userRow = addMsg("user", text);
+    addMsg("user", text);
     const spin = addSpinner();
     try{
       const form = new FormData();
@@ -223,12 +288,76 @@
     }catch(err){
       chat.removeChild(spin);
       addMsg("ai","⚠️ "+err.message);
-    }finally{ promptEl.value=""; }
+    }finally{ promptEl.value=""; saveActiveChat(); }
   }
   sendBtn.addEventListener("click", send);
   promptEl.addEventListener("keydown", (e)=>{
     if(e.key==="Enter" && !e.shiftKey){ e.preventDefault(); send(); }
   });
+
+  /* =========================
+     Chat history (additions)
+     ========================= */
+  const initialGreeting = `
+    <div class="msg ai">
+      <small>GoldenSpaceAI</small>
+      Choose a mode from the ＋ button: Study & Learn, Deep Search, Get Advice, or upload a file.
+    </div>
+  `;
+
+  let chats = [];         // { id:number, title:string, content:string }
+  let activeChat = null;  // id
+
+  function openHistory(open=true){
+    chatHistory.classList.toggle('open', open);
+    chatHistory.setAttribute('aria-hidden', open ? 'false' : 'true');
+  }
+
+  chatHistoryBtn.addEventListener("click", ()=> openHistory(chatHistory.getAttribute('aria-hidden') !== 'false'));
+  closeHistoryBtn.addEventListener("click", ()=> openHistory(false));
+
+  function saveActiveChat(){
+    if(activeChat==null) return;
+    const idx = chats.findIndex(c=>c.id===activeChat);
+    if(idx>-1){ chats[idx].content = chat.innerHTML; }
+    renderChatList();
+  }
+
+  function switchToChat(id){
+    const c = chats.find(x=>x.id===id);
+    if(!c) return;
+    activeChat = id;
+    chat.innerHTML = c.content || initialGreeting;
+    chat.scrollTop = chat.scrollHeight;
+    renderChatList();
+  }
+
+  function createNewChat(){
+    const id = Date.now();
+    const n = { id, title:`Chat ${chats.length+1}`, content: initialGreeting };
+    chats.push(n);
+    switchToChat(id);
+  }
+
+  function renderChatList(){
+    chatListEl.innerHTML = "";
+    chats.forEach(c=>{
+      const b = document.createElement("button");
+      b.className = "chatItem" + (c.id===activeChat ? " active" : "");
+      b.textContent = c.title;
+      b.onclick = ()=> { switchToChat(c.id); };
+      chatListEl.appendChild(b);
+    });
+  }
+
+  newChatBtn.addEventListener("click", ()=>{
+    createNewChat();
+    renderChatList();
+  });
+
+  // boot: start with one chat
+  createNewChat();
+  renderChatList();
 </script>
 </body>
 </html>

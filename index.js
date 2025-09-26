@@ -122,7 +122,10 @@ const modelFlash = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 const modelPro = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
 
 // ---------- OpenAI ----------
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || "" });
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 // ---------- Memory helpers (session-scoped) ----------
 function pushHistory(req, role, content) {

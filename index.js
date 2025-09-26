@@ -1,4 +1,4 @@
-// index.js — GoldenSpaceAI (Home-first, OpenAI GPT-4o-mini default, GPT-4o advanced)
+// index.js — GoldenSpaceAI (GPT-4o-mini default, GPT-4o for advancedai.html, GPT-3.5-turbo for ChatAI pack)
 
 import express from "express";
 import cors from "cors";
@@ -48,11 +48,12 @@ app.use(passport.session());
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// ---------- Simple plan map (not enforced for now; pages unlocked) ----------
+// ---------- Simple plan map ----------
 const PLAN_LIMITS = {
   moon: { ask: 40, search: 20 },
   earth: { ask: Infinity, search: Infinity },
-  chatai: { ask: Infinity, search: Infinity }, // ChatAI pack (Advanced too)
+  // 🔑 ChatAI pack → GPT-3.5-turbo (instead of GPT-4o-mini)
+  chatai: { ask: Infinity, search: Infinity, model: "gpt-3.5-turbo" },
 };
 
 // ---------- Helper: compute base URL ----------
@@ -62,7 +63,7 @@ function getBaseUrl(req) {
   return `${proto}://${host}`;
 }
 
-// ---------- Google OAuth (kept; optional) ----------
+// ---------- Google OAuth ----------
 const DEFAULT_CALLBACK_PATH = "/auth/google/callback";
 passport.use(
   new GoogleStrategy(
@@ -87,27 +88,9 @@ passport.use(
 passport.serializeUser((user, done) => done(null, user));
 passport.deserializeUser((obj, done) => done(null, obj));
 
-app.get("/auth/google", (req, res, next) => {
-  const callbackURL = `${getBaseUrl(req)}${DEFAULT_CALLBACK_PATH}`;
-  passport.authenticate("google", { scope: ["profile", "email"], callbackURL })(req, res, next);
-});
-app.get(DEFAULT_CALLBACK_PATH, (req, res, next) => {
-  const callbackURL = `${getBaseUrl(req)}${DEFAULT_CALLBACK_PATH}`;
-  passport.authenticate("google", { failureRedirect: "/login.html", callbackURL })(req, res, () =>
-    res.redirect("/"),
-  );
-});
-app.post("/logout", (req, res, next) => {
-  req.logout(err => {
-    if (err) return next(err);
-    req.session.destroy(() => res.json({ ok: true }));
-  });
-});
-
-// ---------- PUBLIC / AUTH GATE ----------
-const PUBLIC_FILE_EXT = /\.(css|js|mjs|map|png|jpg|jpeg|gif|svg|ico|txt|woff2?|html)$/i;
+// ---------- PUBLIC / AUTH ----------
 function isPublicPath(req) {
-  return true; // <- UNLOCK EVERYTHING FOR NOW (testing)
+  return true; // all unlocked for now
 }
 function authRequired(req, res, next) {
   if (isPublicPath(req)) return next();
@@ -148,7 +131,7 @@ async function readTextIfPossible(filePath, mimetype) {
   }
 }
 
-// ---------- ROUTES (OpenAI GPT-4o-mini) ----------
+// ---------- Normal Routes (GPT-4o-mini) ----------
 app.post("/ask", async (req, res) => {
   try {
     const q = (req.body?.question || "").trim();
@@ -160,7 +143,6 @@ app.post("/ask", async (req, res) => {
         { role: "system", content: "You are GoldenSpaceAI. Always answer in a long, detailed way." },
         { role: "user", content: q },
       ],
-      temperature: 0.7,
     });
 
     const answer = completion.choices[0]?.message?.content || "No response.";
@@ -171,53 +153,8 @@ app.post("/ask", async (req, res) => {
   }
 });
 
-app.post("/search-info", async (req, res) => {
-  try {
-    const q = (req.body?.query || "").trim();
-    if (!q) return res.json({ answer: "Type something to search." });
-
-    const prompt = `You are GoldenSpace Knowledge. Provide a long overview + 3 detailed bullet facts.\nTopic: ${q}`;
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        { role: "system", content: "Always answer in a long, detailed way." },
-        { role: "user", content: prompt },
-      ],
-    });
-
-    const answer = completion.choices[0]?.message?.content || "No info found.";
-    res.json({ answer });
-  } catch (e) {
-    console.error("search-info error", e);
-    res.status(500).json({ answer: "Search error" });
-  }
-});
-
-app.post("/ai/physics-explain", async (req, res) => {
-  try {
-    const q = (req.body?.question || "").trim();
-    if (!q) return res.json({ reply: "Ask a physics question." });
-
-    const prompt = `You are GoldenSpace Physics Tutor. Give a long, step-by-step explanation.\nQuestion: ${q}`;
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        { role: "system", content: "Always answer in a long, detailed way." },
-        { role: "user", content: prompt },
-      ],
-    });
-
-    const reply = completion.choices[0]?.message?.content || "No reply.";
-    res.json({ reply });
-  } catch (e) {
-    console.error("physics error", e);
-    res.status(500).json({ reply: "Physics error" });
-  }
-});
-
-// ---------- Advanced Chat AI (OpenAI GPT-4o) ----------
+// ---------- Advanced Chat AI (GPT-4o for advancedai.html) ----------
 const upload = multer({ dest: "uploads/" });
-
 app.post("/chat-advanced-ai", upload.single("file"), async (req, res) => {
   try {
     const q = (req.body?.q || "").trim();
@@ -232,9 +169,8 @@ app.post("/chat-advanced-ai", upload.single("file"), async (req, res) => {
     }
 
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o", // ✅ advanced = GPT-4o
+      model: "gpt-4o", // ✅ stays GPT-4o
       messages,
-      temperature: 0.5,
     });
 
     const reply = completion.choices?.[0]?.message?.content || "No reply.";
@@ -246,71 +182,3 @@ app.post("/chat-advanced-ai", upload.single("file"), async (req, res) => {
     res.status(500).json({ error: "Advanced AI error" });
   }
 });
-
-// ---------- Homework Solver (OpenAI GPT-4o-mini with vision) ----------
-async function handleHomework(req, res) {
-  try {
-    const message = (req.body?.message || req.body?.prompt || "").trim();
-    const allFiles = [];
-    if (req.files && Array.isArray(req.files)) allFiles.push(...req.files);
-    if (req.file) allFiles.push(req.file);
-
-    const parts = [];
-    if (message) parts.push({ type: "text", text: message });
-
-    const img = allFiles.find(f => (f.mimetype || "").startsWith("image/"));
-    if (img) {
-      const b64 = fs.readFileSync(img.path).toString("base64");
-      parts.push({ type: "image_url", image_url: { url: `data:${img.mimetype};base64,${b64}` } });
-    }
-
-    for (const f of allFiles) {
-      try {
-        fs.unlinkSync(f.path);
-      } catch {}
-    }
-
-    if (parts.length === 0) {
-      return res.status(400).json({ error: "Provide an image or a message." });
-    }
-
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content:
-            "You are GoldenSpaceAI Homework Helper. Explain step-by-step in a long, detailed way, show working, and verify the final answer.",
-        },
-        { role: "user", content: parts },
-      ],
-      temperature: 0.2,
-    });
-
-    const reply = completion.choices?.[0]?.message?.content || "No reply.";
-    res.json({ model: "gpt-4o-mini", reply });
-  } catch (e) {
-    console.error("homework api error", e);
-    res.status(500).json({ error: "Homework error" });
-  }
-}
-
-app.post("/api/chat", upload.any(), handleHomework);
-app.post("/api/homework", upload.any(), handleHomework);
-
-// ---------- /api/me ----------
-app.get("/api/me", (req, res) => {
-  const plan = req.user?.plan || "moon";
-  res.json({
-    loggedIn: !!req.user,
-    email: req.user?.email || null,
-    name: req.user?.name || null,
-    given_name: req.user?.name?.split(" ")?.[0] || null,
-    picture: req.user?.photo || null,
-    plan,
-  });
-});
-
-// ---------- Start ----------
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 GoldenSpaceAI running on ${PORT}`));

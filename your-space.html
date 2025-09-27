@@ -1,307 +1,597 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Planetary Genesis | GoldenSpaceAI</title>
-    <style>
-        :root {
-            --bg-dark: #0a0e15;
-            --panel-bg: #101828;
-            --border-color: #334155;
-            --text-primary: #E2E8F0;
-            --text-secondary: #94A3B8;
-            --gold-accent: #f6c64a;
-        }
-        * { box-sizing: border-box; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-dark);
-            color: var(--text-primary);
-            margin: 0;
-            height: 100vh;
-            width: 100vw;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Create Your Space ✨</title>
+<style>
+  :root{
+    --ui:#0c1224;--card:#0e1733;--ink:#eef3ff;--muted:#9fb0da;--brand:#ffd54a;--accent:#62d0ff;--good:#29e07a;--warn:#ff6b6b;
+    --ring: rgba(255,213,74,.35);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; color:var(--ink); font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial;
+    background:#05070f url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2400&auto=format&fit=crop') center/cover fixed no-repeat;
+    overflow:hidden;
+  }
+  .wrap{display:grid; grid-template-columns: 320px 1fr; grid-template-rows: auto 1fr; height:100%;}
+  header{
+    grid-column: 1/3; display:flex; align-items:center; gap:12px; padding:12px 16px;
+    background:linear-gradient(180deg, rgba(10,12,25,.75), rgba(10,12,25,.35)); backdrop-filter: blur(8px);
+    border-bottom:1px solid rgba(255,255,255,.08);
+  }
+  .logo{width:36px;height:36px;border-radius:50%; background: conic-gradient(from 220deg, #ffd54a, #ffb300, #9ed3ff, #ffd54a); box-shadow:0 0 0 2px rgba(255,213,74,.3)}
+  h1{font-size:18px; margin:0}
+  .badge{margin-left:auto; padding:6px 10px; border-radius:999px; background:linear-gradient(180deg,#ffd54a,#ffb300); color:#221d05; font-weight:800}
 
-        /* --- Layout (Mobile First) --- */
-        .genesis-container {
-            display: flex;
-            flex-direction: column;
-            width: 100%;
-            height: 100%;
-        }
-        .viewport {
-            flex: 1;
-            display: grid;
-            place-items: center;
-            position: relative;
-            overflow: hidden;
-            background-image: radial-gradient(circle at center, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
-            background-size: 10px 10px;
-        }
-        .controls {
-            width: 100%;
-            background-color: var(--panel-bg);
-            border-top: 1px solid var(--border-color);
-            padding: 1rem;
-            max-height: 45vh;
-            overflow-y: auto;
-        }
+  aside{
+    grid-row: 2/3; background:linear-gradient(180deg, rgba(10,16,36,.82), rgba(9,14,30,.72));
+    border-right:1px solid rgba(255,255,255,.08); overflow:auto; padding:14px;
+  }
+  .panel{background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02)); border:1px solid rgba(255,255,255,.1);
+    border-radius:14px; padding:12px; margin-bottom:12px}
+  .panel h3{margin:0 0 8px; font-size:14px; color:#cfe0ff}
+  label{display:block; font-size:12px; color:var(--muted); margin-top:8px}
+  input[type="text"], input[type="number"], select, input[type="color"]{
+    width:100%; padding:8px 10px; border-radius:10px; border:1px solid rgba(255,255,255,.12); background:#0c142d; color:var(--ink);
+  }
+  .row{display:flex; gap:8px}
+  .btn{display:inline-flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; border:none;
+    padding:10px 12px; border-radius:10px; font-weight:800; color:#0f0f12;
+    background:linear-gradient(180deg, var(--brand), #ffb300); box-shadow:0 8px 18px rgba(255,213,74,.25)}
+  .btn.secondary{background:#1a244a; color:#d9e4ff; border:1px solid rgba(255,255,255,.12); box-shadow:none}
+  .btn.ghost{background:transparent; color:#d9e4ff; border:1px dashed rgba(255,255,255,.18)}
+  .btn.full{width:100%}
+  .hint{font-size:12px; color:var(--muted); margin-top:6px}
+  .toggle{display:flex; gap:8px; flex-wrap:wrap}
+  .toggle > button{padding:8px 10px; border-radius:999px; border:1px solid rgba(255,255,255,.12); background:#0c142d; color:#cfe0ff; cursor:pointer}
+  .toggle > button[aria-pressed="true"]{background:#14204a; outline:2px solid var(--ring)}
+  .wall-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:8px}
+  .wall{height:56px; border-radius:10px; border:1px solid rgba(255,255,255,.12); cursor:pointer; overflow:hidden}
+  .wall[aria-selected="true"]{outline:3px solid var(--ring)}
+  .wall img{width:100%; height:100%; object-fit:cover; display:block}
 
-        /* --- Planet & Moon Styles --- */
-        #planet-container {
-            position: relative;
-            display: grid;
-            place-items: center;
-        }
-        #planet {
-            width: 250px;
-            height: 250px;
-            border-radius: 50%;
-            position: relative;
-            overflow: hidden;
-            box-shadow: inset -25px -15px 40px rgba(0,0,0,0.5), 0 0 80px rgba(246, 198, 74, 0.2);
-            transition: width 0.3s, height 0.3s;
-        }
-        #planet-surface {
-            width: 100%;
-            height: 100%;
-            background-size: 200% 100%;
-            animation: rotate-surface 30s linear infinite;
-        }
-        @keyframes rotate-surface {
-            from { background-position: 0% 50%; }
-            to { background-position: 200% 50%; }
-        }
-        #planet-atmosphere {
-            width: 100%;
-            height: 100%;
-            position: absolute;
-            top: 0; left: 0;
-            border-radius: 50%;
-        }
-        .moon {
-            position: absolute;
-            width: 20px;
-            height: 20px;
-            background-color: #aaa;
-            border-radius: 50%;
-            cursor: grab;
-            box-shadow: inset -5px -3px 10px rgba(0,0,0,0.5);
-        }
-        .moon.dragging { cursor: grabbing; z-index: 100; }
-        
-        /* --- Controls Styling --- */
-        .control-accordion details { margin-bottom: 0.5rem; }
-        .control-accordion summary {
-            padding: 0.75rem;
-            font-weight: bold;
-            color: var(--gold-accent);
-            background-color: var(--bg-dark);
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            cursor: pointer;
-        }
-        .control-group {
-            padding: 1rem;
-            border: 1px solid var(--border-color);
-            border-top: none;
-            border-radius: 0 0 6px 6px;
-        }
-        .control-group label { display: block; margin-bottom: 0.5rem; color: var(--text-secondary); }
-        .control-group input { width: 100%; }
+  /* canvas area */
+  .stage{position:relative}
+  canvas{display:block; width:100%; height:100%; background: radial-gradient(900px 600px at 120% -20%, rgba(255,213,74,.06), transparent 45%)}
+  .topbar{
+    position:absolute; top:10px; left:10px; right:10px; display:flex; gap:8px; align-items:center; justify-content:space-between; pointer-events:none;
+  }
+  .stack{pointer-events:auto; display:flex; gap:8px; align-items:center}
+  .pill{background: rgba(14,22,46,.7); border:1px solid rgba(255,255,255,.12); backdrop-filter: blur(8px); color:#dfe7ff;
+        padding:8px 10px; border-radius:999px; font-size:12px}
+  .mini-btn{pointer-events:auto; background:#0e1733; color:#dfe7ff; border:1px solid rgba(255,255,255,.12); border-radius:999px; padding:8px 10px; cursor:pointer}
+  .mini-btn.primary{background:linear-gradient(180deg,#ffd54a,#ffb300); color:#221d05; font-weight:800}
 
-        /* --- Finalize Button --- */
-        #finalize-btn {
-            background-color: var(--gold-accent);
-            color: var(--bg-dark);
-            border: none;
-            padding: 1rem;
-            width: 100%;
-            font-size: 1.1rem;
-            font-weight: bold;
-            border-radius: 8px;
-            cursor: pointer;
-            margin-top: 1rem;
-        }
-        
-        /* --- Desktop Layout --- */
-        @media (min-width: 769px) {
-            .genesis-container {
-                flex-direction: row;
-            }
-            .controls {
-                order: -1; /* Move to the left */
-                width: 320px;
-                height: 100%;
-                max-height: 100vh;
-                border-top: none;
-                border-right: 1px solid var(--border-color);
-            }
-        }
-    </style>
+  .legend{position:absolute; bottom:10px; left:10px; right:10px; display:flex; gap:8px; flex-wrap:wrap; align-items:center}
+  .chip{display:flex; align-items:center; gap:6px; background:rgba(14,22,46,.7); border:1px solid rgba(255,255,255,.12); border-radius:999px; padding:6px 10px; font-size:12px}
+  .dot{width:10px; height:10px; border-radius:50%}
+  .danger{color:#ffc6c6}
+
+  .toast{position:fixed; bottom:18px; left:50%; transform:translateX(-50%); background:#0f1633; border:1px solid rgba(255,255,255,.15);
+    padding:10px 14px; border-radius:10px; display:none; z-index:50}
+  .toast.show{display:block}
+</style>
 </head>
 <body>
+<div class="wrap">
+  <header>
+    <div class="logo"></div>
+    <h1>Create Your Space</h1>
+    <span class="badge">2.5$ Edition ⭐</span>
+  </header>
 
-    <div class="genesis-container">
-        <aside class="controls">
-            <h2>Planetary Genesis</h2>
-            <div id="name-group" class="control-group" style="border-radius: 6px;">
-                <label for="planet-name">Planet Name</label>
-                <input type="text" id="planet-name" value="New Eden" style="background-color: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-primary); padding: 0.5rem; border-radius: 4px;">
-            </div>
-            <div class="control-accordion">
-                <details open>
-                    <summary>Base & Surface</summary>
-                    <div class="control-group">
-                        <label for="planet-size">Size</label>
-                        <input type="range" id="planet-size" min="150" max="400" value="250">
-                        <label for="land-color">Land Color</label>
-                        <input type="color" id="land-color" value="#4a7852">
-                        <label for="ocean-color">Ocean Color</label>
-                        <input type="color" id="ocean-color" value="#3b82f6">
-                    </div>
-                </details>
-                <details>
-                    <summary>Atmosphere & Moons</summary>
-                    <div class="control-group">
-                        <label for="atmosphere-color">Atmosphere Color</label>
-                        <input type="color" id="atmosphere-color" value="#87ceeb">
-                        <label for="atmosphere-density">Atmosphere Density</label>
-                        <input type="range" id="atmosphere-density" min="0" max="100" value="50">
-                        <button id="add-moon-btn" style="width:100%; padding: 0.5rem; margin-top: 1rem;">Add Moon</button>
-                    </div>
-                </details>
-            </div>
-            <button id="finalize-btn">Finalize Planet & Add to Universe</button>
-        </aside>
-
-        <main class="viewport">
-            <div id="planet-container">
-                <div id="planet">
-                    <div id="planet-surface"></div>
-                    <div id="planet-atmosphere"></div>
-                </div>
-            </div>
-        </main>
+  <!-- Controls -->
+  <aside>
+    <div class="panel">
+      <h3>Add Body</h3>
+      <div class="row">
+        <button class="btn full" id="addSun">☀️ Add Sun</button>
+        <button class="btn secondary full" id="addPlanet">🪐 Add Planet</button>
+      </div>
+      <label>Name</label>
+      <input id="name" type="text" placeholder="Planet/Sun name"/>
+      <label>Color</label>
+      <input id="color" type="color" value="#69d0ff"/>
+      <div class="row">
+        <div style="flex:1">
+          <label>Size (km ×1000)</label>
+          <input id="size" type="number" min="2" max="200" step="1" value="24"/>
+        </div>
+        <div style="flex:1">
+          <label>Mass (×10¹⁸ kg)</label>
+          <input id="mass" type="number" min="1" max="5000" step="1" value="300"/>
+        </div>
+      </div>
+      <label>Type of Life</label>
+      <select id="life">
+        <option value="none">None</option>
+        <option value="microbial">Microbial</option>
+        <option value="plant">Plant</option>
+        <option value="animal">Animal</option>
+        <option value="intelligent">Intelligent</option>
+        <option value="mystery">Mystery ✨</option>
+      </select>
+      <div class="row" style="margin-top:8px">
+        <button class="btn ghost full" id="applySelected">Apply to Selected</button>
+      </div>
+      <p class="hint">Tip: drag bodies on the canvas. Hold <b>Shift</b> while dragging to “throw” with velocity.</p>
     </div>
-    
-    <script>
-        // --- DOM ELEMENTS ---
-        const planet = document.getElementById('planet');
-        const planetSurface = document.getElementById('planet-surface');
-        const planetAtmosphere = document.getElementById('planet-atmosphere');
-        const planetContainer = document.getElementById('planet-container');
 
-        const controls = {
-            name: document.getElementById('planet-name'),
-            size: document.getElementById('planet-size'),
-            landColor: document.getElementById('land-color'),
-            oceanColor: document.getElementById('ocean-color'),
-            atmosphereColor: document.getElementById('atmosphere-color'),
-            atmosphereDensity: document.getElementById('atmosphere-density'),
-            addMoonBtn: document.getElementById('add-moon-btn'),
-            finalizeBtn: document.getElementById('finalize-btn')
-        };
-        
-        let moons = [];
+    <div class="panel">
+      <h3>Satellites</h3>
+      <div class="row">
+        <button class="btn full" id="addMoon">🌙 Add Satellite to Selected</button>
+        <button class="btn secondary full" id="deleteSelected">🗑️ Delete Selected</button>
+      </div>
+      <p class="hint">Satellites orbit planets. Select a planet first.</p>
+    </div>
 
-        // --- UPDATE PLANET FUNCTION ---
-        function updatePlanet() {
-            // Size
-            const size = controls.size.value;
-            planet.style.width = `${size}px`;
-            planet.style.height = `${size}px`;
+    <div class="panel">
+      <h3>Simulation</h3>
+      <div class="toggle">
+        <button id="toggleSim" aria-pressed="true">▶️ Running</button>
+        <button id="toggleTrails" aria-pressed="true">🧭 Orbits</button>
+        <button id="toggleGravity" aria-pressed="true">🧲 Gravity Lines</button>
+        <button id="toggleLabels" aria-pressed="true">🏷️ Labels</button>
+        <button id="toggleSnap" aria-pressed="true">🛰️ Snap-to-Orbit</button>
+      </div>
+      <label>Time Scale</label>
+      <input id="timeScale" type="range" min="0.1" max="3" step="0.1" value="1"/>
+      <div class="row" style="margin-top:8px">
+        <button class="btn secondary full" id="centerView">🎯 Center View</button>
+        <button class="btn secondary full" id="clearAll">♻️ Clear All</button>
+      </div>
+    </div>
 
-            // Surface Colors
-            const land = controls.landColor.value;
-            const ocean = controls.oceanColor.value;
-            planetSurface.style.backgroundImage = `radial-gradient(circle at 20% 20%, ${land} 15%, transparent 15.5%), radial-gradient(circle at 75% 50%, ${land} 25%, transparent 25.5%), linear-gradient(90deg, ${ocean}, ${ocean})`;
+    <div class="panel">
+      <h3>Wallpaper</h3>
+      <div class="wall-grid" id="wallGrid">
+        <button class="wall" data-wall="bright" aria-selected="true"><img src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=600&auto=format&fit=crop" alt="Bright"/></button>
+        <button class="wall" data-wall="nebula"><img src="https://images.unsplash.com/photo-1447433819943-74a20887a81e?q=80&w=600&auto=format&fit=crop" alt="Nebula"/></button>
+        <button class="wall" data-wall="dark"><img src="https://images.unsplash.com/photo-1444703686981-a3abbc4d4fe3?q=80&w=600&auto=format&fit=crop" alt="Dark Space"/></button>
+      </div>
+      <p class="hint">Bright, Nebula, or Dark Space wallpapers.</p>
+    </div>
 
-            // Atmosphere
-            const atmosColor = controls.atmosphereColor.value;
-            const atmosDensity = controls.atmosphereDensity.value / 100; // 0 to 1
-            planetAtmosphere.style.boxShadow = `inset 0 0 80px 20px ${atmosColor}, inset -20px -20px 80px 0px rgba(0,0,0,0.5)`;
-            planetAtmosphere.style.opacity = atmosDensity;
-        }
+    <div class="panel">
+      <h3>Save / Share</h3>
+      <div class="row">
+        <button class="btn full" id="save">💾 Save</button>
+        <button class="btn secondary full" id="load">📂 Load</button>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <button class="btn full" id="exportPNG">🖼️ Export Poster</button>
+        <button class="btn secondary full" id="exportJSON">📄 Export JSON</button>
+      </div>
+      <input id="importFile" type="file" accept="application/json" style="display:none"/>
+      <div class="row" style="margin-top:8px">
+        <button class="btn ghost full" id="importJSON">⬆️ Import JSON</button>
+      </div>
+    </div>
+  </aside>
 
-        // --- ADDING & DRAGGING MOONS ---
-        controls.addMoonBtn.addEventListener('click', () => {
-            const moon = document.createElement('div');
-            moon.className = 'moon';
-            const angle = Math.random() * 2 * Math.PI;
-            const radius = (planet.offsetWidth / 2) + 50 + (Math.random() * 50);
-            moon.style.left = `${(planetContainer.offsetWidth / 2) + radius * Math.cos(angle) - 10}px`;
-            moon.style.top = `${(planetContainer.offsetHeight / 2) + radius * Math.sin(angle) - 10}px`;
-            
-            planetContainer.appendChild(moon);
-            makeDraggable(moon);
-            moons.push(moon);
-        });
+  <!-- Canvas -->
+  <div class="stage">
+    <canvas id="space"></canvas>
 
-        function makeDraggable(element) {
-            let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
-            element.onmousedown = dragMouseDown;
-            function dragMouseDown(e) {
-                e.preventDefault();
-                element.classList.add('dragging');
-                pos3 = e.clientX;
-                pos4 = e.clientY;
-                document.onmouseup = closeDragElement;
-                document.onmousemove = elementDrag;
-            }
-            function elementDrag(e) {
-                e.preventDefault();
-                pos1 = pos3 - e.clientX;
-                pos2 = pos4 - e.clientY;
-                pos3 = e.clientX;
-                pos4 = e.clientY;
-                element.style.top = (element.offsetTop - pos2) + "px";
-                element.style.left = (element.offsetLeft - pos1) + "px";
-            }
-            function closeDragElement() {
-                document.onmouseup = null;
-                document.onmousemove = null;
-                element.classList.remove('dragging');
-            }
-        }
+    <div class="topbar">
+      <div class="stack">
+        <div class="pill">Drag to move • Wheel to zoom • Shift+Drag = throw</div>
+      </div>
+      <div class="stack">
+        <button class="mini-btn" id="help">❔ Help</button>
+        <button class="mini-btn primary" id="randomSystem">✨ Generate System</button>
+      </div>
+    </div>
 
-        // --- FINALIZE & SAVE ---
-        controls.finalizeBtn.addEventListener('click', () => {
-            const moonPositions = moons.map(moon => ({ x: moon.style.left, y: moon.style.top }));
+    <div class="legend">
+      <div class="chip"><span class="dot" style="background:#ffd54a"></span> Sun (star)</div>
+      <div class="chip"><span class="dot" style="background:#7dd3fc"></span> Planet</div>
+      <div class="chip"><span class="dot" style="background:#c3bdfb"></span> Satellite</div>
+      <div class="chip danger">Keep planets near stars to feel gravity pull!</div>
+    </div>
+  </div>
+</div>
 
-            const planetData = {
-                name: controls.name.value,
-                size: controls.size.value,
-                colors: {
-                    land: controls.landColor.value,
-                    ocean: controls.oceanColor.value,
-                    atmosphere: controls.atmosphereColor.value
-                },
-                atmosphereDensity: controls.atmosphereDensity.value,
-                moons: moonPositions
-            };
-            
-            const newConstructKey = `completedConstruct_planet_${Date.now()}`;
-            localStorage.setItem(newConstructKey, JSON.stringify({type: 'planet', data: planetData}));
-            
-            alert(`${planetData.name} has been designed! Returning to Your Space hub...`);
-            window.location.href = '/your-space.html';
-        });
+<div class="toast" id="toast"></div>
 
+<script>
+/* -------------------------
+   Engine & Data Structures
+--------------------------*/
+const canvas = document.getElementById('space');
+const ctx = canvas.getContext('2d', { alpha:true });
+let W=innerWidth-320, H=innerHeight-60; // will be set later
+function resize(){ W = innerWidth-320; H = innerHeight-60; canvas.width=W*2; canvas.height=H*2; canvas.style.width=W+'px'; canvas.style.height=H+'px'; ctx.setTransform(2,0,0,2,0,0); }
+addEventListener('resize', resize); resize();
 
-        // --- EVENT LISTENERS ---
-        Object.values(controls).forEach(control => {
-            if (control.id !== 'add-moon-btn' && control.id !== 'finalize-btn' && control.id !== 'planet-name') {
-                control.addEventListener('input', updatePlanet);
-            }
-        });
+// World units
+const G = 0.0008;  // toy gravity constant
+let timeScale = 1; // slider-controlled
+let running = true;
+let showTrails = true, showGravity = true, showLabels = true, snapOrbit = true;
+let zoom = 1, pan = {x:0,y:0};
 
-        // Initial render
-        updatePlanet();
-    </script>
+const bodies = []; // all stars, planets, satellites
+let selectedId = null;
+const trails = new Map(); // id -> points[]
+
+const rand = (a,b)=> a + Math.random()*(b-a);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+
+function uuid(){ return Math.random().toString(36).slice(2,10); }
+
+function addBody({type='planet', name='Planet', color='#7dd3fc', r=16, mass=300, x=0, y=0, vx=0, vy=0, life='none', parent=null}){
+  const id = uuid();
+  bodies.push({id,type,name,color,r, mass, x,y,vx,vy, life, parent});
+  trails.set(id, []);
+  return id;
+}
+
+function bodyById(id){ return bodies.find(b=>b.id===id); }
+function suns(){ return bodies.filter(b=>b.type==='sun'); }
+
+function drawDot(x,y,r,c){ ctx.fillStyle=c; ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill(); }
+function drawRing(x,y,r,c){ ctx.strokeStyle=c; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.stroke(); }
+
+function worldToScreen(p){ return { x:(p.x+pan.x)*zoom + W/2, y:(p.y+pan.y)*zoom + H/2 }; }
+function screenToWorld(p){ return { x:(p.x - W/2)/zoom - pan.x, y:(p.y - H/2)/zoom - pan.y }; }
+
+/* -------------------------
+   UI Elements
+--------------------------*/
+const el = id=>document.getElementById(id);
+const nameEl=el('name'), colorEl=el('color'), sizeEl=el('size'), massEl=el('mass'), lifeEl=el('life');
+
+function toast(msg){
+  const t = el('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 1600);
+}
+
+/* -------------------------
+   Physics & Simulation
+--------------------------*/
+function step(dt){
+  // satellites inherit gravity from parent + stars
+  for(const b of bodies){
+    if(b.type==='sun') continue;
+
+    // gravity from all suns
+    for(const s of bodies){
+      if(s.type!=='sun') continue;
+      const dx = s.x - b.x, dy = s.y - b.y;
+      const d2 = dx*dx+dy*dy;
+      const dist = Math.sqrt(d2)+1e-6;
+      const f = G * s.mass / d2; // simplified: star mass only
+      const ax = f * dx/dist;
+      const ay = f * dy/dist;
+      b.vx += ax * dt * timeScale;
+      b.vy += ay * dt * timeScale;
+
+      // snap-to-orbit helper (visual)
+      if(snapOrbit && dist < s.r*6 + b.r){
+        // give a tangential nudge to approximate orbit
+        const tangent = {x: -dy/dist, y: dx/dist};
+        const desired = Math.sqrt(G*s.mass/dist);
+        b.vx = tangent.x * desired;
+        b.vy = tangent.y * desired;
+      }
+
+      // gravity lines indicator
+      if(showGravity && dist < s.r*14){
+        const p1 = worldToScreen({x:b.x,y:b.y});
+        const p2 = worldToScreen({x: b.x + (dx/dist)*40, y: b.y + (dy/dist)*40});
+        ctx.strokeStyle='rgba(255,215,0,.45)';
+        ctx.lineWidth=1.5;
+        ctx.beginPath(); ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y); ctx.stroke();
+      }
+    }
+
+    // simple parent link for satellites (pull towards parent even without star)
+    if(b.parent){
+      const p = bodyById(b.parent);
+      if(p){
+        const dx = p.x - b.x, dy = p.y - b.y; const dist = Math.sqrt(dx*dx+dy*dy)+1e-6;
+        const ax = (G * p.mass / (dist*dist)) * (dx/dist);
+        const ay = (G * p.mass / (dist*dist)) * (dy/dist);
+        b.vx += ax * dt * timeScale; b.vy += ay * dt * timeScale;
+      }
+    }
+  }
+
+  // integrate & trails
+  for(const b of bodies){
+    b.x += b.vx * dt * timeScale;
+    b.y += b.vy * dt * timeScale;
+
+    if(showTrails){
+      const track = trails.get(b.id);
+      const p = worldToScreen(b);
+      track.push([p.x,p.y]);
+      if(track.length>200) track.shift();
+    }else{
+      trails.set(b.id, []);
+    }
+  }
+}
+
+/* -------------------------
+   Rendering
+--------------------------*/
+function draw(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  // trails
+  if(showTrails){
+    ctx.lineWidth=1;
+    for(const b of bodies){
+      const t = trails.get(b.id)||[];
+      ctx.strokeStyle = b.type==='sun' ? 'rgba(255,215,0,.35)' :
+                        b.type==='sat' ? 'rgba(195,189,251,.35)' : 'rgba(125,211,252,.35)';
+      ctx.beginPath();
+      t.forEach((pt,i)=>{ if(i===0) ctx.moveTo(pt[0],pt[1]); else ctx.lineTo(pt[0],pt[1]); });
+      ctx.stroke();
+    }
+  }
+
+  // bodies
+  for(const b of bodies){
+    const p = worldToScreen(b);
+    const radius = clamp(b.r*zoom, 2, 120);
+
+    // glow for suns
+    if(b.type==='sun'){
+      const grad = ctx.createRadialGradient(p.x,p.y, radius*0.4, p.x,p.y, radius*2.4);
+      grad.addColorStop(0, b.color);
+      grad.addColorStop(1, 'rgba(255,215,0,0)');
+      ctx.fillStyle=grad; ctx.beginPath(); ctx.arc(p.x,p.y,radius*2,0,Math.PI*2); ctx.fill();
+    }
+
+    drawDot(p.x,p.y,radius, b.color);
+
+    // selection ring
+    if(b.id===selectedId){ drawRing(p.x,p.y,radius+4,'rgba(255,255,255,.85)'); }
+
+    // label
+    if(showLabels){
+      ctx.fillStyle='rgba(240,245,255,.95)';
+      ctx.font='12px system-ui, sans-serif';
+      const lifeIcon = b.life==='none'?'': b.life==='microbial'?'🦠': b.life==='plant'?'🌿': b.life==='animal'?'🐾': b.life==='intelligent'?'👽':'✨';
+      const t = `${b.name || (b.type==='sun'?'Star':'Body')} ${lifeIcon}`;
+      ctx.fillText(t, p.x+radius+6, p.y-6);
+    }
+  }
+}
+
+/* -------------------------
+   Interaction (drag/throw)
+--------------------------*/
+let dragging = null, dragOffset = {x:0,y:0}, dragStartWorld=null, throwMode=false;
+
+canvas.addEventListener('mousedown', (e)=>{
+  const m = screenToWorld({x:e.offsetX, y:e.offsetY});
+  // hit test closest body
+  let hit=null, mind=1e9;
+  for(const b of bodies){
+    const d = Math.hypot(b.x-m.x, b.y-m.y);
+    if(d < b.r*1.2 && d < mind){ mind=d; hit=b;}
+  }
+  if(hit){
+    selectedId = hit.id; updateFormFromSelected();
+    dragging = hit; dragOffset.x = hit.x - m.x; dragOffset.y = hit.y - m.y;
+    dragStartWorld = {x:hit.x,y:hit.y};
+    throwMode = e.shiftKey; // enable throw
+  }else{
+    selectedId = null;
+  }
+});
+
+canvas.addEventListener('mousemove', (e)=>{
+  if(!dragging) return;
+  const m = screenToWorld({x:e.offsetX, y:e.offsetY});
+  dragging.x = m.x + dragOffset.x;
+  dragging.y = m.y + dragOffset.y;
+});
+
+addEventListener('mouseup', (e)=>{
+  if(!dragging) return;
+  if(throwMode && dragStartWorld){
+    // simple throw: velocity from drag delta
+    dragging.vx = (dragging.x - dragStartWorld.x) * 0.03;
+    dragging.vy = (dragging.y - dragStartWorld.y) * 0.03;
+  }
+  dragging = null; dragStartWorld=null;
+});
+
+canvas.addEventListener('wheel', (e)=>{
+  const prev = zoom;
+  zoom = clamp(zoom * (e.deltaY>0 ? 0.92 : 1.08), 0.3, 2.8);
+  // zoom to mouse
+  const mouse = {x:e.offsetX, y:e.offsetY};
+  const before = screenToWorld(mouse);
+  const after = screenToWorld(mouse);
+  pan.x += (before.x - after.x);
+  pan.y += (before.y - after.y);
+});
+
+/* -------------------------
+   Controls & Features
+--------------------------*/
+function updateFormFromSelected(){
+  const b = bodyById(selectedId);
+  if(!b) return;
+  nameEl.value = b.name || '';
+  colorEl.value = b.color || '#69d0ff';
+  sizeEl.value = Math.round(b.r);
+  massEl.value = Math.round(b.mass);
+  lifeEl.value = b.life || 'none';
+}
+el('applySelected').onclick = ()=>{
+  const b = bodyById(selectedId); if(!b) return;
+  b.name = nameEl.value.trim() || b.name;
+  b.color = colorEl.value;
+  b.r = clamp(parseFloat(sizeEl.value)||b.r, 2, 300);
+  b.mass = clamp(parseFloat(massEl.value)||b.mass, 1, 10000);
+  b.life = lifeEl.value;
+  toast('Applied to selected body.');
+};
+
+el('addSun').onclick = ()=>{
+  const id = addBody({type:'sun', name:nameEl.value||'Sun', color:'#ffd54a', r: clamp(parseFloat(sizeEl.value)||40, 20, 160),
+                      mass: clamp(parseFloat(massEl.value)||4000, 500, 10000),
+                      x: rand(-200,200), y: rand(-80,80), vx:0,vy:0, life:'none'});
+  selectedId = id; updateFormFromSelected();
+};
+
+el('addPlanet').onclick = ()=>{
+  const id = addBody({type:'planet', name:nameEl.value||'Planet', color: colorEl.value,
+                      r: clamp(parseFloat(sizeEl.value)||16, 6, 80),
+                      mass: clamp(parseFloat(massEl.value)||300, 50, 2000),
+                      x: rand(-260,260), y: rand(-160,160),
+                      vx: rand(-0.6,0.6), vy: rand(-0.6,0.6),
+                      life: lifeEl.value});
+  selectedId = id; updateFormFromSelected();
+};
+
+el('addMoon').onclick = ()=>{
+  const p = bodyById(selectedId);
+  if(!p || p.type!=='planet'){ toast('Select a planet first.'); return; }
+  const id = addBody({type:'sat', name:`${p.name||'Planet'} Moon`, color:'#c3bdfb',
+                      r: clamp(p.r * 0.35, 3, 24), mass: clamp(p.mass*0.1, 10, 400),
+                      x: p.x + p.r*2 + rand(10,30), y: p.y + rand(-10,10),
+                      vx: p.vx, vy: p.vy + 0.8, parent: p.id, life:'none'});
+  selectedId = id; updateFormFromSelected();
+};
+
+el('deleteSelected').onclick = ()=>{
+  if(!selectedId) return;
+  const i = bodies.findIndex(b=>b.id===selectedId);
+  if(i>-1){ bodies.splice(i,1); trails.delete(selectedId); selectedId=null; toast('Deleted.'); }
+};
+
+el('toggleSim').onclick = (e)=>{ running = !running; e.target.setAttribute('aria-pressed', String(running)); e.target.textContent = running?'▶️ Running':'⏸️ Paused'; };
+el('toggleTrails').onclick = (e)=>{ showTrails = !showTrails; e.target.setAttribute('aria-pressed', String(showTrails)); };
+el('toggleGravity').onclick = (e)=>{ showGravity = !showGravity; e.target.setAttribute('aria-pressed', String(showGravity)); };
+el('toggleLabels').onclick = (e)=>{ showLabels = !showLabels; e.target.setAttribute('aria-pressed', String(showLabels)); };
+el('toggleSnap').onclick = (e)=>{ snapOrbit = !snapOrbit; e.target.setAttribute('aria-pressed', String(snapOrbit)); };
+
+el('timeScale').oninput = (e)=>{ timeScale = parseFloat(e.target.value); };
+
+el('centerView').onclick = ()=>{ pan.x=0; pan.y=0; zoom=1; };
+el('clearAll').onclick = ()=>{ bodies.splice(0,bodies.length); trails.clear(); selectedId=null; toast('Cleared.'); };
+
+function setWallpaper(kind){
+  const walls = {
+    bright: "url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2400&auto=format&fit=crop')",
+    nebula: "url('https://images.unsplash.com/photo-1447433819943-74a20887a81e?q=80&w=2400&auto=format&fit=crop')",
+    dark:   "url('https://images.unsplash.com/photo-1444703686981-a3abbc4d4fe3?q=80&w=2400&auto=format&fit=crop')"
+  };
+  document.body.style.backgroundImage = walls[kind] + ", radial-gradient(900px 600px at 120% -20%, rgba(255,213,74,.06), transparent 45%)";
+  localStorage.setItem('space:wall', kind);
+}
+document.querySelectorAll('#wallGrid .wall').forEach(btn=>{
+  btn.onclick=()=>{
+    document.querySelectorAll('#wallGrid .wall').forEach(b=>b.setAttribute('aria-selected','false'));
+    btn.setAttribute('aria-selected','true');
+    setWallpaper(btn.dataset.wall);
+  }
+});
+// restore wallpaper
+{
+  const w = localStorage.getItem('space:wall') || 'bright';
+  const target = document.querySelector(`.wall[data-wall="${w}"]`); if(target){ target.click(); }
+}
+
+/* -------------------------
+   Save / Load / Export
+--------------------------*/
+function serialize(){
+  return JSON.stringify({ version:1, zoom, pan, bodies }, null, 2);
+}
+function deserialize(json){
+  try{
+    const d = JSON.parse(json);
+    if(!d || !Array.isArray(d.bodies)) throw new Error('Invalid file');
+    bodies.splice(0,bodies.length, ...d.bodies);
+    trails.clear(); bodies.forEach(b=>trails.set(b.id, []));
+    zoom = d.zoom??1; pan = d.pan??{x:0,y:0}; selectedId=null;
+  }catch(e){ toast('Import failed: '+e.message); }
+}
+el('save').onclick = ()=>{ localStorage.setItem('space:save', serialize()); toast('Saved to this browser.'); };
+el('load').onclick = ()=>{ const s = localStorage.getItem('space:save'); if(s) deserialize(s); else toast('No save found.'); };
+el('exportJSON').onclick = ()=>{
+  const blob = new Blob([serialize()], {type:'application/json'});
+  const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='your-space.json'; a.click();
+};
+el('importJSON').onclick = ()=> el('importFile').click();
+el('importFile').addEventListener('change', (e)=>{
+  const f = e.target.files[0]; if(!f) return;
+  const reader = new FileReader(); reader.onload = ()=>{ deserialize(reader.result); toast('Imported.'); };
+  reader.readAsText(f);
+});
+el('exportPNG').onclick = ()=>{
+  // temporarily render at higher DPI
+  const off = document.createElement('canvas'); off.width=W*3; off.height=H*3;
+  const ox = off.getContext('2d'); ox.scale(3,3);
+  // simple render copy
+  const back = ctx.getImageData(0,0,canvas.width,canvas.height);
+  ox.drawImage(canvas,0,0,W,H);
+  const a = document.createElement('a'); a.href = off.toDataURL('image/png'); a.download = 'your-space.png'; a.click();
+  off.remove();
+};
+
+el('help').onclick = ()=> alert(
+`How to Play:
+• Click “Add Sun” or “Add Planet”.
+• Drag bodies to move them.
+• Hold Shift while dragging to throw (add velocity).
+• Add Satellites to orbit planets.
+• Keep planets near stars to see gravity pull & snap into orbit.
+• Use the toggles for trails, gravity lines, labels, and snap-to-orbit.
+• Zoom with mouse wheel, pan with Center View if needed.
+• Save/Load locally, or Export JSON/PNG to share!`
+);
+
+el('randomSystem').onclick = ()=>{
+  bodies.splice(0,bodies.length); trails.clear(); selectedId=null;
+  const starId = addBody({type:'sun', name:'Solara', color:'#ffd54a', r:60, mass:6000, x:0,y:0});
+  for(let i=0;i<5;i++){
+    const dist = 120 + i*80 + rand(-10,10);
+    const angle = rand(0,Math.PI*2);
+    const x = Math.cos(angle)*dist, y = Math.sin(angle)*dist;
+    const v = Math.sqrt(G*6000/dist);
+    const dir = {x: -Math.sin(angle), y: Math.cos(angle)};
+    const pid = addBody({type:'planet', name:'P-'+(i+1), color: `hsl(${rand(180,260)},85%,70%)`,
+      r: rand(10,26), mass: rand(200,900), x, y, vx: dir.x*v, vy: dir.y*v, life: (Math.random()<.3?'plant':'none')});
+    if(Math.random()<.6){
+      const mid = addBody({type:'sat', name:'M-'+(i+1), color:'#c3bdfb', r: rand(4,10), mass: rand(40,150),
+        x: x + rand(26,36), y: y + rand(-10,10), vx: dir.x*v, vy: dir.y*v+rand(.4,1), parent: pid});
+    }
+  }
+  toast('Random system generated!');
+};
+
+/* -------------------------
+   Main Loop
+--------------------------*/
+let last=performance.now();
+function loop(t){
+  const dt = clamp((t-last)/16.66, 0, 2); last=t;
+  if(running) step(dt);
+  draw();
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+// Initial demo bodies
+(function seed(){
+  const s = addBody({type:'sun', name:'Aurion', color:'#ffd54a', r:56, mass:5500, x:0,y:0});
+  const p1 = addBody({type:'planet', name:'Ripple', color:'#7dd3fc', r:18, mass:500, x:180,y:0, vy:1.2, life:'plant'});
+  addBody({type:'sat', name:'Ripple Moon', color:'#c3bdfb', r:7, mass:60, x:210,y:10, vy:2.0, parent: p1});
+  const p2 = addBody({type:'planet', name:'Gleam', color:'#ff9ecb', r:22, mass:800, x:-260,y:0, vy:-1.0, life:'animal'});
+})();
+</script>
 </body>
 </html>

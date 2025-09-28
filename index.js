@@ -54,37 +54,29 @@ app.get("/health", (_req, res) => res.json({ ok: true }));
 // - plus: starter + PHYSICS (learn physics) + CREATE_PLANET
 // - pro: plus + ADVANCED_CHAT, CREATE_ROCKET, CREATE_SAT, CREATE_UNIVERSE
 // - ultra: everything (all CAPS)
+// Capabilities
 const CAPS = {
   CHAT: "chat",
   SEARCH_INFO: "search-info",
-  LEARN_INFO: "learn-info", // kept for completeness; only enabled on ULTRA
-  PHYSICS: "physics",
+  LEARN_PHYSICS: "learn-physics",
   CREATE_PLANET: "create-planet",
+  ADVANCED_CHAT: "advanced-chat",
   CREATE_ROCKET: "create-rocket",
   CREATE_SAT: "create-satellite",
   CREATE_UNIVERSE: "create-universe",
-  ADVANCED_CHAT: "advanced-chat",
-  HOMEWORK: "homework",
-  LESSON_SEARCH: "lesson-search",
+  EXAMS: "exams"
 };
 
-const ALL_CAPS = new Set(Object.values(CAPS));
-
+// Plans
 const PLAN_CAPS = {
   free: new Set([CAPS.CHAT]),
   starter: new Set([CAPS.CHAT, CAPS.SEARCH_INFO]),
-  plus: new Set([CAPS.CHAT, CAPS.SEARCH_INFO, CAPS.PHYSICS, CAPS.CREATE_PLANET]),
+  plus: new Set([CAPS.CHAT, CAPS.SEARCH_INFO, CAPS.LEARN_PHYSICS, CAPS.CREATE_PLANET]),
   pro: new Set([
-    CAPS.CHAT,
-    CAPS.SEARCH_INFO,
-    CAPS.PHYSICS,
-    CAPS.CREATE_PLANET,
-    CAPS.ADVANCED_CHAT,
-    CAPS.CREATE_ROCKET,
-    CAPS.CREATE_SAT,
-    CAPS.CREATE_UNIVERSE,
+    CAPS.CHAT, CAPS.SEARCH_INFO, CAPS.LEARN_PHYSICS, CAPS.CREATE_PLANET,
+    CAPS.ADVANCED_CHAT, CAPS.CREATE_ROCKET, CAPS.CREATE_SAT, CAPS.CREATE_UNIVERSE, CAPS.EXAMS
   ]),
-  ultra: ALL_CAPS,
+  ultra: new Set(Object.values(CAPS)) // unlocks everything
 };
 
 // ---------- Helpers ----------

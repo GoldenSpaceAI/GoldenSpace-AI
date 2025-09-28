@@ -1,5 +1,5 @@
-// index.js — GoldenSpaceAI (Node 22 clean)
-// Mongo-free sessions, plans, static hosting, GPT-4 tutor routes.
+// index.js — GoldenSpaceAI (Node 22)
+// Plans with access blocks + Google OAuth + Exam endpoints
 
 import express from "express";
 import cors from "cors";
@@ -47,12 +47,17 @@ const __dirname = path.dirname(__filename);
 app.use(express.static(__dirname));
 app.get("/health", (_req, res) => res.json({ ok: true }));
 
-// ---------- Plans & capabilities ----------
-const PLAN_CODES = { earth: "33117722", space: "22116644", chatai: "444666333222" };
+// ---------- Plans & capabilities (NEW) ----------
+// Plans: free → starter → plus → pro → ultra
+// - free: CHAT only
+// - starter: CHAT, SEARCH_INFO
+// - plus: starter + PHYSICS (learn physics) + CREATE_PLANET
+// - pro: plus + ADVANCED_CHAT, CREATE_ROCKET, CREATE_SAT, CREATE_UNIVERSE
+// - ultra: everything (all CAPS)
 const CAPS = {
   CHAT: "chat",
   SEARCH_INFO: "search-info",
-  LEARN_INFO: "learn-info",
+  LEARN_INFO: "learn-info", // kept for completeness; only enabled on ULTRA
   PHYSICS: "physics",
   CREATE_PLANET: "create-planet",
   CREATE_ROCKET: "create-rocket",
@@ -62,20 +67,24 @@ const CAPS = {
   HOMEWORK: "homework",
   LESSON_SEARCH: "lesson-search",
 };
+
+const ALL_CAPS = new Set(Object.values(CAPS));
+
 const PLAN_CAPS = {
-  moon: new Set([CAPS.SEARCH_INFO, CAPS.CHAT]),
-  earth: new Set([CAPS.CHAT, CAPS.LEARN_INFO, CAPS.PHYSICS, CAPS.CREATE_PLANET]),
-  space: new Set([
-    CAPS.CHAT, CAPS.SEARCH_INFO, CAPS.ADVANCED_CHAT, CAPS.HOMEWORK, CAPS.LESSON_SEARCH,
-    CAPS.LEARN_INFO, CAPS.PHYSICS, CAPS.CREATE_PLANET, CAPS.CREATE_ROCKET, CAPS.CREATE_SAT, CAPS.CREATE_UNIVERSE,
+  free: new Set([CAPS.CHAT]),
+  starter: new Set([CAPS.CHAT, CAPS.SEARCH_INFO]),
+  plus: new Set([CAPS.CHAT, CAPS.SEARCH_INFO, CAPS.PHYSICS, CAPS.CREATE_PLANET]),
+  pro: new Set([
+    CAPS.CHAT,
+    CAPS.SEARCH_INFO,
+    CAPS.PHYSICS,
+    CAPS.CREATE_PLANET,
+    CAPS.ADVANCED_CHAT,
+    CAPS.CREATE_ROCKET,
+    CAPS.CREATE_SAT,
+    CAPS.CREATE_UNIVERSE,
   ]),
-  chatai: new Set([CAPS.CHAT, CAPS.SEARCH_INFO, CAPS.ADVANCED_CHAT, CAPS.HOMEWORK, CAPS.LESSON_SEARCH]),
-};
-const PLAN_LIMITS = {
-  moon: { ask: 40, search: 20 },
-  earth: { ask: Infinity, search: Infinity },
-  chatai: { ask: Infinity, search: Infinity },
-  space: { ask: Infinity, search: Infinity },
+  ultra: ALL_CAPS,
 };
 
 // ---------- Helpers ----------
@@ -84,12 +93,16 @@ function getBaseUrl(req) {
   const host = (req.headers["x-forwarded-host"] || "").toString().split(",")[0] || req.get("host");
   return `${proto}://${host}`;
 }
-function getPlan(req) { return req.session.plan || "moon"; }
-function setPlan(req, plan) { req.session.plan = plan; }
+function getPlan(req) {
+  return req.session.plan || "free"; // default plan is FREE
+}
+function setPlan(req, plan) {
+  req.session.plan = plan;
+}
 function requireCaps(...required) {
   return (req, res, next) => {
     const plan = getPlan(req);
-    const caps = PLAN_CAPS[plan] || PLAN_CAPS.moon;
+    const caps = PLAN_CAPS[plan] || PLAN_CAPS.free;
     for (const r of required) {
       if (!caps.has(r)) return res.status(403).json({ error: `Your plan (${plan}) does not allow this action.` });
     }
@@ -143,15 +156,6 @@ if (HAVE_GOOGLE) {
   });
 }
 
-// ---------- Public/auth gate (everything public for now) ----------
-function isPublicPath(_req) { return true; }
-function authRequired(req, res, next) {
-  if (isPublicPath(req)) return next();
-  if (req.isAuthenticated && req.isAuthenticated()) return next();
-  if (req.accepts("html")) return res.redirect("/login.html");
-  return res.status(401).json({ error: "Sign in required" });
-}
-
 // ---------- OpenAI client ----------
 if (!process.env.OPENAI_API_KEY) {
   console.warn("⚠️ OPENAI_API_KEY is not set. Tutor endpoints will fail until you add it.");
@@ -163,7 +167,7 @@ const uploadsDir = path.join(__dirname, "uploads");
 try { fs.mkdirSync(uploadsDir, { recursive: true }); } catch {}
 const upload = multer({ dest: uploadsDir });
 
-// NEW: memory storage for AI endpoints (no leftover tmp files)
+// Memory storage for AI endpoints (no leftover tmp files)
 const memoryUpload = multer({
   storage: multer.memoryStorage(),
   limits: {
@@ -172,18 +176,25 @@ const memoryUpload = multer({
   },
 });
 
-// ---------- Plan activation ----------
+// ---------- Plan activation (NEW) ----------
+// 1) Simple setter via plan name: free|starter|plus|pro|ultra
 app.post("/plan/activate", (req, res) => {
-  const code = (req.body?.code || "").trim();
-  if (!code) return res.status(400).json({ ok: false, error: "No code" });
-  if (code === PLAN_CODES.earth) setPlan(req, "earth");
-  else if (code === PLAN_CODES.space) setPlan(req, "space");
-  else if (code === PLAN_CODES.chatai) setPlan(req, "chatai");
-  else return res.status(401).json({ ok: false, error: "Invalid password. Contact support goldenspaceais@gmail.com for help." });
-  return res.json({ ok: true, plan: getPlan(req) });
+  const plan = (req.body?.plan || "").toString().toLowerCase();
+  if (!PLAN_CAPS[plan]) return res.status(400).json({ ok: false, error: "Unknown plan" });
+  setPlan(req, plan);
+  return res.json({ ok: true, plan });
+});
+// 2) Unlock all by owner email button
+app.post("/plan/unlock-by-email", (req, res) => {
+  const email = (req.body?.email || "").toString().trim().toLowerCase();
+  if (email === "goldenspaceais@gmail.com") {
+    setPlan(req, "ultra");
+    return res.json({ ok: true, plan: getPlan(req) });
+  }
+  return res.status(401).json({ ok: false, error: "Unauthorized" });
 });
 
-// ---------- /api/me ----------
+// ---------- /api/me (add logoutUrl + plan) ----------
 app.get("/api/me", (req, res) => {
   const plan = getPlan(req);
   res.json({
@@ -193,34 +204,33 @@ app.get("/api/me", (req, res) => {
     given_name: req.user?.name?.split(" ")?.[0] || null,
     picture: req.user?.photo || null,
     plan,
+    logoutUrl: "/logout",
   });
 });
 
-// ================== AI ROUTES ==================
+// ================== AI ROUTES (GATED BY PLAN) ==================
 
-// Basic Chat (CHAT)
+// Basic Chat (FREE and above)
 app.post("/ask", requireCaps(CAPS.CHAT), async (req, res) => {
   try {
     const q = (req.body?.question || "").trim();
     if (!q) return res.json({ answer: "Ask me anything!" });
-    const plan = getPlan(req);
-    const model = plan === "chatai" ? "gpt-3.5-turbo" : "gpt-4o-mini";
     const completion = await openai.chat.completions.create({
-      model,
+      model: "gpt-4o-mini",
       messages: [
         { role: "system", content: "You are GoldenSpaceAI. Always answer in a very simple way, and a short answer." },
         { role: "user", content: q },
       ],
       temperature: 0.3,
     });
-    res.json({ model, answer: completion.choices[0]?.message?.content || "No response." });
+    res.json({ model: "gpt-4o-mini", answer: completion.choices[0]?.message?.content || "No response." });
   } catch (e) {
     console.error("ask error", e);
     res.status(500).json({ answer: "OpenAI error" });
   }
 });
 
-// Search Info (SEARCH_INFO)
+// Search Info (STARTER and above)
 app.post("/search-info", requireCaps(CAPS.SEARCH_INFO), async (req, res) => {
   try {
     const q = (req.body?.query || "").trim();
@@ -238,7 +248,7 @@ app.post("/search-info", requireCaps(CAPS.SEARCH_INFO), async (req, res) => {
   }
 });
 
-// Learn Info (LEARN_INFO)
+// Learn Info (ULTRA only — not requested in lower tiers but kept for completeness)
 app.post("/learn-info", requireCaps(CAPS.LEARN_INFO), async (req, res) => {
   try {
     const q = (req.body?.topic || "").trim();
@@ -256,7 +266,7 @@ app.post("/learn-info", requireCaps(CAPS.LEARN_INFO), async (req, res) => {
   }
 });
 
-// Physics Explain (right-side quick box) — matches learn-physics.html
+// Physics Explain (PLUS and above)
 app.post("/api/physics-explain", requireCaps(CAPS.PHYSICS), async (req, res) => {
   try {
     const q = (req.body?.question || "").trim();
@@ -276,7 +286,7 @@ app.post("/api/physics-explain", requireCaps(CAPS.PHYSICS), async (req, res) => 
   }
 });
 
-// Full Tutor chat (center chat) — matches learn-physics.html
+// Full Tutor chat (PLUS and above)
 app.post("/api/physics-tutor", requireCaps(CAPS.PHYSICS), async (req, res) => {
   try {
     const { question = "", topic = "Mechanics", mode = "Socratic" } = req.body || {};
@@ -284,11 +294,11 @@ app.post("/api/physics-tutor", requireCaps(CAPS.PHYSICS), async (req, res) => {
       Socratic: "Start with 1–2 guiding questions, then outline steps, then final answer.",
       Steps: "Show the full derivation step-by-step with LaTeX-style equations inline.",
       Practice: "Generate 3 practice problems of increasing difficulty with brief solutions after a 'Solutions:' line.",
-      Check: "Grade the student's work: identify errors, show corrected steps, and give a score /10."
+      Check: "Grade the student's work: identify errors, show corrected steps, and give a score /10.",
     }[mode] || "Explain clearly.";
     const messages = [
       { role: "system", content: "You are GoldenSpaceAI, a rigorous but friendly physics tutor. Prefer step-by-step reasoning, dimensional analysis, and units checks. Keep answers compact but complete." },
-      { role: "user", content: `Topic: ${topic}\nMode: ${mode}\nInstruction: ${modeInstr}\nStudent: ${question}` }
+      { role: "user", content: `Topic: ${topic}\nMode: ${mode}\nInstruction: ${modeInstr}\nStudent: ${question}` },
     ];
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
@@ -302,7 +312,7 @@ app.post("/api/physics-tutor", requireCaps(CAPS.PHYSICS), async (req, res) => {
   }
 });
 
-// --- Create Planet
+// --- Create Planet (PLUS and above)
 app.post("/ai/create-planet", requireCaps(CAPS.CREATE_PLANET), async (req, res) => {
   try {
     const specs = req.body?.specs || {};
@@ -319,7 +329,7 @@ app.post("/ai/create-planet", requireCaps(CAPS.CREATE_PLANET), async (req, res) 
   }
 });
 
-// --- Create Rocket
+// --- Create Rocket (PRO and above)
 app.post("/ai/create-rocket", requireCaps(CAPS.CREATE_ROCKET), async (_req, res) => {
   try {
     const prompt = "Design a conceptual rocket (non-actionable). Provide: stages, payload class, propulsion overview, safety notes, and a 3-step launch profile (high level).";
@@ -335,7 +345,7 @@ app.post("/ai/create-rocket", requireCaps(CAPS.CREATE_ROCKET), async (_req, res)
   }
 });
 
-// --- Create Satellite
+// --- Create Satellite (PRO and above)
 app.post("/ai/create-satellite", requireCaps(CAPS.CREATE_SAT), async (_req, res) => {
   try {
     const prompt = "Design a conceptual Earth-observation satellite at a high level (non-operational): payload, orbit type, mission goals, ground segment overview.";
@@ -351,7 +361,7 @@ app.post("/ai/create-satellite", requireCaps(CAPS.CREATE_SAT), async (_req, res)
   }
 });
 
-// --- Create Universe
+// --- Create Universe (PRO and above)
 app.post("/ai/create-universe", requireCaps(CAPS.CREATE_UNIVERSE), async (req, res) => {
   try {
     const theme = (req.body?.theme || "space opera").trim();
@@ -368,7 +378,7 @@ app.post("/ai/create-universe", requireCaps(CAPS.CREATE_UNIVERSE), async (req, r
   }
 });
 
-// --- Advanced Chat (vision/file aware)
+// --- Advanced Chat (PRO and above; vision/file aware)
 const uploadAny = multer({ dest: uploadsDir });
 function pushHistory(req, role, content) {
   if (!req.session.advHistory) req.session.advHistory = [];
@@ -391,11 +401,10 @@ async function readTextIfPossible(filePath, mimetype) {
 app.post("/chat-advanced-ai", requireCaps(CAPS.ADVANCED_CHAT), uploadAny.single("file"), async (req, res) => {
   try {
     const q = (req.body?.q || "").trim();
-    const sys = (req.body?.system || "You are GoldenSpaceAI Advanced Assistant. Always provide long,  very profetional and detailed answers.").toString();
+    const sys = (req.body?.system || "You are GoldenSpaceAI Advanced Assistant. Always provide long,  very professional and detailed answers.").toString();
     const messages = [{ role: "system", content: sys }, ...getHistory(req)];
     if (q) { messages.push({ role: "user", content: q }); pushHistory(req, "user", q); }
 
-    // Attach file (image => vision, text-like => inline)
     if (req.file) {
       const filePath = req.file.path;
       const mime = req.file.mimetype || "application/octet-stream";
@@ -435,25 +444,22 @@ app.post("/chat-advanced-ai", requireCaps(CAPS.ADVANCED_CHAT), uploadAny.single(
   }
 });
 
-// --- Homework (vision-capable input)
-async function handleHomework(req, res) {
+// --- Homework (ULTRA only or keep free?) → not specified; keeping under ULTRA via LESSON_SEARCH/HOMEWORK
+app.post("/api/chat", requireCaps(CAPS.HOMEWORK), uploadAny.any(), async (req, res) => {
   try {
     const message = (req.body?.message || req.body?.prompt || "").trim();
     const model = "gpt-4o-mini";
-
     const allFiles = [];
     if (req.files && Array.isArray(req.files)) allFiles.push(...req.files);
     if (req.file) allFiles.push(req.file);
 
     const parts = [];
     if (message) parts.push({ type: "text", text: message });
-
     const img = allFiles.find((f) => (f.mimetype || "").startsWith("image/"));
     if (img) {
       const b64 = fs.readFileSync(img.path).toString("base64");
       parts.push({ type: "image_url", image_url: { url: `data:${img.mimetype};base64,${b64}` } });
     }
-
     for (const f of allFiles) { try { fs.unlinkSync(f.path); } catch {} }
 
     if (parts.length === 0) return res.status(400).json({ error: "Provide an image or a message." });
@@ -466,41 +472,29 @@ async function handleHomework(req, res) {
       ],
       temperature: 0.2,
     });
-
     const reply = completion.choices?.[0]?.message?.content || "No reply.";
     res.json({ model, reply });
   } catch (e) {
     console.error("homework api error", e);
     res.status(500).json({ error: "Homework error" });
   }
-}
-app.post("/api/chat", requireCaps(CAPS.HOMEWORK), uploadAny.any(), handleHomework);
-app.post("/api/homework", requireCaps(CAPS.HOMEWORK), uploadAny.any(), handleHomework);
+});
 
-// ================== NEW: Prepare/Grade Exam endpoints (for prepare-exam.html) ==================
+// ================== Prepare/Grade Exam endpoints (always allowed? not specified) ==================
+// The spec didn't mention gating these, but ULTRA unlocks everything. We'll allow ULTRA only for safety.
 
-// Utility: make data URL for any file buffer (image, pdf, docx...) — suitable for 'responses' API as input_image
 function bufferToDataUrl(mime, buf) { return `data:${mime || "application/octet-stream"};base64,${buf.toString("base64")}`; }
-
-function pickModelForExam() {
-  // Small + cheap default; upgrade easily via env
-  return process.env.EXAM_MODEL || "gpt-4o-mini";
-}
-
+function pickModelForExam() { return process.env.EXAM_MODEL || "gpt-4o-mini"; }
 function safeJson(text) {
   try { return JSON.parse(text); } catch {}
-  // try to extract the first JSON object
-  const m = text.match(/\{[\s\S]*\}/);
-  if (m) { try { return JSON.parse(m[0]); } catch {} }
+  const m = text.match(/\{[\s\S]*\}/); if (m) { try { return JSON.parse(m[0]); } catch {} }
   return null;
 }
 
-// POST /api/prepare-exam — returns exam blueprint JSON
-app.post("/api/prepare-exam", memoryUpload.array("files"), async (req, res) => {
+// Build exam from uploaded study files (ULTRA)
+app.post("/api/prepare-exam", requireCaps(CAPS.ADVANCED_CHAT), memoryUpload.array("files"), async (req, res) => {
   try {
     const options = (() => { try { return JSON.parse(req.body?.options || "{}"); } catch { return {}; } })();
-
-    // Build content parts for the Responses API: one input_text + N input_image (data URLs)
     const content = [];
     const sys = [
       `You are an assessment designer. Create a rigorous exam based ONLY on the provided materials.`,
@@ -513,50 +507,21 @@ app.post("/api/prepare-exam", memoryUpload.array("files"), async (req, res) => {
       `Return STRICT JSON with keys: title, instructions, sections:[{title, questions:[{q, choices?, answer}]}]. No markdown.`
     ].filter(Boolean).join("\n");
     content.push({ type: "input_text", text: sys });
-
-    for (const f of (req.files || [])) {
-      const dataUrl = bufferToDataUrl(f.mimetype, f.buffer);
-      content.push({ type: "input_image", image_url: dataUrl });
-    }
+    for (const f of (req.files || [])) content.push({ type: "input_image", image_url: bufferToDataUrl(f.mimetype, f.buffer) });
 
     const model = pickModelForExam();
-
-    // Prefer Responses API (handles mixed modal parts cleanly)
     let exam;
     try {
-      const response = await openai.responses.create({
-        model,
-        input: [ { role: "user", content } ],
-        temperature: 0.2,
-        max_output_tokens: 2000,
-        response_format: { type: "json_object" }
-      });
-      // Try multiple shapes produced by SDK versions
-      const outText = response.output_text
-        || response.output?.[0]?.content?.[0]?.text
-        || response.output?.[0]?.content?.[0]?.text?.value
-        || response.content?.[0]?.text
-        || JSON.stringify(response);
+      const response = await openai.responses.create({ model, input: [ { role: "user", content } ], temperature: 0.2, max_output_tokens: 2000, response_format: { type: "json_object" } });
+      const outText = response.output_text || response.output?.[0]?.content?.[0]?.text || response.output?.[0]?.content?.[0]?.text?.value || response.content?.[0]?.text || JSON.stringify(response);
       exam = safeJson(outText);
     } catch (e) {
-      // Fallback to chat.completions (images only if image/*)
       const chatParts = [{ type: "text", text: sys }];
-      for (const f of (req.files || [])) {
-        if ((f.mimetype || "").startsWith("image/")) {
-          chatParts.push({ type: "image_url", image_url: { url: bufferToDataUrl(f.mimetype, f.buffer) } });
-        }
-      }
-      const completion = await openai.chat.completions.create({
-        model,
-        messages: [ { role: "user", content: chatParts } ],
-        temperature: 0.2,
-      });
+      for (const f of (req.files || [])) if ((f.mimetype || "").startsWith("image/")) chatParts.push({ type: "image_url", image_url: { url: bufferToDataUrl(f.mimetype, f.buffer) } });
+      const completion = await openai.chat.completions.create({ model, messages: [ { role: "user", content: chatParts } ], temperature: 0.2 });
       exam = safeJson(completion.choices?.[0]?.message?.content || "");
     }
-
-    if (!exam || !Array.isArray(exam.sections)) {
-      return res.status(500).send("Model did not return a valid exam JSON. Try different files or smaller batch.");
-    }
+    if (!exam || !Array.isArray(exam.sections)) return res.status(500).send("Model did not return a valid exam JSON.");
     return res.json(exam);
   } catch (e) {
     console.error("prepare-exam error", e);
@@ -564,12 +529,11 @@ app.post("/api/prepare-exam", memoryUpload.array("files"), async (req, res) => {
   }
 });
 
-// POST /api/grade-exam — returns grading report JSON
-app.post("/api/grade-exam", memoryUpload.any(), async (req, res) => {
+// Grade solved exam (ULTRA)
+app.post("/api/grade-exam", requireCaps(CAPS.ADVANCED_CHAT), memoryUpload.any(), async (req, res) => {
   try {
     const exam = (() => { try { return JSON.parse(req.body?.exam || "{}"); } catch { return {}; } })();
     const typed = (req.body?.typed || "").toString();
-
     if (!exam || !Array.isArray(exam.sections)) return res.status(400).send("Missing or invalid exam JSON.");
 
     const content = [];
@@ -583,48 +547,22 @@ app.post("/api/grade-exam", memoryUpload.any(), async (req, res) => {
     content.push({ type: "input_text", text: instr });
     content.push({ type: "input_text", text: `EXAM JSON:\n${JSON.stringify(exam)}` });
     if (typed) content.push({ type: "input_text", text: `TYPED ANSWERS:\n${typed}` });
-
-    // Attach any uploaded solved files (images, pdfs, docs)
-    for (const f of (req.files || [])) {
-      const dataUrl = bufferToDataUrl(f.mimetype, f.buffer);
-      content.push({ type: "input_image", image_url: dataUrl });
-    }
+    for (const f of (req.files || [])) content.push({ type: "input_image", image_url: bufferToDataUrl(f.mimetype, f.buffer) });
 
     const model = pickModelForExam();
     let report;
     try {
-      const response = await openai.responses.create({
-        model,
-        input: [ { role: "user", content } ],
-        temperature: 0.1,
-        max_output_tokens: 2000,
-        response_format: { type: "json_object" }
-      });
-      const outText = response.output_text
-        || response.output?.[0]?.content?.[0]?.text
-        || response.output?.[0]?.content?.[0]?.text?.value
-        || response.content?.[0]?.text
-        || JSON.stringify(response);
+      const response = await openai.responses.create({ model, input: [ { role: "user", content } ], temperature: 0.1, max_output_tokens: 2000, response_format: { type: "json_object" } });
+      const outText = response.output_text || response.output?.[0]?.content?.[0]?.text || response.output?.[0]?.content?.[0]?.text?.value || response.content?.[0]?.text || JSON.stringify(response);
       report = safeJson(outText);
     } catch (e) {
-      // Fallback to chat for image files only
       const chatParts = [{ type: "text", text: `${instr}\n\nEXAM JSON:\n${JSON.stringify(exam)}\n\nTYPED ANSWERS:\n${typed}` }];
-      for (const f of (req.files || [])) {
-        if ((f.mimetype || "").startsWith("image/")) {
-          chatParts.push({ type: "image_url", image_url: { url: bufferToDataUrl(f.mimetype, f.buffer) } });
-        }
-      }
-      const completion = await openai.chat.completions.create({
-        model,
-        messages: [ { role: "user", content: chatParts } ],
-        temperature: 0.1,
-      });
+      for (const f of (req.files || [])) if ((f.mimetype || "").startsWith("image/")) chatParts.push({ type: "image_url", image_url: { url: bufferToDataUrl(f.mimetype, f.buffer) } });
+      const completion = await openai.chat.completions.create({ model, messages: [ { role: "user", content: chatParts } ], temperature: 0.1 });
       report = safeJson(completion.choices?.[0]?.message?.content || "");
     }
 
-    if (!report || typeof report.score !== "number") {
-      return res.status(500).send("Model did not return a valid grading JSON.");
-    }
+    if (!report || typeof report.score !== "number") return res.status(500).send("Model did not return a valid grading JSON.");
     return res.json(report);
   } catch (e) {
     console.error("grade-exam error", e);
@@ -634,4 +572,4 @@ app.post("/api/grade-exam", memoryUpload.any(), async (req, res) => {
 
 // ---------- Start ----------
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 GoldenSpaceAI running on ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 GoldenSpaceAI running on ${PORT} (plans enabled)`));

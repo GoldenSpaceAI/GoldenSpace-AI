@@ -54,11 +54,13 @@ app.get("/health", (_req, res) => res.json({ ok: true }));
 // - plus: starter + PHYSICS (learn physics) + CREATE_PLANET
 // - pro: plus + ADVANCED_CHAT, CREATE_ROCKET, CREATE_SAT, CREATE_UNIVERSE
 // - ultra: everything (all CAPS)
+// index.js (near the top)
+
 // Capabilities
 const CAPS = {
   CHAT: "chat",
   SEARCH_INFO: "search-info",
-  LEARN_PHYSICS: "learn-physics",
+  PHYSICS: "physics",
   CREATE_PLANET: "create-planet",
   ADVANCED_CHAT: "advanced-chat",
   CREATE_ROCKET: "create-rocket",
@@ -67,17 +69,38 @@ const CAPS = {
   EXAMS: "exams"
 };
 
-// Plans
+// Plans (use your new names)
 const PLAN_CAPS = {
   free: new Set([CAPS.CHAT]),
   starter: new Set([CAPS.CHAT, CAPS.SEARCH_INFO]),
-  plus: new Set([CAPS.CHAT, CAPS.SEARCH_INFO, CAPS.LEARN_PHYSICS, CAPS.CREATE_PLANET]),
+  plus: new Set([CAPS.CHAT, CAPS.SEARCH_INFO, CAPS.PHYSICS, CAPS.CREATE_PLANET]),
   pro: new Set([
-    CAPS.CHAT, CAPS.SEARCH_INFO, CAPS.LEARN_PHYSICS, CAPS.CREATE_PLANET,
+    CAPS.CHAT, CAPS.SEARCH_INFO, CAPS.PHYSICS, CAPS.CREATE_PLANET,
     CAPS.ADVANCED_CHAT, CAPS.CREATE_ROCKET, CAPS.CREATE_SAT, CAPS.CREATE_UNIVERSE, CAPS.EXAMS
   ]),
-  ultra: new Set(Object.values(CAPS)) // unlocks everything
+  ultra: new Set(Object.values(CAPS)) // unlock everything
 };
+
+// Default plan
+function getPlan(req) {
+  return req.session.plan || "free";
+}
+
+// Middleware
+function requireCaps(...required) {
+  return (req, res, next) => {
+    const plan = getPlan(req);
+    const caps = PLAN_CAPS[plan] || new Set();
+    for (const r of required) {
+      if (!caps.has(r)) {
+        return res.status(403).json({
+          error: `Your plan (${plan}) does not allow this action. Contact goldenspaceais@gmail.com to upgrade.`
+        });
+      }
+    }
+    next();
+  };
+}
 
 // ---------- Helpers ----------
 function getBaseUrl(req) {

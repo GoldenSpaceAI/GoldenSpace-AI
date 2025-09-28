@@ -1,291 +1,560 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-    <meta name="theme-color" content="#0a0e15" />
-    <title>GoldenSpaceAI • Create Your Satellite</title>
-    <link rel="icon" href="/favicon.ico" />
-    <style>
-      :root{
-        --bg:#0a0e15; --panel:#0f1624; --panel2:#0b1320; --border:#1f2a40;
-        --text:#e7f4e9; --muted:#cfc6a5; --gold:#f6c64a; --gold2:#eb8b36;
-        --shadow:0 22px 70px rgba(0,0,0,.5); --radius:18px; --max:1080px;
-        --accent:#7dd3fc;
-      }
-      *{box-sizing:border-box} html,body{height:100%}
-      body{
-        margin:0;color:var(--text);
-        font:16px/1.6 Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-        background:
-          linear-gradient(180deg,rgba(10,14,21,.55),rgba(10,14,21,.55)),
-          radial-gradient(1400px 800px at 50% -20%,rgba(246,198,74,.30),transparent 70%),
-          url("https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2400&auto=format&fit=crop")
-          center/cover no-repeat fixed;
-        -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
-      }
-      a{color:inherit;text-decoration:none}
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GoldenSpaceAI · Create Satellite</title>
+  <meta name="description" content="Design an advanced satellite: orbit, power, comms, payloads, propulsion, reliability—and watch it fly!" />
+  <style>
+    :root{
+      --gold:#ffd76a; --ink:#0b0b12; --ink-2:#121222; --ink-3:#1b1b2e; --muted:#9aa0b4; --card:#11111c; --glass:rgba(255,255,255,.06);
+      --ok:#50fa7b; --warn:#ffb86c; --bad:#ff6b6b; --accent:#7aa2ff;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0; font:16px/1.45 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial; color:#e9ecf8; background:
+      radial-gradient(1200px 700px at 80% -20%, rgba(255,215,106,.18), transparent 40%),
+      radial-gradient(900px 500px at -10% 110%, rgba(122,162,255,.16), transparent 40%),
+      linear-gradient(180deg, var(--ink), var(--ink-2));}
+    .container{max-width:1280px; margin:0 auto; padding:24px;}
+    .header{display:flex; align-items:center; gap:14px;}
+    .logo{width:36px; height:36px; border-radius:10px; background: linear-gradient(135deg, var(--gold), #ff8), #444; box-shadow:0 0 0 2px rgba(255,215,106,.35);}
+    h1{font-size:clamp(22px, 3vw, 34px); margin:0}
+    .sub{color:var(--muted)}
 
-      /* Top */
-      .top{position:sticky;top:0;z-index:30;backdrop-filter:blur(10px);
-        background:linear-gradient(180deg,rgba(10,14,21,.85),rgba(10,14,21,.5) 60%,transparent);
-        border-bottom:1px solid var(--border);padding:max(12px, env(safe-area-inset-top)) 16px 10px;
-        display:flex;align-items:center;gap:12px}
-      .brand{display:flex;align-items:center;gap:10px;font-weight:900;color:var(--gold);
-        font-size:clamp(20px,2.2vw,26px);text-shadow:0 0 16px rgba(246,198,74,.25)}
-      .dot{width:10px;height:10px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#ffd86a,#f6c64a 50%,#eb8b36 90%);box-shadow:0 0 18px rgba(246,198,74,.5)}
-      .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px;border-radius:12px;font-weight:900;cursor:pointer;border:1px solid rgba(0,0,0,.2)}
-      .btn.gold{background:linear-gradient(180deg,var(--gold),var(--gold2));color:#1b1300;box-shadow:0 10px 26px rgba(246,198,74,.28)}
-      .btn.ghost{background:transparent;color:var(--muted);border:1px solid var(--border)}
+    .grid{display:grid; grid-template-columns: 1.1fr .9fr; gap:22px; margin-top:18px}
+    @media (max-width: 980px){ .grid{grid-template-columns:1fr; } }
 
-      .wrap{max-width:var(--max);margin:22px auto;padding:0 16px}
+    .card{background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.06); border-radius:18px; overflow:hidden; box-shadow:0 8px 30px rgba(0,0,0,.25)}
+    .card h2{margin:0; padding:16px 18px; font-size:18px; background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02)); border-bottom:1px solid rgba(255,255,255,.06)}
+    .card .body{padding:18px}
 
-      .hero{background:linear-gradient(180deg,rgba(14,21,34,.9),rgba(11,17,28,.9));border:1px solid var(--border);
-        border-radius:calc(var(--radius)+2px);padding:clamp(18px,3.6vw,26px);box-shadow:var(--shadow)}
-      .hero h1{margin:6px 0 8px;font-size:clamp(26px,5vw,48px);line-height:1.08;color:#fff7dc}
-      .tag{display:inline-block;margin-top:6px;padding:6px 10px;border-radius:999px;border:1px solid var(--border);color:#c9d1e6;font-weight:800;font-size:12px}
+    .row{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+    .field{display:flex; flex-direction:column; gap:8px; padding:10px; background:var(--glass); border:1px solid rgba(255,255,255,.06); border-radius:12px}
+    .field label{font-size:13px; color:#c7cbe0; display:flex; align-items:center; gap:6px}
+    .hint{font-size:12px; color:#aab1c9}
+    input[type="text"], select, input[type="number"], input[type="range"]{width:100%; padding:10px 11px; border-radius:10px; border:1px solid rgba(255,255,255,.12); background:#0e0e18; color:#e9ecf8}
+    input[type="range"]{padding:0}
+    .twocol{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+    .threecol{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px}
 
-      .grid{display:grid;gap:14px;grid-template-columns:1.2fr 1fr}
-      @media(max-width:940px){.grid{grid-template-columns:1fr}}
+    .actions{display:flex; gap:10px; flex-wrap:wrap; margin-top:12px}
+    .btn{cursor:pointer; border:1px solid rgba(255,255,255,.14); background:#121224; color:#f2f4ff; padding:10px 14px; border-radius:12px; font-weight:600}
+    .btn:hover{background:#171732}
+    .btn.gold{background:linear-gradient(135deg, var(--gold), #ffea9d); color:#2c2300; border:none}
+    .btn.ghost{background:transparent}
+    .preset{font-size:12px; padding:6px 10px; border-radius:999px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.08); cursor:pointer}
 
-      .panel{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--border);border-radius:16px;padding:14px;box-shadow:var(--shadow)}
-      .panel h2{margin:0 0 8px;font-size:18px;color:var(--gold)}
-      .panel p{margin:0 0 10px;color:#dfe7f1;font-size:14px}
+    .canvas-wrap{position:relative; display:grid; gap:12px}
+    canvas{width:100%; height:auto; border-radius:16px; background:radial-gradient(600px 400px at 20% 10%, rgba(255,255,255,.05), transparent 50%), #0a0a12; border:1px solid rgba(255,255,255,.06)}
 
-      .field{display:grid;gap:6px;margin-bottom:10px}
-      .field label{font-size:12px;color:#c9d1e6}
-      .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-      .choice{padding:8px 10px;border:1px solid var(--border);border-radius:12px;background:rgba(255,255,255,.03);cursor:pointer;font-weight:800;color:#dfe7f1}
-      .choice[data-active="true"]{outline:2px solid rgba(246,198,74,.5);background:linear-gradient(180deg,rgba(246,198,74,.08),rgba(255,255,255,.03))}
-      input[type="range"]{width:100%}
-      input[type="text"], select{width:100%;border-radius:10px;border:1px solid var(--border);background:#0a1120;color:var(--text);padding:10px;font:inherit}
+    .legend{display:flex; gap:8px; flex-wrap:wrap; font-size:13px}
+    .chip{padding:6px 10px; border-radius:999px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.08)}
 
-      .craft{display:grid;gap:10px}
-      .preview{position:relative;height:320px;border-radius:14px;overflow:hidden;background:radial-gradient(600px 320px at 110% -10%,rgba(125,211,252,.12),transparent 60%),linear-gradient(180deg,#0c1322,#0a1120)}
-      .sky{position:absolute;inset:0;background:radial-gradient(1200px 600px at 10% -20%,rgba(246,198,74,.16),transparent 60%)}
-      .orb{position:absolute;left:50%;top:50%;width:38px;height:38px;background:linear-gradient(145deg,#8bdcff,#0ea5e9);border-radius:50%;transform:translate(-50%,-50%);box-shadow:0 0 18px rgba(125,211,252,.6)}
-      .panel-solar{position:absolute;left:calc(50% - 110px);top:calc(50% - 6px);width:90px;height:12px;background:linear-gradient(180deg,#1e2a46,#111a2f);border:1px solid #223354;border-radius:6px}
-      .panel-solar.r{left:calc(50% + 20px)}
-      .antenna{position:absolute;left:50%;top:calc(50% + 26px);width:2px;height:34px;background:#cbd5e1;transform:translateX(-50%)}
-      .beep{position:absolute;left:50%;top:calc(50% + 60px);width:6px;height:6px;background:#f6c64a;border-radius:50%;transform:translateX(-50%);box-shadow:0 0 16px rgba(246,198,74,.7)}
+    .status{display:flex; align-items:center; gap:10px; font-size:14px}
+    .status b{color:#fff}
+    .dot{width:10px; height:10px; border-radius:50%}
+    .ok{background:var(--ok)} .warn{background:var(--warn)} .bad{background:var(--bad)}
 
-      .facts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-      .fact{background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.01));border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:10px}
-      .fact b{color:#fff7dc}
+    footer{opacity:.8; text-align:center; font-size:12px; padding:18px}
+    code.small{font-size:12px; padding:2px 6px; border-radius:6px; background:rgba(255,255,255,.06);}
 
-      .launch{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-      .note{font-size:12px;color:#aeb7c5}
-
-      /* Launch animation */
-      .launch-scene{position:fixed;inset:0;display:none;place-items:center;background:rgba(0,0,0,.55);backdrop-filter:blur(3px);z-index:1000}
-      .launch-scene.on{display:grid}
-      .ship{width:220px;height:220px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#0ea5e9,transparent 70%),radial-gradient(circle at 65% 65%,rgba(246,198,74,.5),transparent 70%),linear-gradient(180deg,#0f172a,#020617);position:relative;box-shadow:0 8px 40px rgba(14,165,233,.45) inset,0 22px 70px rgba(0,0,0,.6)}
-      .ship::after{content:"";position:absolute;left:50%;bottom:-10px;transform:translateX(-50%);width:16px;height:30px;background:linear-gradient(180deg,#fff7dc,#f6c64a,#eb8b36,#ef4444);filter:blur(4px);border-radius:10px}
-      .stars{position:absolute;inset:0;background-image:radial-gradient(#fff7dc 1px,transparent 1px);background-size:3px 3px;opacity:.6;animation:twinkle 1.8s linear infinite}
-      @keyframes twinkle{0%{opacity:.3}50%{opacity:.7}100%{opacity:.3}}
-      .count{margin-top:14px;font-size:20px;color:#fff7dc;font-weight:900;text-shadow:0 0 18px rgba(246,198,74,.4)}
-    </style>
-  </head>
-  <body>
-    <div class="top">
-      <div class="brand"><span class="dot"></span> GoldenSpaceAI</div>
-      <div style="flex:1"></div>
-      <a class="btn ghost" href="/">Home</a>
-      <a class="btn gold" href="/your-space.html">Your Universe</a>
-    </div>
-
-    <main class="wrap">
-      <section class="hero">
-        <h1>🛰️ Create Your Satellite</h1>
-        <p class="tag">Futuristic builder • Adds to <b>Your Universe</b></p>
-        <p>
-          A <b>satellite</b> is any object that orbits a planet or star. Natural satellites are moons; 
-          <b>artificial satellites</b> are human-made spacecraft that circle Earth or other worlds. They carry a
-          <i>payload</i> (camera, antenna, sensors) on a <i>bus</i> (power, structure, thermal, comms) and fly in a chosen
-          <i>orbit</i> (LEO, MEO, GEO, or beyond).
-        </p>
-        <p>Below, you'll design a satellite — name it, pick its bus & payload, choose an orbit, tune its power, and then <b>launch</b> it into <i>Your Universe</i>.</p>
-      </section>
-
-      <section class="grid" style="margin-top:14px">
-        <!-- Builder -->
-        <div class="panel">
-          <h2>🧩 Build Module</h2>
-          <div class="field">
-            <label for="satName">Satellite name</label>
-            <input id="satName" type="text" placeholder="e.g., Aurora-1" maxlength="28" />
-          </div>
-
-          <div class="field">
-            <label>Bus</label>
-            <div class="row" id="busRow">
-              <button class="choice" data-group="bus" data-val="CubeSat">CubeSat</button>
-              <button class="choice" data-group="bus" data-val="SmallSat">SmallSat</button>
-              <button class="choice" data-group="bus" data-val="GeoBus">GeoBus</button>
-            </div>
-          </div>
-
-          <div class="field">
-            <label>Payload</label>
-            <div class="row" id="payloadRow">
-              <button class="choice" data-group="payload" data-val="Imager">Imager</button>
-              <button class="choice" data-group="payload" data-val="Antenna">Antenna</button>
-              <button class="choice" data-group="payload" data-val="Science Pack">Science Pack</button>
-            </div>
-          </div>
-
-          <div class="field">
-            <label>Orbit</label>
-            <div class="row" id="orbitRow">
-              <button class="choice" data-group="orbit" data-val="LEO">LEO</button>
-              <button class="choice" data-group="orbit" data-val="MEO">MEO</button>
-              <button class="choice" data-group="orbit" data-val="GEO">GEO</button>
-              <button class="choice" data-group="orbit" data-val="HEO">HEO</button>
-            </div>
-          </div>
-
-          <div class="field">
-            <label>Solar power (W)</label>
-            <input type="range" id="power" min="50" max="2000" value="400" />
-            <div class="row small"><span>50W</span><span style="flex:1"></span><span>2000W</span></div>
-          </div>
-
-          <div class="field">
-            <label>Downlink rate</label>
-            <select id="downlink">
-              <option>Low (32 kbps)</option>
-              <option selected>Medium (2 Mbps)</option>
-              <option>High (50 Mbps)</option>
-            </select>
-          </div>
-
-          <div class="launch">
-            <button id="launchBtn" class="btn gold">🚀 Send to My Universe</button>
-            <span class="note">You can edit later from <a href="/your-space.html">Your Universe</a>.</span>
-          </div>
-        </div>
-
-        <!-- Preview & Facts -->
-        <div class="panel craft">
-          <h2>✨ Live Preview</h2>
-          <div class="preview" id="preview">
-            <div class="sky"></div>
-            <div class="panel-solar"></div>
-            <div class="orb" id="orb"></div>
-            <div class="panel-solar r"></div>
-            <div class="antenna"></div>
-            <div class="beep"></div>
-          </div>
-
-          <div class="facts">
-            <div class="fact"><b>Name:</b> <span id="fName">—</span></div>
-            <div class="fact"><b>Bus:</b> <span id="fBus">—</span></div>
-            <div class="fact"><b>Payload:</b> <span id="fPayload">—</span></div>
-            <div class="fact"><b>Orbit:</b> <span id="fOrbit">—</span></div>
-            <div class="fact"><b>Power:</b> <span id="fPower">400 W</span></div>
-            <div class="fact"><b>Downlink:</b> <span id="fDown">Medium (2 Mbps)</span></div>
-          </div>
-        </div>
-      </section>
-    </main>
-
-    <!-- Launch scene overlay -->
-    <div class="launch-scene" id="launchScene" aria-hidden="true">
+    details{background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.06); border-radius:12px; padding:10px;}
+    details summary{cursor:pointer; color:#d7ddf3}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo" aria-hidden="true"></div>
       <div>
-        <div class="ship">
-          <div class="stars"></div>
-        </div>
-        <div class="count" id="count">Preparing…</div>
+        <h1>Create Satellite 🚀🛰️</h1>
+        <div class="sub">Adults will get lost in the details. Kids will love the visuals. Configure everything—from orbit and power to comms and payload—and watch it fly.</div>
       </div>
     </div>
 
-    <script>
-      // --- State ---
-      const state = { name:"", bus:"", payload:"", orbit:"", power:400, down:"Medium (2 Mbps)" };
+    <div class="grid">
+      <!-- Controls -->
+      <section class="card" aria-labelledby="controls-title">
+        <h2 id="controls-title">Satellite Designer</h2>
+        <div class="body">
+          <div class="row">
+            <div class="field">
+              <label>Mission Name</label>
+              <input id="name" type="text" placeholder="e.g., GS-Alpha" maxlength="40" />
+              <div class="hint">Short and memorable works best.</div>
+            </div>
+            <div class="field">
+              <label>Preset</label>
+              <select id="preset">
+                <option value="custom">Custom</option>
+                <option value="cubesat">CubeSat EO (Earth Observation)</option>
+                <option value="comms">Comms GEO Relay</option>
+                <option value="science">Science Orbiter</option>
+                <option value="deep">Deep Space Probe</option>
+              </select>
+              <div class="hint">Presets populate realistic starting values you can tweak.</div>
+            </div>
+          </div>
 
-      // --- Helpers ---
-      const $ = (s, root=document) => root.querySelector(s);
-      const $$ = (s, root=document) => Array.from(root.querySelectorAll(s));
+          <details open>
+            <summary><b>Orbit</b> – altitude, inclination, eccentricity, RAAN</summary>
+            <div class="row">
+              <div class="field"><label>Central Body</label>
+                <select id="body">
+                  <option value="earth">Earth</option>
+                  <option value="mars">Mars</option>
+                  <option value="moon">Moon</option>
+                  <option value="jupiter">Jupiter</option>
+                </select>
+              </div>
+              <div class="field"><label>Altitude (km) <span id="altOut"></span></label>
+                <input id="alt" type="range" min="160" max="36000" step="10" value="550" />
+              </div>
+            </div>
+            <div class="row">
+              <div class="field"><label>Inclination (°) <span id="incOut"></span></label>
+                <input id="inc" type="range" min="0" max="180" value="53" />
+              </div>
+              <div class="field"><label>Eccentricity <span id="eccOut"></span></label>
+                <input id="ecc" type="range" min="0" max="0.9" step="0.01" value="0" />
+              </div>
+            </div>
+            <div class="row">
+              <div class="field"><label>RAAN (°) <span id="raanOut"></span></label>
+                <input id="raan" type="range" min="0" max="360" value="0" />
+              </div>
+              <div class="field"><label>Argument of Perigee (°) <span id="aopOut"></span></label>
+                <input id="aop" type="range" min="0" max="360" value="0" />
+              </div>
+            </div>
+          </details>
 
-      function setChoice(group, val){
-        $$(`.choice[data-group="${group}"]`).forEach(el=>{
-          el.dataset.active = (el.dataset.val === val);
-        });
-        state[group] = val;
-        updateFacts();
-        tweakPreview();
-      }
+          <details open>
+            <summary><b>Bus</b> – mass, size, power, thermal</summary>
+            <div class="row">
+              <div class="field"><label>Dry Mass (kg) <span id="massOut"></span></label>
+                <input id="mass" type="range" min="3" max="5000" step="1" value="12" />
+              </div>
+              <div class="field"><label>Dimensions (m)</label>
+                <div class="threecol">
+                  <input id="sx" type="number" min="0.1" max="5" step="0.1" value="0.3" />
+                  <input id="sy" type="number" min="0.1" max="5" step="0.1" value="0.1" />
+                  <input id="sz" type="number" min="0.1" max="5" step="0.1" value="0.1" />
+                </div>
+                <div class="hint">Length × Width × Height</div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="field"><label>Solar Array (W) <span id="powerOut"></span></label>
+                <input id="power" type="range" min="5" max="20000" step="5" value="50" />
+              </div>
+              <div class="field"><label>Battery (Wh)</label>
+                <input id="batt" type="number" min="10" max="50000" step="10" value="80" />
+              </div>
+            </div>
+            <div class="row">
+              <div class="field"><label>Thermal Control</label>
+                <select id="thermal">
+                  <option>Passive (radiators/coatings)</option>
+                  <option>Active (heaters/loops)</option>
+                </select>
+              </div>
+              <div class="field"><label>Operating Temp Range (°C)</label>
+                <div class="twocol">
+                  <input id="tmin" type="number" min="-200" max="50" value="-20" />
+                  <input id="tmax" type="number" min="0" max="200" value="50" />
+                </div>
+              </div>
+            </div>
+          </details>
 
-      function updateFacts(){
-        $('#fName').textContent = state.name || '—';
-        $('#fBus').textContent = state.bus || '—';
-        $('#fPayload').textContent = state.payload || '—';
-        $('#fOrbit').textContent = state.orbit || '—';
-        $('#fPower').textContent = `${state.power} W`;
-        $('#fDown').textContent = state.down;
-      }
+          <details open>
+            <summary><b>Comms</b> – RF band, antenna, link budget</summary>
+            <div class="row">
+              <div class="field"><label>Band</label>
+                <select id="band">
+                  <option value="UHF">UHF</option>
+                  <option value="S">S-band</option>
+                  <option value="X">X-band</option>
+                  <option value="Ka">Ka-band</option>
+                </select>
+              </div>
+              <div class="field"><label>TX Power (W) <span id="txOut"></span></label>
+                <input id="tx" type="range" min="0.1" max="200" step="0.1" value="2" />
+              </div>
+            </div>
+            <div class="row">
+              <div class="field"><label>Antenna Gain (dBi) <span id="gainOut"></span></label>
+                <input id="gain" type="range" min="0" max="40" step="0.5" value="5" />
+              </div>
+              <div class="field"><label>Ground Dish (m)</label>
+                <input id="dish" type="number" min="0.1" step="0.1" value="3" />
+              </div>
+            </div>
+            <div class="row">
+              <div class="field"><label>Data Rate (Mbps)</label>
+                <input id="rate" type="number" min="0.01" step="0.01" value="2" />
+              </div>
+              <div class="field"><label>Coding Margin (dB)</label>
+                <input id="margin" type="number" min="0" step="0.5" value="3" />
+              </div>
+            </div>
+          </details>
 
-      function tweakPreview(){
-        // Change color/size a bit based on choices
-        const orb = $('#orb');
-        let hue = 200;
-        if(state.payload === 'Imager') hue = 195;
-        if(state.payload === 'Antenna') hue = 40;
-        if(state.payload === 'Science Pack') hue = 140;
-        const color = `linear-gradient(145deg, hsl(${hue} 90% 70%), hsl(${hue} 85% 45%))`;
-        orb.style.background = color;
+          <details open>
+            <summary><b>Propulsion & ADCS</b> – delta‑V, Isp, wheels, pointing</summary>
+            <div class="row">
+              <div class="field"><label>Propellant Mass (kg) <span id="pmOut"></span></label>
+                <input id="pmass" type="range" min="0" max="3000" step="1" value="0" />
+              </div>
+              <div class="field"><label>Isp (s)</label>
+                <input id="isp" type="number" min="50" max="4500" step="10" value="220" />
+              </div>
+            </div>
+            <div class="row">
+              <div class="field"><label>Reaction Wheels</label>
+                <select id="wheels">
+                  <option>None</option>
+                  <option>Small</option>
+                  <option>Medium</option>
+                  <option>Large</option>
+                </select>
+              </div>
+              <div class="field"><label>Pointing Accuracy (°)</label>
+                <input id="point" type="number" min="0.01" step="0.01" value="0.5" />
+              </div>
+            </div>
+          </details>
 
-        const scale = state.bus==='GeoBus' ? 1.25 : state.bus==='SmallSat' ? 1.1 : 0.95;
-        orb.style.transform = `translate(-50%,-50%) scale(${scale})`;
-      }
+          <details>
+            <summary><b>Payloads</b> – cameras, radars, science</summary>
+            <div class="row">
+              <div class="field"><label>Primary Payload</label>
+                <select id="payload">
+                  <option>EO Camera</option>
+                  <option>SAR Radar</option>
+                  <option>GNSS Receiver</option>
+                  <option>Particle Analyzer</option>
+                  <option>Comms Repeater</option>
+                </select>
+              </div>
+              <div class="field"><label>Payload Power (W)</label>
+                <input id="ppower" type="number" min="1" step="1" value="20" />
+              </div>
+            </div>
+            <div class="row">
+              <div class="field"><label>Imager Resolution (m/px)</label>
+                <input id="res" type="number" min="0.05" step="0.05" value="2" />
+              </div>
+              <div class="field"><label>Duty Cycle (%)</label>
+                <input id="duty" type="number" min="0" max="100" step="1" value="35" />
+              </div>
+            </div>
+          </details>
 
-      // Attach events
-      $('#satName').addEventListener('input', e=>{ state.name = e.target.value.trim(); updateFacts(); });
-      $('#power').addEventListener('input', e=>{ state.power = +e.target.value; updateFacts(); });
-      $('#downlink').addEventListener('change', e=>{ state.down = e.target.value; updateFacts(); });
+          <details>
+            <summary><b>Reliability & Ops</b> – MTBF, lifetime, ground passes</summary>
+            <div class="row">
+              <div class="field"><label>Design Lifetime (years)</label>
+                <input id="life" type="number" min="0.2" step="0.1" value="3" />
+              </div>
+              <div class="field"><label>MTBF (hours)</label>
+                <input id="mtbf" type="number" min="100" step="10" value="12000" />
+              </div>
+            </div>
+            <div class="row">
+              <div class="field"><label>Ground Stations</label>
+                <select id="gs">
+                  <option>Single mid‑lat</option>
+                  <option>Global net</option>
+                </select>
+              </div>
+              <div class="field"><label>Automation</label>
+                <select id="auto">
+                  <option>Manual planning</option>
+                  <option>AI‑assisted</option>
+                </select>
+              </div>
+            </div>
+          </details>
 
-      $$('#busRow .choice').forEach(b=> b.addEventListener('click', ()=> setChoice('bus', b.dataset.val)));
-      $$('#payloadRow .choice').forEach(b=> b.addEventListener('click', ()=> setChoice('payload', b.dataset.val)));
-      $$('#orbitRow .choice').forEach(b=> b.addEventListener('click', ()=> setChoice('orbit', b.dataset.val)));
+          <div class="actions">
+            <button class="btn gold" id="generate">Update & Fly</button>
+            <button class="btn" id="randomize">🎲 Randomize</button>
+            <button class="btn" id="exportJSON">Export Settings (JSON)</button>
+            <button class="btn" id="exportPNG">Save Visualization (PNG)</button>
+            <button class="btn ghost" id="reset">Reset</button>
+          </div>
 
-      // Default selections
-      setChoice('bus','CubeSat');
-      setChoice('payload','Imager');
-      setChoice('orbit','LEO');
-      updateFacts();
+          <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap">
+            <span class="preset" data-preset="cubesat">Load: CubeSat EO</span>
+            <span class="preset" data-preset="comms">Load: Comms GEO</span>
+            <span class="preset" data-preset="science">Load: Science Orbiter</span>
+            <span class="preset" data-preset="deep">Load: Deep Space Probe</span>
+          </div>
+        </div>
+      </section>
 
-      // Launch button -> save to localStorage and animate then redirect
-      $('#launchBtn').addEventListener('click', ()=>{
-        if(!state.name || !state.bus || !state.payload || !state.orbit){
-          alert('Please complete the name, bus, payload, and orbit.');
-          return;
-        }
-        const sat = {
-          id: `sat_${Date.now()}`,
-          ...state,
-          createdAt: new Date().toISOString()
-        };
-        try{
-          const key = 'gs_universe_satellites';
-          const arr = JSON.parse(localStorage.getItem(key) || '[]');
-          arr.push(sat);
-          localStorage.setItem(key, JSON.stringify(arr));
-        }catch(e){ /* ignore quota errors */ }
+      <!-- Preview -->
+      <section class="card" aria-labelledby="preview-title">
+        <h2 id="preview-title">Preview & Quick Analysis</h2>
+        <div class="body">
+          <div class="canvas-wrap">
+            <canvas id="scene" width="720" height="540" aria-label="satellite orbit visualization"></canvas>
+            <div class="legend">
+              <div class="chip">Mission: <b id="nameOut">Unnamed</b></div>
+              <div class="chip">Orbit: <b id="orbitOut">—</b></div>
+              <div class="chip">Period: <b id="periodOut">—</b></div>
+              <div class="chip">Coverage: <b id="covOut">—</b></div>
+              <div class="chip status"><span class="dot" id="powerDot"></span> Power: <b id="powerStat">—</b></div>
+              <div class="chip status"><span class="dot" id="linkDot"></span> Link: <b id="linkStat">—</b></div>
+            </div>
+          </div>
 
-        // Fun launch sequence
-        const scene = $('#launchScene');
-        const count = $('#count');
-        scene.classList.add('on');
-        let n = 3;
-        const tick = setInterval(()=>{
-          count.textContent = n>0 ? `Launching in ${n}…` : 'LAUNCH!';
-          if(n===0){
-            clearInterval(tick);
-            setTimeout(()=>{ window.location.href = '/your-space.html#satellites'; }, 600);
-          }
-          n--;
-        }, 700);
+          <div style="margin-top:12px" class="row">
+            <div class="field">
+              <label>Notes</label>
+              <textarea id="notes" rows="4" style="width:100%;resize:vertical;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:#0e0e18;color:#e9ecf8" placeholder="Observations, to‑dos, risks…"></textarea>
+            </div>
+            <div class="field">
+              <label>Fast Stats</label>
+              <div id="stats" style="font-size:13px; color:#cbd2ea; line-height:1.6"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <footer>
+      Made for curious minds and mission designers. Share your JSON so others can reproduce your satellite. <code class="small">#GoldenSpaceAI</code>
+    </footer>
+  </div>
+
+  <script>
+    // DOM helper
+    const $ = id => document.getElementById(id);
+
+    // Elements
+    const nameEl=$('name'), presetEl=$('preset');
+    const bodyEl=$('body'), altEl=$('alt'), incEl=$('inc'), eccEl=$('ecc'), raanEl=$('raan'), aopEl=$('aop');
+    const massEl=$('mass'), sxEl=$('sx'), syEl=$('sy'), szEl=$('sz');
+    const powerEl=$('power'), battEl=$('batt'), thermalEl=$('thermal'), tminEl=$('tmin'), tmaxEl=$('tmax');
+    const bandEl=$('band'), txEl=$('tx'), gainEl=$('gain'), dishEl=$('dish'), rateEl=$('rate'), marginEl=$('margin');
+    const pmassEl=$('pmass'), ispEl=$('isp'), wheelsEl=$('wheels'), pointEl=$('point');
+    const payloadEl=$('payload'), ppowerEl=$('ppower'), resEl=$('res'), dutyEl=$('duty');
+    const lifeEl=$('life'), mtbfEl=$('mtbf'), gsEl=$('gs'), autoEl=$('auto');
+
+    const altOut=$('altOut'), incOut=$('incOut'), eccOut=$('eccOut'), raanOut=$('raanOut'), aopOut=$('aopOut');
+    const massOut=$('massOut'), powerOut=$('powerOut'), txOut=$('txOut'), gainOut=$('gainOut'), pmOut=$('pmOut');
+
+    const nameOut=$('nameOut'), orbitOut=$('orbitOut'), periodOut=$('periodOut'), covOut=$('covOut');
+    const powerDot=document.getElementById('powerDot'), powerStat=$('powerStat');
+    const linkDot=document.getElementById('linkDot'), linkStat=$('linkStat');
+
+    const scene=$('scene'); const ctx=scene.getContext('2d');
+
+    // Celestial constants (simplified)
+    const bodies={
+      earth:{ R:6371, mu:398600.4418, color:'#2c7be5'},
+      mars:{ R:3389.5, mu:42828.3, color:'#c55c3a'},
+      moon:{ R:1737.4, mu:4902.8, color:'#bfc7d9'},
+      jupiter:{ R:69911, mu:126686534, color:'#d3a675'}
+    };
+
+    // Helpers
+    function hsl(h,s,l){return `hsl(${h} ${s}% ${l}%)`}
+    function clamp(n,a,b){return Math.max(a, Math.min(b,n))}
+
+    function toSettings(){
+      return {
+        name: nameEl.value || 'Unnamed',
+        body: bodyEl.value,
+        orbit:{ alt:+altEl.value, inc:+incEl.value, ecc:+eccEl.value, raan:+raanEl.value, aop:+aopEl.value },
+        bus:{ mass:+massEl.value, size:[+sxEl.value,+syEl.value,+szEl.value], solar:+powerEl.value, batt:+battEl.value, thermal:thermalEl.value, temp:[+tminEl.value,+tmaxEl.value] },
+        comms:{ band:bandEl.value, tx:+txEl.value, gain:+gainEl.value, dish:+dishEl.value, rate:+rateEl.value, margin:+marginEl.value },
+        prop:{ pmass:+pmassEl.value, isp:+ispEl.value, wheels:wheelsEl.value, point:+pointEl.value },
+        payload:{ type:payloadEl.value, pwr:+ppowerEl.value, res:+resEl.value, duty:+dutyEl.value },
+        ops:{ life:+lifeEl.value, mtbf:+mtbfEl.value, gs:gsEl.value, auto:autoEl.value }
+      };
+    }
+
+    function setSettings(s){
+      nameEl.value=s.name||'Unnamed'; bodyEl.value=s.body||'earth';
+      altEl.value=s.orbit.alt; incEl.value=s.orbit.inc; eccEl.value=s.orbit.ecc; raanEl.value=s.orbit.raan; aopEl.value=s.orbit.aop;
+      massEl.value=s.bus.mass; [sxEl.value,syEl.value,szEl.value]=s.bus.size; powerEl.value=s.bus.solar; battEl.value=s.bus.batt; thermalEl.value=s.bus.thermal; [tminEl.value,tmaxEl.value]=s.bus.temp;
+      bandEl.value=s.comms.band; txEl.value=s.comms.tx; gainEl.value=s.comms.gain; dishEl.value=s.comms.dish; rateEl.value=s.comms.rate; marginEl.value=s.comms.margin;
+      pmassEl.value=s.prop.pmass; ispEl.value=s.prop.isp; wheelsEl.value=s.prop.wheels; pointEl.value=s.prop.point;
+      payloadEl.value=s.payload.type; ppowerEl.value=s.payload.pwr; resEl.value=s.payload.res; dutyEl.value=s.payload.duty;
+      lifeEl.value=s.ops.life; mtbfEl.value=s.ops.mtbf; gsEl.value=s.ops.gs; autoEl.value=s.ops.auto;
+    }
+
+    // Presets
+    const presets={
+      cubesat:()=>({ name:'GS‑Cube', body:'earth', orbit:{alt:520,inc:97.5,ecc:0.001,raan:0,aop:0}, bus:{mass:12,size:[0.3,0.1,0.1],solar:50,batt:80,thermal:'Passive (radiators/coatings)',temp:[-20,50]}, comms:{band:'UHF',tx:2,gain:5,dish:3,rate:2,margin:3}, prop:{pmass:0,isp:220,wheels:'Small',point:1.0}, payload:{type:'EO Camera',pwr:20,res:2,duty:35}, ops:{life:3,mtbf:12000,gs:'Single mid‑lat',auto:'AI‑assisted'} }),
+      comms:()=>({ name:'GS‑Relay', body:'earth', orbit:{alt:35786,inc:0,ecc:0,raan:0,aop:0}, bus:{mass:1800,size:[2.5,1.6,1.6],solar:9000,batt:12000,thermal:'Active (heaters/loops)',temp:[-10,60]}, comms:{band:'Ka',tx:120,gain:35,dish:10,rate:400,margin:5}, prop:{pmass:600,isp:320,wheels:'Large',point:0.05}, payload:{type:'Comms Repeater',pwr:800,res:0.5,duty:90}, ops:{life:15,mtbf:50000,gs:'Global net',auto:'AI‑assisted'} }),
+      science:()=>({ name:'GS‑Orbiter', body:'mars', orbit:{alt:300,inc:75,ecc:0.2,raan:0,aop:0}, bus:{mass:900,size:[2.0,1.5,1.2],solar:2500,batt:6000,thermal:'Active (heaters/loops)',temp:[-50,80]}, comms:{band:'X',tx:40,gain:25,dish:5,rate:50,margin:4}, prop:{pmass:400,isp:310,wheels:'Medium',point:0.1}, payload:{type:'Particle Analyzer',pwr:250,res:50,duty:50}, ops:{life:5,mtbf:30000,gs:'Global net',auto:'AI‑assisted'} }),
+      deep:()=>({ name:'GS‑Voyager', body:'jupiter', orbit:{alt:150000,inc:10,ecc:0.6,raan:0,aop:0}, bus:{mass:1600,size:[3.0,2.2,2.0],solar:0,batt:20000,thermal:'Active (heaters/loops)',temp:[-150,120]}, comms:{band:'X',tx:70,gain:35,dish:70,rate:1,margin:6}, prop:{pmass:800,isp:3200,wheels:'Medium',point:0.2}, payload:{type:'GNSS Receiver',pwr:120,res:100,duty:30}, ops:{life:12,mtbf:50000,gs:'Global net',auto:'AI‑assisted'} })
+    };
+
+    // Physics (simplified)
+    function periodSeconds(mu, a){ return 2*Math.PI*Math.sqrt(Math.pow(a,3)/mu); }
+    function sma(R, alt, ecc){ return (R+alt)/(1 - ecc); } // rough for perigee alt
+    function coverageFootprint(R, alt){ // central angle (half-angle) approx: acos(R/(R+alt))
+      const ang = Math.acos( R/(R+alt) );
+      return { halfAngle: ang, diameterKm: 2*(R+alt)*Math.sin(ang) };
+    }
+
+    function linkBudgetOK(band, txW, satGain, dishM, rangeKm, rateMbps, margin){
+      // Extremely simplified free-space path loss + rough gains.
+      const freqGHz = {UHF:0.4, S:2.2, X:8.4, Ka:26}[band];
+      const fspl = 92.45 + 20*Math.log10(rangeKm) + 20*Math.log10(freqGHz); // dB
+      const EIRP = 10*Math.log10(txW*1000) - 30 + satGain; // dBW
+      const GsGain = 20*Math.log10((Math.PI*dishM*freqGHz*1e9)/3e8) + 7.7; // aperture eff ~55% lumped
+      const CNR = EIRP + GsGain - fspl - (10*Math.log10(rateMbps*1e6)) - 3; // -3 dBk noise temp fudge
+      return CNR > (8 + margin); // threshold ~8 dB for coded link
+    }
+
+    // Drawing
+    function drawScene(s){
+      const W=scene.width,H=scene.height; ctx.clearRect(0,0,W,H);
+      ctx.fillStyle='#080810'; ctx.fillRect(0,0,W,H);
+
+      // Stars
+      for(let i=0;i<120;i++){ ctx.globalAlpha=0.5+Math.random()*0.5; ctx.fillStyle=hsl(200+Math.random()*40,80,60+Math.random()*30); ctx.fillRect(Math.random()*W,Math.random()*H,1.2,1.2);}
+      ctx.globalAlpha=1;
+
+      const body=bodies[s.body];
+      // Planet
+      const cx=W*0.42, cy=H*0.6, R=Math.min(W,H)*0.22*(body.R/6371>1?0.6:1); // scale for giants
+      const grad=ctx.createRadialGradient(cx-R*0.2,cy-R*0.2,R*0.2, cx,cy,R*1.1); grad.addColorStop(0,'rgba(255,255,255,.2)'); grad.addColorStop(1,body.color);
+      ctx.fillStyle=grad; ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2); ctx.fill();
+
+      // Orbit ellipse (projected)
+      const a = sma(body.R, s.orbit.alt, s.orbit.ecc); // km
+      const e = s.orbit.ecc; const b = a*Math.sqrt(1-e*e);
+      const scale = (R* (1 + (s.body==='jupiter'? 0.8:1)) ) / (body.R*0.001 + 1); // tuned scale for display
+      const rx=a*scale*0.001, ry=b*scale*0.001; // px
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate((s.orbit.inc/180*Math.PI));
+      ctx.strokeStyle='rgba(255,255,255,.35)'; ctx.setLineDash([6,6]);
+      ctx.beginPath(); ctx.ellipse(0,0, rx, ry, 0, 0, Math.PI*2); ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Satellite position along orbit (animated by time)
+      const t = performance.now()/1000; // s
+      const P = periodSeconds(body.mu, a)*0.001; // scaled
+      const theta = (t%P)/P * Math.PI*2 + (s.orbit.raan/180*Math.PI);
+      const px = rx*Math.cos(theta); const py = ry*Math.sin(theta);
+
+      // Ground track / coverage cone (simplified visual)
+      ctx.globalAlpha=0.25; ctx.fillStyle='#7aa2ff';
+      ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(px,py); ctx.arc(0,0, Math.hypot(px,py), Math.atan2(py,px), Math.atan2(py,px)+0.2); ctx.closePath(); ctx.fill();
+      ctx.globalAlpha=1;
+
+      // Satellite body
+      ctx.fillStyle='#e9ecf8';
+      ctx.beginPath(); ctx.ellipse(px,py,10,7, theta, 0, Math.PI*2); ctx.fill();
+      // Panels
+      ctx.fillStyle='#6fb3ff'; ctx.fillRect(px-26, py-3, 18,6); ctx.fillRect(px+8, py-3, 18,6);
+      // Antenna
+      ctx.strokeStyle='#e9ecf8'; ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(px+14*Math.cos(theta), py+14*Math.sin(theta)); ctx.stroke();
+
+      ctx.restore();
+
+      // HUD boxes
+      ctx.fillStyle='rgba(255,255,255,.06)'; ctx.strokeStyle='rgba(255,255,255,.18)';
+      roundRect(ctx, W-240, 16, 220, 110, 12, true, true);
+      ctx.fillStyle='#d8def2'; ctx.font='600 14px ui-sans-serif, system-ui';
+      const cov=coverageFootprint(body.R, s.orbit.alt);
+      ctx.fillText(`Half‑angle: ${(cov.halfAngle*180/Math.PI).toFixed(1)}°`, W-224, 42);
+      ctx.fillText(`Footprint: ${cov.diameterKm.toFixed(0)} km`, W-224, 66);
+      const aKm=a; const T=periodSeconds(body.mu,aKm);
+      ctx.fillText(`Period: ${(T/60).toFixed(1)} min`, W-224, 90);
+    }
+
+    function roundRect(ctx,x,y,w,h,r,fill,stroke){
+      if(w<2*r) r=w/2; if(h<2*r) r=h/2; ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y, x+w,y+h, r); ctx.arcTo(x+w,y+h, x,y+h, r); ctx.arcTo(x,y+h, x,y, r); ctx.arcTo(x,y, x+w,y, r); if(fill) ctx.fill(); if(stroke) ctx.stroke();
+    }
+
+    // Quick analysis
+    function updateReadouts(s){
+      const b=bodies[s.body];
+      altOut.textContent=`(${s.orbit.alt} km)`; incOut.textContent=`(${s.orbit.inc}°)`; eccOut.textContent=`(${s.orbit.ecc.toFixed(2)})`; raanOut.textContent=`(${s.orbit.raan}°)`; aopOut.textContent=`(${s.orbit.aop}°)`;
+      massOut.textContent=`(${s.bus.mass} kg)`; powerOut.textContent=`(${s.bus.solar} W)`; txOut.textContent=`(${s.comms.tx} W)`; gainOut.textContent=`(${s.comms.gain} dBi)`; pmOut.textContent=`(${s.prop.pmass} kg)`;
+
+      nameOut.textContent=s.name;
+      orbitOut.textContent = `${s.body}, ${s.orbit.alt} km, inc ${s.orbit.inc}°`;
+
+      // Compute period & coverage
+      const aKm=sma(b.R,s.orbit.alt,s.orbit.ecc); const T=periodSeconds(b.mu,aKm);
+      periodOut.textContent = `${(T/60).toFixed(1)} min`;
+      const cov=coverageFootprint(b.R,s.orbit.alt); covOut.textContent = `${cov.diameterKm.toFixed(0)} km footprint`;
+
+      // Power budget (very rough): available solar minus payload + comms nominal
+      const avgSolar = s.bus.solar * 0.65; // daylight + inefficiencies
+      const loads = s.payload.pwr * (s.payload.duty/100) + (s.comms.tx*3) * 0.5; // PA inefficiency 3x, 50% duty
+      const headroom = avgSolar - loads;
+      const powerOK = headroom > 10; powerDot.className='dot ' + (powerOK? 'ok': (headroom>-10?'warn':'bad'));
+      powerStat.textContent = powerOK? `OK (+${headroom.toFixed(0)} W)` : `Tight (${headroom.toFixed(0)} W)`;
+
+      // Link budget check at horizon‑ish slant range
+      let rangeKm = Math.sqrt( (b.R+s.orbit.alt)**2 - b.R**2 ); // to horizon
+      const ok = linkBudgetOK(s.comms.band, s.comms.tx, s.comms.gain, s.comms.dish, Math.max(800,rangeKm), s.comms.rate, s.comms.margin);
+      linkDot.className='dot ' + (ok? 'ok':'warn'); linkStat.textContent = ok? 'Link margin OK' : 'Link may be weak';
+
+      // Stats panel
+      const dv = 9.81 * s.prop.isp * Math.log((s.bus.mass + s.prop.pmass)/(s.bus.mass));
+      const stats = `Δv: <b>${isFinite(dv)?dv.toFixed(0):0}</b> m/s · Panels: <b>${s.bus.solar} W</b> · Battery: <b>${s.bus.batt} Wh</b><br>
+      Payload: <b>${s.payload.type}</b> · Res: <b>${s.payload.res} m/px</b> · Duty: <b>${s.payload.duty}%</b><br>
+      Lifetime: <b>${s.ops.life} y</b> · MTBF: <b>${s.ops.mtbf} h</b> · GS: <b>${s.ops.gs}</b>`;
+      $('stats').innerHTML = stats;
+    }
+
+    // Export helpers
+    function download(filename, text){ const a=document.createElement('a'); a.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text)); a.setAttribute('download', filename); a.click(); }
+
+    // Wire up
+    function refresh(){ const s=toSettings(); updateReadouts(s); drawScene(s); }
+
+    ;['input','change'].forEach(ev=>{
+      [nameEl,presetEl, bodyEl, altEl, incEl, eccEl, raanEl, aopEl, massEl, sxEl, syEl, szEl, powerEl, battEl, thermalEl, tminEl, tmaxEl, bandEl, txEl, gainEl, dishEl, rateEl, marginEl, pmassEl, ispEl, wheelsEl, pointEl, payloadEl, ppowerEl, resEl, dutyEl, lifeEl, mtbfEl, gsEl, autoEl].forEach(elm=>{
+        elm.addEventListener(ev, ()=>{ if(elm===presetEl){
+          const p=presetEl.value; if(p!=='custom' && presets[p]){ setSettings(presets[p]()); }
+        } refresh(); });
       });
-    </script>
-  </body>
+    });
+
+    document.querySelectorAll('.preset').forEach(x=>x.addEventListener('click', ()=>{ const p=x.dataset.preset; if(presets[p]){ setSettings(presets[p]()); refresh(); }}));
+
+    $('generate').addEventListener('click', refresh);
+    $('randomize').addEventListener('click', ()=>{ randomize(); refresh(); });
+    $('reset').addEventListener('click', ()=>{ location.reload(); });
+
+    $('exportJSON').addEventListener('click', ()=>{ const data = JSON.stringify(toSettings(), null, 2); download((nameEl.value||'satellite')+'.json', data); });
+    $('exportPNG').addEventListener('click', ()=>{ const link=document.createElement('a'); link.download=(nameEl.value||'satellite')+'.png'; link.href=scene.toDataURL('image/png'); link.click(); });
+
+    // Randomizer
+    function randomize(){
+      const r=Math.random;
+      nameEl.value = ['Aether','Beacon','Courier','Dorado','Echo','Falcon','Helios','Iris','Nimbus'][ (r()*9)|0 ] + '-' + ((r()*900)|0+100);
+      bodyEl.value = ['earth','mars','moon','jupiter'][ (r()*4)|0 ];
+      altEl.value = [400,520,700,20000,35786][ (r()*5)|0 ];
+      incEl.value = Math.round(r()*98);
+      eccEl.value = (r()<0.7? 0 : +(r()*0.6).toFixed(2));
+      raanEl.value = Math.round(r()*360); aopEl.value=Math.round(r()*360);
+      massEl.value = Math.round(r()*1800)+5; powerEl.value=Math.round(r()*9000)+20; battEl.value = Math.round(r()*15000)+50;
+      sxEl.value=(0.3 + r()*2.5).toFixed(1); syEl.value=(0.1 + r()*1.6).toFixed(1); szEl.value=(0.1 + r()*1.6).toFixed(1);
+      bandEl.value = ['UHF','S','X','Ka'][ (r()*4)|0 ]; txEl.value=(r()*120+0.2).toFixed(1); gainEl.value=(r()*35).toFixed(1); dishEl.value=(r()*12+0.5).toFixed(1); rateEl.value=(r()*400+0.1).toFixed(1); marginEl.value=(r()*6).toFixed(1);
+      pmassEl.value = Math.round(r()*800); ispEl.value = [220,310,3200][ (r()*3)|0 ]; wheelsEl.value=['None','Small','Medium','Large'][ (r()*4)|0 ]; pointEl.value=(r()*1.2+0.05).toFixed(2);
+      payloadEl.value=['EO Camera','SAR Radar','GNSS Receiver','Particle Analyzer','Comms Repeater'][ (r()*5)|0 ]; ppowerEl.value=Math.round(r()*800)+5; resEl.value=(r()*10+0.1).toFixed(1); dutyEl.value=Math.round(r()*95);
+      lifeEl.value=(r()*15+1).toFixed(1); mtbfEl.value=Math.round(r()*60000)+2000; gsEl.value=['Single mid‑lat','Global net'][ (r()*2)|0 ]; autoEl.value=['Manual planning','AI‑assisted'][ (r()*2)|0 ];
+    }
+
+    // Initial
+    setSettings(presets.cubesat()); refresh();
+
+  </script>
+</body>
 </html>

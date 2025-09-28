@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GoldenSpaceAI · Prepare Exam</title>
+  <meta name="description" content="Upload study files/photos, have AI generate a Word exam, then submit your solved exam for AI grading." />
+
+  <!-- Docx builder for client-side .docx creation -->
+  <script src="https://unpkg.com/docx@8.5.0/build/index.js"></script>
+
+  <style>
+    :root{
+      --gold-1:#ffd700; --gold-2:#e6c200; --gold-3:#b89700;
+      --text:#faf7e8; --muted:#c8b88a; --bg:#0b0e14; --glass:rgba(255,255,255,.06);
+      --ring: rgba(255,215,0,.35); --ok:#36d399; --warn:#f6c760; --err:#ff8c8c;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial;
+      color:var(--text); background:
+        radial-gradient(1200px 800px at 75% -20%, rgba(255,215,0,.14), transparent 40%),
+        radial-gradient(900px 700px at 5% 110%, rgba(255,215,0,.08), transparent 45%),
+        linear-gradient(180deg, #0b0e14 0%, #0b0e14 100%);
+    }
+    header{position:sticky;top:0;background:rgba(11,14,20,.7);backdrop-filter:blur(8px);border-bottom:1px solid rgba(255,215,0,.12);z-index:10}
+    .bar{max-width:1100px;margin:0 auto;padding:14px 18px;display:flex;align-items:center;gap:14px}
+    .logo{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,var(--gold-1),var(--gold-3));box-shadow:0 0 0 3px rgba(255,215,0,.15) inset}
+    h1{font-size:20px;margin:0;letter-spacing:.4px}
+
+    main{max-width:1100px;margin:28px auto;padding:0 18px 56px;display:grid;grid-template-columns:1.1fr .9fr;gap:22px}
+    @media (max-width: 980px){ main{grid-template-columns:1fr} }
+
+    .card{background:var(--glass); border:1px solid rgba(255,215,0,.12); border-radius:18px; padding:18px; box-shadow:0 12px 40px rgba(0,0,0,.25)}
+    .card h2{margin:0 0 10px;font-size:18px}
+    .card p{margin:8px 0;color:var(--muted)}
+
+    .group{display:grid;grid-template-columns:1fr 1fr; gap:12px}
+    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    label{font-size:13px;color:var(--muted)}
+    input[type="text"], input[type="number"], select, textarea{
+      width:100%; padding:10px 12px; border-radius:12px; border:1px solid rgba(255,215,0,.18);
+      background:rgba(255,255,255,.04); color:var(--text); outline:none;
+    }
+    textarea{min-height:96px;resize:vertical}
+
+    .drop{
+      border:2px dashed rgba(255,215,0,.35); border-radius:16px; padding:18px; text-align:center;
+      background:rgba(255,255,255,.03); transition:.2s; cursor:pointer
+    }
+    .drop.drag{background:rgba(255,215,0,.08)}
+    .thumbs{display:grid; grid-template-columns:repeat(auto-fill, minmax(120px,1fr)); gap:10px; margin-top:10px}
+    .thumb{border:1px dashed rgba(255,215,0,.2); border-radius:12px; padding:8px; background:rgba(255,255,255,.03);}
+    .thumb small{display:block;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+    .btn{appearance:none;border:1px solid rgba(255,215,0,.3); background:linear-gradient(135deg, rgba(255,215,0,.16), rgba(255,215,0,.04)); color:var(--text);
+      padding:10px 14px; border-radius:14px; cursor:pointer; font-weight:600; letter-spacing:.3px; transition:.2s;}
+    .btn:hover{box-shadow:0 0 0 3px var(--ring)}
+    .btn.primary{background:linear-gradient(135deg,var(--gold-1),var(--gold-3)); color:#151515; border-color:transparent}
+    .btn.ghost{background:transparent}
+    .btn:disabled{opacity:.6; cursor:not-allowed}
+
+    .divider{height:1px;background:linear-gradient(90deg,transparent, rgba(255,215,0,.25), transparent); margin:14px 0}
+
+    .log{height:240px; overflow:auto; background:rgba(0,0,0,.35); border:1px solid rgba(255,215,0,.15); border-radius:14px; padding:10px; font-family:ui-monospace, SFMono-Regular, Menlo, monospace; font-size:12px}
+    .log .ok{color:var(--ok)} .log .warn{color:var(--warn)} .log .err{color:var(--err)}
+
+    .pill{border:1px solid rgba(255,215,0,.25); border-radius:999px; padding:6px 10px; display:inline-flex; align-items:center; gap:8px}
+    .toggle{display:flex; gap:10px; flex-wrap:wrap}
+
+    .out-links{display:flex; gap:10px; flex-wrap:wrap}
+    .tag{font-size:12px; opacity:.8}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="bar">
+      <div class="logo" aria-hidden="true"></div>
+      <h1>Prepare Exam · GoldenSpaceAI</h1>
+      <span class="tag">v1.0</span>
+    </div>
+  </header>
+
+  <main>
+    <!-- LEFT: Build Exam -->
+    <section class="card" id="builder">
+      <h2>Step 1 — Upload materials & create exam</h2>
+      <p>Drop PDFs, docs, slides, or photos of notes. We'll ask your backend to have GPT‑4 analyze them and return an exam blueprint. This page then builds a Word <strong>.docx</strong> for download.</p>
+
+      <div id="drop" class="drop" tabindex="0" role="button" aria-label="Upload study files">
+        <input id="fileInput" type="file" multiple hidden accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.md,.rtf,.png,.jpg,.jpeg,.webp,.heic" />
+        <div>
+          <strong>Drag & drop</strong> files here or <button class="btn ghost" type="button" onclick="document.querySelector('#fileInput').click()">browse</button>
+          <div class="tag" style="margin-top:6px">Accepted: PDF, DOCX, PPTX, TXT, images</div>
+        </div>
+        <div class="thumbs" id="thumbs"></div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="group">
+        <div>
+          <label>Subject / Topic</label>
+          <input id="subject" type="text" placeholder="e.g., Physics — Kinematics" />
+        </div>
+        <div>
+          <label>Target level</label>
+          <select id="level">
+            <option>Middle School</option>
+            <option>High School</option>
+            <option>First‑year University</option>
+            <option>Advanced University</option>
+          </select>
+        </div>
+        <div>
+          <label>Number of questions</label>
+          <input id="count" type="number" value="15" min="4" max="100" />
+        </div>
+        <div>
+          <label>Difficulty</label>
+          <select id="difficulty">
+            <option>Mixed</option>
+            <option>Easy</option>
+            <option>Medium</option>
+            <option>Hard</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="margin-top:10px">
+        <label>Question types</label>
+        <div class="toggle">
+          <label class="pill"><input type="checkbox" id="t_mcq" checked /> MCQ</label>
+          <label class="pill"><input type="checkbox" id="t_short" checked /> Short answer</label>
+          <label class="pill"><input type="checkbox" id="t_problem" /> Problems/Numerical</label>
+          <label class="pill"><input type="checkbox" id="t_essay" /> Essay</label>
+        </div>
+      </div>
+
+      <div style="margin-top:10px">
+        <label>Extra instructions to AI (optional)</label>
+        <textarea id="extra" placeholder="e.g., Align to Lebanese high‑school curriculum; include units; add rubric."></textarea>
+      </div>
+
+      <div class="row" style="margin-top:12px">
+        <button id="genBtn" class="btn primary" type="button">Generate Exam (.docx)</button>
+        <button id="previewBtn" class="btn" type="button" disabled>Download Answer Key (.docx)</button>
+        <div class="tag" id="genMeta"></div>
+      </div>
+
+      <div class="divider"></div>
+      <label>Activity log</label>
+      <div class="log" id="log" aria-live="polite"></div>
+    </section>
+
+    <!-- RIGHT: Grade Exam -->
+    <section class="card" id="grader">
+      <h2>Step 2 — Upload your solved exam for AI grading</h2>
+      <p>When students finish solving, upload the completed file (DOCX/PDF/images) or paste answers. Your backend will send it, plus the original answer key, to GPT‑4 for grading and feedback.</p>
+
+      <div class="group">
+        <div>
+          <label>Upload solved exam (DOCX/PDF/Images)</label>
+          <input id="solved" type="file" multiple accept=".doc,.docx,.pdf,.png,.jpg,.jpeg,.webp,.heic" />
+        </div>
+        <div>
+          <label>Or paste typed answers (Q# → answer)</label>
+          <textarea id="typed" placeholder="1) C\n2) 4.9 m/s^2\n3) Momentum is...\n…"></textarea>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:12px">
+        <button id="gradeBtn" class="btn primary" type="button" disabled>Grade with AI</button>
+        <button id="selfCheckBtn" class="btn" type="button" disabled>Quick self‑check (MCQ/short)</button>
+      </div>
+
+      <div class="divider"></div>
+      <div>
+        <label>Results</label>
+        <div id="results" class="log"></div>
+        <div class="out-links" style="margin-top:10px">
+          <button id="dlReportBtn" class="btn" type="button" disabled>Download Grade Report (.docx)</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // ====== UTIL ======
+    const logEl = document.getElementById('log');
+    function addLog(msg, cls=''){ const p=document.createElement('div'); p.textContent=msg; if(cls) p.classList.add(cls); logEl.appendChild(p); logEl.scrollTop=logEl.scrollHeight; }
+    function $(id){ return document.getElementById(id); }
+    function toBase64(file){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(file); }); }
+
+    // Stores the current exam JSON and answer key
+    let currentExam = null; // { title, instructions, sections:[{title,questions:[{q,choices?,answer?,rubric?}]}], answer_key:[...] }
+
+    // ====== FILE DROP UI ======
+    const drop = $('drop');
+    const fileInput = $('fileInput');
+    const thumbs = $('thumbs');
+    const files = [];
+
+    function renderThumbs(){
+      thumbs.innerHTML='';
+      files.forEach(f=>{
+        const d=document.createElement('div'); d.className='thumb';
+        const name=document.createElement('small'); name.textContent=f.name;
+        const meta=document.createElement('small'); meta.textContent=(f.type||'file')+` · ${(f.size/1024/1024).toFixed(2)} MB`;
+        d.appendChild(name); d.appendChild(meta);
+        thumbs.appendChild(d);
+      });
+      $('genMeta').textContent = files.length? `${files.length} file(s) attached` : '';
+    }
+
+    drop.addEventListener('click', ()=> fileInput.click());
+    drop.addEventListener('dragover', (e)=>{ e.preventDefault(); drop.classList.add('drag'); });
+    drop.addEventListener('dragleave', ()=> drop.classList.remove('drag'));
+    drop.addEventListener('drop', (e)=>{
+      e.preventDefault(); drop.classList.remove('drag');
+      for(const f of e.dataTransfer.files){ files.push(f); }
+      renderThumbs();
+    });
+    fileInput.addEventListener('change', ()=>{ for(const f of fileInput.files){ files.push(f); } renderThumbs(); });
+
+    // ====== BUILD REQUEST PAYLOAD ======
+    function buildOptions(){
+      return {
+        subject: $('subject').value || 'General',
+        level: $('level').value,
+        difficulty: $('difficulty').value,
+        count: Math.max(4, Math.min(100, parseInt($('count').value||'15',10))),
+        types: {
+          mcq: $('t_mcq').checked,
+          short: $('t_short').checked,
+          problem: $('t_problem').checked,
+          essay: $('t_essay').checked,
+        },
+        extra: $('extra').value || ''
+      };
+    }
+
+    // ====== CLIENT → BACKEND: PREPARE EXAM ======
+    const genBtn = $('genBtn');
+    const previewBtn = $('previewBtn');
+    const gradeBtn = $('gradeBtn');
+    const selfCheckBtn = $('selfCheckBtn');
+
+    genBtn.addEventListener('click', async ()=>{
+      try{
+        if(!files.length){ addLog('Please add at least one study file/photo.', 'warn'); return; }
+        genBtn.disabled = true; previewBtn.disabled = true; gradeBtn.disabled=true; selfCheckBtn.disabled=true;
+        addLog('Packaging files…');
+
+        const fd = new FormData();
+        files.forEach((f,i)=> fd.append('files', f, f.name));
+        fd.append('options', JSON.stringify(buildOptions()));
+
+        addLog('Sending to backend /api/prepare-exam (this should call GPT‑4 with vision & text).');
+        const res = await fetch('/api/prepare-exam', { method:'POST', body: fd });
+        if(!res.ok){ const t = await res.text(); throw new Error(`Backend error ${res.status}: ${t}`); }
+        const exam = await res.json();
+        // Basic shape sanity
+        if(!exam || !exam.sections || !exam.sections.length){ throw new Error('Malformed exam JSON from backend.'); }
+        currentExam = exam;
+        addLog('Exam blueprint received ✓', 'ok');
+
+        // Build DOCX immediately
+        const docBlob = await buildExamDocx(exam, /*withAnswers*/ false);
+        const fileName = (exam.title || 'AI Exam') + '.docx';
+        downloadBlob(docBlob, fileName);
+        addLog(`Exam .docx downloaded: ${fileName}`, 'ok');
+
+        // Prepare answer key and enable controls
+        previewBtn.disabled = false;
+        gradeBtn.disabled = false; selfCheckBtn.disabled = false;
+      }catch(err){ console.error(err); addLog(err.message || String(err), 'err'); }
+      finally{ genBtn.disabled = false; }
+    });
+
+    previewBtn.addEventListener('click', async ()=>{
+      if(!currentExam){ return; }
+      const blob = await buildExamDocx(currentExam, /*withAnswers*/ true);
+      const name = (currentExam.title || 'AI Exam') + ' — Answer Key.docx';
+      downloadBlob(blob, name);
+    });
+
+    // ====== GRADING ======
+    const resultsEl = $('results');
+    $('typed').addEventListener('input', ()=>{ /* enable quick self-check if we have exam */ if(currentExam) selfCheckBtn.disabled = false; });
+
+    selfCheckBtn.addEventListener('click', ()=>{
+      if(!currentExam) return;
+      const lines = $('typed').value.split(/\n+/).map(s=>s.trim()).filter(Boolean);
+      const answers = new Map();
+      for(const line of lines){ const m = line.match(/^(\d+)[\).:-]?\s*(.*)$/); if(m){ answers.set(parseInt(m[1],10), m[2]); } }
+      const report = quickSelfCheck(currentExam, answers);
+      resultsEl.innerHTML = report.html;
+      $('dlReportBtn').disabled = false;
+      $('dlReportBtn').onclick = async ()=>{
+        const blob = await buildReportDocx(report);
+        downloadBlob(blob, (currentExam.title||'AI Exam') + ' — Self‑Check Report.docx');
+      }
+    });
+
+    $('gradeBtn').addEventListener('click', async ()=>{
+      try{
+        if(!currentExam){ addLog('Generate an exam first.', 'warn'); return; }
+        $('gradeBtn').disabled = true;
+        resultsEl.textContent = '';
+        const fd = new FormData();
+        const solved = $('solved');
+        for(const f of solved.files){ fd.append('solved', f, f.name); }
+        if($('typed').value) fd.append('typed', $('typed').value);
+        fd.append('exam', JSON.stringify(currentExam));
+
+        addLog('Sending solved work to backend /api/grade-exam for GPT‑4 grading…');
+        const res = await fetch('/api/grade-exam', { method:'POST', body: fd });
+        if(!res.ok){ const t = await res.text(); throw new Error(`Backend error ${res.status}: ${t}`); }
+        const report = await res.json();
+        // render report
+        renderReport(report);
+        $('dlReportBtn').disabled = false;
+        $('dlReportBtn').onclick = async ()=>{
+          const blob = await buildReportDocx(report);
+          downloadBlob(blob, (currentExam.title||'AI Exam') + ' — Grading Report.docx');
+        }
+        addLog('Grading complete ✓', 'ok');
+      }catch(err){ console.error(err); addLog(err.message || String(err), 'err'); }
+      finally{ $('gradeBtn').disabled = false; }
+    });
+
+    function renderReport(report){
+      const { score=0, of=100, summary='', items=[] } = report || {};
+      const pct = of ? Math.round((score/of)*100) : 0;
+      const frag = document.createDocumentFragment();
+      const head = document.createElement('div');
+      head.innerHTML = `Total: <strong>${score}</strong> / ${of} (${pct}%) — ${summary}`;
+      frag.appendChild(head);
+      items.forEach((it,i)=>{
+        const d=document.createElement('div'); d.style.marginTop='6px';
+        d.innerHTML = `${i+1}. <strong>${escapeHtml(it.q||'Question')}</strong>\n<br>Student: ${escapeHtml(it.student||'-')}\n<br>Result: <strong>${escapeHtml(it.result||'—')}</strong>\n<br>Feedback: ${escapeHtml(it.feedback||'')}`;
+        frag.appendChild(d);
+      });
+      resultsEl.innerHTML=''; resultsEl.appendChild(frag);
+    }
+
+    // ====== DOCX BUILDERS ======
+    async function buildExamDocx(exam, withAnswers){
+      const { Document, Packer, Paragraph, HeadingLevel, TextRun, AlignmentType, PageNumber, Table, TableRow, TableCell, WidthType } = docx;
+      const title = exam.title || 'AI‑Generated Exam';
+      const docChildren = [];
+
+      docChildren.push(new Paragraph({ text: title, heading: HeadingLevel.TITLE, alignment: AlignmentType.CENTER }));
+      docChildren.push(new Paragraph({ text: exam.instructions || 'Answer all questions. Show work where required.', spacing: { after: 200 } }));
+
+      exam.sections.forEach((sec, sIdx)=>{
+        docChildren.push(new Paragraph({ text: sec.title || `Section ${sIdx+1}`, heading: HeadingLevel.HEADING_2 }));
+        sec.questions.forEach((q, i)=>{
+          const num = `${i+1}. `;
+          const parts = [ new TextRun({ text: num + (q.q||'Question'), bold: false }) ];
+          docChildren.push(new Paragraph({ children: parts, spacing:{ after: 80 } }));
+          if(Array.isArray(q.choices)){
+            q.choices.forEach((c, idx)=>{
+              const label = String.fromCharCode(65+idx) + ') ';
+              docChildren.push(new Paragraph({ text: '   ' + label + c }));
+            });
+          }
+          if(withAnswers && q.answer){
+            docChildren.push(new Paragraph({ text: `Answer: ${q.answer}`, spacing:{ after: 120 } }));
+          } else {
+            // add space for answer writing
+            if(!Array.isArray(q.choices)){
+              docChildren.push(new Paragraph({ text: '_____________________________________________' }));
+              docChildren.push(new Paragraph({ text: '_____________________________________________' }));
+            }
+          }
+        });
+        docChildren.push(new Paragraph({ spacing:{ after: 160 } }));
+      });
+
+      // Footer page numbers
+      const doc = new Document({
+        sections: [{
+          properties: {},
+          footers: { default: new docx.Footer({ children: [ new Paragraph({ alignment: AlignmentType.CENTER, children:[ new TextRun('Page '), new PageNumber() ] }) ] }) },
+          children: docChildren
+        }]
+      });
+
+      const blob = await Packer.toBlob(doc);
+      return blob;
+    }
+
+    function downloadBlob(blob, name){
+      const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+    }
+
+    function escapeHtml(s){ return (s||'').replace(/[&<>\"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c])); }
+
+    function quickSelfCheck(exam, answersMap){
+      let score=0, of=0; const items=[];
+      let qNum=0;
+      (exam.sections||[]).forEach(sec=>{
+        (sec.questions||[]).forEach(q=>{
+          qNum++; const student = (answersMap.get(qNum)||'').trim();
+          let result='N/A', feedback=''; let points=1; // 1 point each by default
+          if(q.answer){
+            of += points;
+            if(!student){ result='Missing'; feedback='No answer provided.'; }
+            else if(normalizeAns(student) === normalizeAns(q.answer)) { result='Correct'; score+=points; }
+            else { result='Incorrect'; feedback = `Expected: ${q.answer}`; }
+          } else {
+            result='Ungraded here'; feedback='Open‑ended; use AI grading.';
+          }
+          items.push({ q:q.q, student, result, feedback, points });
+        });
+      });
+      const summary = `Auto‑checked ${of} point(s) (MCQ/short only).`;
+      const html = [`Total: <strong>${score}</strong> / ${of} (${of?Math.round(100*score/of):0}%) — ${summary}`]
+        .concat(items.map((it,i)=> `${i+1}. <strong>${escapeHtml(it.q||'')}</strong><br>Student: ${escapeHtml(it.student)}<br>Result: <strong>${escapeHtml(it.result)}</strong><br>Feedback: ${escapeHtml(it.feedback)}`))
+        .join('\n\n');
+      return { score, of, summary, items, html };
+    }
+
+    function normalizeAns(a){ return (a||'').toString().trim().toLowerCase().replace(/\s+/g,' ').replace(/^option\s+/,'').replace(/[).:]+$/,''); }
+
+    async function buildReportDocx(report){
+      const { Document, Packer, Paragraph, HeadingLevel, TextRun, AlignmentType } = docx;
+      const docChildren = [];
+      const pct = report.of ? Math.round((report.score/report.of)*100) : 0;
+      docChildren.push(new Paragraph({ text: 'Grading Report', heading: HeadingLevel.TITLE, alignment: AlignmentType.CENTER }));
+      docChildren.push(new Paragraph({ text: `Total: ${report.score} / ${report.of} (${pct}%) — ${report.summary}`, spacing:{ after: 200 } }));
+      (report.items||[]).forEach((it,i)=>{
+        docChildren.push(new Paragraph({ text: `${i+1}. ${it.q||'Question'}`, heading: HeadingLevel.HEADING_2 }));
+        docChildren.push(new Paragraph({ text: `Student: ${it.student||'-'}` }));
+        docChildren.push(new Paragraph({ text: `Result: ${it.result||'-'}` }));
+        if(it.feedback) docChildren.push(new Paragraph({ text: `Feedback: ${it.feedback}` }));
+      });
+      const doc = new Document({ sections: [{ children: docChildren }] });
+      return await Packer.toBlob(doc);
+    }
+
+    // ====== BACKEND CONTRACT (for your Node/Express server) ======
+    /*
+      POST /api/prepare-exam
+      Body: multipart/form-data
+        - files: one or more files (pdf/docx/pptx/txt/images)
+        - options: JSON string { subject, level, difficulty, count, types:{mcq,short,problem,essay}, extra }
+      Response 200 JSON → exam object like:
+        {
+          "title": "Physics — Kinematics Midterm",
+          "instructions": "Answer all questions. Show your work.",
+          "sections": [
+            { "title": "Multiple Choice", "questions": [
+                { "q": "What is the SI unit of acceleration?", "choices": ["m/s", "m/s^2", "N", "kg"], "answer": "m/s^2" },
+                ...
+            ]},
+            { "title": "Short Answer", "questions": [ { "q": "State Newton's 2nd Law.", "answer": "F = m a" } ]}
+          ]
+        }
+
+      POST /api/grade-exam
+      Body: multipart/form-data
+        - solved: (optional) one or more files containing the student’s work (docx/pdf/images)
+        - typed:  (optional) plain text answers (e.g., "1) C\n2) 4.9 m/s^2\n...")
+        - exam:   the original exam JSON returned earlier
+      Response 200 JSON → grading report
+        { score: 24, of: 30, summary: "Strong conceptual grasp.", items: [ { q, student, result, feedback, points } ] }
+    */
+  </script>
+
+  <!--
+    OPTIONAL: Minimal Node/Express sketch (put on your server). Keep secrets server-side.
+
+    import express from 'express';
+    import multer from 'multer';
+    import OpenAI from 'openai';
+
+    const app = express();
+    const upload = multer({ limits: { fileSize: 25 * 1024 * 1024 } }); // 25MB each (adjust as needed)
+    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+    app.post('/api/prepare-exam', upload.array('files'), async (req, res) => {
+      try {
+        const options = JSON.parse(req.body.options||'{}');
+        // Convert files to base64 data URLs for vision models, or extract text server-side if you prefer.
+        const inputs = await Promise.all((req.files||[]).map(async f => ({
+          name: f.originalname,
+          mimetype: f.mimetype,
+          dataUrl: `data:${f.mimetype};base64,${f.buffer.toString('base64')}`,
+        })));
+
+        // Prompt the model to draft an exam JSON (ensure the output is valid JSON)
+        const system = `You are an assessment designer. Create a rigorous ${options.level} exam on ${options.subject}. Difficulty: ${options.difficulty}. Types: ${JSON.stringify(options.types)}. Count: ${options.count}. Return strictly a JSON object with title, instructions, sections[{title, questions[{q, choices?, answer}]}].` + (options.extra? ` Extra constraints: ${options.extra}` : '');
+
+        const contentParts = [ { type: 'input_text', text: system } ];
+        for (const inp of inputs) contentParts.push({ type: 'input_image', image_url: inp.dataUrl });
+
+        const response = await openai.responses.create({
+          model: 'gpt-4o-mini',
+          input: [ { role: 'user', content: contentParts } ],
+          temperature: 0.2,
+          max_output_tokens: 2000,
+          response_format: { type: 'json_object' }
+        });
+
+        const exam = JSON.parse(response.output[0].content[0].text);
+        res.json(exam);
+      } catch (e) { res.status(500).send(String(e?.message||e)); }
+    });
+
+    app.post('/api/grade-exam', upload.any(), async (req, res) => {
+      try {
+        const exam = JSON.parse(req.body.exam);
+        const typed = req.body.typed || '';
+        const solved = (req.files||[]).map(f => ({ name: f.originalname, mimetype: f.mimetype, dataUrl: `data:${f.mimetype};base64,${f.buffer.toString('base64')}` }));
+
+        const prompt = `Grade the student's work against this exam. Return JSON: {score, of, summary, items:[{q, student, result, feedback, points}]}. Exam JSON: ${JSON.stringify(exam)}. Typed answers (if any): ${typed}`;
+        const content = [ { role:'user', content:[ { type:'input_text', text: prompt }, ...solved.map(s=>({type:'input_image', image_url: s.dataUrl})) ] } ];
+
+        const response = await openai.responses.create({ model:'gpt-4o-mini', input: content, temperature: 0.1, max_output_tokens: 2000, response_format:{ type:'json_object' } });
+        const report = JSON.parse(response.output[0].content[0].text);
+        res.json(report);
+      } catch (e) { res.status(500).send(String(e?.message||e)); }
+    });
+
+    app.listen(process.env.PORT||3000, ()=> console.log('Exam service online'));
+  -->
+</body>
+</html>

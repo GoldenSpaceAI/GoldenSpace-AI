@@ -61,7 +61,7 @@
     .btn.wide{width:100%}
 
     .gridSmall{display:grid;gap:14px;grid-template-columns:1fr; margin-top:6px}
-    @media(min-width:800px){.gridSmall{grid-template-columns:repeat(3,1fr)}}
+    @media(min-width:900px){.gridSmall{grid-template-columns:repeat(3,1fr)}}
 
     footer{max-width:var(--max);margin:26px auto 34px;padding:0 16px;color:#aeb7c5;font-size:12px;
       display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;border-top:1px solid var(--border);padding-top:12px}
@@ -78,61 +78,80 @@
   <main class="wrap" aria-label="Plans">
     <h1 style="margin:6px 0 12px;font-size:clamp(22px,4vw,34px)">Choose your plan</h1>
 
-    <!-- TOP: Big cards -->
+    <!-- TOP: Big cards (Pro & Ultra) -->
     <section class="gridTop">
-      <!-- Chat AI Pack -->
+      <!-- Pro -->
       <article class="card">
-        <h2>🧠 Chat AI Pack <span class="price">— $5 / month</span></h2>
-        <div class="pill">Best for students & study help</div>
+        <h2>🚀 Pro <span class="price">— $8 / month</span></h2>
+        <div class="pill">Everything in Plus, for builders</div>
         <ul class="feats">
-          <li><span class="ok">✓</span> Unlimited Advanced AI questions</li>
-          <li><span class="ok">✓</span> Unlimited info searches and lesson searches</li>
-          <li><span class="ok">✓</span> Unlimited Homework solving</li>          
-          <li><span class="no">✗</span> Planet builder & Physics learning not included</li>
+          <li><span class="ok">✓</span> Includes all <strong>Plus</strong> features</li>
+          <li><span class="ok">✓</span> Create Rockets</li>
+          <li><span class="ok">✓</span> Create Satellites</li>
+          <li><span class="ok">✓</span> Create your <strong>Universe</strong></li>
+          <li><span class="ok">✓</span> Advanced Planet builder</li>
         </ul>
-        <button class="btn gold wide" data-plan="moon">Subscribe to Chat AI</button>
+        <button class="btn gold wide" data-plan="pro">Choose Pro</button>
       </article>
 
-      <!-- Your Space / Universe Pack -->
+      <!-- Ultra -->
       <article class="card">
-        <h2>🌌 Your Space Pack <span class="price">— $2.50 one-time</span></h2>
-        <div class="pill">Build your own universe hub</div>
+        <h2>💫 Ultra <span class="price">— $12 / month</span></h2>
+        <div class="pill">Best value • power users</div>
         <ul class="feats">
-          <li><span class="ok">✓</span> Create your universe</li>
-          <li><span class="ok">✓</span> Create rockets and satalites</li>
-          <li><span class="ok">✓</span> Create advanced planets</li>          
-          <li><span class="no">✗</span> No Learn Physics</li>
+          <li><span class="ok">✓</span> Includes all <strong>Pro</strong> features</li>
+          <li><span class="ok">✓</span> Better homework solving</li>
+          <li><span class="ok">✓</span> Advanced AI (higher quality)</li>
+          <li><span class="ok">✓</span> Search lessons</li>
         </ul>
-        <button class="btn gold wide" data-plan="spade">Unlock Your Space</button>
+        <button class="btn gold wide" data-plan="ultra">Go Ultra</button>
       </article>
     </section>
 
-    <!-- BOTTOM: Small cards -->
+    <!-- BOTTOM: Small cards (Free, Starter, Plus) -->
     <section class="gridSmall" aria-label="Core packs">
-      <!-- Moon -->
+      <!-- Free -->
       <article class="card">
-        <h2>🌙 Moon (Free)</h2>
+        <h2>🌙 Free</h2>
+        <div class="pill">Try it out</div>
         <ul class="feats">
-          <li><span class="ok">✓</span> Access to Chat AI </li>
-          <li><span class="ok">✓</span> Access to info searches</li>
+          <li><span class="ok">✓</span> Chat AI</li>
+          <li><span class="no">✗</span> Learn info</li>
           <li><span class="no">✗</span> Learn Physics</li>
-          <li><span class="no">✗</span> Create your own planet</li>
+          <li><span class="no">✗</span> Create Planet / Space tools</li>
         </ul>
-        <button class="btn ghost wide" data-plan="moon">Select Free Plan</button>
+        <button class="btn ghost wide" data-plan="free">Select Free</button>
       </article>
 
-      <!-- Earth -->
+      <!-- Starter -->
       <article class="card">
-        <h2>🌍 Earth ($2 / month)</h2>
+        <h2>🟢 Starter <span class="price">— $2 / month</span></h2>
+        <div class="pill">Essentials</div>
         <ul class="feats">
-          <li><span class="ok">✓</span> Access to Chat AI</li>
-          <li><span class="ok">✓</span> Access to  info searches</li>
-          <li><span class="ok">✓</span> Access to physics learnings</li>
-          <li><span class="ok">✓</span> Access to Create planet</li>
+          <li><span class="ok">✓</span> Chat AI</li>
+          <li><span class="ok">✓</span> Learn info</li>
+          <li><span class="no">✗</span> Learn Physics</li>
+          <li><span class="no">✗</span> Create Planet / Space tools</li>
         </ul>
-        <button class="btn gold wide" data-plan="earth">Choose Earth</button>
+        <button class="btn gold wide" data-plan="starter">Choose Starter</button>
       </article>
- <footer>
+
+      <!-- Plus -->
+      <article class="card">
+        <h2>⭐ Plus <span class="price">— $4 / month</span></h2>
+        <div class="pill">Great for students</div>
+        <ul class="feats">
+          <li><span class="ok">✓</span> Chat AI</li>
+          <li><span class="ok">✓</span> Learn info</li>
+          <li><span class="ok">✓</span> Learn Physics</li>
+          <li><span class="ok">✓</span> Create Planet</li>
+          <li><span class="no">✗</span> Rockets / Satellites / Universe</li>
+        </ul>
+        <button class="btn gold wide" data-plan="plus">Choose Plus</button>
+      </article>
+    </section>
+
+    <footer>
       <div>©️ <span id="yr"></span> GoldenSpaceAI</div>
       <div>
         <a href="/privacy.html">Privacy</a> ·
@@ -148,20 +167,22 @@
     // All plan buttons
     document.querySelectorAll('[data-plan]').forEach(btn=>{
       btn.addEventListener('click', async ()=>{
-        const plan = btn.dataset.plan;
+        const plan = btn.dataset.plan; // free, starter, plus, pro, ultra
         try{
           const r = await fetch('/api/select-plan/' + plan, {
             method:'POST',
             credentials:'include'
           });
-          if(r.status===401){ 
-            location.href='/auth/google'; 
-            return; 
+          if(r.status===401){
+            location.href='/auth/google';
+            return;
           }
           const j = await r.json();
           if(j.ok){
             alert('✅ Plan set to: ' + plan);
             location.href = '/';
+          }else{
+            alert('Something went wrong setting your plan.');
           }
         }catch(e){
           alert('Please sign in first.');

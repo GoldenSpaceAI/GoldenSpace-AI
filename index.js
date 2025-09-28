@@ -1,5 +1,5 @@
-// index.js — GoldenSpaceAI (Mongo-free version)
-// Plans & locks, GPT-4o/4o-mini routing, MemoryStore sessions
+// index.js — GoldenSpaceAI (Mongo-free)
+// Keeps your routes/plans; replaces Mongo sessions with MemoryStore.
 
 import express from "express";
 import cors from "cors";
@@ -50,11 +50,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // ---------- Plans & capabilities ----------
-const PLAN_CODES = {
-  earth: "33117722",
-  space: "22116644",
-  chatai: "444666333222",
-};
+const PLAN_CODES = { earth: "33117722", space: "22116644", chatai: "444666333222" };
 const CAPS = {
   CHAT: "chat",
   SEARCH_INFO: "search-info",
@@ -72,25 +68,10 @@ const PLAN_CAPS = {
   moon: new Set([CAPS.SEARCH_INFO, CAPS.CHAT]),
   earth: new Set([CAPS.CHAT, CAPS.LEARN_INFO, CAPS.PHYSICS, CAPS.CREATE_PLANET]),
   space: new Set([
-    CAPS.CHAT,
-    CAPS.SEARCH_INFO,
-    CAPS.ADVANCED_CHAT,
-    CAPS.HOMEWORK,
-    CAPS.LESSON_SEARCH,
-    CAPS.LEARN_INFO,
-    CAPS.PHYSICS,
-    CAPS.CREATE_PLANET,
-    CAPS.CREATE_ROCKET,
-    CAPS.CREATE_SAT,
-    CAPS.CREATE_UNIVERSE,
+    CAPS.CHAT, CAPS.SEARCH_INFO, CAPS.ADVANCED_CHAT, CAPS.HOMEWORK, CAPS.LESSON_SEARCH,
+    CAPS.LEARN_INFO, CAPS.PHYSICS, CAPS.CREATE_PLANET, CAPS.CREATE_ROCKET, CAPS.CREATE_SAT, CAPS.CREATE_UNIVERSE,
   ]),
-  chatai: new Set([
-    CAPS.CHAT,
-    CAPS.SEARCH_INFO,
-    CAPS.ADVANCED_CHAT,
-    CAPS.HOMEWORK,
-    CAPS.LESSON_SEARCH,
-  ]),
+  chatai: new Set([CAPS.CHAT, CAPS.SEARCH_INFO, CAPS.ADVANCED_CHAT, CAPS.HOMEWORK, CAPS.LESSON_SEARCH]),
 };
 const PLAN_LIMITS = {
   moon: { ask: 40, search: 20 },
@@ -101,13 +82,8 @@ const PLAN_LIMITS = {
 
 // ---------- Helper: compute base URL ----------
 function getBaseUrl(req) {
-  const proto =
-    (req.headers["x-forwarded-proto"] || "").toString().split(",")[0] ||
-    req.protocol ||
-    "https";
-  const host =
-    (req.headers["x-forwarded-host"] || "").toString().split(",")[0] ||
-    req.get("host");
+  const proto = (req.headers["x-forwarded-proto"] || "").toString().split(",")[0] || req.protocol || "https";
+  const host = (req.headers["x-forwarded-host"] || "").toString().split(",")[0] || req.get("host");
   return `${proto}://${host}`;
 }
 
@@ -117,11 +93,11 @@ passport.use(
   new GoogleStrategy(
     {
       clientID: process.env.GOOGLE_CLIENT_ID || "none",
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "none",
+      clientSecret: process.env.Google_CLIENT_SECRET || process.env.GOOGLE_CLIENT_SECRET || "none",
       callbackURL: DEFAULT_CALLBACK_PATH,
       proxy: true,
     },
-    (accessToken, refreshToken, profile, done) => {
+    (_accessToken, _refreshToken, profile, done) => {
       const user = {
         id: profile.id,
         name: profile.displayName,
@@ -137,17 +113,11 @@ passport.deserializeUser((obj, done) => done(null, obj));
 
 app.get("/auth/google", (req, res, next) => {
   const callbackURL = `${getBaseUrl(req)}${DEFAULT_CALLBACK_PATH}`;
-  passport.authenticate("google", {
-    scope: ["profile", "email"],
-    callbackURL,
-  })(req, res, next);
+  passport.authenticate("google", { scope: ["profile", "email"], callbackURL })(req, res, next);
 });
 app.get(DEFAULT_CALLBACK_PATH, (req, res, next) => {
   const callbackURL = `${getBaseUrl(req)}${DEFAULT_CALLBACK_PATH}`;
-  passport.authenticate("google", {
-    failureRedirect: "/login.html",
-    callbackURL,
-  })(req, res, () => res.redirect("/"));
+  passport.authenticate("google", { failureRedirect: "/login.html", callbackURL })(req, res, () => res.redirect("/"));
 });
 app.post("/logout", (req, res, next) => {
   req.logout?.((err) => {
@@ -156,10 +126,8 @@ app.post("/logout", (req, res, next) => {
   });
 });
 
-// ---------- Public/auth gate (everything open now) ----------
-function isPublicPath(_req) {
-  return true;
-}
+// ---------- Public/auth gate (open for now) ----------
+function isPublicPath(_req) { return true; }
 function authRequired(req, res, next) {
   if (isPublicPath(req)) return next();
   if (req.isAuthenticated && req.isAuthenticated()) return next();
@@ -174,19 +142,14 @@ app.get("/health", (_req, res) => res.json({ ok: true }));
 // ---------- OpenAI ----------
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-// ---------- Session helpers (chat memory) ----------
+// ---------- Session helpers (advanced chat memory) ----------
 function pushHistory(req, role, content) {
   if (!req.session.advHistory) req.session.advHistory = [];
   req.session.advHistory.push({ role, content });
-  if (req.session.advHistory.length > 20) {
-    req.session.advHistory = req.session.advHistory.slice(-20);
-  }
+  if (req.session.advHistory.length > 20) req.session.advHistory = req.session.advHistory.slice(-20);
 }
 function getHistory(req) {
-  return (req.session.advHistory || []).map((m) => ({
-    role: m.role,
-    content: m.content,
-  }));
+  return (req.session.advHistory || []).map((m) => ({ role: m.role, content: m.content }));
 }
 
 // ---------- Small file helper ----------
@@ -197,27 +160,19 @@ async function readTextIfPossible(filePath, mimetype) {
       return fs.readFileSync(filePath, "utf8").slice(0, 30000);
     }
     return null;
-  } catch {
-    return null;
-  }
+  } catch { return null; }
 }
 
 // ---------- Plan utils ----------
-function getPlan(req) {
-  return req.session.plan || "moon";
-}
-function setPlan(req, plan) {
-  req.session.plan = plan;
-}
+function getPlan(req) { return req.session.plan || "moon"; }
+function setPlan(req, plan) { req.session.plan = plan; }
 function requireCaps(...required) {
   return (req, res, next) => {
     const plan = getPlan(req);
     const caps = PLAN_CAPS[plan] || PLAN_CAPS.moon;
     for (const r of required) {
       if (!caps.has(r)) {
-        return res
-          .status(403)
-          .json({ error: `Your plan (${plan}) does not allow this action.` });
+        return res.status(403).json({ error: `Your plan (${plan}) does not allow this action.` });
       }
     }
     next();
@@ -232,12 +187,8 @@ app.post("/plan/activate", (req, res) => {
   if (code === PLAN_CODES.earth) setPlan(req, "earth");
   else if (code === PLAN_CODES.space) setPlan(req, "space");
   else if (code === PLAN_CODES.chatai) setPlan(req, "chatai");
-  else {
-    return res.status(401).json({
-      ok: false,
-      error: "Invalid password. Contact support goldenspaceais@gmail.com for help.",
-    });
-  }
+  else return res.status(401).json({ ok: false, error: "Invalid password. Contact support goldenspaceais@gmail.com for help." });
+
   return res.json({ ok: true, plan: getPlan(req) });
 });
 
@@ -428,12 +379,11 @@ app.post("/ai/create-universe", requireCaps(CAPS.CREATE_UNIVERSE), async (req, r
 app.post("/chat-advanced-ai", requireCaps(CAPS.ADVANCED_CHAT), upload.single("file"), async (req, res) => {
   try {
     const q = (req.body?.q || "").trim();
-    const sys = (req.body?.system || "You are GoldenSpaceAI Advanced Assistant. Always provide long, detailed answers.").toString();
+    const sys =
+      (req.body?.system ||
+        "You are GoldenSpaceAI Advanced Assistant. Always provide long, detailed answers.").toString();
 
-    const messages = [
-      { role: "system", content: sys },
-      ...getHistory(req),
-    ];
+    const messages = [{ role: "system", content: sys }, ...getHistory(req)];
     if (q) {
       messages.push({ role: "user", content: q });
       pushHistory(req, "user", q);
@@ -454,17 +404,12 @@ app.post("/chat-advanced-ai", requireCaps(CAPS.ADVANCED_CHAT), upload.single("fi
         });
       } else {
         const text = await readTextIfPossible(filePath, mime);
-        if (text) {
-          messages.push({
-            role: "user",
-            content: `Attached file "${req.file.originalname}" (truncated):\n\n${text}`,
-          });
-        } else {
-          messages.push({
-            role: "user",
-            content: `Attached file "${req.file.originalname}" (${mime}).`,
-          });
-        }
+        messages.push({
+          role: "user",
+          content: text
+            ? `Attached file "${req.file.originalname}" (truncated):\n\n${text}`
+            : `Attached file "${req.file.originalname}" (${mime}).`,
+        });
       }
       fs.unlink(filePath, () => {});
     }
@@ -484,7 +429,7 @@ app.post("/chat-advanced-ai", requireCaps(CAPS.ADVANCED_CHAT), upload.single("fi
   }
 });
 
-// --- Homework solver (HOMEWORK) — vision capable input
+// --- Homework (HOMEWORK) — vision-capable input
 async function handleHomework(req, res) {
   try {
     const message = (req.body?.message || req.body?.prompt || "").trim();
@@ -500,27 +445,17 @@ async function handleHomework(req, res) {
     const img = allFiles.find((f) => (f.mimetype || "").startsWith("image/"));
     if (img) {
       const b64 = fs.readFileSync(img.path).toString("base64");
-      parts.push({
-        type: "image_url",
-        image_url: { url: `data:${img.mimetype};base64,${b64}` },
-      });
+      parts.push({ type: "image_url", image_url: { url: `data:${img.mimetype};base64,${b64}` } });
     }
 
-    for (const f of allFiles) {
-      try { fs.unlinkSync(f.path); } catch {}
-    }
+    for (const f of allFiles) { try { fs.unlinkSync(f.path); } catch {} }
 
-    if (parts.length === 0) {
-      return res.status(400).json({ error: "Provide an image or a message." });
-    }
+    if (parts.length === 0) return res.status(400).json({ error: "Provide an image or a message." });
 
     const completion = await openai.chat.completions.create({
       model,
       messages: [
-        {
-          role: "system",
-          content: "You are GoldenSpaceAI Homework Helper. Explain step-by-step, show working, and verify the final answer.",
-        },
+        { role: "system", content: "You are GoldenSpaceAI Homework Helper. Explain step-by-step, show working, and verify the final answer." },
         { role: "user", content: parts },
       ],
       temperature: 0.2,

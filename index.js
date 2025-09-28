@@ -208,7 +208,7 @@ app.post("/ask", requireCaps(CAPS.CHAT), async (req, res) => {
     const completion = await openai.chat.completions.create({
       model,
       messages: [
-        { role: "system", content: "You are GoldenSpaceAI. Always answer in a long, detailed way." },
+        { role: "system", content: "You are GoldenSpaceAI. Always answer in a very simple way, and a short answer." },
         { role: "user", content: q },
       ],
       temperature: 0.3,
@@ -391,7 +391,7 @@ async function readTextIfPossible(filePath, mimetype) {
 app.post("/chat-advanced-ai", requireCaps(CAPS.ADVANCED_CHAT), uploadAny.single("file"), async (req, res) => {
   try {
     const q = (req.body?.q || "").trim();
-    const sys = (req.body?.system || "You are GoldenSpaceAI Advanced Assistant. Always provide long, detailed answers.").toString();
+    const sys = (req.body?.system || "You are GoldenSpaceAI Advanced Assistant. Always provide long,  very profetional and detailed answers.").toString();
     const messages = [{ role: "system", content: sys }, ...getHistory(req)];
     if (q) { messages.push({ role: "user", content: q }); pushHistory(req, "user", q); }
 

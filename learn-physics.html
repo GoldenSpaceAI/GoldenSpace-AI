@@ -102,7 +102,237 @@
         <p class="sub">Premium notes with worked examples. Tap to expand.</p>
 
         <div id="topics" class="topics">
-          <!-- Cards injected below -->
+          <!-- 1 Mechanics -->
+          <div class="card" data-topic="Mechanics">
+            <h3>Mechanics <span class="pill">Kinematics & Dynamics</span></h3>
+            <div class="tiny">Motion with constant/variable acceleration; forces.</div>
+            <details><summary>Key formulas</summary>
+              <div class="content">
+                <p><span class="formula">v = u + at</span> &nbsp; <span class="formula">s = ut + ½at²</span> &nbsp; <span class="formula">v² = u² + 2as</span></p>
+                <p><span class="formula">F = ma</span>, work <span class="formula">W = Fs</span>, power <span class="formula">P = W/t</span></p>
+              </div>
+            </details>
+          </div>
+
+          <!-- 2 Rotational Dynamics -->
+          <div class="card" data-topic="Rotational Dynamics">
+            <h3>Rotational Dynamics <span class="pill">Torque</span></h3>
+            <div class="tiny">Angular motion, moment of inertia, rolling.</div>
+            <details><summary>Key formulas</summary>
+              <div class="content">
+                <p><span class="formula">τ = Iα</span> &nbsp; <span class="formula">L = Iω</span> &nbsp; <span class="formula">K<sub>rot</sub> = ½Iω²</span></p>
+                <p>Rolling: <span class="formula">v = ωr</span>, energy = translational + rotational.</p>
+              </div>
+            </details>
+          </div>
+
+          <!-- 3 SHM -->
+          <div class="card" data-topic="SHM & Oscillations">
+            <h3>SHM & Oscillations <span class="pill">Periodic</span></h3>
+            <div class="tiny">Mass–spring, pendulum, resonance.</div>
+            <details><summary>Key formulas</summary>
+              <div class="content">
+                <p><span class="formula">x = A cos(ωt+φ)</span> &nbsp; <span class="formula">ω = √(k/m)</span> &nbsp; <span class="formula">T = 2π/ω</span></p>
+                <p>Pendulum small-angle: <span class="formula">T = 2π√(L/g)</span></p>
+              </div>
+            </details>
+          </div>
+
+          <!-- 4 Gravitation -->
+          <div class="card" data-topic="Gravitation & Orbits">
+            <h3>Gravitation & Orbits <span class="pill">Kepler</span></h3>
+            <div class="tiny">Inverse-square law; circular & elliptical orbits.</div>
+            <details><summary>Key formulas</summary>
+              <div class="content">
+                <p><span class="formula">F = GmM/r²</span> &nbsp; <span class="formula">U = -GmM/r</span> &nbsp; <span class="formula">v<sub>orb</sub> = √(GM/r)</span></p>
+                <p>Escape: <span class="formula">v<sub>esc</sub> = √(2GM/r)</span></p>
+              </div>
+            </details>
+          </div>
+
+          <!-- 5 Energy & Momentum -->
+          <div class="card" data-topic="Energy & Momentum">
+            <h3>Energy & Momentum <span class="pill">Conservation</span></h3>
+            <div class="tiny">Work–energy theorem; elastic/inelastic collisions.</div>
+            <details><summary>Key formulas</summary>
+              <div class="content">
+                <p><span class="formula">K = ½mv²</span> &nbsp; <span class="formula">W = ΔK</span> &nbsp; <span class="formula">p = mv</span></p>
+                <p>Elastic collision conserves both <span class="formula">p</span> & <span class="formula">K</span>.</p>
+              </div>
+            </details>
+          </div>
+
+          <!-- 6 Fluids -->
+          <div class="card" data-topic="Fluid Mechanics">
+            <h3>Fluid Mechanics <span class="pill">Pressure</span></h3>
+            <div class="tiny">Buoyancy, continuity, Bernoulli.</div>
+            <details><summary>Key formulas</summary>
+              <div class="content">
+                <p>Hydrostatic: <span class="formula">P = P₀ + ρgh</span>; Buoyant: <span class="formula">F<sub>b</sub>=ρgV</span></p>
+                <p>Continuity: <span class="formula">A₁v₁ = A₂v₂</span>; Bernoulli: <span class="formula">P + ½ρv² + ρgh = const</span></p>
+              </div>
+            </details>
+          </div>
+
+          <!-- 7 Waves & Optics -->
+          <div class="card" data-topic="Waves & Optics">
+            <h3>Waves & Optics <span class="pill">Interference</span></h3>
+            <div class="tiny">Wave equation, diffraction, lenses.</div>
+            <details><summary>Key formulas</summary>
+              <div class="content">
+                <p><span class="formula">v = fλ</span> &nbsp; <span class="formula">I ∝ A²</span> &nbsp; <span class="formula">Δy = λL/d</span></p>
+                <p>Thin lens: <span class="formula">1/f = 1/u + 1/v</span></p>
+              </div>
+            </details>
+          </div>
+
+          <!-- 8 Thermodynamics -->
+          <div class="card" data-topic="Thermodynamics">
+            <h3>Thermodynamics <span class="pill">Laws</span></h3>
+            <div class="tiny">First/second law; PV diagrams; engines.</div>
+            <details><summary>Key formulas</summary>
+              <div class="content">
+                <p><span class="formula">ΔU = Q - W</span> &nbsp; <span class="formula">PV = nRT</span> &nbsp; Carnot: <span class="formula">η = 1 - T<sub>c</sub>/T<sub>h</sub></span></p>
+              </div>
+            </details>
+          </div>
+
+          <!-- 9 Heat Transfer -->
+          <div class="card" data-topic="Thermal Physics">
+            <h3>Thermal Physics <span class="pill">Heat Transfer</span></h3>
+            <div class="tiny">Conduction, convection, radiation.</div>
+            <details><summary>Key formulas</summary>
+              <div class="content">
+                <p>Conduction: <span class="formula">Q/t = kAΔT/L</span>; Radiation: <span class="formula">P = σεAT⁴</span></p>
+              </div>
+            </details>
+          </div>
+
+          <!-- 10 Electricity -->
+          <div class="card" data-topic="Electricity">
+            <h3>Electricity <span class="pill">DC Circuits</span></h3>
+            <div class="tiny">Ohm’s law; series/parallel; power.</div>
+            <details><summary>Key formulas</summary>
+              <div class="content">
+                <p><span class="formula">V = IR</span> &nbsp; <span class="formula">P = VI = I²R = V²/R</span></p>
+                <p>Series: <span class="formula">R<sub>eq</sub>=ΣR</span>; Parallel: <span class="formula">1/R<sub>eq</sub>=Σ1/R</span></p>
+              </div>
+            </details>
+          </div>
+
+          <!-- 11 Magnetism -->
+          <div class="card" data-topic="Magnetism">
+            <h3>Magnetism <span class="pill">Fields & Induction</span></h3>
+            <div class="tiny">Lorentz force; Faraday’s law.</div>
+            <details><summary>Key formulas</summary>
+              <div class="content">
+                <p>Force: <span class="formula">F = qvB sinθ</span>, wire: <span class="formula">F = BIL sinθ</span></p>
+                <p>Induction: <span class="formula">ε = -dΦ/dt</span></p>
+              </div>
+            </details>
+          </div>
+
+          <!-- 12 Electromagnetism -->
+          <div class="card" data-topic="Electromagnetism">
+            <h3>Electromagnetism <span class="pill">Maxwell</span></h3>
+            <div class="tiny">Unified E & B; waves in vacuum.</div>
+            <details><summary>Key formulas</summary>
+              <div class="content">
+                <p>Maxwell: <span class="formula">∇·E=ρ/ε₀</span>, <span class="formula">∇·B=0</span>, <span class="formula">∇×E=-∂B/∂t</span>, <span class="formula">∇×B=μ₀J+μ₀ε₀∂E/∂t</span></p>
+                <p>Light speed: <span class="formula">c = 1/√(μ₀ε₀)</span></p>
+              </div>
+            </details>
+          </div>
+
+          <!-- 13 Modern Physics -->
+          <div class="card" data-topic="Modern Physics">
+            <h3>Modern Physics <span class="pill">Photoelectric</span></h3>
+            <div class="tiny">Photons, Bohr model, Compton.</div>
+            <details><summary>Key formulas</summary>
+              <div class="content">
+                <p>Photon: <span class="formula">E = hf = hc/λ</span>; PE effect: <span class="formula">K<sub>max</sub> = hf - Φ</span></p>
+              </div>
+            </details>
+          </div>
+
+          <!-- 14 Relativity -->
+          <div class="card" data-topic="Relativity">
+            <h3>Relativity <span class="pill">SR/GR</span></h3>
+            <div class="tiny">Time dilation, length contraction; gravity as curvature.</div>
+            <details><summary>Key formulas</summary>
+              <div class="content">
+                <p><span class="formula">γ = 1/√(1 - v²/c²)</span> &nbsp; <span class="formula">Δt' = γΔt</span> &nbsp; <span class="formula">L' = L/γ</span></p>
+                <p>Energy: <span class="formula">E = γmc²</span></p>
+              </div>
+            </details>
+          </div>
+
+          <!-- 15 Quantum -->
+          <div class="card" data-topic="Quantum Mechanics">
+            <h3>Quantum Mechanics <span class="pill">Basics</span></h3>
+            <div class="tiny">Wavefunctions, uncertainty, wells.</div>
+            <details><summary>Key formulas</summary>
+              <div class="content">
+                <p>de Broglie: <span class="formula">λ = h/p</span>; Heisenberg: <span class="formula">ΔxΔp ≥ ħ/2</span></p>
+              </div>
+            </details>
+          </div>
+
+          <!-- 16 Nuclear -->
+          <div class="card" data-topic="Nuclear Physics">
+            <h3>Nuclear Physics <span class="pill">Decay</span></h3>
+            <div class="tiny">Radioactivity; binding energy.</div>
+            <details><summary>Key formulas</summary>
+              <div class="content">
+                <p>Decay: <span class="formula">N = N₀ e^{-λt}</span> &nbsp; <span class="formula">T½ = ln2/λ</span></p>
+                <p>Mass–energy: <span class="formula">E = Δmc²</span></p>
+              </div>
+            </details>
+          </div>
+
+          <!-- 17 Materials -->
+          <div class="card" data-topic="Materials & Solid State">
+            <h3>Materials & Solid State <span class="pill">Stress–Strain</span></h3>
+            <div class="tiny">Elasticity; band theory; semiconductors.</div>
+            <details><summary>Key formulas</summary>
+              <div class="content">
+                <p><span class="formula">σ = F/A</span>, <span class="formula">ε = ΔL/L</span>, Young’s: <span class="formula">E = σ/ε</span></p>
+              </div>
+            </details>
+          </div>
+
+          <!-- 18 Error Analysis -->
+          <div class="card" data-topic="Units & Error Analysis">
+            <h3>Units & Error Analysis <span class="pill">Significant</span></h3>
+            <div class="tiny">Uncertainty, propagation, SI.</div>
+            <details><summary>Key formulas</summary>
+              <div class="content">
+                <p>Add/Sub: <span class="formula">Δz = √(Δx²+Δy²)</span>; Mult/Div: relative errors add.</p>
+              </div>
+            </details>
+          </div>
+
+          <!-- 19 Astrophysics -->
+          <div class="card" data-topic="Astronomy & Astrophysics">
+            <h3>Astronomy & Astrophysics <span class="pill">Cosmic</span></h3>
+            <div class="tiny">Stars, H–R diagram, cosmology basics.</div>
+            <details><summary>Key formulas</summary>
+              <div class="content">
+                <p>Luminosity: <span class="formula">L = 4πR²σT⁴</span>; Hubble: <span class="formula">v = H₀ d</span></p>
+              </div>
+            </details>
+          </div>
+
+          <!-- 20 Rocketry -->
+          <div class="card" data-topic="Rocketry & Spaceflight">
+            <h3>Rocketry & Spaceflight <span class="pill">Tsiolkovsky</span></h3>
+            <div class="tiny">Delta-v, staging, orbits.</div>
+            <details><summary>Key formulas</summary>
+              <div class="content">
+                <p>Rocket eq.: <span class="formula">Δv = v<sub>e</sub> ln(m₀/m<sub>f</sub>)</span> &nbsp; Isp relation: <span class="formula">v<sub>e</sub>=g₀ I<sub>sp</sub></span></p>
+              </div>
+            </details>
+          </div>
         </div>
       </section>
 
@@ -150,44 +380,10 @@
     </main>
 
     <script>
-      // ----------------- Topic Cards (20) -----------------
-      const TOPIC_DATA = [
-        {t:'Mechanics', pill:'Kinematics & Dynamics', formulas:['v = u + at','s = ut + ½at²','v² = u² + 2as','F = ma','P = W/t']},
-        {t:'Rotational Dynamics', pill:'Torque', formulas:['τ = Iα','L = Iω','K_rot = ½Iω²','v = ωr']},
-        {t:'SHM & Oscillations', pill:'Periodic', formulas:['x = A cos(ωt+φ)','ω = √(k/m)','T = 2π/ω','T_pend = 2π√(L/g)']},
-        {t:'Gravitation & Orbits', pill:'Kepler', formulas:['F = GmM/r²','U = -GmM/r','v_orb = √(GM/r)','v_esc = √(2GM/r)']},
-        {t:'Energy & Momentum', pill:'Conservation', formulas:['K = ½mv²','W = ΔK','p = mv']},
-        {t:'Fluid Mechanics', pill:'Pressure', formulas:['P = P₀ + ρgh','F_b = ρgV','A₁v₁ = A₂v₂','Bernoulli']},
-        {t:'Waves & Optics', pill:'Interference', formulas:['v = fλ','I ∝ A²','Δy = λL/d','1/f = 1/u + 1/v']},
-        {t:'Thermodynamics', pill:'Laws', formulas:['ΔU = Q - W','PV = nRT','η = 1 - Tc/Th']},
-        {t:'Thermal Physics', pill:'Heat Transfer', formulas:['Q/t = kAΔT/L','P = σεAT⁴']},
-        {t:'Electricity', pill:'DC Circuits', formulas:['V = IR','P = VI = I²R = V²/R','Req series/parallel']},
-        {t:'Magnetism', pill:'Fields & Induction', formulas:['F = qvB sinθ','F = BIL sinθ','ε = -dΦ/dt']},
-        {t:'Electromagnetism', pill:'Maxwell', formulas:['∇·E=ρ/ε₀','∇·B=0','∇×E=-∂B/∂t','∇×B=μ₀J+μ₀ε₀∂E/∂t','c=1/√(μ₀ε₀)']},
-        {t:'Modern Physics', pill:'Photoelectric', formulas:['E = hf = hc/λ','Kmax = hf - Φ']},
-        {t:'Relativity', pill:'SR/GR', formulas:['γ = 1/√(1 - v²/c²)','Δt\' = γΔt','L\' = L/γ','E = γmc²']},
-        {t:'Quantum Mechanics', pill:'Basics', formulas:['λ = h/p','ΔxΔp ≥ ħ/2']},
-        {t:'Nuclear Physics', pill:'Decay', formulas:['N = N₀ e^{-λt}','T½ = ln2/λ','E = Δmc²']},
-        {t:'Materials & Solid State', pill:'Stress–Strain', formulas:['σ = F/A','ε = ΔL/L','E = σ/ε']},
-        {t:'Units & Error Analysis', pill:'Significant', formulas:['Δz = √(Δx²+Δy²)','relative errors add']},
-        {t:'Astronomy & Astrophysics', pill:'Cosmic', formulas:['L = 4πR²σT⁴','v = H₀ d']},
-        {t:'Rocketry & Spaceflight', pill:'Tsiolkovsky', formulas:['Δv = v_e ln(m0/mf)','v_e = g0 Isp']},
-      ];
-
-      const topicsWrap = document.getElementById('topics');
-      let CURRENT_TOPIC = TOPIC_DATA[0].t;
-
-      TOPIC_DATA.forEach((d)=>{
-        const el = document.createElement('div');
-        el.className = 'card';
-        el.innerHTML = `
-          <h3>${d.t} <span class="pill">${d.pill}</span></h3>
-          <div class="tiny">Tap to expand. Current topic set when clicked.</div>
-          <details><summary>Key formulas</summary>
-            <div class="content">${d.formulas.map(f=>`<div class='formula'>${f}</div>`).join('')}</div>
-          </details>`;
-        el.addEventListener('click', ()=>{ CURRENT_TOPIC = d.t; toast(`Topic set: ${d.t}`); });
-        topicsWrap.appendChild(el);
+      // ----------------- Topic Cards (20, static) -----------------
+      let CURRENT_TOPIC = 'Mechanics';
+      document.querySelectorAll('#topics .card[data-topic]').forEach(card=>{
+        card.addEventListener('click', ()=>{ CURRENT_TOPIC = card.getAttribute('data-topic'); toast(`Topic set: ${CURRENT_TOPIC}`); });
       });
 
       // ----------------- Small tools -----------------

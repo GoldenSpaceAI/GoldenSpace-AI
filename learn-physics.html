@@ -1,365 +1,256 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>GoldenSpaceAI · Learn Physics (GPT‑4 Tutor)</title>
-  <meta name="description" content="An interactive Physics tutor powered by GPT‑4. Practice problems, hints, and step‑by‑step explanations with LaTeX rendering."/>
-  <style>
-    :root{
-      --gold-1:#ffd700; --gold-2:#e6c200; --gold-3:#b89700;
-      --space-1:#0b0f16; --space-2:#0f1726; --glass:rgba(255,255,255,.06);
-      --ring:rgba(255,215,0,.35); --text:#f7f6ef; --muted:#c8b88a;
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0; font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial;
-      color:var(--text);
-      background:
-        radial-gradient(1200px 800px at 90% -10%, rgba(255,215,0,.12), transparent 40%),
-        radial-gradient(1000px 700px at 0% 120%, rgba(255,215,0,.10), transparent 40%),
-        linear-gradient(180deg, var(--space-1), var(--space-2));
-    }
-    .page{display:grid; grid-template-columns: 300px 1fr; gap:16px; height:100%;}
-    aside{
-      padding:18px; border-right:1px solid rgba(255,255,255,.06);
-      background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.00));
-      backdrop-filter: blur(8px);
-    }
-    main{padding:18px; display:flex; flex-direction:column; height:100%;}
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>GoldenSpaceAI • Learn Physics</title>
 
-    .brand {display:flex; align-items:center; gap:10px; margin-bottom:14px}
-    .logo{width:28px; height:28px; border-radius:8px; background:linear-gradient(135deg,var(--gold-1),var(--gold-3)); box-shadow:0 0 0 2px rgba(0,0,0,.3), 0 0 22px rgba(255,215,0,.25)}
-    h1{font-size:18px; margin:0}
-    .muted{color:var(--muted); font-size:12px}
+    <style>
+      :root {
+        --bg: #0b0f14;
+        --panel: #131a25;
+        --panel2: #0f1520;
+        --border: #1f2a40;
+        --gold: #f6c64a;
+        --gold2: #eb8b36;
+        --text: #e7f4e9;
+        --muted: #cfc6a5;
+        --shadow: 0 18px 60px rgba(0, 0, 0, 0.45);
+      }
+      * { box-sizing: border-box; }
+      html, body { height: 100%; }
+      body {
+        margin: 0; color: var(--text);
+        font: 15px/1.5 ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;
+        background:
+          radial-gradient(1100px 520px at 85% -10%, rgba(246, 198, 74, 0.12), transparent 60%),
+          radial-gradient(900px 480px at -10% 0%, rgba(246, 198, 74, 0.08), transparent 60%),
+          #0a0e15;
+        min-height: 100svh;
+      }
+      a { color: inherit; text-decoration: none; }
 
-    .card{border:1px solid rgba(255,255,255,.08); background:var(--glass); border-radius:16px; box-shadow:0 8px 40px rgba(0,0,0,.35)}
-    .panel{padding:12px 14px}
+      /* Top */
+      .top { position: sticky; top: 0; z-index: 10; padding: clamp(14px, 2.2vh, 22px) 18px 10px;
+        background: linear-gradient(180deg, rgba(10, 14, 21, 0.92), rgba(10, 14, 21, 0.65) 60%, transparent);
+        border-bottom: 1px solid var(--border); backdrop-filter: blur(8px);
+        display: flex; align-items: center; gap: 12px; }
+      .back { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px; font-weight: 900; font-size: 14px;
+        background: linear-gradient(180deg, var(--gold), var(--gold2)); color: #1b1300; border: 1px solid rgba(0, 0, 0, 0.18); box-shadow: 0 10px 26px rgba(246, 198, 74, 0.25);
+        transition: transform 0.2s ease, filter 0.2s ease; }
+      .back:hover { transform: translateY(-1px); filter: saturate(1.05); }
+      .title { font-weight: 900; letter-spacing: 0.4px; color: var(--gold); font-size: clamp(22px, 2.6vw, 28px); text-shadow: 0 0 18px rgba(246, 198, 74, 0.25); }
+      .spacer { flex: 1; }
 
-    .section-title{font-size:12px; text-transform:uppercase; letter-spacing:.12em; color:var(--muted); margin:14px 0 8px}
+      /* Layout */
+      .wrap { max-width: 1200px; margin: 26px auto; padding: 0 18px; display: grid; gap: 18px; grid-template-columns: 1.4fr 0.9fr; }
+      @media (max-width: 1100px) { .wrap { grid-template-columns: 1fr; } }
 
-    .topics{display:grid; gap:8px}
-    .topic{display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:12px; cursor:pointer; border:1px solid transparent}
-    .topic:hover{border-color:var(--ring); background:rgba(255,215,0,.04)}
-    .topic.active{border-color:var(--gold-2); background:rgba(255,215,0,.08)}
-    .topic input{margin-left:auto}
+      .panel { background: linear-gradient(180deg, var(--panel), var(--panel2)); border: 1px solid var(--border); border-radius: 16px; padding: 18px; box-shadow: var(--shadow); }
+      .panel h2 { margin: 0 0 10px; font-size: 18px; color: var(--gold); font-weight: 900; }
+      .sub { margin: 6px 0 14px; color: var(--muted); font-size: 14px; }
 
-    .controls {display:grid; gap:10px}
-    .row{display:flex; align-items:center; gap:8px}
-    .row > *{flex:1}
-    label{font-size:12px; color:var(--muted)}
-    select, input[type="text"], input[type="password"], textarea{ width:100%; padding:10px 12px; border-radius:12px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.04); color:var(--text)}
+      /* Cards grid: 20 topics */
+      .topics { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+      .card { background: #0d1420; border: 1px solid var(--border); border-radius: 14px; padding: 14px; transition: transform 0.12s ease, box-shadow 0.12s ease; cursor: pointer; }
+      .card:hover { transform: translateY(-2px); box-shadow: 0 14px 30px rgba(0, 0, 0, 0.25); }
+      .card h3 { margin: 0 0 6px; font-size: 16px; display: flex; align-items: center; gap: 8px; }
+      .pill { display: inline-block; padding: 3px 8px; border-radius: 999px; font-size: 12px; font-weight: 800; color: #1b1300; background: linear-gradient(180deg, #f8d772, #e7b72f); }
+      .tiny { font-size: 12px; color: var(--muted); }
+      .formula { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: #ffe08a; }
 
-    .btn{display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:10px 12px; border-radius:12px; border:1px solid rgba(255,255,255,.12); cursor:pointer; user-select:none}
-    .btn:hover{border-color:var(--ring); background:rgba(255,215,0,.06)}
-    .btn.primary{background:linear-gradient(135deg,var(--gold-2),var(--gold-1)); color:#1a1400; border-color:rgba(0,0,0,.15); box-shadow:0 4px 30px rgba(255,215,0,.25)}
-    .btn.ghost{background:transparent}
-    .btn.small{padding:8px 10px; font-size:12px}
+      details { margin-top: 8px; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+      summary { cursor: pointer; padding: 10px 12px; background: #0f1725; list-style: none; font-weight: 800; }
+      summary::-webkit-details-marker { display: none; }
+      details .content { padding: 12px; background: #0b111c; }
 
-    /* Chat */
-    .chat{display:flex; flex-direction:column; gap:12px; overflow:auto; padding:14px;}
-    .bubble{position:relative; padding:12px 14px; border-radius:14px; border:1px solid rgba(255,255,255,.10); background:rgba(255,255,255,.03)}
-    .bubble.me{align-self:flex-end; border-color:rgba(255,215,0,.25); background:rgba(255,215,0,.06)}
-    .bubble.assistant{align-self:flex-start}
-    .bubble h4{margin:.2rem 0 .4rem; font-size:13px; color:var(--muted)}
-    .bubble .content{font-size:15px; line-height:1.6}
-    .msg-toolbar{display:flex; gap:8px; justify-content:flex-end; margin-top:6px}
+      /* Right: Tools + Tutor */
+      .box { background: #0d1420; border: 1px solid var(--border); border-radius: 12px; padding: 12px; }
+      label { display: block; font-size: 12px; color: var(--muted); margin-top: 6px; }
+      input[type="number"], input[type="text"], textarea { width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border); background: #0b1219; color: var(--text); margin-top: 6px; }
+      .btn { margin-top: 10px; border-radius: 12px; padding: 10px 14px; font-weight: 900; cursor: pointer; background: linear-gradient(180deg, var(--gold), var(--gold2)); color: #1b1300; border: 1px solid rgba(0, 0, 0, 0.18); box-shadow: 0 10px 26px rgba(246, 198, 74, 0.28); transition: transform 0.2s ease, filter 0.2s ease; }
+      .btn:hover { transform: translateY(-1px); filter: saturate(1.05); }
+      .out { margin-top: 8px; font-weight: 900; color: var(--gold); }
 
-    .composer{display:grid; grid-template-columns:1fr auto; gap:10px; padding:12px; border-top:1px solid rgba(255,255,255,.06)}
-    .actions{display:flex; gap:8px}
+      .ai-wrap { margin-top: 14px; }
+      .ai { display: flex; gap: 10px; }
+      .ai input { flex: 1; }
 
-    .tags{display:flex; flex-wrap:wrap; gap:6px}
-    .tag{font-size:11px; border:1px solid rgba(255,255,255,.15); padding:4px 8px; border-radius:999px; color:var(--muted)}
+      /* Tutor chat */
+      .tutor { margin-top: 14px; }
+      .chat { height: 280px; overflow: auto; display: flex; flex-direction: column; gap: 10px; padding: 10px; background: #0b1219; border: 1px solid var(--border); border-radius: 12px; }
+      .bubble { padding: 10px 12px; border-radius: 12px; border: 1px solid #22304a; background: #0e1622; }
+      .me { align-self: flex-end; background: #121b29; border-color: #3a2a00; }
+      .assistant { align-self: flex-start; }
+      .controls { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: start; margin-top: 10px; }
+      .row { display: flex; gap: 8px; margin-top: 6px; }
+      .tag { font-size: 11px; border: 1px solid var(--border); padding: 4px 8px; border-radius: 999px; color: var(--muted); cursor: pointer; }
+      .tag:hover { color: var(--gold); border-color: #3b2a00; }
+    </style>
+  </head>
+  <body>
+    <div class="top">
+      <a class="back" href="/">Home</a>
+      <div class="title">Learn Physics</div>
+      <div class="spacer"></div>
+    </div>
 
-    .banner{padding:10px 12px; border:1px dashed rgba(255,215,0,.45); border-radius:12px; background:rgba(255,215,0,.06); margin-top:10px}
+    <main class="wrap">
+      <!-- LEFT: the 20 topic cards -->
+      <section class="panel">
+        <h2>Core Topics</h2>
+        <p class="sub">Premium notes with worked examples. Tap to expand.</p>
 
-    code.inline {background:rgba(255,255,255,.08); padding:2px 6px; border-radius:6px}
-
-    @media (max-width: 900px){ .page{grid-template-columns:1fr} aside{order:2} main{order:1} }
-  </style>
-  <!-- MathJax for LaTeX rendering -->
-  <script>
-    window.MathJax = { tex: { inlineMath: [['$','$'], ['\\(','\\)']] }, svg: { fontCache: 'global' } };
-  </script>
-  <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
-</head>
-<body>
-  <div class="page">
-    <aside>
-      <div class="brand">
-        <div class="logo"></div>
-        <div>
-          <h1>GoldenSpaceAI</h1>
-          <div class="muted">Physics Tutor (GPT‑4)</div>
+        <div id="topics" class="topics">
+          <!-- Cards injected below -->
         </div>
-      </div>
+      </section>
 
-      <div class="card panel">
-        <div class="section-title">Topics</div>
-        <div class="topics" id="topics">
-          <!-- Will be injected -->
+      <!-- RIGHT: Tools + GPT‑4 Tutor (server key) -->
+      <aside class="panel">
+        <h2>Tools</h2>
+
+        <div class="box">
+          <h3 style="margin: 0 0 6px">Kinematics (quick)</h3>
+          <label>u (m/s)</label><input id="u" type="number" step="any" />
+          <label>a (m/s²)</label><input id="a" type="number" step="any" />
+          <label>t (s)</label><input id="t" type="number" step="any" />
+          <button class="btn" id="kinBtn">Compute</button>
+          <div id="calcOut" class="out"></div>
         </div>
-      </div>
 
-      <div class="card panel" style="margin-top:12px">
-        <div class="section-title">Tutor Settings</div>
-        <div class="controls">
+        <!-- GPT‑4 Physics Helper (server-side key on Render) -->
+        <div class="panel ai-wrap">
+          <h2>Quick Explain (GPT‑4)</h2>
+          <p class="tiny">Ask a concept or calculation. Uses your server API key on Render (no keys in the browser).</p>
+          <div class="ai">
+            <input id="aiQ" type="text" placeholder="e.g., Why doesn’t escape velocity depend on mass?" />
+            <button id="aiBtn" class="btn">Ask</button>
+          </div>
+          <div id="aiOut" class="out"></div>
+        </div>
+
+        <!-- Full Tutor -->
+        <div class="panel tutor">
+          <h2>Physics Tutor (GPT‑4)</h2>
+          <div class="tiny">Pick a topic from the left, then ask. Modes: Socratic • Steps • Practice • Check</div>
+          <div id="chat" class="chat"></div>
+          <div class="controls">
+            <textarea id="ask" rows="2" placeholder="Ask a physics question…"></textarea>
+            <button id="send" class="btn">Ask Tutor →</button>
+          </div>
           <div class="row">
-            <div>
-              <label for="level">Level</label>
-              <select id="level">
-                <option>Middle School</option>
-                <option selected>High School</option>
-                <option>AP / IB</option>
-                <option>Undergrad</option>
-              </select>
-            </div>
-            <div>
-              <label for="mode">Mode</label>
-              <select id="mode">
-                <option selected>Socratic (ask me guiding questions)</option>
-                <option>Direct Explanation</option>
-                <option>Exam Drill</option>
-              </select>
-            </div>
-          </div>
-          <div class="row">
-            <div>
-              <label for="model">Model</label>
-              <select id="model">
-                <option value="gpt-4o-mini" selected>gpt-4o-mini (fast)</option>
-                <option value="gpt-4o">gpt-4o (balanced)</option>
-                <option value="gpt-4-turbo">gpt-4-turbo</option>
-              </select>
-            </div>
-            <div>
-              <label for="temperature">Creativity: <span id="tempVal">0.2</span></label>
-              <input id="temperature" type="range" min="0" max="1" step="0.1" value="0.2"/>
-            </div>
-          </div>
-          <div class="row">
-            <div>
-              <label for="apiKey">OpenAI API Key</label>
-              <input id="apiKey" type="password" placeholder="sk-..." />
-            </div>
-            <button class="btn small" id="saveKey">Save</button>
-          </div>
-          <div class="tags">
-            <div class="tag">Latex rendering</div>
-            <div class="tag">Hints</div>
-            <div class="tag">Step-by-step</div>
-            <div class="tag">Practice generator</div>
+            <div class="tag" data-mode="Socratic">💡 Socratic</div>
+            <div class="tag" data-mode="Steps">🪜 Steps</div>
+            <div class="tag" data-mode="Practice">🧪 Practice</div>
+            <div class="tag" data-mode="Check">✅ Check</div>
           </div>
         </div>
-      </div>
-
-      <div class="banner" style="margin-top:12px">
-        Tip: your key is stored locally in <code class="inline">localStorage</code> on this device.
-      </div>
-    </aside>
-
-    <main>
-      <div class="card" style="flex:1; display:flex; flex-direction:column; overflow:hidden">
-        <div class="panel" style="border-bottom:1px solid rgba(255,255,255,.06); display:flex; justify-content:space-between; align-items:center; gap:10px">
-          <div>
-            <div style="font-weight:600">Physics Tutor</div>
-            <div class="muted" id="topicLabel">Pick a topic to focus the tutor.</div>
-          </div>
-          <div class="actions">
-            <button class="btn ghost small" id="btnHint">💡 Hint</button>
-            <button class="btn ghost small" id="btnSteps">🪜 Explain Steps</button>
-            <button class="btn ghost small" id="btnPractice">🧪 Generate Practice</button>
-            <button class="btn ghost small" id="btnCheck">✅ Check My Work</button>
-            <button class="btn small" id="btnClear">🧹 Clear</button>
-          </div>
-        </div>
-
-        <div id="chat" class="chat"></div>
-
-        <div class="composer">
-          <textarea id="input" rows="2" placeholder="Ask a physics question… (supports LaTeX like F=ma or E=mc^2)"></textarea>
-          <div class="actions">
-            <button class="btn" id="btnMic" title="Speak">🎙️</button>
-            <button class="btn primary" id="send">Ask Tutor →</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="card panel" style="margin-top:12px">
-        <div class="section-title">Quick Starters</div>
-        <div class="tags" id="starters"></div>
-      </div>
+      </aside>
     </main>
-  </div>
 
-  <script>
-    // ---------- UI Boot ----------
-    const TOPICS = [
-      {id:'mechanics', name:'Mechanics', examples:['How do I resolve forces on an incline?','Derive range of a projectile','Uniform circular motion period']},
-      {id:'waves', name:'Waves & Sound', examples:['What sets the pitch of a closed pipe?','Why does amplitude not affect frequency?']},
-      {id:'em', name:'Electricity & Magnetism', examples:['Find the field of a point charge','RC circuit time constant','Right-hand rule refresher']},
-      {id:'thermo', name:'Thermodynamics', examples:['Explain entropy with examples','PV diagrams and work']},
-      {id:'optics', name:'Optics', examples:['Lens equation 1/f=1/do+1/di','Why do rainbows arc?']},
-      {id:'modern', name:'Modern Physics', examples:['Photoelectric effect intuition','de Broglie wavelength of electron']}
-    ];
-
-    const topicsEl = document.getElementById('topics');
-    const chatEl = document.getElementById('chat');
-    const inputEl = document.getElementById('input');
-    const topicLabel = document.getElementById('topicLabel');
-    const startersEl = document.getElementById('starters');
-
-    TOPICS.forEach((t, idx)=>{
-      const el = document.createElement('div');
-      el.className = 'topic';
-      el.dataset.id = t.id;
-      el.innerHTML = `<span>🪐</span><div>${t.name}</div><input type="radio" name="topic" ${idx===0? 'checked':''}/>`;
-      el.addEventListener('click', ()=>selectTopic(t.id));
-      topicsEl.appendChild(el);
-    });
-
-    function selectTopic(id){
-      document.querySelectorAll('.topic').forEach(n=>{
-        n.classList.toggle('active', n.dataset.id===id);
-        if(n.dataset.id===id) n.querySelector('input').checked = true;
-      });
-      const t = TOPICS.find(x=>x.id===id);
-      topicLabel.textContent = `Focused on: ${t.name}`;
-      renderStarters(t.examples);
-    }
-    selectTopic('mechanics');
-
-    function renderStarters(list){
-      startersEl.innerHTML = '';
-      list.forEach(q=>{
-        const tag = document.createElement('div');
-        tag.className = 'tag'; tag.textContent = q; tag.style.cursor='pointer';
-        tag.addEventListener('click', ()=>{ inputEl.value = q; inputEl.focus(); });
-        startersEl.appendChild(tag);
-      });
-    }
-
-    // ---------- Local storage for API key ----------
-    const apiKeyInput = document.getElementById('apiKey');
-    const saveKeyBtn = document.getElementById('saveKey');
-    const saved = localStorage.getItem('openai_api_key');
-    if(saved) apiKeyInput.value = saved.replace(/.(?=.{4})/g,'•');
-    saveKeyBtn.onclick = ()=>{
-      const raw = prompt('Paste your OpenAI API key (sk-...)');
-      if(raw){ localStorage.setItem('openai_api_key', raw.trim()); apiKeyInput.value = raw.replace(/.(?=.{4})/g,'•'); alert('Saved locally.'); }
-    };
-
-    // ---------- Chat helpers ----------
-    const temperatureEl = document.getElementById('temperature');
-    const tempValEl = document.getElementById('tempVal');
-    temperatureEl.oninput = ()=>{ tempValEl.textContent = temperatureEl.value; };
-
-    function addBubble(role, html){
-      const b = document.createElement('div');
-      b.className = `bubble ${role==='user'?'me':'assistant'}`;
-      b.innerHTML = `<h4>${role==='user'?'You':'Tutor'}</h4><div class="content">${html}</div>`;
-      chatEl.appendChild(b);
-      chatEl.scrollTop = chatEl.scrollHeight;
-      if(window.MathJax) MathJax.typesetPromise([b]);
-      return b;
-    }
-
-    function escapeHTML(s){ return s.replace(/[&<>]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
-
-    // ---------- Microphone (basic) ----------
-    const micBtn = document.getElementById('btnMic');
-    let recognition;
-    if('webkitSpeechRecognition' in window){
-      recognition = new webkitSpeechRecognition();
-      recognition.lang = 'en-US';
-      recognition.continuous = false; recognition.interimResults = false;
-      recognition.onresult = (e)=>{ inputEl.value = e.results[0][0].transcript; };
-      micBtn.onclick = ()=> recognition.start();
-    } else {
-      micBtn.disabled = true; micBtn.title = 'Speech API not supported';
-    }
-
-    // ---------- Model call ----------
-    async function callTutor(userText, mode){
-      const key = localStorage.getItem('openai_api_key');
-      if(!key){ alert('Click Save and add your OpenAI API key first.'); return; }
-      const model = document.getElementById('model').value;
-      const level = document.getElementById('level').value;
-      const topic = document.querySelector('.topic.active div').textContent;
-      const temperature = Number(temperatureEl.value);
-
-      const SYSTEM = [
-        "You are GoldenSpaceAI, a kind, rigorous Physics tutor.",
-        "Always adapt to the student's level: " + level + ".",
-        "Prefer step-by-step reasoning with equations in LaTeX.",
-        "If asked, use the Socratic method: ask 1–2 guiding questions before giving full steps.",
-        "Provide dimensional analysis and units checks when relevant.",
-        "Show a short summary and 1 follow-up practice problem at the end (unless in Exam Drill).",
-      ].join(' ');
-
-      const BEHAVIOR = mode || document.getElementById('mode').value;
-
-      const TASK = {
-        "Socratic (ask me guiding questions)": `We are working on ${topic}. Start with 1–2 guiding questions, then outline steps, then final answer.`,
-        "Direct Explanation": `Explain clearly for ${level} on ${topic}. Include derivation or diagrams-in-words as needed.`,
-        "Exam Drill": `Create 3 exam-style questions on ${topic} at ${level}, then wait for answers. Provide answer key only if asked.`,
-        "Hint": `Give a gentle hint for the student's question without revealing the full solution.`,
-        "Steps": `Show the full derivation and solution steps from first principles for the student's question.`,
-        "Practice": `Generate 3 practice problems (increasing difficulty) on ${topic} with brief solutions hidden after a spoiler line 'Solutions:'`,
-        "Check": `Grade the student's work. Identify errors, show corrected steps, and give a score out of 10.`
-      }[BEHAVIOR] || '';
-
-      const messages = [
-        {role:'system', content: SYSTEM},
-        {role:'user', content: `Context topic: ${topic}.\nUser question/work: """${userText}""".\nInstruction: ${TASK}`}
+    <script>
+      // ----------------- Topic Cards (20) -----------------
+      const TOPIC_DATA = [
+        {t:'Mechanics', pill:'Kinematics & Dynamics', formulas:['v = u + at','s = ut + ½at²','v² = u² + 2as','F = ma','P = W/t']},
+        {t:'Rotational Dynamics', pill:'Torque', formulas:['τ = Iα','L = Iω','K_rot = ½Iω²','v = ωr']},
+        {t:'SHM & Oscillations', pill:'Periodic', formulas:['x = A cos(ωt+φ)','ω = √(k/m)','T = 2π/ω','T_pend = 2π√(L/g)']},
+        {t:'Gravitation & Orbits', pill:'Kepler', formulas:['F = GmM/r²','U = -GmM/r','v_orb = √(GM/r)','v_esc = √(2GM/r)']},
+        {t:'Energy & Momentum', pill:'Conservation', formulas:['K = ½mv²','W = ΔK','p = mv']},
+        {t:'Fluid Mechanics', pill:'Pressure', formulas:['P = P₀ + ρgh','F_b = ρgV','A₁v₁ = A₂v₂','Bernoulli']},
+        {t:'Waves & Optics', pill:'Interference', formulas:['v = fλ','I ∝ A²','Δy = λL/d','1/f = 1/u + 1/v']},
+        {t:'Thermodynamics', pill:'Laws', formulas:['ΔU = Q - W','PV = nRT','η = 1 - Tc/Th']},
+        {t:'Thermal Physics', pill:'Heat Transfer', formulas:['Q/t = kAΔT/L','P = σεAT⁴']},
+        {t:'Electricity', pill:'DC Circuits', formulas:['V = IR','P = VI = I²R = V²/R','Req series/parallel']},
+        {t:'Magnetism', pill:'Fields & Induction', formulas:['F = qvB sinθ','F = BIL sinθ','ε = -dΦ/dt']},
+        {t:'Electromagnetism', pill:'Maxwell', formulas:['∇·E=ρ/ε₀','∇·B=0','∇×E=-∂B/∂t','∇×B=μ₀J+μ₀ε₀∂E/∂t','c=1/√(μ₀ε₀)']},
+        {t:'Modern Physics', pill:'Photoelectric', formulas:['E = hf = hc/λ','Kmax = hf - Φ']},
+        {t:'Relativity', pill:'SR/GR', formulas:['γ = 1/√(1 - v²/c²)','Δt\' = γΔt','L\' = L/γ','E = γmc²']},
+        {t:'Quantum Mechanics', pill:'Basics', formulas:['λ = h/p','ΔxΔp ≥ ħ/2']},
+        {t:'Nuclear Physics', pill:'Decay', formulas:['N = N₀ e^{-λt}','T½ = ln2/λ','E = Δmc²']},
+        {t:'Materials & Solid State', pill:'Stress–Strain', formulas:['σ = F/A','ε = ΔL/L','E = σ/ε']},
+        {t:'Units & Error Analysis', pill:'Significant', formulas:['Δz = √(Δx²+Δy²)','relative errors add']},
+        {t:'Astronomy & Astrophysics', pill:'Cosmic', formulas:['L = 4πR²σT⁴','v = H₀ d']},
+        {t:'Rocketry & Spaceflight', pill:'Tsiolkovsky', formulas:['Δv = v_e ln(m0/mf)','v_e = g0 Isp']},
       ];
 
-      const thinkingBubble = addBubble('assistant', 'Thinking…');
+      const topicsWrap = document.getElementById('topics');
+      let CURRENT_TOPIC = TOPIC_DATA[0].t;
 
-      try{
-        const res = await fetch('https://api.openai.com/v1/chat/completions',{
-          method:'POST',
-          headers:{ 'Content-Type':'application/json', 'Authorization': 'Bearer ' + key },
-          body: JSON.stringify({
-            model,
-            temperature,
-            messages
-          })
-        });
-        if(!res.ok){
-          const t = await res.text();
-          throw new Error(`API error ${res.status}: ${t}`);
-        }
-        const data = await res.json();
-        const text = data.choices?.[0]?.message?.content?.trim() || '(No response)';
-        thinkingBubble.querySelector('.content').innerHTML = text.replace(/\n/g,'<br/>');
-        if(window.MathJax) MathJax.typesetPromise([thinkingBubble]);
-      }catch(err){
-        thinkingBubble.querySelector('.content').innerHTML = `<span style="color:#ff9a9a">${escapeHTML(err.message)}</span>`;
+      TOPIC_DATA.forEach((d)=>{
+        const el = document.createElement('div');
+        el.className = 'card';
+        el.innerHTML = `
+          <h3>${d.t} <span class="pill">${d.pill}</span></h3>
+          <div class="tiny">Tap to expand. Current topic set when clicked.</div>
+          <details><summary>Key formulas</summary>
+            <div class="content">${d.formulas.map(f=>`<div class='formula'>${f}</div>`).join('')}</div>
+          </details>`;
+        el.addEventListener('click', ()=>{ CURRENT_TOPIC = d.t; toast(`Topic set: ${d.t}`); });
+        topicsWrap.appendChild(el);
+      });
+
+      // ----------------- Small tools -----------------
+      document.getElementById('kinBtn').onclick = ()=>{
+        const u=+document.getElementById('u').value||0;
+        const a=+document.getElementById('a').value||0;
+        const t=+document.getElementById('t').value||0;
+        const v=u+a*t; const s=u*t+0.5*a*t*t;
+        document.getElementById('calcOut').innerText = `v=${v.toFixed(2)} m/s, s=${s.toFixed(2)} m`;
+      };
+
+      // ----------------- Quick Explain (server) -----------------
+      const aiInput = document.getElementById('aiQ');
+      const aiBtn   = document.getElementById('aiBtn');
+      const aiOut   = document.getElementById('aiOut');
+      async function askExplain(){
+        const question = (aiInput.value||'').trim(); if(!question) return;
+        aiBtn.disabled = true; aiOut.textContent = 'Thinking… ✨';
+        try{
+          const res = await fetch('/api/physics-explain', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ question }) });
+          const data = await res.json();
+          aiOut.innerHTML = (data.reply||'No reply.').replace(/
+/g,'<br>');
+        }catch(e){ aiOut.textContent = 'Error: '+(e.message||'Something went wrong.'); }
+        finally{ aiBtn.disabled = false; }
       }
-    }
+      aiBtn.addEventListener('click', askExplain);
+      aiInput.addEventListener('keydown', e=>{ if(e.key==='Enter') askExplain(); });
 
-    // ---------- Buttons ----------
-    document.getElementById('send').onclick = ()=>{
-      const v = inputEl.value.trim(); if(!v) return;
-      addBubble('user', escapeHTML(v));
-      callTutor(v);
-      inputEl.value = '';
-    };
-    document.getElementById('btnHint').onclick   = ()=>{ const v = inputEl.value || 'Give me a hint.'; addBubble('user', escapeHTML(v)); callTutor(v,'Hint'); };
-    document.getElementById('btnSteps').onclick  = ()=>{ const v = inputEl.value || 'Show me the steps.'; addBubble('user', escapeHTML(v)); callTutor(v,'Steps'); };
-    document.getElementById('btnPractice').onclick= ()=>{ const v = inputEl.value || 'Practice on this topic'; addBubble('user', escapeHTML(v)); callTutor(v,'Practice'); };
-    document.getElementById('btnCheck').onclick  = ()=>{ const v = inputEl.value || 'Check my solution: ...'; addBubble('user', escapeHTML(v)); callTutor(v,'Check'); };
-    document.getElementById('btnClear').onclick  = ()=>{ chatEl.innerHTML=''; };
+      // ----------------- Tutor Chat (server, GPT‑4) -----------------
+      const chat = document.getElementById('chat');
+      const ask  = document.getElementById('ask');
+      const send = document.getElementById('send');
+      const modeTags = Array.from(document.querySelectorAll('.tag'));
+      let MODE = 'Socratic';
+      modeTags.forEach(t=>t.addEventListener('click', ()=>{ MODE = t.dataset.mode; toast(`Mode: ${MODE}`);}));
 
-    // Enter to send
-    inputEl.addEventListener('keydown', (e)=>{
-      if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); document.getElementById('send').click(); }
-    });
+      function bubble(role, html){
+        const b = document.createElement('div');
+        b.className = `bubble ${role==='user'?'me':'assistant'}`; b.innerHTML = html; chat.appendChild(b); chat.scrollTop = chat.scrollHeight; return b;
+      }
 
-    // Warm welcome
-    addBubble('assistant', `Welcome to <b>Learn Physics</b>! Pick a topic on the left, then ask a question. You can type LaTeX like $F=ma$ and I'll render it.`);
-  </script>
-</body>
+      async function sendTutor(text){
+        const thinking = bubble('assistant', 'Thinking…');
+        try{
+          const res = await fetch('/api/physics-tutor', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ question: text, topic: CURRENT_TOPIC, mode: MODE }) });
+          const data = await res.json();
+          thinking.innerHTML = (data.reply||'No reply.').replace(/
+/g,'<br>');
+        }catch(e){ thinking.innerHTML = `<span style='color:#ff9a9a'>${(e.message||'Error')}</span>`; }
+      }
+
+      send.addEventListener('click', ()=>{ const v=(ask.value||'').trim(); if(!v) return; bubble('user', v.replace(/
+/g,'<br>')); ask.value=''; sendTutor(v); });
+      ask.addEventListener('keydown', e=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); send.click(); } });
+
+      // ----------------- Tiny Toast -----------------
+      function toast(msg){
+        const el = document.createElement('div');
+        el.textContent = msg; el.style.position='fixed'; el.style.bottom='18px'; el.style.left='50%'; el.style.transform='translateX(-50%)';
+        el.style.padding='8px 12px'; el.style.border='1px solid var(--border)'; el.style.background='#0d1420'; el.style.borderRadius='999px'; el.style.boxShadow='var(--shadow)'; el.style.zIndex='50';
+        document.body.appendChild(el); setTimeout(()=>{ el.remove(); }, 1400);
+      }
+    </script>
+  </body>
 </html>

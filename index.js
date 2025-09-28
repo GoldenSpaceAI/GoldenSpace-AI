@@ -19,7 +19,64 @@ dotenv.config();
 
 const app = express();
 app.set("trust proxy", 1);
+// --- add to top ---
+import express from "express";
+import fetch from "node-fetch"; // if on Node <18; otherwise, built-in fetch is fine
+const app = express();
+app.use(express.json());
 
+// Utility: call OpenAI
+async function chatOpenAI(messages, { model = "gpt-4o-mini", temperature = 0.2 } = {}) {
+  const res = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+    },
+    body: JSON.stringify({ model, temperature, messages })
+  });
+  if (!res.ok) throw new Error(`OpenAI ${res.status} ${await res.text()}`);
+  const data = await res.json();
+  return data.choices?.[0]?.message?.content?.trim() || "";
+}
+
+// Quick explain endpoint (right panel small box)
+app.post("/api/physics-explain", async (req, res) => {
+  try {
+    const q = (req.body?.question || "").slice(0, 4000);
+    const reply = await chatOpenAI([
+      { role: "system", content: "You are a clear, concise physics explainer for high school to early undergrad. Use units, short steps, and show 1 practice question at the end." },
+      { role: "user", content: q }
+    ], { model: "gpt-4o-mini", temperature: 0.2 });
+    res.json({ reply });
+  } catch (e) {
+    res.status(500).json({ error: String(e.message || e) });
+  }
+});
+
+// Full tutor endpoint (chat box with modes)
+app.post("/api/physics-tutor", async (req, res) => {
+  try {
+    const { question = "", topic = "Mechanics", mode = "Socratic" } = req.body || {};
+    const modeInstr = {
+      Socratic: "Start with 1–2 guiding questions, then outline steps, then final answer.",
+      Steps: "Show the full derivation step-by-step with LaTeX-style equations inline.",
+      Practice: "Generate 3 practice problems of increasing difficulty with brief solutions after a 'Solutions:' line.",
+      Check: "Grade the student's work: identify errors, show corrected steps, and give a score /10."
+    }[mode] || "Explain clearly.";
+
+    const reply = await chatOpenAI([
+      { role: "system", content: "You are GoldenSpaceAI, a rigorous but friendly physics tutor. Prefer step-by-step reasoning, dimensional analysis, and units checks. Keep answers compact but complete." },
+      { role: "user", content: `Topic: ${topic}\nMode: ${mode}\nInstruction: ${modeInstr}\nStudent: ${question}` }
+    ], { model: "gpt-4o-mini", temperature: 0.2 });
+
+    res.json({ reply });
+  } catch (e) {
+    res.status(500).json({ error: String(e.message || e) });
+  }
+});
+
+// --- keep your existing app.use(...) and server listen ---
 // ---------- Core middleware ----------
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json({ limit: "10mb" }));

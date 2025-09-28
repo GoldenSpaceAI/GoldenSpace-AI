@@ -1,112 +1,588 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Orbital Design & Trajectory Simulator | GoldenSpaceAI</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/katex.min.css">
-    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/katex.min.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body);"></script>
-    <style>
-        :root { --bg-dark:#0A0F1A; --panel-bg:#101828; --border-color:#334155; --text-primary:#E2E8F0; --text-secondary:#94A3B8; --accent-blue:#38BDF8; --accent-green:#34D399; --accent-red:#F87171; --font-main:'Segoe UI','Roboto',system-ui,sans-serif; --font-mono:'Courier New','monospace'; }
-        body { font-family:var(--font-main); background-color:var(--bg-dark); color:var(--text-primary); margin:0; padding:2rem; font-size:14px; }
-        .main-grid { display:grid; grid-template-columns:2fr 3fr 2fr; gap:1.5rem; max-width:1600px; margin:auto; }
-        .panel { background-color:var(--panel-bg); border:1px solid var(--border-color); border-radius:8px; padding:1.5rem; }
-        h1,h2,h3 { color:var(--text-primary); margin-top:0; font-weight:600; }
-        h2 { border-bottom:1px solid var(--border-color); padding-bottom:0.75rem; }
-        .component-list .component { border:1px solid var(--border-color); border-radius:6px; margin-bottom:1rem; padding:1rem; cursor:pointer; transition:all 0.2s ease; }
-        .component-list .component:hover { border-color:var(--accent-blue); background-color:#1E293B; }
-        .component-list .component h3 { margin-bottom:0.5rem; color:var(--accent-blue); }
-        .component-stats { display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; font-family:var(--font-mono); font-size:0.9em; color:var(--text-secondary); }
-        .assembly-silo { height:450px; display:flex; flex-direction:column-reverse; align-items:center; background-color:#0c121e; border-radius:6px; border:1px solid var(--border-color); padding:1rem; }
-        .stage { width:30%; min-height:50px; border-left:1px solid var(--border-color); border-right:1px solid var(--border-color); text-align:center; color:var(--text-secondary); display:flex; align-items:center; justify-content:center; transition:all 0.3s ease; }
-        .stage.filled { background-color:#475569; color:var(--text-primary); border-color:#64748B; }
-        #stage-payload { border-top:1px solid var(--border-color); border-top-left-radius:50px; border-top-right-radius:50px; height:100px; }
-        #stage-tank { height:200px; }
-        #stage-engine { border-bottom:1px solid var(--border-color); height:80px; }
-        .telemetry-panel { margin-top:1.5rem; }
-        .telemetry-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:1rem; }
-        .telemetry-readout { background-color:var(--bg-dark); padding:1rem; border-radius:4px; }
-        .telemetry-readout label { display:block; font-size:0.9em; color:var(--text-secondary); margin-bottom:0.5rem; }
-        .telemetry-readout .value { font-family:var(--font-mono); font-size:1.5em; font-weight:bold; color:var(--accent-green); }
-        .telemetry-readout .value.warning { color:#FBBF24; }
-        .telemetry-readout .value.error { color:var(--accent-red); }
-        .mission-selector,.systems-analysis,.launch-control { margin-bottom:2rem; }
-        select,button { width:100%; background-color:#1E293B; border:1px solid var(--border-color); color:var(--text-primary); padding:0.75rem; border-radius:4px; font-size:1em; }
-        button { cursor:pointer; font-weight:bold; }
-        #launch-btn { background-color:#4B5563; color:#9CA3AF; cursor:not-allowed; }
-        #launch-btn.ready { background-color:var(--accent-green); color:var(--bg-dark); cursor:pointer; }
-        #launch-btn.ready:hover { background-color:#6EE7B7; }
-        .analysis-item { color:var(--text-secondary); margin-bottom:0.5rem; }
-        .analysis-item.pass { color:var(--accent-green); }
-        .analysis-item.fail { color:var(--accent-red); }
-        .formula { font-size:0.9em; color:var(--text-secondary); margin-top:1rem; }
-    </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>GoldenSpaceAI · Rocket Designer</title>
+<style>
+  :root{
+    --gold-1:#ffd700; --gold-2:#e6c200; --gold-3:#b89700; --text:#faf7e8; --muted:#c8b88a;
+    --bg:#0b0e16; --bg-soft:#0f1322; --glass:rgba(255,255,255,.06); --ring:rgba(255,215,0,.35);
+    --ok:#32d583; --warn:#f59e0b; --bad:#ef4444;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial; color:var(--text);
+    background:
+      radial-gradient(1200px 800px at 75% -20%, rgba(255,215,0,.15), transparent 40%),
+      radial-gradient(800px 600px at 10% 120%, rgba(255,215,0,.08), transparent 40%),
+      radial-gradient(500px 400px at 20% 10%, #1a2242, transparent 50%),
+      linear-gradient(180deg, #0a0d15, #0b0e16 30%, #0b0e16);
+  }
+  header{
+    position:sticky; top:0; z-index:10; backdrop-filter: blur(6px); background:linear-gradient(180deg, rgba(0,0,0,.45), rgba(0,0,0,.15));
+    border-bottom:1px solid rgba(255,255,255,.05);
+  }
+  .container{max-width:1200px; margin:0 auto; padding:16px}
+  .row{display:grid; grid-template-columns: 380px 1fr; gap:16px}
+  .card{background:var(--glass); border:1px solid rgba(255,255,255,.08); border-radius:16px; box-shadow:0 10px 32px rgba(0,0,0,.3)}
+  .card h2{margin:0 0 8px 0; padding:16px; border-bottom:1px solid rgba(255,255,255,.08); font-weight:700; letter-spacing:.2px}
+  .card .content{padding:16px}
+  .pill{display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.04); font-size:12px; color:var(--muted)}
+  .grid{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+  .grid-3{display:grid; grid-template-columns:repeat(3, 1fr); gap:12px}
+  label{font-size:12px; color:var(--muted)}
+  input, select{width:100%; padding:10px 12px; background:#0e1323; border:1px solid rgba(255,255,255,.12); color:var(--text); border-radius:12px; outline: none}
+  input[type="range"]{appearance:none; height:6px; border-radius:8px; background:linear-gradient(90deg, var(--gold-1), var(--gold-3)); outline:none}
+  input[type="range"]::-webkit-slider-thumb{appearance:none; width:18px; height:18px; background:var(--text); border:2px solid var(--gold-2); border-radius:50%; cursor:pointer}
+  .btn{display:inline-flex; align-items:center; gap:8px; padding:10px 14px; border-radius:12px; border:1px solid rgba(255,215,0,.35); background:linear-gradient(180deg, rgba(255,215,0,.12), rgba(255,215,0,.08)); color:var(--text); cursor:pointer; text-decoration:none}
+  .btn:active{transform:translateY(1px)}
+  .btn.ghost{border-color:rgba(255,255,255,.12); background:rgba(255,255,255,.04)}
+  .btn.danger{border-color:rgba(239,68,68,.45); background:rgba(239,68,68,.12)}
+  .btn-group{display:flex; flex-wrap:wrap; gap:8px}
+  .metrics{display:grid; grid-template-columns:repeat(4,1fr); gap:10px}
+  .metric{background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); border-radius:12px; padding:12px}
+  .metric .k{font-size:22px; font-weight:700}
+  .metric .s{font-size:12px; color:var(--muted)}
+  .badge{padding:3px 8px; border-radius:6px; font-size:11px; border:1px solid rgba(255,255,255,.12)}
+  .badge.ok{border-color:rgba(50,213,131,.4); color:#9ef3c5}
+  .badge.warn{border-color:rgba(245,158,11,.4); color:#f6cf8d}
+  .badge.bad{border-color:rgba(239,68,68,.4); color:#f7a8a8}
+  .stage{padding:12px; border:1px dashed rgba(255,255,255,.12); border-radius:12px; background:rgba(255,255,255,.03)}
+  .stage h3{margin:4px 0 8px 0}
+  .stage-controls{display:grid; grid-template-columns:repeat(2,1fr); gap:10px}
+  .stage-actions{display:flex; gap:8px; justify-content:flex-end}
+  .footer{padding:14px 16px; display:flex; align-items:center; justify-content:space-between; border-top:1px solid rgba(255,255,255,.08)}
+  canvas{width:100%; height:540px; background: linear-gradient(180deg, #090c14, #0e1323); border-radius:16px; border:1px solid rgba(255,255,255,.08)}
+  .legend{display:flex; gap:8px; flex-wrap:wrap; font-size:12px; color:var(--muted)}
+  .legend span{display:inline-flex; align-items:center; gap:6px}
+  .swatch{width:12px; height:12px; border-radius:3px; display:inline-block}
+  .bar{height:8px; border-radius:6px; background:rgba(255,255,255,.08); overflow:hidden}
+  .fill{height:100%; background:linear-gradient(90deg, var(--gold-1), var(--gold-3))}
+  .notice{font-size:12px; color:var(--muted)}
+  @media(max-width:1000px){ .row{grid-template-columns:1fr} }
+</style>
 </head>
 <body>
-    <main class="main-grid">
-        <section id="components-panel" class="panel"><h2>Component Selector</h2><div id="component-list" class="component-list"></div></section>
-        <section id="assembly-panel" class="panel">
-            <h2>Assembly & Vehicle Telemetry</h2>
-            <div class="assembly-silo">
-                <div id="stage-payload" class="stage">Payload Fairing</div>
-                <div id="stage-tank" class="stage">Fuel Tank</div>
-                <div id="stage-engine" class="stage">Engine</div>
+  <header>
+    <div class="container" style="display:flex; align-items:center; gap:12px; justify-content:space-between">
+      <div style="display:flex; align-items:center; gap:12px">
+        <div class="pill" title="GoldenSpaceAI">🚀 <b style="color:var(--gold-1)">Golden</b>Rocket</div>
+        <span class="pill">Design • Stage • Simulate</span>
+      </div>
+      <div class="btn-group">
+        <button class="btn" id="btnPresetFalcon">Load Falcon‑style</button>
+        <button class="btn" id="btnPresetSaturn">Load Saturn‑style</button>
+        <button class="btn ghost" id="btnRandom">Randomize</button>
+        <button class="btn ghost" id="btnSave">Save</button>
+        <button class="btn ghost" id="btnLoad">Load</button>
+        <button class="btn" id="btnShare">Share</button>
+        <button class="btn" id="btnExport">Export PNG</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="container" style="margin-top:12px">
+    <div class="row">
+      <!-- Controls -->
+      <div class="card">
+        <h2>Rocket Parameters</h2>
+        <div class="content">
+          <div class="grid">
+            <div>
+              <label>Rocket Name</label>
+              <input id="rocketName" placeholder="e.g., Golden Phoenix" />
             </div>
-            <div class="telemetry-panel">
-                <h3>Performance Projection</h3>
-                <div class="telemetry-grid">
-                    <div class="telemetry-readout"><label>Total Mass</label><span id="telemetry-mass" class="value">0 t</span></div>
-                    <div class="telemetry-readout"><label>Thrust-to-Weight</label><span id="telemetry-twr" class="value">0</span></div>
-                    <div class="telemetry-readout"><label>Projected Delta-V ($\Delta v$)</label><span id="telemetry-dv" class="value">0 m/s</span></div>
-                </div>
-                <div class="formula">Rocket Equation: $\Delta v = I_{sp} \cdot g_0 \cdot \ln(\frac{m_{start}}{m_{final}})$</div>
+            <div>
+              <label>Payload (kg)</label>
+              <input type="number" id="payload" min="0" value="2000" />
             </div>
-        </section>
-        <section id="mission-panel" class="panel">
-            <div class="mission-selector"><h2>1. Mission Profile</h2><select id="mission-select"><option value="leo">LEO Satellite Deployment</option><option value="gto">GTO Communications Relay</option><option value="mars">Mars Cargo Supply</option></select></div>
-            <div class="systems-analysis"><h2>2. Systems Analysis</h2><div id="analysis-output"><div id="analysis-dv" class="analysis-item">Awaiting vehicle data...</div><div id="analysis-twr" class="analysis-item">Awaiting vehicle data...</div><div id="analysis-payload" class="analysis-item">Awaiting vehicle data...</div></div></div>
-            <div class="launch-control"><h2>3. Launch Control</h2><button id="launch-btn" disabled>Systems Offline</button></div>
-        </section>
-    </main>
+            <div>
+              <label>Fairing Diameter (m)</label>
+              <input type="number" id="fairingDia" min="1" step="0.1" value="5.2" />
+            </div>
+            <div>
+              <label>Nose Type</label>
+              <select id="noseType">
+                <option value="ogive">Ogive</option>
+                <option value="conic">Conic</option>
+                <option value="blunt">Blunt</option>
+              </select>
+            </div>
+          </div>
 
-    <script>
-        const components = { engines:[{id:'en-merlin',name:'Merlin 1D',type:'engine',thrust:845,isp:311,mass:0.47},{id:'en-raptor',name:'Raptor 2',type:'engine',thrust:2256,isp:350,mass:1.6},], tanks:[{id:'tn-medium',name:'Medium Tank',type:'tank',fuelMass:25,dryMass:2},{id:'tn-large',name:'Large Tank',type:'tank',fuelMass:100,dryMass:7},], payloads:[{id:'pl-cubesat',name:'CubeSat Cluster',type:'payload',mass:0.5},{id:'pl-comm',name:'Comm Satellite',type:'payload',mass:4},{id:'pl-cargo',name:'Mars Cargo Pod',type:'payload',mass:10},]};
-        const missions = { leo:{name:'LEO Satellite Deployment',dv_req:9400,payload_req:'pl-cubesat'}, gto:{name:'GTO Communications Relay',dv_req:11900,payload_req:'pl-comm'}, mars:{name:'Mars Cargo Supply',dv_req:14500,payload_req:'pl-cargo'},};
-        const G0 = 9.81;
-        let selectedParts = {engine:null,tank:null,payload:null};
-        let currentMission = missions.leo;
-        const componentListEl = document.getElementById('component-list');
-        const stagesEl = {engine:document.getElementById('stage-engine'),tank:document.getElementById('stage-tank'),payload:document.getElementById('stage-payload')};
-        const telemetry = {mass:document.getElementById('telemetry-mass'),twr:document.getElementById('telemetry-twr'),dv:document.getElementById('telemetry-dv')};
-        const analysis = {dv:document.getElementById('analysis-dv'),twr:document.getElementById('analysis-twr'),payload:document.getElementById('analysis-payload')};
-        const missionSelectEl = document.getElementById('mission-select');
-        const launchBtnEl = document.getElementById('launch-btn');
+          <div style="margin-top:12px" class="grid">
+            <div>
+              <label>Material</label>
+              <select id="material">
+                <option value="aluminum">Aluminum‑Lithium (baseline)</option>
+                <option value="stainless">Stainless Steel (robust)</option>
+                <option value="composite">Carbon Composite (light)</option>
+              </select>
+            </div>
+            <div>
+              <label>Reusability</label>
+              <select id="reuse">
+                <option value="none">Expendable</option>
+                <option value="booster">Booster Landing</option>
+                <option value="full">First Stage + Fairing</option>
+              </select>
+            </div>
+          </div>
 
-        function populateComponents(){componentListEl.innerHTML='<h2>Engines</h2>';components.engines.forEach(c=>componentListEl.innerHTML+=createComponentHTML(c));componentListEl.innerHTML+='<h2>Fuel Tanks</h2>';components.tanks.forEach(c=>componentListEl.innerHTML+=createComponentHTML(c));componentListEl.innerHTML+='<h2>Payloads</h2>';components.payloads.forEach(c=>componentListEl.innerHTML+=createComponentHTML(c));document.querySelectorAll('.component').forEach(el=>{el.addEventListener('click',()=>selectPart(el.dataset.id));});}
-        function createComponentHTML(c){let s='';if(c.type==='engine')s=`<div class="component-stats"><span>Thrust:</span><span>${c.thrust} kN</span><span>Isp:</span><span>${c.isp} s</span><span>Mass:</span><span>${c.mass} t</span></div>`;if(c.type==='tank')s=`<div class="component-stats"><span>Fuel Mass:</span><span>${c.fuelMass} t</span><span>Dry Mass:</span><span>${c.dryMass} t</span></div>`;if(c.type==='payload')s=`<div class="component-stats"><span>Mass:</span><span>${c.mass} t</span></div>`;return `<div class="component" data-id="${c.id}"><h3>${c.name}</h3>${s}</div>`;}
-        function selectPart(pId){const [pre,id]=pId.split('-');let pData;let pType;if(pre==='en'){pType='engine';pData=components.engines.find(p=>p.id===pId);}if(pre==='tn'){pType='tank';pData=components.tanks.find(p=>p.id===pId);}if(pre==='pl'){pType='payload';pData=components.payloads.find(p=>p.id===pId);}if(pData){selectedParts[pType]=pData;stagesEl[pType].textContent=pData.name;stagesEl[pType].classList.add('filled');updateSimulation();}}
-        function updateSimulation(){if(!selectedParts.engine||!selectedParts.tank||!selectedParts.payload)return;const m_f=selectedParts.payload.mass+selectedParts.engine.mass+selectedParts.tank.dryMass;const m_s=m_f+selectedParts.tank.fuelMass;const twr=(selectedParts.engine.thrust*1000)/(m_s*1000*G0);const dV=selectedParts.engine.isp*G0*Math.log(m_s/m_f);telemetry.mass.textContent=`${m_s.toFixed(2)} t`;telemetry.twr.textContent=twr.toFixed(2);telemetry.dv.textContent=`${Math.round(dV)} m/s`;runAnalysis(dV,twr);}
-        function runAnalysis(dV,twr){let dP=false,tP=false,pP=false;if(dV>=currentMission.dv_req){analysis.dv.textContent=`✅ Delta-V sufficient (${Math.round(dV)}/${currentMission.dv_req} m/s)`;analysis.dv.className='analysis-item pass';dP=true;}else{analysis.dv.textContent=`❌ Delta-V insufficient (${Math.round(dV)}/${currentMission.dv_req} m/s)`;analysis.dv.className='analysis-item fail';}if(twr>1.2){analysis.twr.textContent=`✅ TWR optimal (${twr.toFixed(2)} > 1.2)`;analysis.twr.className='analysis-item pass';tP=true;}else{analysis.twr.textContent=`❌ TWR too low (${twr.toFixed(2)} < 1.2)`;analysis.twr.className='analysis-item fail';}if(selectedParts.payload&&selectedParts.payload.id===currentMission.payload_req){analysis.payload.textContent=`✅ Correct payload for mission.`;analysis.payload.className='analysis-item pass';pP=true;}else{analysis.payload.textContent=`❌ Incorrect payload for mission.`;analysis.payload.className='analysis-item fail';}if(dP&&tP&&pP){launchBtnEl.disabled=false;launchBtnEl.textContent='Initiate Launch Sequence';launchBtnEl.className='ready';}else{launchBtnEl.disabled=true;launchBtnEl.textContent='Design Incomplete';launchBtnEl.className='';}}
-        missionSelectEl.addEventListener('change',(e)=>{currentMission=missions[e.target.value];updateSimulation();});
-        
-        launchBtnEl.addEventListener('click', () => {
-            if (launchBtnEl.disabled) return;
-            const missionReport = `LAUNCH SIMULATION:\n\nMission: ${currentMission.name}\nStatus: SUCCESSFUL\n\nYour vehicle design met all performance requirements.`;
-            alert(missionReport);
+          <div style="margin:14px 0 6px; display:flex; align-items:center; justify-content:space-between">
+            <span class="pill">Stages</span>
+            <div class="btn-group">
+              <button class="btn" id="btnAddStage">Add Stage</button>
+              <button class="btn danger" id="btnRemoveStage">Remove Last</button>
+            </div>
+          </div>
 
-            // --- NEW UPDATE: Save to localStorage and redirect ---
-            const rocketData = {
-                name: `Rocket for ${currentMission.name}`,
-                engine: selectedParts.engine.name,
-                payload: selectedParts.payload.name
-            };
-            localStorage.setItem('completedRocket', JSON.stringify(rocketData));
-            window.location.href = '/your-space.html';
-        });
+          <div id="stages"></div>
 
-        populateComponents();
-        renderMathInElement(document.body);
-    </script>
+          <div class="footer">
+            <div class="notice">Tip: Hover labels for hints. Your designs save locally.</div>
+            <div class="btn-group">
+              <button class="btn" id="btnReset">Reset</button>
+              <button class="btn" id="btnLaunch">Simulate Launch</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Preview & Metrics -->
+      <div class="card">
+        <h2>Preview & Performance</h2>
+        <div class="content">
+          <div class="metrics" style="margin-bottom:12px">
+            <div class="metric"><div class="s">Lift‑off Mass</div><div class="k" id="m0">—</div></div>
+            <div class="metric"><div class="s">Total Thrust</div><div class="k" id="thrust">—</div></div>
+            <div class="metric"><div class="s">T/W @ Sea Level</div><div class="k" id="twr">—</div></div>
+            <div class="metric"><div class="s">∆v (vac)</div><div class="k" id="dv">—</div></div>
+          </div>
+
+          <div class="legend" style="margin-bottom:8px">
+            <span><i class="swatch" style="background:#8bb7ff"></i> Fuel</span>
+            <span><i class="swatch" style="background:#6ee7b7"></i> Dry</span>
+            <span><i class="swatch" style="background:#fca5a5"></i> Payload</span>
+          </div>
+          <canvas id="preview" width="800" height="540"></canvas>
+
+          <div style="margin-top:12px" class="grid">
+            <div>
+              <label>Mass Breakdown</label>
+              <div class="bar"><div id="massFill" class="fill" style="width:0%"></div></div>
+              <div class="notice" id="massNotice">—</div>
+            </div>
+            <div>
+              <label>Status</label>
+              <div>
+                <span id="badgeTWR" class="badge">TWR</span>
+                <span id="badgeDV" class="badge">∆v</span>
+                <span id="badgeFuel" class="badge">Fuel Fraction</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+<script>
+const g0 = 9.80665;
+const ctx = document.getElementById('preview').getContext('2d');
+
+const engineData = {
+  kerolox: { name:'Kerolox', IspSL:285, IspVac:330, thrustPerEngine:760e3 }, // Merlin-ish
+  methalox:{ name:'Methalox', IspSL:300, IspVac:360, thrustPerEngine:1850e3 }, // Raptor-ish (vac diff handled)
+  hydrolox:{ name:'Hydrolox', IspSL:270, IspVac:450, thrustPerEngine:2000e3 }, // RS-25 class
+  solid:   { name:'Solid',   IspSL:250, IspVac:280, thrustPerEngine:1200e3 },
+};
+
+// State
+let state = {
+  name: 'Golden Phoenix',
+  payload: 2000,
+  fairingDia: 5.2,
+  noseType: 'ogive',
+  material: 'aluminum',
+  reuse: 'none',
+  stages: [
+    stageTemplate('kerolox', 9, 255000, 25000),
+    stageTemplate('hydrolox', 1, 22000, 4000),
+  ],
+};
+
+function stageTemplate(type='kerolox', engines=9, fuel=200000, dry=20000){
+  return { type, engines, fuel, dry, throttle:100, vacNozzle:false };
+}
+
+// UI elements
+const el = {
+  name: document.getElementById('rocketName'),
+  payload: document.getElementById('payload'),
+  fairingDia: document.getElementById('fairingDia'),
+  noseType: document.getElementById('noseType'),
+  material: document.getElementById('material'),
+  reuse: document.getElementById('reuse'),
+  stages: document.getElementById('stages'),
+  m0: document.getElementById('m0'),
+  thrust: document.getElementById('thrust'),
+  twr: document.getElementById('twr'),
+  dv: document.getElementById('dv'),
+  massFill: document.getElementById('massFill'),
+  massNotice: document.getElementById('massNotice'),
+  badgeTWR: document.getElementById('badgeTWR'),
+  badgeDV: document.getElementById('badgeDV'),
+  badgeFuel: document.getElementById('badgeFuel'),
+};
+
+// Build stage cards
+function renderStages(){
+  el.stages.innerHTML = '';
+  state.stages.forEach((s, idx)=>{
+    const card = document.createElement('div');
+    card.className = 'stage';
+    card.innerHTML = `
+      <h3>Stage ${idx+1}</h3>
+      <div class="stage-controls">
+        <div>
+          <label title="Engine cycle & propellants">Engine Type</label>
+          <select data-k="type" data-i="${idx}">
+            <option value="kerolox" ${s.type==='kerolox'?'selected':''}>Kerolox</option>
+            <option value="methalox" ${s.type==='methalox'?'selected':''}>Methalox</option>
+            <option value="hydrolox" ${s.type==='hydrolox'?'selected':''}>Hydrolox</option>
+            <option value="solid" ${s.type==='solid'?'selected':''}>Solid</option>
+          </select>
+        </div>
+        <div>
+          <label title="How many engines fire at liftoff for this stage"># Engines</label>
+          <input data-k="engines" data-i="${idx}" type="number" min="1" max="33" value="${s.engines}">
+        </div>
+        <div>
+          <label title="Propellant mass for this stage (kg)">Fuel (kg)</label>
+          <input data-k="fuel" data-i="${idx}" type="number" min="0" step="100" value="${s.fuel}">
+        </div>
+        <div>
+          <label title="Structure, tanks, avionics, engines, etc. (kg)">Dry Mass (kg)</label>
+          <input data-k="dry" data-i="${idx}" type="number" min="0" step="100" value="${s.dry}">
+        </div>
+        <div>
+          <label title="Throttle setting at this phase (%)">Throttle %</label>
+          <input data-k="throttle" data-i="${idx}" type="range" min="50" max="100" value="${s.throttle}">
+        </div>
+        <div>
+          <label title="Vacuum-optimized nozzles (better Isp in space)">Vac Nozzle</label>
+          <select data-k="vacNozzle" data-i="${idx}">
+            <option value="false" ${!s.vacNozzle?'selected':''}>No</option>
+            <option value="true" ${s.vacNozzle?'selected':''}>Yes</option>
+          </select>
+        </div>
+      </div>
+      <div class="stage-actions">
+        <button class="btn ghost" onclick="duplicateStage(${idx})">Duplicate</button>
+        <button class="btn danger" onclick="deleteStage(${idx})">Delete</button>
+      </div>
+    `;
+    el.stages.appendChild(card);
+  });
+
+  // Bind inputs
+  el.stages.querySelectorAll('input, select').forEach(inp=>{
+    inp.addEventListener('input', (e)=>{
+      const i = Number(e.target.dataset.i);
+      const k = e.target.dataset.k;
+      let val = e.target.value;
+      if(['engines','fuel','dry','throttle'].includes(k)) val = Number(val);
+      if(k==='vacNozzle') val = (val==='true');
+      state.stages[i][k] = val;
+      computeAndRender();
+      saveLocal();
+    });
+  });
+}
+
+function duplicateStage(i){ state.stages.splice(i+1,0, JSON.parse(JSON.stringify(state.stages[i]))); renderStages(); computeAndRender(); saveLocal(); }
+function deleteStage(i){ if(state.stages.length>1){ state.stages.splice(i,1); renderStages(); computeAndRender(); saveLocal(); } }
+
+// Top controls bindings
+['name','payload','fairingDia','noseType','material','reuse'].forEach(k=>{
+  const map = { name:'rocketName', payload:'payload', fairingDia:'fairingDia', noseType:'noseType', material:'material', reuse:'reuse' };
+  const e = document.getElementById(map[k]);
+  const setter = ()=>{ let v = e.value; if(['payload','fairingDia'].includes(k)) v = Number(v); state[k]=v; computeAndRender(); saveLocal(); };
+  e.value = state[k];
+  e.addEventListener('input', setter);
+});
+
+// Physics helpers
+function stageIsp(stage){
+  const d = engineData[stage.type];
+  const vacBonus = stage.vacNozzle ? 0.08 : 0; // +8% Isp in vacuum
+  return { SL: d.IspSL, VAC: Math.round(d.IspVac*(1+vacBonus)) };
+}
+function stageThrust(stage){
+  const d = engineData[stage.type];
+  return d.thrustPerEngine * stage.engines * (stage.throttle/100);
+}
+function materialDryFactor(material){
+  switch(material){
+    case 'stainless': return 1.12; // stronger but heavier
+    case 'composite': return 0.88; // lighter but costly
+    default: return 1.0; // aluminum baseline
+  }
+}
+function reusePenalty(reuse){
+  // Added dry mass for landing gear, heatshield, etc., mostly on stage 1
+  switch(reuse){
+    case 'booster': return { dryAddStage1: 3000, dvLoss: 150 }; // retroprop
+    case 'full': return { dryAddStage1: 3500, dvLoss: 200 };
+    default: return { dryAddStage1: 0, dvLoss: 0 };
+  }
+}
+
+function computePerformance(){
+  const stages = JSON.parse(JSON.stringify(state.stages));
+  const matF = materialDryFactor(state.material);
+  const reuseF = reusePenalty(state.reuse);
+
+  // Apply material and reuse to dry mass
+  stages.forEach((s, i)=>{ s.dry = s.dry*matF + (i===0? reuseF.dryAddStage1:0); });
+
+  // Compute stacked masses from top to bottom
+  let upperMass = state.payload; // start with payload
+  stages.slice().reverse().forEach(s=>{ upperMass += s.dry + s.fuel; });
+  let m0 = upperMass; // total lift-off mass
+
+  // TWR based on first stage thrust at SL
+  const thrustSL = stageThrust(stages[0]);
+  const TWR = thrustSL / (m0 * g0);
+
+  // Delta-v (vacuum) with simple stack model
+  let dv = 0;
+  let stackMass = state.payload;
+  for(let i=stages.length-1; i>=0; i--){
+    const s = stages[i];
+    const isp = stageIsp(s).VAC;
+    const m0i = stackMass + s.dry + s.fuel;
+    const m1i = stackMass + s.dry;
+    const dvi = isp * g0 * Math.log(Math.max(1.0001, m0i/m1i));
+    dv += dvi;
+    stackMass += s.dry; // next stage below must carry this dry mass as dead weight after burnout
+  }
+  dv = Math.max(0, dv - reuseF.dvLoss);
+
+  // Mass fractions
+  const fuelMass = state.stages.reduce((a,b)=>a+b.fuel,0) * matF/ matF; // fuel unaffected by material factor
+  const dryMass = stages.reduce((a,b)=>a+b.dry,0);
+
+  return { m0, thrustSL, TWR, dv, fuelMass, dryMass };
+}
+
+function fmt(n){ if(!isFinite(n)) return '—'; if(Math.abs(n)>=1000) return (n/1000).toFixed(1)+" t"; return Math.round(n)+" kg"; }
+function fmtNum(n, d=1){ if(!isFinite(n)) return '—'; return n.toFixed(d); }
+
+function computeAndRender(){
+  const { m0, thrustSL, TWR, dv, fuelMass, dryMass } = computePerformance();
+  // Metrics
+  el.m0.textContent = fmt(m0);
+  el.thrust.textContent = (thrustSL/1000).toFixed(0)+" kN";
+  el.twr.textContent = TWR.toFixed(2);
+  el.dv.textContent = Math.round(dv).toLocaleString()+" m/s";
+
+  // Badges
+  setBadge(el.badgeTWR, TWR>=1.2 ? 'ok' : TWR>=1.0? 'warn':'bad', `TWR ${TWR.toFixed(2)}`);
+  setBadge(el.badgeDV, dv>=9400 ? 'ok' : dv>=8000? 'warn':'bad', `∆v ${Math.round(dv)} m/s`);
+  const fuelFrac = fuelMass / m0; // approx
+  setBadge(el.badgeFuel, fuelFrac>0.7? 'ok' : fuelFrac>0.55? 'warn':'bad', `Fuel ${(fuelFrac*100).toFixed(0)}%`);
+  el.massFill.style.width = Math.min(100, Math.max(0, fuelFrac*100))+'%';
+  el.massNotice.textContent = `Fuel: ${fmt(fuelMass)} • Dry: ${fmt(dryMass)} • Payload: ${fmt(state.payload)}`;
+
+  drawRocket();
+}
+
+function setBadge(elm, kind, text){ elm.className = 'badge '+kind; elm.textContent = text; }
+
+// Drawing
+function drawRocket(){
+  const w = ctx.canvas.width, h = ctx.canvas.height;
+  ctx.clearRect(0,0,w,h);
+
+  // Stars background
+  for(let i=0;i<60;i++){
+    ctx.fillStyle = 'rgba(255,255,255,'+(Math.random()*0.6+0.1)+')';
+    ctx.fillRect(Math.random()*w, Math.random()*h, 1, 1);
+  }
+
+  // Ground
+  ctx.fillStyle = '#0a0f1d';
+  ctx.fillRect(0, h-30, w, 30);
+  ctx.fillStyle = 'rgba(255,215,0,.08)';
+  ctx.fillRect(0, h-32, w, 2);
+
+  const x = w*0.75;
+  const baseY = h-30;
+  const totalHeight = Math.min(420, 80 + state.stages.reduce((a,b)=>a + (b.fuel*0.0005 + b.dry*0.0008), 0));
+  const dia = Math.min(120, 30 + state.fairingDia*8);
+
+  // Draw stages from bottom up
+  let y = baseY;
+  state.stages.forEach((s, i)=>{
+    const height = 40 + s.fuel*0.00035 + s.dry*0.0006; // arbitrary visual mapping
+    y -= height;
+    const colFuel = '#8bb7ff', colDry = '#6ee7b7';
+    const r = dia/2;
+
+    // Tank (fuel)
+    roundedRect(x-r, y, dia, height*0.72, 10, colFuel, '#93c5fd');
+    // Interstage/engine section (dry)
+    roundedRect(x-r*0.95, y+height*0.72, dia*0.95*2/2, height*0.28, 8, colDry, '#a7f3d0');
+
+    // Engine flames at stage 1 if launching
+    if(i===0 && launchAnim.running){
+      const thrust = stageThrust(s);
+      const flameLen = Math.min(160, Math.max(20, thrust/15000));
+      for(let e=0; e<Math.min(10, s.engines); e++){
+        const ex = x - r*0.8 + (e/(Math.min(10, s.engines)-1||1))*r*1.6;
+        flame(ex, y+height*0.98, flameLen);
+      }
+    }
+  });
+
+  // Fairing + nose
+  const fairH = 60 + state.payload*0.003;
+  const topY = y - fairH;
+  fairing(ctx, x, y, dia, fairH, state.noseType);
+
+  // Label
+  ctx.fillStyle = 'rgba(255,255,255,.7)';
+  ctx.font = '14px ui-sans-serif, system-ui';
+  ctx.textAlign = 'center';
+  ctx.fillText(state.name || 'Unnamed Rocket', x, topY-10);
+}
+
+function roundedRect(x, y, w, h, r, fill, stroke){
+  ctx.beginPath();
+  ctx.moveTo(x+r, y);
+  ctx.arcTo(x+w, y, x+w, y+h, r);
+  ctx.arcTo(x+w, y+h, x, y+h, r);
+  ctx.arcTo(x, y+h, x, y, r);
+  ctx.arcTo(x, y, x+w, y, r);
+  ctx.closePath();
+  ctx.fillStyle = fill; ctx.fill();
+  ctx.strokeStyle = stroke; ctx.lineWidth = 1; ctx.stroke();
+}
+function fairing(ctx, x, y, d, h, type){
+  ctx.save(); ctx.translate(x, y);
+  ctx.fillStyle = 'rgba(255,215,0,.12)'; ctx.strokeStyle = 'rgba(255,215,0,.6)';
+  ctx.beginPath(); ctx.moveTo(-d/2, 0); ctx.lineTo(-d/2, -h*0.7);
+  switch(type){
+    case 'conic': ctx.lineTo(0, -h); break;
+    case 'blunt': ctx.quadraticCurveTo(-d*0.2, -h*0.9, 0, -h*0.85); ctx.quadraticCurveTo(d*0.2, -h*0.9, d/2, -h*0.7); break;
+    default: // ogive
+      ctx.quadraticCurveTo(-d*0.4, -h*0.9, 0, -h);
+      ctx.quadraticCurveTo(d*0.4, -h*0.9, d/2, -h*0.7);
+  }
+  ctx.lineTo(d/2, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.restore();
+}
+function flame(x, y, len){
+  const grd = ctx.createLinearGradient(x, y, x, y+len);
+  grd.addColorStop(0, 'rgba(255,240,200,.95)');
+  grd.addColorStop(0.4, 'rgba(255,180,60,.85)');
+  grd.addColorStop(1, 'rgba(255,80,20,.05)');
+  ctx.fillStyle = grd; ctx.beginPath();
+  ctx.moveTo(x-4, y);
+  ctx.quadraticCurveTo(x, y+len*0.3, x-2, y+len);
+  ctx.lineTo(x+2, y+len);
+  ctx.quadraticCurveTo(x, y+len*0.3, x+4, y);
+  ctx.closePath(); ctx.fill();
+}
+
+// Launch animation
+const launchAnim = { running:false, t:0 };
+function step(){
+  if(launchAnim.running){ launchAnim.t += 1/60; const c = ctx.canvas; ctx.save(); ctx.translate(0, launchAnim.t*40); ctx.globalAlpha = 0.96; ctx.drawImage(c, 0, -launchAnim.t*40); ctx.restore(); if(launchAnim.t>6){ launchAnim.running=false; launchAnim.t=0; } }
+  requestAnimationFrame(step);
+}
+requestAnimationFrame(step);
+
+// Buttons
+function randomize(){
+  state.name = randomName();
+  state.payload = Math.round(1000 + Math.random()*18000);
+  state.fairingDia = (3 + Math.random()*6).toFixed(1)*1;
+  state.noseType = ['ogive','conic','blunt'][Math.floor(Math.random()*3)];
+  state.material = ['aluminum','stainless','composite'][Math.floor(Math.random()*3)];
+  state.reuse = ['none','booster','full'][Math.floor(Math.random()*3)];
+  const n = 1 + Math.floor(Math.random()*3);
+  state.stages = Array.from({length:n}, (_,i)=> stageTemplate(['kerolox','methalox','hydrolox','solid'][Math.floor(Math.random()*4)], i?1:9, Math.round(5000+Math.random()*250000), Math.round(1000+Math.random()*40000)) );
+  bindTop(); renderStages(); computeAndRender(); saveLocal();
+}
+function presetFalcon(){
+  state = {
+    name:'Golden Falcon‑like', payload: 22800, fairingDia: 5.2, noseType:'ogive', material:'aluminum', reuse:'booster',
+    stages:[ stageTemplate('kerolox', 9, 395000, 25000), stageTemplate('kerolox', 1, 90000, 4000) ]
+  }; bindTop(); renderStages(); computeAndRender(); saveLocal();
+}
+function presetSaturn(){
+  state = {
+    name:'Golden Saturn‑like', payload: 43000, fairingDia: 10.1, noseType:'conic', material:'aluminum', reuse:'none',
+    stages:[ stageTemplate('kerolox', 5, 2030000, 131000), stageTemplate('hydrolox', 5, 456000, 40000), stageTemplate('hydrolox', 1, 109000, 13000) ]
+  }; bindTop(); renderStages(); computeAndRender(); saveLocal();
+}
+function addStage(){ state.stages.push(stageTemplate()); renderStages(); computeAndRender(); saveLocal(); }
+function removeStage(){ if(state.stages.length>1){ state.stages.pop(); renderStages(); computeAndRender(); saveLocal(); } }
+function resetAll(){ state = { name:'Golden Phoenix', payload:2000, fairingDia:5.2, noseType:'ogive', material:'aluminum', reuse:'none', stages:[ stageTemplate('kerolox',9,255000,25000), stageTemplate('hydrolox',1,22000,4000) ] }; bindTop(); renderStages(); computeAndRender(); saveLocal(); }
+function launch(){ launchAnim.running=true; launchAnim.t=0; drawRocket(); }
+
+function shareLink(){ const data = encodeURIComponent(btoa(JSON.stringify(state))); const url = location.origin+location.pathname+"#r="+data; navigator.clipboard.writeText(url).then(()=> alert('Share link copied!')); }
+function exportPNG(){ const a = document.createElement('a'); a.download = (state.name||'rocket')+'.png'; a.href = ctx.canvas.toDataURL('image/png'); a.click(); }
+
+function saveLocal(){ localStorage.setItem('goldenRocket', JSON.stringify(state)); }
+function loadLocal(){ const v = localStorage.getItem('goldenRocket'); if(v){ try{ state = JSON.parse(v);}catch{} } bindTop(); renderStages(); computeAndRender(); }
+
+function bindTop(){
+  el.name.value = state.name || '';
+  el.payload.value = state.payload;
+  el.fairingDia.value = state.fairingDia;
+  el.noseType.value = state.noseType;
+  el.material.value = state.material;
+  el.reuse.value = state.reuse;
+}
+
+// Utils
+function randomName(){
+  const a=['Golden','Stellar','Nova','Astra','Zenith','Aurora','Nebula','Orion','Titan','Vega'];
+  const b=['Phoenix','Arrow','Voyager','Thunder','Pioneer','Comet','Draco','Falcon','Ranger','Quasar'];
+  return a[Math.floor(Math.random()*a.length)]+' '+b[Math.floor(Math.random()*b.length)];
+}
+
+// URL import
+(function(){ const m = location.hash.match(/#r=(.+)$/); if(m){ try{ state = JSON.parse(atob(decodeURIComponent(m[1]))); }catch{} } })();
+
+// Wire buttons
+document.getElementById('btnRandom').onclick = randomize;
+_documentById('btnPresetFalcon', presetFalcon);
+_documentById('btnPresetSaturn', presetSaturn);
+_documentById('btnAddStage', addStage);
+_documentById('btnRemoveStage', removeStage);
+_documentById('btnReset', resetAll);
+_documentById('btnLaunch', launch);
+_documentById('btnShare', shareLink);
+_documentById('btnExport', exportPNG);
+_documentById('btnSave', ()=>{ const name = prompt('Save preset name?'); if(!name) return; const all = JSON.parse(localStorage.getItem('goldenRocketSaves')||'{}'); all[name]=state; localStorage.setItem('goldenRocketSaves', JSON.stringify(all)); alert('Saved ✅'); });
+_documentById('btnLoad', ()=>{ const all = JSON.parse(localStorage.getItem('goldenRocketSaves')||'{}'); const names = Object.keys(all); if(!names.length) return alert('No saves yet'); const pick = prompt('Type preset name to load:\n'+names.join('\n')); if(pick && all[pick]){ state = all[pick]; bindTop(); renderStages(); computeAndRender(); }});
+
+function _documentById(id, fn){ const el = document.getElementById(id); if(el) el.addEventListener('click', fn); }
+
+// Init
+renderStages();
+computeAndRender();
+saveLocal();
+loadLocal();
+</script>
 </body>
 </html>

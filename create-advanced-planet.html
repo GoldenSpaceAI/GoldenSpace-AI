@@ -1,263 +1,525 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-  <title>Create Your Advanced Planet • GoldenSpaceAI</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GoldenSpaceAI · Create Advanced Planet</title>
+  <meta name="description" content="Design a custom planet with oceans, atmosphere, temperature, life, gravity, and more—then see it come alive!" />
   <style>
-    body {
-      margin: 0;
-      font-family: Inter, system-ui, sans-serif;
-      background: url("https://images.unsplash.com/photo-1580428180163-9c89365a2d50?q=80&w=1920&auto=format&fit=crop") center/cover fixed;
-      color: #f9f9f9;
-      padding: 0;
+    :root{
+      --gold:#ffd76a; --ink:#0b0b12; --ink-2:#121222; --ink-3:#1b1b2e; --muted:#9aa0b4; --card:#11111c; --glass:rgba(255,255,255,.06);
+      --ok:#50fa7b; --warn:#ffb86c; --bad:#ff6b6b; --accent:#7aa2ff;
     }
-    header {
-      padding: 16px;
-      background: rgba(10, 14, 21, 0.8);
-      border-bottom: 1px solid rgba(255,255,255,.1);
-      color: #f6c64a;
-      font-size: 20px;
-      font-weight: 800;
-      text-align: center;
-    }
-    main {
-      max-width: 900px;
-      margin: 20px auto;
-      background: rgba(15, 22, 36, 0.9);
-      padding: 20px;
-      border-radius: 16px;
-      box-shadow: 0 12px 40px rgba(0,0,0,0.5);
-    }
-    h2 {
-      margin-top: 28px;
-      color: #f6c64a;
-      font-size: 20px;
-    }
-    label {
-      display: block;
-      margin: 10px 0 4px;
-      font-weight: 600;
-    }
-    input, select {
-      width: 100%;
-      padding: 8px;
-      border-radius: 8px;
-      border: none;
-      background: #0f1624;
-      color: #fff;
-      font-size: 14px;
-    }
-    input[type=range] {
-      padding: 0;
-    }
-    .section {
-      margin-bottom: 20px;
-      border-bottom: 1px solid rgba(255,255,255,.08);
-      padding-bottom: 20px;
-    }
-    #preview {
-      background: #111a2d;
-      border: 1px solid rgba(255,255,255,.1);
-      border-radius: 12px;
-      padding: 16px;
-      margin-top: 20px;
-      font-size: 14px;
-      color: #d0d7e4;
-    }
-    .btn {
-      display: inline-block;
-      margin-top: 20px;
-      padding: 12px 20px;
-      border-radius: 12px;
-      font-weight: 800;
-      background: linear-gradient(180deg, #f6c64a, #eb8b36);
-      border: none;
-      color: #1a1200;
-      cursor: pointer;
-      box-shadow: 0 8px 20px rgba(246,198,74,.3);
-    }
-    .btn:hover {
-      transform: translateY(-1px);
-    }
-    #message {
-      margin-top: 20px;
-      font-size: 14px;
-      color: #ffecb3;
-    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0; font:16px/1.45 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial; color:#e9ecf8; background:
+      radial-gradient(1200px 700px at 80% -20%, rgba(255,215,106,.18), transparent 40%),
+      radial-gradient(900px 500px at -10% 110%, rgba(122,162,255,.16), transparent 40%),
+      linear-gradient(180deg, var(--ink), var(--ink-2));}
+    .container{max-width:1200px; margin:0 auto; padding:24px;}
+    .header{display:flex; align-items:center; gap:14px;}
+    .logo{width:36px; height:36px; border-radius:10px; background: linear-gradient(135deg, var(--gold), #ff8), #444; box-shadow:0 0 0 2px rgba(255,215,106,.35);}
+    h1{font-size:clamp(22px, 3vw, 34px); margin:0}
+    .sub{color:var(--muted)}
+
+    .grid{display:grid; grid-template-columns: 1.1fr .9fr; gap:22px; margin-top:18px}
+    @media (max-width: 980px){ .grid{grid-template-columns:1fr; } }
+
+    .card{background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.06); border-radius:18px; overflow:hidden; box-shadow:0 8px 30px rgba(0,0,0,.25)}
+    .card h2{margin:0; padding:16px 18px; font-size:18px; background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02)); border-bottom:1px solid rgba(255,255,255,.06)}
+    .card .body{padding:18px}
+
+    .row{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+    .field{display:flex; flex-direction:column; gap:8px; padding:10px; background:var(--glass); border:1px solid rgba(255,255,255,.06); border-radius:12px}
+    .field label{font-size:13px; color:#c7cbe0; display:flex; align-items:center; gap:6px}
+    .hint{font-size:12px; color:#aab1c9}
+    input[type="text"], select, input[type="number"]{width:100%; padding:10px 11px; border-radius:10px; border:1px solid rgba(255,255,255,.12); background:#0e0e18; color:#e9ecf8}
+    input[type="range"]{width:100%}
+    .twocol{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+
+    .actions{display:flex; gap:10px; flex-wrap:wrap; margin-top:12px}
+    .btn{cursor:pointer; border:1px solid rgba(255,255,255,.14); background:#121224; color:#f2f4ff; padding:10px 14px; border-radius:12px; font-weight:600}
+    .btn:hover{background:#171732}
+    .btn.gold{background:linear-gradient(135deg, var(--gold), #ffea9d); color:#2c2300; border:none}
+    .btn.ghost{background:transparent}
+
+    .canvas-wrap{position:relative; display:grid; gap:12px}
+    canvas{width:100%; height:auto; border-radius:16px; background:radial-gradient(600px 400px at 20% 10%, rgba(255,255,255,.05), transparent 50%), #0a0a12; border:1px solid rgba(255,255,255,.06)}
+
+    .legend{display:flex; gap:8px; flex-wrap:wrap; font-size:13px}
+    .chip{padding:6px 10px; border-radius:999px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.08)}
+
+    .status{display:flex; align-items:center; gap:10px; font-size:14px}
+    .status b{color:#fff}
+    .dot{width:10px; height:10px; border-radius:50%}
+    .ok{background:var(--ok)} .warn{background:var(--warn)} .bad{background:var(--bad)}
+
+    footer{opacity:.8; text-align:center; font-size:12px; padding:18px}
+    code.small{font-size:12px; padding:2px 6px; border-radius:6px; background:rgba(255,255,255,.06);}
   </style>
 </head>
 <body>
-  <header>🌌 GoldenSpaceAI — Create Your Advanced Planet</header>
-  <main>
-    <h1>Create Your Advanced Planet</h1>
-    <p>Customize everything: climate, oceans, life, and unique features. When done, build your planet!</p>
-
-    <!-- Planet Basics -->
-    <div class="section">
-      <h2>Planet Basics</h2>
-      <label>Planet Name</label>
-      <input type="text" id="planetName" placeholder="Enter planet name"/>
-      
-      <label>Size</label>
-      <select id="planetSize">
-        <option>Small</option>
-        <option>Earth-like</option>
-        <option>Giant</option>
-      </select>
-
-      <label>Gravity Level</label>
-      <select id="gravity">
-        <option>Low</option>
-        <option>Medium</option>
-        <option>High</option>
-      </select>
+  <div class="container">
+    <div class="header">
+      <div class="logo" aria-hidden="true"></div>
+      <div>
+        <h1>Build Your Own Planet 🌍✨</h1>
+        <div class="sub">Dial in oceans, air, gravity, life, and more. Then watch your world form in real‑time.</div>
+      </div>
     </div>
 
-    <!-- Environment -->
-    <div class="section">
-      <h2>Environment & Climate</h2>
-      <label>Temperature (°C)</label>
-      <input type="range" id="temp" min="-200" max="500" value="25"/>
-      <span id="tempVal">25°C</span>
+    <div class="grid">
+      <!-- Controls -->
+      <section class="card" aria-labelledby="controls-title">
+        <h2 id="controls-title">Planet Designer</h2>
+        <div class="body">
+          <div class="row">
+            <div class="field">
+              <label>Planet Name</label>
+              <input id="name" type="text" placeholder="e.g., Auroria" maxlength="32" />
+              <div class="hint">Tip: Names ending with -ia or -on feel extra cosmic.</div>
+            </div>
+            <div class="field">
+              <label>Seed (for repeatable worlds)</label>
+              <input id="seed" type="text" placeholder="(optional)" />
+              <div class="hint">Same seed + same settings = identical planet.</div>
+            </div>
+          </div>
 
-      <label>Atmosphere</label>
-      <select id="atmosphere">
-        <option>Oxygen-rich</option>
-        <option>Carbon-heavy</option>
-        <option>Methane</option>
-        <option>Custom</option>
-      </select>
+          <div class="row">
+            <div class="field">
+              <label>Temperature (°C) <span id="tempOut"></span></label>
+              <input id="temperature" type="range" min="-100" max="100" value="15" />
+              <div class="hint">Colder = more ice caps; hotter = wider deserts.</div>
+            </div>
+            <div class="field">
+              <label>Gravity (g) <span id="gravOut"></span></label>
+              <input id="gravity" type="range" min="0.2" max="2.5" step="0.1" value="1.0" />
+              <div class="hint">Higher gravity compresses atmosphere & mountains.</div>
+            </div>
+          </div>
 
-      <label>Weather</label>
-      <select id="weather">
-        <option>Calm</option>
-        <option>Stormy</option>
-        <option>Windy</option>
-        <option>Snowy</option>
-        <option>Mixed</option>
-      </select>
+          <div class="row">
+            <div class="field">
+              <label>Ocean Coverage (%) <span id="oceanOut"></span></label>
+              <input id="ocean" type="range" min="0" max="95" value="71" />
+              <div class="twocol">
+                <div class="field">
+                  <label>Salinity (ppt)</label>
+                  <input id="salinity" type="number" min="0" max="120" value="35" />
+                </div>
+                <div class="field">
+                  <label>Drinkable?</label>
+                  <select id="drinkable">
+                    <option value="auto" selected>Auto (based on salinity)</option>
+                    <option value="yes">Yes</option>
+                    <option value="no">No</option>
+                  </select>
+                </div>
+              </div>
+              <div class="hint">Below ~1 ppt is generally potable; 1–3 ppt brackish; &gt;3 ppt not drinkable.</div>
+            </div>
+            <div class="field">
+              <label>Atmosphere</label>
+              <div class="twocol">
+                <div class="field">
+                  <label>Thickness</label>
+                  <input id="atmo" type="range" min="0" max="100" value="60" />
+                </div>
+                <div class="field">
+                  <label>Main Gas</label>
+                  <select id="gas">
+                    <option>N₂/O₂ (Earth‑like)</option>
+                    <option>CO₂‑rich</option>
+                    <option>CH₄‑rich</option>
+                    <option>H₂/He (gas‑giant style)</option>
+                    <option>Thin Ar/N₂</option>
+                  </select>
+                </div>
+              </div>
+              <div class="hint">Thicker air = stronger blue rim + vivid clouds.</div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="field">
+              <label>Life Type</label>
+              <select id="life">
+                <option value="none">None</option>
+                <option value="microbial">Microbial</option>
+                <option value="flora">Flora (plants)</option>
+                <option value="fauna">Fauna (animals)</option>
+                <option value="smart">Technological</option>
+              </select>
+              <div class="hint">Life probability rises with drinkable surface water + mild temps.</div>
+            </div>
+            <div class="field">
+              <label>Biomes Mix</label>
+              <div class="twocol">
+                <div class="field">
+                  <label>Forests % <span id="forestOut"></span></label>
+                  <input id="forest" type="range" min="0" max="100" value="35" />
+                </div>
+                <div class="field">
+                  <label>Deserts % <span id="desertOut"></span></label>
+                  <input id="desert" type="range" min="0" max="100" value="20" />
+                </div>
+              </div>
+              <div class="hint">Remaining area becomes grasslands/tundra depending on temperature.</div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="field">
+              <label>Rings & Moons</label>
+              <div class="twocol">
+                <div class="field">
+                  <label>Rings</label>
+                  <select id="rings">
+                    <option value="none">None</option>
+                    <option value="thin">Thin ring</option>
+                    <option value="wide">Wide bright ring</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>Moons</label>
+                  <input id="moons" type="number" min="0" max="6" value="1" />
+                </div>
+              </div>
+            </div>
+            <div class="field">
+              <label>Palette</label>
+              <div class="twocol">
+                <div class="field">
+                  <label>Land Hue</label>
+                  <input id="landHue" type="range" min="0" max="360" value="120" />
+                </div>
+                <div class="field">
+                  <label>Ocean Hue</label>
+                  <input id="oceanHue" type="range" min="180" max="260" value="205" />
+                </div>
+              </div>
+              <div class="hint">Tune colors to taste—kids love wild palettes, scientists love realism 😉</div>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button class="btn gold" id="generate">Generate Planet</button>
+            <button class="btn" id="randomize">🎲 Randomize</button>
+            <button class="btn" id="exportJSON">Export Settings (JSON)</button>
+            <button class="btn" id="exportPNG">Save Image (PNG)</button>
+            <button class="btn ghost" id="reset">Reset</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Preview -->
+      <section class="card" aria-labelledby="preview-title">
+        <h2 id="preview-title">Preview</h2>
+        <div class="body">
+          <div class="canvas-wrap">
+            <canvas id="planet" width="640" height="640" aria-label="planet visualization"></canvas>
+            <div class="legend">
+              <div class="chip">Name: <b id="nameOut">Unnamed</b></div>
+              <div class="chip status"><span class="dot" id="potDot"></span> Water: <b id="potText">Unknown</b></div>
+              <div class="chip">Life: <b id="lifeOut">None</b></div>
+              <div class="chip">Moons: <b id="moonsOut">1</b></div>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
 
-    <!-- Oceans -->
-    <div class="section">
-      <h2>Oceans & Land</h2>
-      <label>Water Coverage (%)</label>
-      <input type="range" id="water" min="0" max="100" value="70"/>
-      <span id="waterVal">70%</span>
-
-      <label>Ocean Color</label>
-      <select id="oceanColor">
-        <option>Blue</option>
-        <option>Green</option>
-        <option>Red</option>
-        <option>Black</option>
-      </select>
-
-      <label>Continents</label>
-      <input type="number" id="continents" value="5"/>
-    </div>
-
-    <!-- Life -->
-    <div class="section">
-      <h2>Life & Ecosystem</h2>
-      <label>Type of Life</label>
-      <select id="life">
-        <option>None</option>
-        <option>Microbial</option>
-        <option>Plants</option>
-        <option>Animals</option>
-        <option>Intelligent Civilization</option>
-      </select>
-
-      <label>Diversity</label>
-      <input type="range" id="diversity" min="0" max="10" value="5"/>
-      <span id="divVal">5</span>
-
-      <label>Civilization Level</label>
-      <select id="civLevel">
-        <option>Stone Age</option>
-        <option>Industrial</option>
-        <option>Futuristic</option>
-      </select>
-    </div>
-
-    <!-- Special -->
-    <div class="section">
-      <h2>Special Features</h2>
-      <label>Rings</label>
-      <select id="rings">
-        <option>No</option>
-        <option>Yes</option>
-      </select>
-
-      <label>Number of Moons</label>
-      <input type="number" id="moons" value="1"/>
-
-      <label>Magnetic Field</label>
-      <select id="magField">
-        <option>Weak</option>
-        <option>Strong</option>
-        <option>None</option>
-      </select>
-
-      <label>Core Type</label>
-      <select id="core">
-        <option>Iron</option>
-        <option>Ice</option>
-        <option>Exotic</option>
-      </select>
-    </div>
-
-    <button class="btn" id="buildBtn">🚀 Build Advanced Planet</button>
-    <div id="message"></div>
-
-    <div id="preview"></div>
-  </main>
+    <footer>
+      Made for creators of all ages. Pro‑tip: Share your JSON with friends so they can rebuild your exact world. <code class="small">#GoldenSpaceAI</code>
+    </footer>
+  </div>
 
   <script>
-    const temp = document.getElementById("temp");
-    const tempVal = document.getElementById("tempVal");
-    temp.oninput = () => tempVal.textContent = temp.value + "°C";
+    // --- Utility: seeded RNG + Simplex noise (tiny implementation) ---
+    function xmur3(str){ let h=1779033703^str.length; for(let i=0;i<str.length;i++){ h=Math.imul(h^str.charCodeAt(i),3432918353); h=h<<13|h>>>19; } return ()=>{ h=Math.imul(h^h>>>16,2246822507); h=Math.imul(h^h>>>13,3266489909); return (h^h>>>16)>>>0; } }
+    function mulberry32(a){ return function(){ let t=a+=0x6D2B79F5; t=Math.imul(t^t>>>15, t|1); t^=t+Math.imul(t^t>>>7, t|61); return ((t^t>>>14)>>>0)/4294967296; } }
 
-    const water = document.getElementById("water");
-    const waterVal = document.getElementById("waterVal");
-    water.oninput = () => waterVal.textContent = water.value + "%";
+    // Lightweight 2D simplex noise (public domain-ish minimal)
+    // Based on Stefan Gustavson's Simplex noise, simplified for size
+    function Simplex(seed=1){
+      const rand = mulberry32(seed>>>0);
+      const p=new Uint8Array(256); for(let i=0;i<256;i++) p[i]=i; for(let i=255;i>0;i--){ const j=(rand()*256)|0; [p[i],p[j%256]]=[p[j%256],p[i]]; }
+      const perm=new Uint8Array(512); for(let i=0;i<512;i++) perm[i]=p[i&255];
+      const grad = (hash,x,y)=>{ const h=hash&7; const u=h<4?x:y; const v=h<4?y:x; return ((h&1)?-u:u)+((h&2)?-2*v:2*v); };
+      this.noise = function(xin,yin){ const F=0.366025403; const G=0.211324865; let n0=0,n1=0,n2=0; const s=(xin+yin)*F; const i=Math.floor(xin+s); const j=Math.floor(yin+s); const t=(i+j)*G; const X0=i-t; const Y0=j-t; const x0=xin-X0; const y0=yin-Y0; let i1= x0>y0?1:0, j1=x0>y0?0:1; const x1=x0-i1+G; const y1=y0-j1+G; const x2=x0-1+2*G; const y2=y0-1+2*G; const ii=i&255; const jj=j&255; const t0=0.5-x0*x0-y0*y0; if(t0>0){ const gi0=perm[ii+perm[jj]]; n0=t0*t0*grad(gi0,x0,y0);} const t1=0.5-x1*x1-y1*y1; if(t1>0){ const gi1=perm[ii+i1+perm[jj+j1]]; n1=t1*t1*grad(gi1,x1,y1);} const t2=0.5-x2*x2-y2*y2; if(t2>0){ const gi2=perm[ii+1+perm[jj+1]]; n2=t2*t2*grad(gi2,x2,y2);} return 70*(n0+n1+n2); };
+    }
 
-    const diversity = document.getElementById("diversity");
-    const divVal = document.getElementById("divVal");
-    diversity.oninput = () => divVal.textContent = diversity.value;
+    // DOM refs
+    const el = id => document.getElementById(id);
+    const nameEl=el('name'), seedEl=el('seed');
+    const tempEl=el('temperature'), gravEl=el('gravity'), oceanEl=el('ocean');
+    const salEl=el('salinity'), drinkEl=el('drinkable');
+    const atmoEl=el('atmo'), gasEl=el('gas');
+    const lifeEl=el('life'), forestEl=el('forest'), desertEl=el('desert');
+    const ringsEl=el('rings'), moonsEl=el('moons');
+    const landHueEl=el('landHue'), oceanHueEl=el('oceanHue');
 
-    document.getElementById("buildBtn").onclick = async () => {
-      const planet = {
-        name: document.getElementById("planetName").value,
-        size: document.getElementById("planetSize").value,
-        gravity: document.getElementById("gravity").value,
-        temp: temp.value,
-        atmosphere: document.getElementById("atmosphere").value,
-        weather: document.getElementById("weather").value,
-        water: water.value,
-        oceanColor: document.getElementById("oceanColor").value,
-        continents: document.getElementById("continents").value,
-        life: document.getElementById("life").value,
-        diversity: diversity.value,
-        civLevel: document.getElementById("civLevel").value,
-        rings: document.getElementById("rings").value,
-        moons: document.getElementById("moons").value,
-        magField: document.getElementById("magField").value,
-        core: document.getElementById("core").value,
-      };
+    const nameOut=el('nameOut'), potDot=el('potDot'), potText=el('potText'), lifeOut=el('lifeOut'), moonsOut=el('moonsOut');
+    const tempOut=el('tempOut'), gravOut=el('gravOut'), oceanOut=el('oceanOut'), forestOut=el('forestOut'), desertOut=el('desertOut');
 
-      const res = await fetch("/api/me", { credentials: "include" });
-      const data = await res.json();
+    const canvas=el('planet'); const ctx=canvas.getContext('2d');
 
-      if (data.plan === "sun" || data.plan === "universe") {
-        document.getElementById("message").textContent = "✅ Planet created! Saved to your account.";
-        document.getElementById("preview").textContent = JSON.stringify(planet, null, 2);
-      } else {
-        document.getElementById("message").textContent = "⚠️ Please upgrade to Sun Pack or Your Space Pack to build advanced planets.";
+    function clamp(n,min,max){return Math.max(min, Math.min(max,n));}
+    function hsl(h,s,l){ return `hsl(${h} ${s}% ${l}%)`; }
+
+    function getPotable(){
+      if(drinkEl.value==='yes') return {ok:true, why:'Chosen'};
+      if(drinkEl.value==='no') return {ok:false, why:'Chosen'};
+      const s = Number(salEl.value||0);
+      if(s<=1) return {ok:true, why:'Low salinity'};
+      if(s<=3) return {ok:false, why:'Brackish'};
+      return {ok:false, why:'Salty'};
+    }
+
+    function healthColor(temp){
+      if(temp>=-10 && temp<=35) return 'ok';
+      if(temp>=-40 && temp<=60) return 'warn';
+      return 'bad';
+    }
+
+    function updateChips(){
+      const temp=Number(tempEl.value); const grav=Number(gravEl.value); const oc=Number(oceanEl.value);
+      tempOut.textContent=`(${temp}°C)`; gravOut.textContent=`(${grav.toFixed(1)}g)`; oceanOut.textContent=`(${oc}%)`;
+      forestOut.textContent=`(${forestEl.value}%)`; desertOut.textContent=`(${desertEl.value}%)`;
+      nameOut.textContent=(nameEl.value||'Unnamed'); lifeOut.textContent=lifeEl.options[lifeEl.selectedIndex].text; moonsOut.textContent=moonsEl.value;
+
+      const pot=getPotable(); potText.textContent= pot.ok?`Drinkable (${pot.why})`:`Not drinkable (${pot.why})`;
+      potDot.className='dot ' + (pot.ok? 'ok':'bad');
+      potDot.title = potText.textContent;
+    }
+
+    function toSettings(){
+      return {
+        name: nameEl.value || 'Unnamed',
+        seed: seedEl.value || '',
+        temperature: Number(tempEl.value),
+        gravity: Number(gravEl.value),
+        oceanCoverage: Number(oceanEl.value),
+        salinity: Number(salEl.value),
+        drinkable: drinkEl.value,
+        atmosphere: { thickness: Number(atmoEl.value), main: gasEl.value },
+        life: lifeEl.value,
+        biomes: { forest: Number(forestEl.value), desert: Number(desertEl.value) },
+        rings: ringsEl.value,
+        moons: Number(moonsEl.value),
+        palette: { landHue: Number(landHueEl.value), oceanHue: Number(oceanHueEl.value) }
       }
-    };
+    }
+
+    function randomize(){
+      const r = Math.random;
+      nameEl.value = ["Auro","Vela","Cetus","Lyra","Neri","Mira","Solia","Kaelon","Orbis"][ (r()*9)|0 ] + ["‑ia","‑on","‑ara","‑ Prime","‑X"][ (r()*5)|0 ];
+      seedEl.value = Math.random().toString(36).slice(2,10);
+      tempEl.value = Math.round(r()*200-100);
+      gravEl.value = (Math.round((r()*2.3+0.2)*10)/10).toFixed(1);
+      oceanEl.value = Math.round(r()*95);
+      salEl.value = Math.round(r()*80);
+      drinkEl.value = 'auto';
+      atmoEl.value = Math.round(r()*100);
+      gasEl.selectedIndex = (r()*5)|0;
+      lifeEl.selectedIndex = (r()*5)|0;
+      forestEl.value = Math.round(r()*80);
+      desertEl.value = Math.round(r()*70);
+      ringsEl.selectedIndex = (r()*3)|0;
+      moonsEl.value = (r()*6)|0;
+      landHueEl.value = Math.round(r()*360);
+      oceanHueEl.value = 180 + Math.round(r()*80);
+      updateChips();
+    }
+
+    // --- Rendering ---
+    function drawPlanet(settings){
+      const W=canvas.width, H=canvas.height; ctx.clearRect(0,0,W,H);
+
+      // background stars
+      ctx.fillStyle = '#080810'; ctx.fillRect(0,0,W,H);
+      const seedStr = settings.seed || settings.name || 'planet';
+      const hash = xmur3(seedStr)();
+      const rng = mulberry32(hash);
+      for(let i=0;i<200;i++){
+        ctx.globalAlpha = rng()*0.7+0.3; ctx.fillStyle = `hsl(${200+rng()*40} 80% ${60+rng()*30}%)`;
+        const x=rng()*W,y=rng()*H; const s=rng()*1.8; ctx.fillRect(x,y,s,s);
+      }
+      ctx.globalAlpha = 1;
+
+      // sphere base
+      const cx=W/2, cy=H/2, R=Math.min(W,H)*0.35;
+      // soft space glow
+      const spaceGlow = ctx.createRadialGradient(cx,cy,R*0.2, cx,cy,R*1.4);
+      spaceGlow.addColorStop(0, 'rgba(50,110,255,.06)');
+      spaceGlow.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle=spaceGlow; ctx.beginPath(); ctx.arc(cx,cy,R*1.3,0,Math.PI*2); ctx.fill();
+
+      // lighting
+      const lightX = cx - R*0.7, lightY = cy - R*0.7;
+
+      // noise setup
+      const simplex = new Simplex(hash);
+      function fBm(nx,ny,oct=5){ let e=0,a=1,f=1; for(let i=0;i<oct;i++){ e+=a*(simplex.noise(nx*f, ny*f)); a*=0.5; f*=2.0; } return e; }
+
+      const oceanHue = settings.palette.oceanHue; const landHue = settings.palette.landHue;
+      const oceanLevel = 0.0 + (50-settings.oceanCoverage)/100; // more water pushes level downwards
+      const temp = settings.temperature;
+
+      // draw sphere with shading & surface
+      const img = ctx.getImageData(0,0,W,H); const data = img.data;
+      for(let y=0;y<H;y++){
+        for(let x=0;x<W;x++){
+          const dx=x-cx, dy=y-cy; const d=Math.sqrt(dx*dx+dy*dy);
+          if(d>R) continue;
+          const nx = dx/R, ny=dy/R, nz = Math.sqrt(1 - nx*nx - ny*ny);
+          // rotate a little for variety
+          const lon = Math.atan2(ny, nx); const lat = Math.acos(nz);
+          const n = fBm(Math.cos(lon)*2 + 0.3, Math.sin(lon)*2 + 0.3 + Math.cos(lat)*0.5, 4);
+          const elev = n - oceanLevel; // land if > 0
+
+          let r,g,b;
+          if(elev<=0){ // ocean
+            const depth = clamp(-elev*1.6, 0, 1);
+            const l = 35 + depth*25; // deeper = darker
+            const c = hsl(oceanHue, 65, l);
+            [r,g,b] = hslToRgb(oceanHue/360, 0.65, l/100);
+          }else{ // land
+            // biome mix by temp & moisture
+            const moisture = clamp( (settings.oceanCoverage/100) * (0.6 + 0.4*Math.max(0, simplex.noise(nx*3, ny*3))) , 0, 1);
+            let hue = landHue; let sat=60; let light = 45 + elev*12;
+            if(temp>30 && moisture<0.35){ // desert
+              hue = 45; sat=70; light = 60 - moisture*20;
+            } else if(temp<-10){ // tundra/snow
+              hue = 200; sat=10; light = 90 - elev*15;
+            } else if(moisture>0.6){ // forest
+              hue = landHue; sat=60; light = 30 + moisture*20;
+            }
+            [r,g,b] = hslToRgb(hue/360, sat/100, light/100);
+          }
+
+          // lambert shading
+          const lx = (x-lightX), ly=(y-lightY); const ldist = Math.sqrt(lx*lx+ly*ly);
+          const lnx = lx/ldist, lny=ly/ldist; const lnz = Math.sqrt(Math.max(0,1 - lnx*lnx - lny*lny));
+          const diff = clamp( (nx*-lnx + ny*-lny + nz*lnz), 0, 1 );
+          const shade = 0.35 + diff*0.65;
+
+          // atmosphere tint
+          const at = settings.atmosphere.thickness/100;
+          const rim = Math.pow(1 - nz, 2.5);
+          r = r*shade + 30*at*rim; g = g*shade + 60*at*rim; b = b*shade + 120*at*rim;
+
+          // write pixel
+          const idx = (y*W + x)*4; data[idx]=r; data[idx+1]=g; data[idx+2]=b; data[idx+3]=255;
+        }
+      }
+      ctx.putImageData(img,0,0);
+
+      // clouds
+      const cloudAlpha = clamp( (settings.atmosphere.thickness/100) * (0.3 + Math.max(0, (settings.oceanCoverage-30)/100) ), 0, 0.6);
+      if(cloudAlpha>0.03){
+        ctx.save(); ctx.globalCompositeOperation='screen'; ctx.globalAlpha = cloudAlpha;
+        ctx.beginPath(); ctx.arc(cx,cy,R*0.98,0,Math.PI*2); ctx.clip();
+        for(let i=0;i<1200;i++){
+          const a = Math.random()*Math.PI*2; const rr = Math.random()*R*0.95; const px=cx+Math.cos(a)*rr, py=cy+Math.sin(a)*rr;
+          const rad = 2+Math.random()*6; const g = ctx.createRadialGradient(px,py,0, px,py,rad);
+          g.addColorStop(0,'rgba(255,255,255,.8)'); g.addColorStop(1,'rgba(255,255,255,0)');
+          ctx.fillStyle=g; ctx.beginPath(); ctx.arc(px,py,rad,0,Math.PI*2); ctx.fill();
+        }
+        ctx.restore();
+      }
+
+      // rim glow
+      const rimGrad = ctx.createRadialGradient(cx-R*0.2, cy-R*0.2, R*0.6, cx,cy,R*1.1);
+      rimGrad.addColorStop(0,'rgba(120,170,255,0.15)');
+      rimGrad.addColorStop(1,'rgba(120,170,255,0)');
+      ctx.globalCompositeOperation='screen'; ctx.fillStyle=rimGrad; ctx.beginPath(); ctx.arc(cx,cy,R*1.02,0,Math.PI*2); ctx.fill();
+      ctx.globalCompositeOperation='source-over';
+
+      // rings
+      if(settings.rings!=='none'){
+        ctx.save();
+        ctx.translate(cx,cy); ctx.rotate(-0.6);
+        const inner=R*1.15, outer = settings.rings==='wide'? R*1.55 : R*1.35;
+        const ringGrad = ctx.createLinearGradient(-outer,0, outer,0);
+        ringGrad.addColorStop(0,'rgba(255,255,255,.05)');
+        ringGrad.addColorStop(0.5,'rgba(255,255,255,.35)');
+        ringGrad.addColorStop(1,'rgba(255,255,255,.05)');
+        ctx.strokeStyle=ringGrad; ctx.lineWidth=outer-inner; ctx.beginPath(); ctx.arc(0,0,(inner+outer)/2,0,Math.PI*2); ctx.stroke();
+        ctx.restore();
+      }
+
+      // moons
+      const m = settings.moons; if(m>0){
+        for(let i=0;i<m;i++){
+          const ang = (i/m)*Math.PI*2 + (i*0.7);
+          const mr = R* (1.9 + (i*0.22));
+          const mx = cx + Math.cos(ang)*mr; const my = cy + Math.sin(ang)*mr;
+          ctx.fillStyle = '#bfc7d9'; ctx.beginPath(); ctx.arc(mx,my, R*0.12 * (0.9 - i*0.08), 0, Math.PI*2); ctx.fill();
+        }
+      }
+
+      // labels
+      ctx.fillStyle = '#d8def2'; ctx.font = '600 18px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial';
+      ctx.fillText(settings.name, 18, H-22);
+
+      // water badge
+      const pot=getPotable();
+      ctx.fillStyle = pot.ok? 'rgba(80,250,123,.18)':'rgba(255,107,107,.18)';
+      ctx.strokeStyle = pot.ok? 'rgba(80,250,123,.6)':'rgba(255,107,107,.6)';
+      ctx.lineWidth=2; const bw=160,bh=28, bx=W- (bw+18), by=H-(bh+18);
+      roundRect(ctx,bx,by,bw,bh,10,true,true);
+      ctx.fillStyle='#fff'; ctx.font='700 14px ui-sans-serif, system-ui';
+      ctx.fillText(pot.ok? 'Water: Drinkable ✅' : 'Water: Not drinkable ❌', bx+10, by+19);
+    }
+
+    function roundRect(ctx,x,y,w,h,r,fill,stroke){
+      if(w<2*r) r=w/2; if(h<2*r) r=h/2; ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y, x+w,y+h, r); ctx.arcTo(x+w,y+h, x,y+h, r); ctx.arcTo(x,y+h, x,y, r); ctx.arcTo(x,y, x+w,y, r); if(fill) ctx.fill(); if(stroke) ctx.stroke();
+    }
+
+    // HSL -> RGB helper (returns [r,g,b] 0-255)
+    function hslToRgb(h, s, l){
+      let r, g, b;
+      if(s === 0){ r = g = b = l; }
+      else {
+        const hue2rgb = function hue2rgb(p, q, t){
+          if(t < 0) t += 1; if(t > 1) t -= 1; if(t < 1/6) return p + (q - p) * 6 * t; if(t < 1/2) return q; if(t < 2/3) return p + (q - p) * (2/3 - t) * 6; return p;
+        }
+        const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        const p = 2 * l - q;
+        r = hue2rgb(p, q, h + 1/3);
+        g = hue2rgb(p, q, h);
+        b = hue2rgb(p, q, h - 1/3);
+      }
+      return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+    }
+
+    // Export helpers
+    function download(filename, text){ const a=document.createElement('a'); a.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text)); a.setAttribute('download', filename); a.click(); }
+
+    // Wire up UI
+    ;['input','change'].forEach(ev=>{
+      [nameEl, seedEl, tempEl, gravEl, oceanEl, salEl, drinkEl, atmoEl, gasEl, lifeEl, forestEl, desertEl, ringsEl, moonsEl, landHueEl, oceanHueEl].forEach(elm=>{
+        elm.addEventListener(ev, ()=>{ updateChips(); drawPlanet(toSettings()); });
+      });
+    });
+
+    document.getElementById('generate').addEventListener('click', ()=>{ updateChips(); drawPlanet(toSettings()); });
+    document.getElementById('randomize').addEventListener('click', ()=>{ randomize(); drawPlanet(toSettings()); });
+    document.getElementById('reset').addEventListener('click', ()=>{ document.querySelector('form')?.reset(); location.reload(); });
+
+    document.getElementById('exportJSON').addEventListener('click', ()=>{
+      const data = JSON.stringify(toSettings(), null, 2);
+      download((nameEl.value||'planet')+'.json', data);
+    });
+
+    document.getElementById('exportPNG').addEventListener('click', ()=>{
+      const link=document.createElement('a'); link.download=(nameEl.value||'planet')+'.png'; link.href=canvas.toDataURL('image/png'); link.click();
+    });
+
+    // Initial
+    updateChips(); drawPlanet(toSettings());
   </script>
 </body>
 </html>

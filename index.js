@@ -163,6 +163,15 @@ const uploadsDir = path.join(__dirname, "uploads");
 try { fs.mkdirSync(uploadsDir, { recursive: true }); } catch {}
 const upload = multer({ dest: uploadsDir });
 
+// NEW: memory storage for AI endpoints (no leftover tmp files)
+const memoryUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: (parseInt(process.env.MAX_UPLOAD_MB || "25", 10)) * 1024 * 1024, // default 25MB each
+    files: parseInt(process.env.MAX_UPLOAD_FILES || "12", 10),
+  },
+});
+
 // ---------- Plan activation ----------
 app.post("/plan/activate", (req, res) => {
   const code = (req.body?.code || "").trim();
@@ -372,7 +381,7 @@ function getHistory(req) {
 async function readTextIfPossible(filePath, mimetype) {
   try {
     const t = mimetype || "";
-    if (t.startsWith("text/") || /\/(json|csv|html|xml)/i.test(t)) {
+    if (t.startsWith("text/") || /(\/|^)(json|csv|html|xml)$/i.test(t)) {
       return fs.readFileSync(filePath, "utf8").slice(0, 30000);
     }
     return null;
@@ -467,6 +476,161 @@ async function handleHomework(req, res) {
 }
 app.post("/api/chat", requireCaps(CAPS.HOMEWORK), uploadAny.any(), handleHomework);
 app.post("/api/homework", requireCaps(CAPS.HOMEWORK), uploadAny.any(), handleHomework);
+
+// ================== NEW: Prepare/Grade Exam endpoints (for prepare-exam.html) ==================
+
+// Utility: make data URL for any file buffer (image, pdf, docx...) — suitable for 'responses' API as input_image
+function bufferToDataUrl(mime, buf) { return `data:${mime || "application/octet-stream"};base64,${buf.toString("base64")}`; }
+
+function pickModelForExam() {
+  // Small + cheap default; upgrade easily via env
+  return process.env.EXAM_MODEL || "gpt-4o-mini";
+}
+
+function safeJson(text) {
+  try { return JSON.parse(text); } catch {}
+  // try to extract the first JSON object
+  const m = text.match(/\{[\s\S]*\}/);
+  if (m) { try { return JSON.parse(m[0]); } catch {} }
+  return null;
+}
+
+// POST /api/prepare-exam — returns exam blueprint JSON
+app.post("/api/prepare-exam", memoryUpload.array("files"), async (req, res) => {
+  try {
+    const options = (() => { try { return JSON.parse(req.body?.options || "{}"); } catch { return {}; } })();
+
+    // Build content parts for the Responses API: one input_text + N input_image (data URLs)
+    const content = [];
+    const sys = [
+      `You are an assessment designer. Create a rigorous exam based ONLY on the provided materials.`,
+      `Subject: ${options.subject || "General"}`,
+      `Level: ${options.level || "High School"}`,
+      `Difficulty: ${options.difficulty || "Mixed"}`,
+      `Count: ${options.count || 15}`,
+      `Types: ${JSON.stringify(options.types || { mcq:true, short:true })}`,
+      options.extra ? `Extra: ${options.extra}` : null,
+      `Return STRICT JSON with keys: title, instructions, sections:[{title, questions:[{q, choices?, answer}]}]. No markdown.`
+    ].filter(Boolean).join("\n");
+    content.push({ type: "input_text", text: sys });
+
+    for (const f of (req.files || [])) {
+      const dataUrl = bufferToDataUrl(f.mimetype, f.buffer);
+      content.push({ type: "input_image", image_url: dataUrl });
+    }
+
+    const model = pickModelForExam();
+
+    // Prefer Responses API (handles mixed modal parts cleanly)
+    let exam;
+    try {
+      const response = await openai.responses.create({
+        model,
+        input: [ { role: "user", content } ],
+        temperature: 0.2,
+        max_output_tokens: 2000,
+        response_format: { type: "json_object" }
+      });
+      // Try multiple shapes produced by SDK versions
+      const outText = response.output_text
+        || response.output?.[0]?.content?.[0]?.text
+        || response.output?.[0]?.content?.[0]?.text?.value
+        || response.content?.[0]?.text
+        || JSON.stringify(response);
+      exam = safeJson(outText);
+    } catch (e) {
+      // Fallback to chat.completions (images only if image/*)
+      const chatParts = [{ type: "text", text: sys }];
+      for (const f of (req.files || [])) {
+        if ((f.mimetype || "").startsWith("image/")) {
+          chatParts.push({ type: "image_url", image_url: { url: bufferToDataUrl(f.mimetype, f.buffer) } });
+        }
+      }
+      const completion = await openai.chat.completions.create({
+        model,
+        messages: [ { role: "user", content: chatParts } ],
+        temperature: 0.2,
+      });
+      exam = safeJson(completion.choices?.[0]?.message?.content || "");
+    }
+
+    if (!exam || !Array.isArray(exam.sections)) {
+      return res.status(500).send("Model did not return a valid exam JSON. Try different files or smaller batch.");
+    }
+    return res.json(exam);
+  } catch (e) {
+    console.error("prepare-exam error", e);
+    res.status(500).send(e?.message || "Prepare exam error");
+  }
+});
+
+// POST /api/grade-exam — returns grading report JSON
+app.post("/api/grade-exam", memoryUpload.any(), async (req, res) => {
+  try {
+    const exam = (() => { try { return JSON.parse(req.body?.exam || "{}"); } catch { return {}; } })();
+    const typed = (req.body?.typed || "").toString();
+
+    if (!exam || !Array.isArray(exam.sections)) return res.status(400).send("Missing or invalid exam JSON.");
+
+    const content = [];
+    const instr = [
+      `Grade the student's work strictly against the provided EXAM JSON.`,
+      `Return STRICT JSON: { score:number, of:number, summary:string, items:[{ q:string, student:string, result:string, feedback:string, points:number }] }`,
+      `Interpret MCQ/short answers exactly; for open-ended, award partial credit using a short rubric.`,
+      `If typed answers are provided, prefer them; otherwise try to read from uploaded images/docs.`
+    ].join("\n");
+
+    content.push({ type: "input_text", text: instr });
+    content.push({ type: "input_text", text: `EXAM JSON:\n${JSON.stringify(exam)}` });
+    if (typed) content.push({ type: "input_text", text: `TYPED ANSWERS:\n${typed}` });
+
+    // Attach any uploaded solved files (images, pdfs, docs)
+    for (const f of (req.files || [])) {
+      const dataUrl = bufferToDataUrl(f.mimetype, f.buffer);
+      content.push({ type: "input_image", image_url: dataUrl });
+    }
+
+    const model = pickModelForExam();
+    let report;
+    try {
+      const response = await openai.responses.create({
+        model,
+        input: [ { role: "user", content } ],
+        temperature: 0.1,
+        max_output_tokens: 2000,
+        response_format: { type: "json_object" }
+      });
+      const outText = response.output_text
+        || response.output?.[0]?.content?.[0]?.text
+        || response.output?.[0]?.content?.[0]?.text?.value
+        || response.content?.[0]?.text
+        || JSON.stringify(response);
+      report = safeJson(outText);
+    } catch (e) {
+      // Fallback to chat for image files only
+      const chatParts = [{ type: "text", text: `${instr}\n\nEXAM JSON:\n${JSON.stringify(exam)}\n\nTYPED ANSWERS:\n${typed}` }];
+      for (const f of (req.files || [])) {
+        if ((f.mimetype || "").startsWith("image/")) {
+          chatParts.push({ type: "image_url", image_url: { url: bufferToDataUrl(f.mimetype, f.buffer) } });
+        }
+      }
+      const completion = await openai.chat.completions.create({
+        model,
+        messages: [ { role: "user", content: chatParts } ],
+        temperature: 0.1,
+      });
+      report = safeJson(completion.choices?.[0]?.message?.content || "");
+    }
+
+    if (!report || typeof report.score !== "number") {
+      return res.status(500).send("Model did not return a valid grading JSON.");
+    }
+    return res.json(report);
+  } catch (e) {
+    console.error("grade-exam error", e);
+    res.status(500).send(e?.message || "Grade exam error");
+  }
+});
 
 // ---------- Start ----------
 const PORT = process.env.PORT || 3000;

@@ -1,723 +1,365 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>GoldenSpaceAI • Learn Physics</title>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GoldenSpaceAI · Learn Physics (GPT‑4 Tutor)</title>
+  <meta name="description" content="An interactive Physics tutor powered by GPT‑4. Practice problems, hints, and step‑by‑step explanations with LaTeX rendering."/>
+  <style>
+    :root{
+      --gold-1:#ffd700; --gold-2:#e6c200; --gold-3:#b89700;
+      --space-1:#0b0f16; --space-2:#0f1726; --glass:rgba(255,255,255,.06);
+      --ring:rgba(255,215,0,.35); --text:#f7f6ef; --muted:#c8b88a;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial;
+      color:var(--text);
+      background:
+        radial-gradient(1200px 800px at 90% -10%, rgba(255,215,0,.12), transparent 40%),
+        radial-gradient(1000px 700px at 0% 120%, rgba(255,215,0,.10), transparent 40%),
+        linear-gradient(180deg, var(--space-1), var(--space-2));
+    }
+    .page{display:grid; grid-template-columns: 300px 1fr; gap:16px; height:100%;}
+    aside{
+      padding:18px; border-right:1px solid rgba(255,255,255,.06);
+      background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.00));
+      backdrop-filter: blur(8px);
+    }
+    main{padding:18px; display:flex; flex-direction:column; height:100%;}
 
-    <style>
-      :root {
-        --bg: #0b0f14;
-        --panel: #131a25;
-        --panel2: #0f1520;
-        --border: #1f2a40;
-        --gold: #f6c64a;
-        --gold2: #eb8b36;
-        --text: #e7f4e9;
-        --muted: #cfc6a5;
-        --shadow: 0 18px 60px rgba(0, 0, 0, 0.45);
-      }
-      * {
-        box-sizing: border-box;
-      }
-      html,
-      body {
-        height: 100%;
-      }
-      body {
-        margin: 0;
-        color: var(--text);
-        font:
-          15px/1.5 ui-sans-serif,
-          system-ui,
-          -apple-system,
-          Segoe UI,
-          Roboto,
-          Inter,
-          Arial,
-          sans-serif;
-        background:
-          radial-gradient(
-            1100px 520px at 85% -10%,
-            rgba(246, 198, 74, 0.12),
-            transparent 60%
-          ),
-          radial-gradient(
-            900px 480px at -10% 0%,
-            rgba(246, 198, 74, 0.08),
-            transparent 60%
-          ),
-          #0a0e15;
-        min-height: 100svh;
-      }
-      a {
-        color: inherit;
-        text-decoration: none;
-      }
+    .brand {display:flex; align-items:center; gap:10px; margin-bottom:14px}
+    .logo{width:28px; height:28px; border-radius:8px; background:linear-gradient(135deg,var(--gold-1),var(--gold-3)); box-shadow:0 0 0 2px rgba(0,0,0,.3), 0 0 22px rgba(255,215,0,.25)}
+    h1{font-size:18px; margin:0}
+    .muted{color:var(--muted); font-size:12px}
 
-      /* Top */
-      .top {
-        position: sticky;
-        top: 0;
-        z-index: 10;
-        padding: clamp(14px, 2.2vh, 22px) 18px 10px;
-        background: linear-gradient(
-          180deg,
-          rgba(10, 14, 21, 0.92),
-          rgba(10, 14, 21, 0.65) 60%,
-          transparent
-        );
-        border-bottom: 1px solid var(--border);
-        backdrop-filter: blur(8px);
-        display: flex;
-        align-items: center;
-        gap: 12px;
-      }
-      .back {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 8px 14px;
-        border-radius: 999px;
-        font-weight: 900;
-        font-size: 14px;
-        background: linear-gradient(180deg, var(--gold), var(--gold2));
-        color: #1b1300;
-        border: 1px solid rgba(0, 0, 0, 0.18);
-        box-shadow: 0 10px 26px rgba(246, 198, 74, 0.25);
-        transition:
-          transform 0.2s ease,
-          filter 0.2s ease;
-      }
-      .back:hover {
-        transform: translateY(-1px);
-        filter: saturate(1.05);
-      }
-      .title {
-        font-weight: 900;
-        letter-spacing: 0.4px;
-        color: var(--gold);
-        font-size: clamp(22px, 2.6vw, 28px);
-        text-shadow: 0 0 18px rgba(246, 198, 74, 0.25);
-      }
-      .spacer {
-        flex: 1;
-      }
+    .card{border:1px solid rgba(255,255,255,.08); background:var(--glass); border-radius:16px; box-shadow:0 8px 40px rgba(0,0,0,.35)}
+    .panel{padding:12px 14px}
 
-      /* Layout */
-      .wrap {
-        max-width: 1200px;
-        margin: 26px auto;
-        padding: 0 18px;
-        display: grid;
-        gap: 18px;
-        grid-template-columns: 1.4fr 0.9fr;
-      }
-      @media (max-width: 1100px) {
-        .wrap {
-          grid-template-columns: 1fr;
-        }
-      }
+    .section-title{font-size:12px; text-transform:uppercase; letter-spacing:.12em; color:var(--muted); margin:14px 0 8px}
 
-      .panel {
-        background: linear-gradient(180deg, var(--panel), var(--panel2));
-        border: 1px solid var(--border);
-        border-radius: 16px;
-        padding: 18px;
-        box-shadow: var(--shadow);
-      }
-      .panel h2 {
-        margin: 0 0 10px;
-        font-size: 18px;
-        color: var(--gold);
-        font-weight: 900;
-      }
-      .sub {
-        margin: 6px 0 14px;
-        color: var(--muted);
-        font-size: 14px;
-      }
+    .topics{display:grid; gap:8px}
+    .topic{display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:12px; cursor:pointer; border:1px solid transparent}
+    .topic:hover{border-color:var(--ring); background:rgba(255,215,0,.04)}
+    .topic.active{border-color:var(--gold-2); background:rgba(255,215,0,.08)}
+    .topic input{margin-left:auto}
 
-      /* Cards grid: 20 topics */
-      .topics {
-        display: grid;
-        gap: 14px;
-        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      }
+    .controls {display:grid; gap:10px}
+    .row{display:flex; align-items:center; gap:8px}
+    .row > *{flex:1}
+    label{font-size:12px; color:var(--muted)}
+    select, input[type="text"], input[type="password"], textarea{ width:100%; padding:10px 12px; border-radius:12px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.04); color:var(--text)}
 
-      .card {
-        background: #0d1420;
-        border: 1px solid var(--border);
-        border-radius: 14px;
-        padding: 14px;
-        transition:
-          transform 0.12s ease,
-          box-shadow 0.12s ease;
-      }
-      .card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 14px 30px rgba(0, 0, 0, 0.25);
-      }
+    .btn{display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:10px 12px; border-radius:12px; border:1px solid rgba(255,255,255,.12); cursor:pointer; user-select:none}
+    .btn:hover{border-color:var(--ring); background:rgba(255,215,0,.06)}
+    .btn.primary{background:linear-gradient(135deg,var(--gold-2),var(--gold-1)); color:#1a1400; border-color:rgba(0,0,0,.15); box-shadow:0 4px 30px rgba(255,215,0,.25)}
+    .btn.ghost{background:transparent}
+    .btn.small{padding:8px 10px; font-size:12px}
 
-      .card h3 {
-        margin: 0 0 6px;
-        font-size: 16px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
-      .pill {
-        display: inline-block;
-        padding: 3px 8px;
-        border-radius: 999px;
-        font-size: 12px;
-        font-weight: 800;
-        color: #1b1300;
-        background: linear-gradient(180deg, #f8d772, #e7b72f);
-      }
-      .tiny {
-        font-size: 12px;
-        color: var(--muted);
-      }
-      .formula {
-        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-        color: #ffe08a;
-      }
+    /* Chat */
+    .chat{display:flex; flex-direction:column; gap:12px; overflow:auto; padding:14px;}
+    .bubble{position:relative; padding:12px 14px; border-radius:14px; border:1px solid rgba(255,255,255,.10); background:rgba(255,255,255,.03)}
+    .bubble.me{align-self:flex-end; border-color:rgba(255,215,0,.25); background:rgba(255,215,0,.06)}
+    .bubble.assistant{align-self:flex-start}
+    .bubble h4{margin:.2rem 0 .4rem; font-size:13px; color:var(--muted)}
+    .bubble .content{font-size:15px; line-height:1.6}
+    .msg-toolbar{display:flex; gap:8px; justify-content:flex-end; margin-top:6px}
 
-      /* Accordions inside cards */
-      details {
-        margin-top: 8px;
-        border: 1px solid var(--border);
-        border-radius: 12px;
-        overflow: hidden;
-      }
-      summary {
-        cursor: pointer;
-        padding: 10px 12px;
-        background: #0f1725;
-        list-style: none;
-        font-weight: 800;
-      }
-      summary::-webkit-details-marker {
-        display: none;
-      }
-      details .content {
-        padding: 12px;
-        background: #0b111c;
-      }
+    .composer{display:grid; grid-template-columns:1fr auto; gap:10px; padding:12px; border-top:1px solid rgba(255,255,255,.06)}
+    .actions{display:flex; gap:8px}
 
-      /* Right: Tools + Gemini helper */
-      .box {
-        background: #0d1420;
-        border: 1px solid var(--border);
-        border-radius: 12px;
-        padding: 12px;
-      }
-      label {
-        display: block;
-        font-size: 12px;
-        color: var(--muted);
-        margin-top: 6px;
-      }
-      input[type="number"],
-      input[type="text"] {
-        width: 100%;
-        padding: 10px 12px;
-        border-radius: 10px;
-        border: 1px solid var(--border);
-        background: #0b1219;
-        color: var(--text);
-        margin-top: 6px;
-      }
-      .btn {
-        margin-top: 10px;
-        border-radius: 12px;
-        padding: 10px 14px;
-        font-weight: 900;
-        cursor: pointer;
-        background: linear-gradient(180deg, var(--gold), var(--gold2));
-        color: #1b1300;
-        border: 1px solid rgba(0, 0, 0, 0.18);
-        box-shadow: 0 10px 26px rgba(246, 198, 74, 0.28);
-        transition:
-          transform 0.2s ease,
-          filter 0.2s ease;
-      }
-      .btn:hover {
-        transform: translateY(-1px);
-        filter: saturate(1.05);
-      }
-      .out {
-        margin-top: 8px;
-        font-weight: 900;
-        color: var(--gold);
-      }
+    .tags{display:flex; flex-wrap:wrap; gap:6px}
+    .tag{font-size:11px; border:1px solid rgba(255,255,255,.15); padding:4px 8px; border-radius:999px; color:var(--muted)}
 
-      .ai-wrap {
-        margin-top: 14px;
-      }
-      .ai {
-        display: flex;
-        gap: 10px;
-      }
-      .ai input {
-        flex: 1;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="top">
-      <a class="back" href="/">Home</a>
-      <div class="title">Learn Physics</div>
-      <div class="spacer"></div>
-    </div>
+    .banner{padding:10px 12px; border:1px dashed rgba(255,215,0,.45); border-radius:12px; background:rgba(255,215,0,.06); margin-top:10px}
 
-    <main class="wrap">
-      <!-- LEFT: the 20 topic cards -->
-      <section class="panel">
-        <h2>Core Topics</h2>
-        <p class="sub">Premium notes with worked examples. Tap to expand.</p>
+    code.inline {background:rgba(255,255,255,.08); padding:2px 6px; border-radius:6px}
 
-        <div class="topics">
-          <!-- 1 Mechanics -->
-          <div class="card">
-            <h3>Mechanics <span class="pill">Kinematics & Dynamics</span></h3>
-            <div class="tiny">
-              Motion with constant/variable acceleration; forces.
+    @media (max-width: 900px){ .page{grid-template-columns:1fr} aside{order:2} main{order:1} }
+  </style>
+  <!-- MathJax for LaTeX rendering -->
+  <script>
+    window.MathJax = { tex: { inlineMath: [['$','$'], ['\\(','\\)']] }, svg: { fontCache: 'global' } };
+  </script>
+  <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+  <div class="page">
+    <aside>
+      <div class="brand">
+        <div class="logo"></div>
+        <div>
+          <h1>GoldenSpaceAI</h1>
+          <div class="muted">Physics Tutor (GPT‑4)</div>
+        </div>
+      </div>
+
+      <div class="card panel">
+        <div class="section-title">Topics</div>
+        <div class="topics" id="topics">
+          <!-- Will be injected -->
+        </div>
+      </div>
+
+      <div class="card panel" style="margin-top:12px">
+        <div class="section-title">Tutor Settings</div>
+        <div class="controls">
+          <div class="row">
+            <div>
+              <label for="level">Level</label>
+              <select id="level">
+                <option>Middle School</option>
+                <option selected>High School</option>
+                <option>AP / IB</option>
+                <option>Undergrad</option>
+              </select>
             </div>
-            <details>
-              <summary>Key formulas</summary>
-              <div class="content">
-                <p>
-                  <span class="formula">v = u + at</span> &nbsp;
-                  <span class="formula">s = ut + ½at²</span> &nbsp;
-                  <span class="formula">v² = u² + 2as</span>
-                </p>
-                <p>
-                  <span class="formula">F = ma</span>, work
-                  <span class="formula">W = Fs</span>, power
-                  <span class="formula">P = W/t</span>
-                </p>
-              </div>
-            </details>
-          </div>
-
-          <!-- 2 Rotational Dynamics -->
-          <div class="card">
-            <h3>Rotational Dynamics <span class="pill">Torque</span></h3>
-            <div class="tiny">Angular motion, moment of inertia, rolling.</div>
-            <details>
-              <summary>Key formulas</summary>
-              <div class="content">
-                <p>
-                  <span class="formula">τ = Iα</span>, &nbsp;
-                  <span class="formula">L = Iω</span>, &nbsp;
-                  <span class="formula">K<sub>rot</sub> = ½Iω²</span>
-                </p>
-                <p>
-                  Rolling: <span class="formula">v = ωr</span>, energy =
-                  translational + rotational.
-                </p>
-              </div>
-            </details>
-          </div>
-
-          <!-- 3 SHM -->
-          <div class="card">
-            <h3>SHM & Oscillations <span class="pill">Periodic</span></h3>
-            <div class="tiny">Mass–spring, pendulum, resonance.</div>
-            <details>
-              <summary>Key formulas</summary>
-              <div class="content">
-                <p>
-                  <span class="formula">x = A cos(ωt+φ)</span>, &nbsp;
-                  <span class="formula">ω = √(k/m)</span>, &nbsp;
-                  <span class="formula">T = 2π/ω</span>
-                </p>
-                <p>
-                  Pendulum small-angle:
-                  <span class="formula">T = 2π√(L/g)</span>
-                </p>
-              </div>
-            </details>
-          </div>
-
-          <!-- 4 Gravitation -->
-          <div class="card">
-            <h3>Gravitation & Orbits <span class="pill">Kepler</span></h3>
-            <div class="tiny">
-              Inverse-square law; circular & elliptical orbits.
+            <div>
+              <label for="mode">Mode</label>
+              <select id="mode">
+                <option selected>Socratic (ask me guiding questions)</option>
+                <option>Direct Explanation</option>
+                <option>Exam Drill</option>
+              </select>
             </div>
-            <details>
-              <summary>Key formulas</summary>
-              <div class="content">
-                <p>
-                  <span class="formula">F = GmM/r²</span>, &nbsp;
-                  <span class="formula">U = -GmM/r</span>, &nbsp;
-                  <span class="formula">v<sub>orb</sub> = √(GM/r)</span>
-                </p>
-                <p>
-                  Escape:
-                  <span class="formula">v<sub>esc</sub> = √(2GM/r)</span>
-                </p>
-              </div>
-            </details>
           </div>
-
-          <!-- 5 Energy & Momentum -->
-          <div class="card">
-            <h3>Energy & Momentum <span class="pill">Conservation</span></h3>
-            <div class="tiny">
-              Work–energy theorem; elastic/inelastic collisions.
+          <div class="row">
+            <div>
+              <label for="model">Model</label>
+              <select id="model">
+                <option value="gpt-4o-mini" selected>gpt-4o-mini (fast)</option>
+                <option value="gpt-4o">gpt-4o (balanced)</option>
+                <option value="gpt-4-turbo">gpt-4-turbo</option>
+              </select>
             </div>
-            <details>
-              <summary>Key formulas</summary>
-              <div class="content">
-                <p>
-                  <span class="formula">K = ½mv²</span>, &nbsp;
-                  <span class="formula">W = ΔK</span>, &nbsp;
-                  <span class="formula">p = mv</span>
-                </p>
-                <p>
-                  Elastic collision conserves both
-                  <span class="formula">p</span> &
-                  <span class="formula">K</span>.
-                </p>
-              </div>
-            </details>
-          </div>
-
-          <!-- 6 Fluids -->
-          <div class="card">
-            <h3>Fluid Mechanics <span class="pill">Pressure</span></h3>
-            <div class="tiny">Buoyancy, continuity, Bernoulli.</div>
-            <details>
-              <summary>Key formulas</summary>
-              <div class="content">
-                <p>
-                  Hydrostatic: <span class="formula">P = P₀ + ρgh</span>;
-                  Buoyant: <span class="formula">F<sub>b</sub>=ρgV</span>
-                </p>
-                <p>
-                  Continuity: <span class="formula">A₁v₁ = A₂v₂</span>;
-                  Bernoulli: <span class="formula">P + ½ρv² + ρgh = const</span>
-                </p>
-              </div>
-            </details>
-          </div>
-
-          <!-- 7 Waves & Optics -->
-          <div class="card">
-            <h3>Waves & Optics <span class="pill">Interference</span></h3>
-            <div class="tiny">Wave equation, diffraction, lenses.</div>
-            <details>
-              <summary>Key formulas</summary>
-              <div class="content">
-                <p>
-                  <span class="formula">v = fλ</span>, &nbsp;
-                  <span class="formula">I ∝ A²</span>, &nbsp;
-                  <span class="formula">Δy = λL/d</span>
-                </p>
-                <p>Thin lens: <span class="formula">1/f = 1/u + 1/v</span></p>
-              </div>
-            </details>
-          </div>
-
-          <!-- 8 Thermodynamics -->
-          <div class="card">
-            <h3>Thermodynamics <span class="pill">Laws</span></h3>
-            <div class="tiny">First/second law; PV diagrams; engines.</div>
-            <details>
-              <summary>Key formulas</summary>
-              <div class="content">
-                <p>
-                  <span class="formula">ΔU = Q - W</span>, &nbsp;
-                  <span class="formula">PV = nRT</span>, &nbsp; Carnot:
-                  <span class="formula"
-                    >η = 1 - T<sub>c</sub>/T<sub>h</sub></span
-                  >
-                </p>
-              </div>
-            </details>
-          </div>
-
-          <!-- 9 Heat Transfer -->
-          <div class="card">
-            <h3>Thermal Physics <span class="pill">Heat Transfer</span></h3>
-            <div class="tiny">Conduction, convection, radiation.</div>
-            <details>
-              <summary>Key formulas</summary>
-              <div class="content">
-                <p>
-                  Conduction: <span class="formula">Q/t = kAΔT/L</span>;
-                  Radiation: <span class="formula">P = σεAT⁴</span>
-                </p>
-              </div>
-            </details>
-          </div>
-
-          <!-- 10 Electricity -->
-          <div class="card">
-            <h3>Electricity <span class="pill">DC Circuits</span></h3>
-            <div class="tiny">Ohm’s law; series/parallel; power.</div>
-            <details>
-              <summary>Key formulas</summary>
-              <div class="content">
-                <p>
-                  <span class="formula">V = IR</span>, &nbsp;
-                  <span class="formula">P = VI = I²R = V²/R</span>
-                </p>
-                <p>
-                  Series: <span class="formula">R<sub>eq</sub>=ΣR</span>;
-                  Parallel: <span class="formula">1/R<sub>eq</sub>=Σ1/R</span>
-                </p>
-              </div>
-            </details>
-          </div>
-
-          <!-- 11 Magnetism -->
-          <div class="card">
-            <h3>Magnetism <span class="pill">Fields & Induction</span></h3>
-            <div class="tiny">Lorentz force; Faraday’s law.</div>
-            <details>
-              <summary>Key formulas</summary>
-              <div class="content">
-                <p>
-                  Force: <span class="formula">F = qvB sinθ</span>, wire:
-                  <span class="formula">F = BIL sinθ</span>
-                </p>
-                <p>Induction: <span class="formula">ε = -dΦ/dt</span></p>
-              </div>
-            </details>
-          </div>
-
-          <!-- 12 Electromagnetism -->
-          <div class="card">
-            <h3>Electromagnetism <span class="pill">Maxwell</span></h3>
-            <div class="tiny">Unified E & B; waves in vacuum.</div>
-            <details>
-              <summary>Key formulas</summary>
-              <div class="content">
-                <p>
-                  Maxwell: <span class="formula">∇·E=ρ/ε₀</span>,
-                  <span class="formula">∇·B=0</span>,
-                  <span class="formula">∇×E=-∂B/∂t</span>,
-                  <span class="formula">∇×B=μ₀J+μ₀ε₀∂E/∂t</span>
-                </p>
-                <p>Light speed: <span class="formula">c = 1/√(μ₀ε₀)</span></p>
-              </div>
-            </details>
-          </div>
-
-          <!-- 13 Modern Physics -->
-          <div class="card">
-            <h3>Modern Physics <span class="pill">Photoelectric</span></h3>
-            <div class="tiny">Photons, Bohr model, Compton.</div>
-            <details>
-              <summary>Key formulas</summary>
-              <div class="content">
-                <p>
-                  Photon: <span class="formula">E = hf = hc/λ</span>; PE effect:
-                  <span class="formula">K<sub>max</sub> = hf - Φ</span>
-                </p>
-              </div>
-            </details>
-          </div>
-
-          <!-- 14 Relativity -->
-          <div class="card">
-            <h3>Relativity <span class="pill">SR/GR</span></h3>
-            <div class="tiny">
-              Time dilation, length contraction; gravity as curvature.
+            <div>
+              <label for="temperature">Creativity: <span id="tempVal">0.2</span></label>
+              <input id="temperature" type="range" min="0" max="1" step="0.1" value="0.2"/>
             </div>
-            <details>
-              <summary>Key formulas</summary>
-              <div class="content">
-                <p>
-                  <span class="formula">γ = 1/√(1 - v²/c²)</span>, &nbsp;
-                  <span class="formula">Δt' = γΔt</span>, &nbsp;
-                  <span class="formula">L' = L/γ</span>
-                </p>
-                <p>Energy: <span class="formula">E = γmc²</span></p>
-              </div>
-            </details>
           </div>
-
-          <!-- 15 Quantum -->
-          <div class="card">
-            <h3>Quantum Mechanics <span class="pill">Basics</span></h3>
-            <div class="tiny">Wavefunctions, uncertainty, wells.</div>
-            <details>
-              <summary>Key formulas</summary>
-              <div class="content">
-                <p>
-                  de Broglie: <span class="formula">λ = h/p</span>; Heisenberg:
-                  <span class="formula">ΔxΔp ≥ ħ/2</span>
-                </p>
-              </div>
-            </details>
+          <div class="row">
+            <div>
+              <label for="apiKey">OpenAI API Key</label>
+              <input id="apiKey" type="password" placeholder="sk-..." />
+            </div>
+            <button class="btn small" id="saveKey">Save</button>
           </div>
-
-          <!-- 16 Nuclear -->
-          <div class="card">
-            <h3>Nuclear Physics <span class="pill">Decay</span></h3>
-            <div class="tiny">Radioactivity; binding energy.</div>
-            <details>
-              <summary>Key formulas</summary>
-              <div class="content">
-                <p>
-                  Decay: <span class="formula">N = N₀ e^{-λt}</span>, &nbsp;
-                  <span class="formula">T½ = ln2/λ</span>
-                </p>
-                <p>Mass–energy: <span class="formula">E = Δmc²</span></p>
-              </div>
-            </details>
-          </div>
-
-          <!-- 17 Materials -->
-          <div class="card">
-            <h3>
-              Materials & Solid State <span class="pill">Stress–Strain</span>
-            </h3>
-            <div class="tiny">Elasticity; band theory; semiconductors.</div>
-            <details>
-              <summary>Key formulas</summary>
-              <div class="content">
-                <p>
-                  <span class="formula">σ = F/A</span>,
-                  <span class="formula">ε = ΔL/L</span>, Young’s:
-                  <span class="formula">E = σ/ε</span>
-                </p>
-              </div>
-            </details>
-          </div>
-
-          <!-- 18 Error Analysis -->
-          <div class="card">
-            <h3>
-              Units & Error Analysis <span class="pill">Significant</span>
-            </h3>
-            <div class="tiny">Uncertainty, propagation, SI.</div>
-            <details>
-              <summary>Key formulas</summary>
-              <div class="content">
-                <p>
-                  Add/Sub: <span class="formula">Δz = √(Δx²+Δy²)</span>;
-                  Mult/Div: relative errors add.
-                </p>
-              </div>
-            </details>
-          </div>
-
-          <!-- 19 Astrophysics -->
-          <div class="card">
-            <h3>Astronomy & Astrophysics <span class="pill">Cosmic</span></h3>
-            <div class="tiny">Stars, H–R diagram, cosmology basics.</div>
-            <details>
-              <summary>Key formulas</summary>
-              <div class="content">
-                <p>
-                  Luminosity: <span class="formula">L = 4πR²σT⁴</span>; Hubble:
-                  <span class="formula">v = H₀ d</span>
-                </p>
-              </div>
-            </details>
-          </div>
-
-          <!-- 20 Rocketry -->
-          <div class="card">
-            <h3>
-              Rocketry & Spaceflight <span class="pill">Tsiolkovsky</span>
-            </h3>
-            <div class="tiny">Delta-v, staging, orbits.</div>
-            <details>
-              <summary>Key formulas</summary>
-              <div class="content">
-                <p>
-                  Rocket eq.:
-                  <span class="formula"
-                    >Δv = v<sub>e</sub> ln(m₀/m<sub>f</sub>)</span
-                  >, &nbsp; Isp relation:
-                  <span class="formula">v<sub>e</sub>=g₀ I<sub>sp</sub></span>
-                </p>
-              </div>
-            </details>
+          <div class="tags">
+            <div class="tag">Latex rendering</div>
+            <div class="tag">Hints</div>
+            <div class="tag">Step-by-step</div>
+            <div class="tag">Practice generator</div>
           </div>
         </div>
-      </section>
+      </div>
 
-      <!-- RIGHT: Tools + Gemini helper -->
-      <aside class="panel">
-        <h2>Tools</h2>
+      <div class="banner" style="margin-top:12px">
+        Tip: your key is stored locally in <code class="inline">localStorage</code> on this device.
+      </div>
+    </aside>
 
-        <div class="box">
-          <h3 style="margin: 0 0 6px">Kinematics (quick)</h3>
-          <label>u (m/s)</label><input id="u" type="number" step="any" />
-          <label>a (m/s²)</label><input id="a" type="number" step="any" />
-          <label>t (s)</label><input id="t" type="number" step="any" />
-          <button
-            class="btn"
-            onclick="
-          const u=+document.getElementById('u').value||0;
-          const a=+document.getElementById('a').value||0;
-          const t=+document.getElementById('t').value||0;
-          const v=u+a*t; const s=u*t+0.5*a*t*t;
-          document.getElementById('calcOut').innerText = `v=${v.toFixed(2)} m/s, s=${s.toFixed(2)} m`;
-        "
-          >
-            Compute
-          </button>
-          <div id="calcOut" class="out"></div>
-        </div>
-
-        <!-- Gemini Physics Helper -->
-        <div class="panel ai-wrap">
-          <h2>Gemini Helper (Physics)</h2>
-          <p class="tiny">
-            Ask a concept or calculation. Use numbers & units when possible.
-          </p>
-          <div class="ai">
-            <input
-              id="aiQ"
-              type="text"
-              placeholder="e.g., Why doesn’t escape velocity depend on mass?"
-            />
-            <button id="aiBtn" class="btn">Ask Gemini</button>
+    <main>
+      <div class="card" style="flex:1; display:flex; flex-direction:column; overflow:hidden">
+        <div class="panel" style="border-bottom:1px solid rgba(255,255,255,.06); display:flex; justify-content:space-between; align-items:center; gap:10px">
+          <div>
+            <div style="font-weight:600">Physics Tutor</div>
+            <div class="muted" id="topicLabel">Pick a topic to focus the tutor.</div>
           </div>
-          <div id="aiOut" class="out"></div>
+          <div class="actions">
+            <button class="btn ghost small" id="btnHint">💡 Hint</button>
+            <button class="btn ghost small" id="btnSteps">🪜 Explain Steps</button>
+            <button class="btn ghost small" id="btnPractice">🧪 Generate Practice</button>
+            <button class="btn ghost small" id="btnCheck">✅ Check My Work</button>
+            <button class="btn small" id="btnClear">🧹 Clear</button>
+          </div>
         </div>
-      </aside>
+
+        <div id="chat" class="chat"></div>
+
+        <div class="composer">
+          <textarea id="input" rows="2" placeholder="Ask a physics question… (supports LaTeX like F=ma or E=mc^2)"></textarea>
+          <div class="actions">
+            <button class="btn" id="btnMic" title="Speak">🎙️</button>
+            <button class="btn primary" id="send">Ask Tutor →</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card panel" style="margin-top:12px">
+        <div class="section-title">Quick Starters</div>
+        <div class="tags" id="starters"></div>
+      </div>
     </main>
+  </div>
 
-    <script>
-      // Physics Gemini helper
-      const aiInput = document.getElementById("aiQ");
-      const aiBtn = document.getElementById("aiBtn");
-      const aiOut = document.getElementById("aiOut");
+  <script>
+    // ---------- UI Boot ----------
+    const TOPICS = [
+      {id:'mechanics', name:'Mechanics', examples:['How do I resolve forces on an incline?','Derive range of a projectile','Uniform circular motion period']},
+      {id:'waves', name:'Waves & Sound', examples:['What sets the pitch of a closed pipe?','Why does amplitude not affect frequency?']},
+      {id:'em', name:'Electricity & Magnetism', examples:['Find the field of a point charge','RC circuit time constant','Right-hand rule refresher']},
+      {id:'thermo', name:'Thermodynamics', examples:['Explain entropy with examples','PV diagrams and work']},
+      {id:'optics', name:'Optics', examples:['Lens equation 1/f=1/do+1/di','Why do rainbows arc?']},
+      {id:'modern', name:'Modern Physics', examples:['Photoelectric effect intuition','de Broglie wavelength of electron']}
+    ];
 
-      async function askPhysics() {
-        const question = (aiInput.value || "").trim();
-        if (!question) return;
-        aiBtn.disabled = true;
-        aiOut.innerHTML = "Thinking… ✨";
-        try {
-          const res = await fetch("/ai/physics-explain", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ question }),
-          });
-          const data = await res.json();
-          aiOut.innerHTML = (data.reply || "No reply.").replace(/\n/g, "<br>");
-        } catch (e) {
-          aiOut.innerHTML = "Error: " + (e.message || "Something went wrong.");
-        } finally {
-          aiBtn.disabled = false;
-        }
-      }
-      aiBtn.addEventListener("click", askPhysics);
-      aiInput.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") askPhysics();
+    const topicsEl = document.getElementById('topics');
+    const chatEl = document.getElementById('chat');
+    const inputEl = document.getElementById('input');
+    const topicLabel = document.getElementById('topicLabel');
+    const startersEl = document.getElementById('starters');
+
+    TOPICS.forEach((t, idx)=>{
+      const el = document.createElement('div');
+      el.className = 'topic';
+      el.dataset.id = t.id;
+      el.innerHTML = `<span>🪐</span><div>${t.name}</div><input type="radio" name="topic" ${idx===0? 'checked':''}/>`;
+      el.addEventListener('click', ()=>selectTopic(t.id));
+      topicsEl.appendChild(el);
+    });
+
+    function selectTopic(id){
+      document.querySelectorAll('.topic').forEach(n=>{
+        n.classList.toggle('active', n.dataset.id===id);
+        if(n.dataset.id===id) n.querySelector('input').checked = true;
       });
-    </script>
-  </body>
+      const t = TOPICS.find(x=>x.id===id);
+      topicLabel.textContent = `Focused on: ${t.name}`;
+      renderStarters(t.examples);
+    }
+    selectTopic('mechanics');
+
+    function renderStarters(list){
+      startersEl.innerHTML = '';
+      list.forEach(q=>{
+        const tag = document.createElement('div');
+        tag.className = 'tag'; tag.textContent = q; tag.style.cursor='pointer';
+        tag.addEventListener('click', ()=>{ inputEl.value = q; inputEl.focus(); });
+        startersEl.appendChild(tag);
+      });
+    }
+
+    // ---------- Local storage for API key ----------
+    const apiKeyInput = document.getElementById('apiKey');
+    const saveKeyBtn = document.getElementById('saveKey');
+    const saved = localStorage.getItem('openai_api_key');
+    if(saved) apiKeyInput.value = saved.replace(/.(?=.{4})/g,'•');
+    saveKeyBtn.onclick = ()=>{
+      const raw = prompt('Paste your OpenAI API key (sk-...)');
+      if(raw){ localStorage.setItem('openai_api_key', raw.trim()); apiKeyInput.value = raw.replace(/.(?=.{4})/g,'•'); alert('Saved locally.'); }
+    };
+
+    // ---------- Chat helpers ----------
+    const temperatureEl = document.getElementById('temperature');
+    const tempValEl = document.getElementById('tempVal');
+    temperatureEl.oninput = ()=>{ tempValEl.textContent = temperatureEl.value; };
+
+    function addBubble(role, html){
+      const b = document.createElement('div');
+      b.className = `bubble ${role==='user'?'me':'assistant'}`;
+      b.innerHTML = `<h4>${role==='user'?'You':'Tutor'}</h4><div class="content">${html}</div>`;
+      chatEl.appendChild(b);
+      chatEl.scrollTop = chatEl.scrollHeight;
+      if(window.MathJax) MathJax.typesetPromise([b]);
+      return b;
+    }
+
+    function escapeHTML(s){ return s.replace(/[&<>]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
+
+    // ---------- Microphone (basic) ----------
+    const micBtn = document.getElementById('btnMic');
+    let recognition;
+    if('webkitSpeechRecognition' in window){
+      recognition = new webkitSpeechRecognition();
+      recognition.lang = 'en-US';
+      recognition.continuous = false; recognition.interimResults = false;
+      recognition.onresult = (e)=>{ inputEl.value = e.results[0][0].transcript; };
+      micBtn.onclick = ()=> recognition.start();
+    } else {
+      micBtn.disabled = true; micBtn.title = 'Speech API not supported';
+    }
+
+    // ---------- Model call ----------
+    async function callTutor(userText, mode){
+      const key = localStorage.getItem('openai_api_key');
+      if(!key){ alert('Click Save and add your OpenAI API key first.'); return; }
+      const model = document.getElementById('model').value;
+      const level = document.getElementById('level').value;
+      const topic = document.querySelector('.topic.active div').textContent;
+      const temperature = Number(temperatureEl.value);
+
+      const SYSTEM = [
+        "You are GoldenSpaceAI, a kind, rigorous Physics tutor.",
+        "Always adapt to the student's level: " + level + ".",
+        "Prefer step-by-step reasoning with equations in LaTeX.",
+        "If asked, use the Socratic method: ask 1–2 guiding questions before giving full steps.",
+        "Provide dimensional analysis and units checks when relevant.",
+        "Show a short summary and 1 follow-up practice problem at the end (unless in Exam Drill).",
+      ].join(' ');
+
+      const BEHAVIOR = mode || document.getElementById('mode').value;
+
+      const TASK = {
+        "Socratic (ask me guiding questions)": `We are working on ${topic}. Start with 1–2 guiding questions, then outline steps, then final answer.`,
+        "Direct Explanation": `Explain clearly for ${level} on ${topic}. Include derivation or diagrams-in-words as needed.`,
+        "Exam Drill": `Create 3 exam-style questions on ${topic} at ${level}, then wait for answers. Provide answer key only if asked.`,
+        "Hint": `Give a gentle hint for the student's question without revealing the full solution.`,
+        "Steps": `Show the full derivation and solution steps from first principles for the student's question.`,
+        "Practice": `Generate 3 practice problems (increasing difficulty) on ${topic} with brief solutions hidden after a spoiler line 'Solutions:'`,
+        "Check": `Grade the student's work. Identify errors, show corrected steps, and give a score out of 10.`
+      }[BEHAVIOR] || '';
+
+      const messages = [
+        {role:'system', content: SYSTEM},
+        {role:'user', content: `Context topic: ${topic}.\nUser question/work: """${userText}""".\nInstruction: ${TASK}`}
+      ];
+
+      const thinkingBubble = addBubble('assistant', 'Thinking…');
+
+      try{
+        const res = await fetch('https://api.openai.com/v1/chat/completions',{
+          method:'POST',
+          headers:{ 'Content-Type':'application/json', 'Authorization': 'Bearer ' + key },
+          body: JSON.stringify({
+            model,
+            temperature,
+            messages
+          })
+        });
+        if(!res.ok){
+          const t = await res.text();
+          throw new Error(`API error ${res.status}: ${t}`);
+        }
+        const data = await res.json();
+        const text = data.choices?.[0]?.message?.content?.trim() || '(No response)';
+        thinkingBubble.querySelector('.content').innerHTML = text.replace(/\n/g,'<br/>');
+        if(window.MathJax) MathJax.typesetPromise([thinkingBubble]);
+      }catch(err){
+        thinkingBubble.querySelector('.content').innerHTML = `<span style="color:#ff9a9a">${escapeHTML(err.message)}</span>`;
+      }
+    }
+
+    // ---------- Buttons ----------
+    document.getElementById('send').onclick = ()=>{
+      const v = inputEl.value.trim(); if(!v) return;
+      addBubble('user', escapeHTML(v));
+      callTutor(v);
+      inputEl.value = '';
+    };
+    document.getElementById('btnHint').onclick   = ()=>{ const v = inputEl.value || 'Give me a hint.'; addBubble('user', escapeHTML(v)); callTutor(v,'Hint'); };
+    document.getElementById('btnSteps').onclick  = ()=>{ const v = inputEl.value || 'Show me the steps.'; addBubble('user', escapeHTML(v)); callTutor(v,'Steps'); };
+    document.getElementById('btnPractice').onclick= ()=>{ const v = inputEl.value || 'Practice on this topic'; addBubble('user', escapeHTML(v)); callTutor(v,'Practice'); };
+    document.getElementById('btnCheck').onclick  = ()=>{ const v = inputEl.value || 'Check my solution: ...'; addBubble('user', escapeHTML(v)); callTutor(v,'Check'); };
+    document.getElementById('btnClear').onclick  = ()=>{ chatEl.innerHTML=''; };
+
+    // Enter to send
+    inputEl.addEventListener('keydown', (e)=>{
+      if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); document.getElementById('send').click(); }
+    });
+
+    // Warm welcome
+    addBubble('assistant', `Welcome to <b>Learn Physics</b>! Pick a topic on the left, then ask a question. You can type LaTeX like $F=ma$ and I'll render it.`);
+  </script>
+</body>
 </html>

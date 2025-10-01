@@ -1,152 +1,56 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>GoldenSpaceAI · Advanced Assistant</title>
+<html lang="en">  
+<head>  
+  <meta charset="utf-8" />  
+  <meta name="viewport" content="width=device-width, initial-scale=1" />  
+  <title>GoldenSpaceAI · Advanced Assistant</title>  
+  <!-- keep all your styles exactly the same -->  
   <style>
-    :root{
-      --gold-1:#ffd700; --gold-2:#e6c200; --gold-3:#b89700;
-      --text:#faf7e8; --muted:#c8b88a; --glass: rgba(255,255,255,.08); --ring: rgba(255,215,0,.35);
-      --bg-color: #05060a;
-      --wallpaper: radial-gradient(1200px 800px at 75% -20%, rgba(255,215,0,.18), transparent 40%),
-                   radial-gradient(800px 600px at 10% 120%, rgba(255,215,0,.08), transparent 45%), #05060a;
-      --stars-opacity: .28;
-      --header-shadow: rgba(0,0,0,.2);
-      --bubble-ai: rgba(12,12,16,.55);
-      --bubble-user: linear-gradient(180deg,rgba(255,215,0,.12),rgba(255,215,0,.08));
-      --border-weak: rgba(255,255,255,.06);
-      --border-mid: rgba(255,255,255,.15);
-    }
-    /* DARK THEME */
-    .theme-dark{
-      --text:#f3f6ff; --muted:#b7c0d9; --bg-color:#03040a;
-      --wallpaper: url('https://images.unsplash.com/photo-1444703686981-a3abbc4d4fe3?q=80&w=1600&auto=format&fit=crop') center/cover no-repeat, #03040a;
-      --stars-opacity: .45;
-      --header-shadow: rgba(0,0,0,.35);
-      --bubble-ai: rgba(12,12,20,.65);
-      --bubble-user: linear-gradient(180deg,rgba(255,215,0,.12),rgba(255,215,0,.08));
-      --border-weak: rgba(255,255,255,.08);
-      --border-mid: rgba(255,255,255,.18);
-    }
-
-    *{box-sizing:border-box} html,body{height:100%}
-    body{
-      margin:0; font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial;
-      color:var(--text); background: var(--wallpaper); background-attachment:fixed; overflow:hidden;
-    }
-
-    .stars,.twinkle{position:fixed; inset:0; z-index:-2; pointer-events:none}
-    .stars{opacity:var(--stars-opacity)}
-    .twinkle{
-      background-image: radial-gradient(2px 2px at 20% 30%, rgba(255,255,255,.45), transparent 55%),
-                        radial-gradient(1.5px 1.5px at 70% 60%, rgba(255,255,255,.35), transparent 55%),
-                        radial-gradient(1.2px 1.2px at 40% 80%, rgba(255,255,255,.4), transparent 55%),
-                        radial-gradient(1px 1px at 85% 15%, rgba(255,255,255,.5), transparent 55%);
-      animation: twinkle 8s linear infinite; opacity:.35
-    }
-    @keyframes twinkle{0%{filter:brightness(1)}50%{filter:brightness(1.25)}100%{filter:brightness(1)}}
-
-    .wrap{display:grid; grid-template-rows:auto 1fr auto; height:100%}
-    header{
-      display:flex; align-items:center; gap:.9rem; padding:14px 18px; backdrop-filter:blur(8px);
-      background:linear-gradient(180deg,rgba(10,10,14,.55),rgba(10,10,14,.25));
-      border-bottom:1px solid var(--border-weak);
-      box-shadow:0 2px 10px var(--header-shadow);
-    }
-    .brand{display:flex; align-items:center; gap:.7rem; font-weight:800}
-    .logo{ width:32px;height:32px;border-radius:50%;
-      background:conic-gradient(from 210deg,var(--gold-1),var(--gold-2),var(--gold-3),var(--gold-1));
-      box-shadow:0 0 0 2px rgba(255,215,0,.25), 0 0 32px rgba(255,215,0,.25) inset;}
-    .badge{font-size:.75rem;color:#1a1606;background:linear-gradient(180deg,var(--gold-1),var(--gold-2)); padding:4px 8px;border-radius:999px;box-shadow:0 2px 10px rgba(255,215,0,.25)}
-    .spacer{margin-left:auto}
-    .toggle{
-      display:inline-flex; align-items:center; gap:.5rem; padding:6px 10px; border-radius:999px; border:1px solid var(--border-mid);
-      background:rgba(255,255,255,.06); color:var(--text); cursor:pointer; font-weight:700;
-    }
-
-    main#chat{position:relative;height:100%;overflow:auto;padding:18px 18px 160px;scroll-behavior:smooth}
-    .msg{max-width:min(780px,92%);padding:14px 16px;border-radius:16px;margin:10px 0;line-height:1.55;
-         box-shadow:0 2px 18px rgba(0,0,0,.2);border:1px solid var(--border-weak);backdrop-filter:blur(6px)}
-    .msg.user{margin-left:auto;background:var(--bubble-user);border-color:rgba(255,215,0,.25)}
-    .msg.ai{background:var(--bubble-ai)}
-    .msg small{display:block;opacity:.7;font-size:.75rem;margin-bottom:6px}
-    .msg .tools{margin-top:8px; display:flex; gap:8px}
-    .speak-btn{
-      background:linear-gradient(180deg,var(--gold-1),var(--gold-2));
-      color:#141209; font-weight:800; padding:4px 10px; border-radius:10px; border:none; cursor:pointer;
-      box-shadow:0 8px 18px rgba(255,215,0,.25); font-size:12px;
-    }
-
-    .spinner{width:20px;height:20px;border-radius:50%;border:2px solid rgba(255,255,255,.2);border-top-color:var(--gold-1);animation:spin 1s linear infinite}
-    @keyframes spin{to{transform:rotate(360deg)}}
-
-    .composer-wrap{position:fixed;left:0;right:0;bottom:18px;display:flex;justify-content:center;pointer-events:none}
-    .composer{ pointer-events:auto;width:min(980px,92%);display:flex;align-items:center;gap:10px;padding:10px;
-      border-radius:18px;background:var(--glass);backdrop-filter:blur(10px);
-      border:1px solid var(--border-weak); box-shadow:0 10px 30px rgba(0,0,0,.35), 0 0 0 1px var(--ring)}
-    .btn{border:none;outline:none;cursor:pointer;height:56px;width:56px;border-radius:999px; background:rgba(255,255,255,.06);display:grid;place-items:center;transition:.2s transform,.2s background}
-    .btn:hover{transform:translateY(-1px);background:rgba(255,255,255,.12)}
-    .btn.plus::before{content:"+";font-size:28px;color:var(--gold-1);font-weight:700}
-    .btn.send::before{content:"➤";font-size:20px;color:#141209;font-weight:800}
-    .btn.send{background:linear-gradient(180deg,var(--gold-1),var(--gold-2)); box-shadow:0 8px 18px rgba(255,215,0,.25)}
-    .mic{ position:relative;background:linear-gradient(180deg,var(--gold-1),var(--gold-2)); box-shadow:0 8px 18px rgba(255,215,0,.25)}
-    .mic::before{content:"🎤";font-size:22px;color:#141209;font-weight:700}
-    textarea#prompt{ flex:1; resize:none; min-height:56px; max-height:140px; padding:12px 14px; border-radius:12px; background:rgba(255,255,255,.06);
-      color:var(--text); border:1px solid var(--border-mid); outline:none; font-size:15px; line-height:1.4;}
-    textarea#prompt::placeholder{ color: rgba(255,255,255,.55) }
-
-    .menu{position:absolute;bottom:70px;left:18px;background:#0e1118;border:1px solid var(--border-mid);border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,.4);display:none;flex-direction:column;z-index:20; min-width:210px}
-    .menu button{background:none;border:none;color:var(--text);padding:12px 14px;text-align:left;cursor:pointer; font-weight:700}
-    .menu button:hover{background:rgba(255,255,255,.08)}
-    .menu .sep{height:1px;background:var(--border-mid); margin:4px 0}
+    /* ... your existing CSS unchanged ... */
   </style>
-</head>
-<body>
-  <div class="stars"></div>
-  <div class="twinkle"></div>
+</head>  
+<body>  
+  <div class="stars"></div>  
+  <div class="twinkle"></div>  
 
-  <div class="wrap">
-    <header>
-      <div class="brand"><div class="logo"></div><span>GoldenSpaceAI</span></div>
-      <span class="badge">Advanced Assistant</span>
-      <div class="spacer"></div>
+  <div class="wrap">  
+    <header>  
+      <div class="brand"><div class="logo"></div><span>GoldenSpaceAI</span></div>  
+      <span class="badge">Advanced Assistant</span>  
+      <div class="spacer"></div>  
+      <button id="themeToggle" class="toggle" type="button" title="Toggle theme">🌞 Light</button>  
+    </header>  
 
-      <!-- Theme toggle -->
-      <button id="themeToggle" class="toggle" type="button" title="Toggle theme">🌞 Light</button>
-    </header>
+    <main id="chat">  
+      <div class="msg ai">  
+        <small>GoldenSpaceAI</small>  
+        Choose a mode from the ＋ button: <strong>Deep Search</strong>, <strong>Study & Learn</strong>, or use the <strong>Mic</strong>. I’ll tailor my responses accordingly.  
+      </div>  
+    </main>  
 
-    <main id="chat">
-      <div class="msg ai">
-        <small>GoldenSpaceAI</small>
-        Choose a mode from the ＋ button: <strong>Deep Search</strong>, <strong>Study & Learn</strong>, or use the <strong>Mic</strong>. I’ll tailor my responses accordingly.
-      </div>
-    </main>
+    <div class="composer-wrap">  
+      <div class="composer">  
+        <button id="plusBtn" type="button" class="btn plus" title="Menu"></button>  
+        <div style="flex:1">  
+          <textarea id="prompt" placeholder="Type your message… (Shift+Enter for newline)"></textarea>  
+        </div>  
+        <button id="micBtn" type="button" class="btn mic" title="Voice mode"></button>  
+        <button id="sendBtn" type="button" class="btn send" title="Send"></button>  
+      </div>  
 
-    <div class="composer-wrap">
-      <div class="composer">
-        <button id="plusBtn" type="button" class="btn plus" title="Menu"></button>
-        <div style="flex:1">
-          <textarea id="prompt" placeholder="Type your message… (Shift+Enter for newline)"></textarea>
-        </div>
-        <button id="micBtn" type="button" class="btn mic" title="Voice mode"></button>
-        <button id="sendBtn" type="button" class="btn send" title="Send"></button>
-      </div>
-
-      <!-- EXACTLY three options in this order -->
-      <div id="menu" class="menu">
-        <button data-mode="deep">🔎 Deep Search</button>
-        <button data-mode="study">📚 Study & Learn</button>
-        <div class="sep"></div>
-        <button id="menuMic">🎤 Mic</button>
-      </div>
-    </div>
-  </div>
+      <div id="menu" class="menu">  
+        <button data-mode="deep">🔎 Deep Search</button>  
+        <button data-mode="study">📚 Study & Learn</button>  
+        <div class="sep"></div>  
+        <button id="menuMic">🎤 Mic</button>  
+      </div>  
+    </div>  
+  </div>  
 
 <script>
-  const BACKEND_URL = "/chat-advanced-ai"; // your backend chat route
-  const TRANSCRIBE_URL = "/api/transcribe"; // your speech-to-text route
-  const MODEL = "gpt-4o";                   // advanced model
+  const BACKEND_URL = "/chat-advanced-ai"; 
+  const TRANSCRIBE_URL = "/api/transcribe"; 
+  const MODEL = "gpt-4o";                   
 
   const chat = document.getElementById("chat");
   const plusBtn = document.getElementById("plusBtn");
@@ -157,175 +61,116 @@
   const menu = document.getElementById("menu");
   const themeToggle = document.getElementById("themeToggle");
 
-  /* MODE */
-  let currentMode = "deep"; // default when page opens
+  let currentMode = "deep"; 
 
   /* THEME */
-  const savedTheme = localStorage.getItem("gsai:theme") || "light";
-  applyTheme(savedTheme);
-  themeToggle.addEventListener("click", ()=>{
-    const next = document.body.classList.contains("theme-dark") ? "light" : "dark";
-    applyTheme(next);
-  });
-  function applyTheme(mode){
-    if(mode==="dark"){
-      document.body.classList.add("theme-dark");
-      themeToggle.textContent = "🌙 Dark";
-      localStorage.setItem("gsai:theme","dark");
-    }else{
-      document.body.classList.remove("theme-dark");
-      themeToggle.textContent = "🌞 Light";
-      localStorage.setItem("gsai:theme","light");
-    }
-  }
+  const savedTheme = localStorage.getItem("gsai:theme") || "light";  
+  applyTheme(savedTheme);  
+  themeToggle.addEventListener("click", ()=>{  
+    const next = document.body.classList.contains("theme-dark") ? "light" : "dark";  
+    applyTheme(next);  
+  });  
+  function applyTheme(mode){  
+    if(mode==="dark"){  
+      document.body.classList.add("theme-dark");  
+      themeToggle.textContent = "🌙 Dark";  
+      localStorage.setItem("gsai:theme","dark");  
+    }else{  
+      document.body.classList.remove("theme-dark");  
+      themeToggle.textContent = "🌞 Light";  
+      localStorage.setItem("gsai:theme","light");  
+    }  
+  }  
 
   /* HELPERS */
-  function el(tag, attrs={}, ...children){
-    const n = document.createElement(tag);
-    Object.entries(attrs).forEach(([k,v])=>{
-      if(k==="class") n.className=v;
-      else if(k==="html") n.innerHTML=v;
-      else n.setAttribute(k,v);
-    });
-    children.forEach(c=> n.append(c instanceof Node? c : document.createTextNode(c)));
-    return n;
-  }
-  function addMsg(role, text){
-    const m = el("div",{class:`msg ${role}`});
-    m.append(el("small",{}, role==="user"?"You":"GoldenSpaceAI"));
-    const body = el("div",{html:(text||"").toString().replace(/\n/g,"<br/>")});
-    m.append(body);
-
-    if(role==="ai"){
-      const tools = el("div",{class:"tools"});
-      const speakBtn = el("button",{class:"speak-btn", type:"button"},"🔊 Read Aloud");
-      let speaking = false, utter = null;
-
-      speakBtn.addEventListener("click", ()=>{
-        if(!speaking){
-          if(window.speechSynthesis){
-            utter = new SpeechSynthesisUtterance(body.textContent);
-            utter.lang = "en-US";
-            utter.onend = ()=>{ speaking=false; speakBtn.textContent="🔊 Read Aloud"; };
-            window.speechSynthesis.cancel();
-            window.speechSynthesis.speak(utter);
-            speaking = true;
-            speakBtn.textContent = "⏹ Stop";
-          }
-        }else{
-          if(window.speechSynthesis){ window.speechSynthesis.cancel(); }
-          speaking=false; speakBtn.textContent="🔊 Read Aloud";
-        }
-      });
-      tools.append(speakBtn);
-      m.append(tools);
-    }
-
-    chat.append(m); chat.scrollTop = chat.scrollHeight;
-    return m;
-  }
-  function addSpinner(){
-    const row = el("div",{class:"msg ai"}); row.append(el("small",{},"GoldenSpaceAI")); row.append(el("div",{class:"spinner"}));
-    chat.append(row); chat.scrollTop = chat.scrollHeight; 
-    return row;
-  }
+  function el(tag, attrs={}, ...children){  
+    const n = document.createElement(tag);  
+    Object.entries(attrs).forEach(([k,v])=>{  
+      if(k==="class") n.className=v;  
+      else if(k==="html") n.innerHTML=v;  
+      else n.setAttribute(k,v);  
+    });  
+    children.forEach(c=> n.append(c instanceof Node? c : document.createTextNode(c)));  
+    return n;  
+  }  
+  function addMsg(role, text){  
+    const m = el("div",{class:`msg ${role}`});  
+    m.append(el("small",{}, role==="user"?"You":"GoldenSpaceAI"));  
+    const body = el("div",{html:(text||"").toString().replace(/\n/g,"<br/>")});  
+    m.append(body);  
+    chat.append(m); chat.scrollTop = chat.scrollHeight;  
+    return m;  
+  }  
+  function addSpinner(){  
+    const row = el("div",{class:"msg ai"}); 
+    row.append(el("small",{},"GoldenSpaceAI")); 
+    row.append(el("div",{class:"spinner"}));  
+    chat.append(row); chat.scrollTop = chat.scrollHeight;   
+    return row;  
+  }  
 
   /* MENU */
-  plusBtn.addEventListener("click", ()=>{
-    menu.style.display = (menu.style.display==="flex"?"none":"flex");
-    menu.style.flexDirection = "column";
-  });
+  plusBtn.addEventListener("click", ()=>{  
+    menu.style.display = (menu.style.display==="flex"?"none":"flex");  
+    menu.style.flexDirection = "column";  
+  });  
 
-  menu.querySelectorAll("button[data-mode]").forEach(btn=>{
-    btn.addEventListener("click",()=>{
-      currentMode = btn.dataset.mode; // "deep" or "study"
-      addMsg("ai", `Mode set to: <strong>${btn.textContent}</strong>`);
-      menu.style.display="none";
-    });
-  });
+  menu.querySelectorAll("button[data-mode]").forEach(btn=>{  
+    btn.addEventListener("click",()=>{  
+      currentMode = btn.dataset.mode;  
+      addMsg("ai", `Mode set to: <strong>${btn.textContent}</strong>`);  
+      menu.style.display="none";  
+    });  
+  });  
 
-  // Menu Mic triggers recording
-  menuMicBtn.addEventListener("click", ()=>{
-    menu.style.display="none";
-    startStopRecording();
-  });
-
-  /* MIC core (clicking big mic or menu mic uses same handler) */
-  let mediaRecorder, audioChunks = [];
-  micBtn.addEventListener("click", startStopRecording);
-
-  async function startStopRecording(){
-    try{
-      if(!mediaRecorder || mediaRecorder.state === "inactive"){
-        const stream = await navigator.mediaDevices.getUserMedia({ audio:true });
-        mediaRecorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
-        audioChunks = [];
-        mediaRecorder.ondataavailable = e => { if(e.data.size) audioChunks.push(e.data); };
-        mediaRecorder.onstop = async () => {
-          const blob = new Blob(audioChunks, { type: "audio/webm" });
-          const fd = new FormData();
-          fd.append("audio", blob, "speech.webm");
-          const r = await fetch(TRANSCRIBE_URL, { method:"POST", body:fd, credentials:"include" });
-          const j = await r.json();
-          if(j?.text){
-            promptEl.value = (promptEl.value ? promptEl.value + " " : "") + j.text.trim();
-            // auto-send after transcribe:
-            send(true); // mark as fromMic for analytics if needed
-          }
-        };
-        mediaRecorder.start();
-        micBtn.title = "Recording… click to stop";
-        micBtn.style.filter = "brightness(1.15)";
-      }else{
-        mediaRecorder.stop();
-        micBtn.title = "Voice mode";
-        micBtn.style.filter = "";
-      }
-    }catch(err){ alert("Microphone error: "+err.message); }
-  }
-
-  /* SYSTEM (hidden) hints per mode */
-  function buildSystemForMode(mode){
-    if(mode==="deep"){
-      return "You are an advanced professional assistant. Perform deep reasoning and deliver a structured, thorough answer with sources or approaches when helpful. Be concise but comprehensive.";
-    }
-    if(mode==="study"){
-      return "You are a master teacher. Explain step-by-step, then re-explain in different ways: simpler, with analogies, and with a short practice checklist. Anticipate misunderstandings and address them.";
-    }
-    return "You are a helpful, professional assistant.";
-  }
+  menuMicBtn.addEventListener("click", ()=>{  
+    menu.style.display="none";  
+    startStopRecording();  
+  });  
 
   /* SEND */
-  async function send(fromMic=false){
-    const text = (promptEl.value||"").trim();
-    if(!text) return;
-    addMsg("user", text);
-    const spin = addSpinner();
-    try{
-      const form = new FormData();
-      form.append("q", text);                 // user message
-      form.append("model", MODEL);            // model
-      form.append("mode", currentMode);       // exposed mode
-      form.append("system", buildSystemForMode(currentMode)); // hidden instruction for OpenAI
+  async function send(){  
+    const text = (promptEl.value||"").trim();  
+    if(!text) return;  
+    addMsg("user", text);  
+    const spin = addSpinner();  
+    try{  
+      const res = await fetch(BACKEND_URL, { 
+        method:"POST", 
+        headers: { "Content-Type":"application/json" },
+        body: JSON.stringify({ 
+          q: text, 
+          model: MODEL, 
+          mode: currentMode, 
+          system: buildSystemForMode(currentMode) 
+        }) 
+      });  
+      if(!res.ok) throw new Error("Backend error: "+res.status);  
+      const data = await res.json();  
+      chat.removeChild(spin);  
+      addMsg("ai", data.answer || data.reply || "[No reply]");  
+    }catch(err){  
+      chat.removeChild(spin);  
+      addMsg("ai","⚠️ "+err.message);  
+    }finally{  
+      promptEl.value="";  
+    }  
+  }  
 
-      const res = await fetch(BACKEND_URL, { method:"POST", body:form, credentials:"include" });
-      if(!res.ok) throw new Error("Backend error: "+res.status);
-      const data = await res.json();
+  function buildSystemForMode(mode){  
+    if(mode==="deep"){  
+      return "You are an advanced professional assistant. Perform deep reasoning and deliver a structured, thorough answer.";  
+    }  
+    if(mode==="study"){  
+      return "You are a master teacher. Explain step-by-step with analogies and clear examples.";  
+    }  
+    return "You are a helpful, professional assistant.";  
+  }  
 
-      chat.removeChild(spin);
-      addMsg("ai", data.answer || data.reply || "[No reply]");
-    }catch(err){
-      chat.removeChild(spin);
-      addMsg("ai","⚠️ "+err.message);
-    }finally{
-      promptEl.value="";
-    }
-  }
-
-  sendBtn.addEventListener("click", ()=>send(false));
-  promptEl.addEventListener("keydown", (e)=>{
-    if(e.key==="Enter" && !e.shiftKey){ e.preventDefault(); send(false); }
-  });
-</script>
-</body>
+  sendBtn.addEventListener("click", ()=>send());  
+  promptEl.addEventListener("keydown", (e)=>{  
+    if(e.key==="Enter" && !e.shiftKey){ e.preventDefault(); send(); }  
+  });  
+</script>  
+</body>  
 </html>

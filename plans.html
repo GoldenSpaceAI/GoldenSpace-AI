@@ -70,7 +70,7 @@
 </head>
 <body>
   <div class="top">
-    <div class="brand"><span class="dot" aria-hidden="true"></span> GoldenSpaceAI</div>
+    <div class="brand"><span class="dot"></span> GoldenSpaceAI</div>
     <div style="flex:1"></div>
     <a class="pill" href="/index.html">← Back to Home</a>
   </div>
@@ -78,28 +78,26 @@
   <main class="wrap" aria-label="Plans">
     <h1 style="margin:6px 0 12px;font-size:clamp(22px,4vw,34px)">Choose your plan</h1>
 
-    <!-- TOP: Big cards (Pro & Ultra) -->
+    <!-- Pro & Ultra -->
     <section class="gridTop">
-      <!-- Pro -->
       <article class="card">
         <h2>🚀 Pro <span class="price">— 2 USDT</span></h2>
         <div class="pill">Everything in Plus, for builders</div>
         <ul class="feats">
-          <li><span class="ok">✓</span> Includes all <strong>Plus</strong> features</li>
+          <li><span class="ok">✓</span> Includes all Plus features</li>
           <li><span class="ok">✓</span> Create Rockets</li>
           <li><span class="ok">✓</span> Create Satellites</li>
-          <li><span class="ok">✓</span> Create your <strong>Universe</strong></li>
+          <li><span class="ok">✓</span> Create your Universe</li>
           <li><span class="ok">✓</span> Advanced Planet builder</li>
         </ul>
         <button class="btn gold wide" data-plan="pro">Choose Pro</button>
       </article>
 
-      <!-- Ultra -->
       <article class="card">
         <h2>💫 Ultra <span class="price">— 4 USDT</span></h2>
         <div class="pill">Best value • power users</div>
         <ul class="feats">
-          <li><span class="ok">✓</span> Includes all <strong>Pro</strong> features</li>
+          <li><span class="ok">✓</span> Includes all Pro features</li>
           <li><span class="ok">✓</span> Better homework solving</li>
           <li><span class="ok">✓</span> Advanced AI (higher quality)</li>
           <li><span class="ok">✓</span> Search lessons</li>
@@ -108,44 +106,34 @@
       </article>
     </section>
 
-    <!-- BOTTOM: Small cards (Free, Starter, Plus) -->
-    <section class="gridSmall" aria-label="Core packs">
-      <!-- Free -->
+    <!-- Free, Starter, Plus -->
+    <section class="gridSmall">
       <article class="card">
         <h2>🌙 Free</h2>
         <div class="pill">Try it out</div>
         <ul class="feats">
           <li><span class="ok">✓</span> Chat AI</li>
           <li><span class="no">✗</span> Learn info</li>
-          <li><span class="no">✗</span> Learn Physics</li>
-          <li><span class="no">✗</span> Create Planet / Space tools</li>
         </ul>
         <button class="btn ghost wide" data-plan="free">Select Free</button>
       </article>
 
-      <!-- Starter -->
       <article class="card">
         <h2>🟢 Starter <span class="price">— 1 USDT</span></h2>
         <div class="pill">Essentials</div>
         <ul class="feats">
           <li><span class="ok">✓</span> Chat AI</li>
           <li><span class="ok">✓</span> Learn info</li>
-          <li><span class="no">✗</span> Learn Physics</li>
-          <li><span class="no">✗</span> Create Planet / Space tools</li>
         </ul>
         <button class="btn gold wide" data-plan="starter">Choose Starter</button>
       </article>
 
-      <!-- Plus -->
       <article class="card">
         <h2>⭐ Plus <span class="price">— 2 USDT</span></h2>
         <div class="pill">Great for students</div>
         <ul class="feats">
           <li><span class="ok">✓</span> Chat AI</li>
-          <li><span class="ok">✓</span> Learn info</li>
           <li><span class="ok">✓</span> Learn Physics</li>
-          <li><span class="ok">✓</span> Create Planet</li>
-          <li><span class="no">✗</span> Rockets / Satellites / Universe</li>
         </ul>
         <button class="btn gold wide" data-plan="plus">Choose Plus</button>
       </article>
@@ -161,6 +149,20 @@
     </footer>
   </main>
 
-  <script src="plans.js"></script>
+  <script>
+    document.getElementById('yr').textContent = new Date().getFullYear();
+    document.querySelectorAll('[data-plan]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const plan = btn.dataset.plan;
+        if(plan === "free"){
+          alert("✅ Free plan selected!");
+          location.href = "/";
+        } else {
+          // redirect to payment page
+          location.href = "/pay.html?plan=" + plan;
+        }
+      });
+    });
+  </script>
 </body>
 </html>

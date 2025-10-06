@@ -101,58 +101,52 @@ const upload = multer({ dest: 'uploads/' }); // You can add more configurations 
 async function askAI(prompt, model, res, role = "General Assistant") {
   try {
     let completion;
+    let imageURL;
 
-    // Determine which AI model to use
     switch (model) {
       case "gemini_2_5_pro":
-        // Call Gemini API (replace with actual API request)
+        // Call Gemini API (replace with actual Gemini 2.5 Pro API request)
         completion = await axios.post('YOUR_GEMINI_API_ENDPOINT', {
           prompt,
-          model: 'gemini_2_5_pro', // or actual Gemini API parameters
+          model: 'gemini_2_5_pro', // Adjust Gemini API parameters
         });
+        imageURL = completion.data?.image_url || null;
         break;
+
       case "gemini_flash":
-        // Call Gemini Flash API (replace with actual API request)
+        // Call Gemini Flash API (replace with actual Gemini Flash API request)
         completion = await axios.post('YOUR_GEMINI_FLASH_API_ENDPOINT', {
           prompt,
-          model: 'gemini_flash', // actual API parameters
+          model: 'gemini_flash', // Adjust Gemini Flash API parameters
         });
+        imageURL = completion.data?.image_url || null;
         break;
+
       case "gpt_4":
-        // Call GPT-4 API (OpenAI)
-        completion = await openai.chat.completions.create({
-          model: "gpt-4",
-          messages: [
-            {
-              role: "system",
-              content: `You are GoldenSpaceAI (${role}). Always reply in a professional, advanced, long, and detailed way with reasoning, examples, and structured explanations.`,
-            },
-            { role: "user", content: prompt },
-          ],
-          temperature: 0.5,
+        // Use OpenAI's DALL-E for image generation (GPT-4 with DALL-E)
+        completion = await openai.images.create({
+          prompt: prompt, // Text prompt to generate an image
+          n: 1, // Number of images to generate
+          size: "1024x1024", // Image size (can be 256x256, 512x512, 1024x1024)
         });
+        imageURL = completion.data?.data[0]?.url || null;
         break;
+
       case "gpt_4o_mini":
-        // Call GPT-4o-mini API (OpenAI)
-        completion = await openai.chat.completions.create({
-          model: "gpt-4o-mini",
-          messages: [
-            {
-              role: "system",
-              content: `You are GoldenSpaceAI (${role}). Always reply in a professional, advanced, long, and detailed way with reasoning, examples, and structured explanations.`,
-            },
-            { role: "user", content: prompt },
-          ],
-          temperature: 0.5,
-        });
-        break;
+        // GPT-4o-mini doesn't support image generation
+        res.status(400).json({ error: "GPT-4o-mini does not support image generation." });
+        return;
+
       default:
         res.status(400).json({ error: "Model not supported." });
         return;
     }
 
-    // Send the AI reply back to the frontend
-    res.json({ reply: completion.choices[0]?.message?.content || "No reply." });
+    if (imageURL) {
+      res.json({ reply: "Image generated successfully", imageURL });
+    } else {
+      res.json({ reply: completion.choices[0]?.message?.content || "No reply." });
+    }
   } catch (e) {
     console.error("AI error", e);
     res.status(500).json({ error: "AI error" });
@@ -179,6 +173,38 @@ app.post("/chat-advanced-ai", upload.single("image"), async (req, res) => {
     console.error("Advanced AI error", e);
     res.status(500).json({ error: "Advanced AI error" });
   }
+});
+
+app.post("/ask", async (req, res) => {
+  await askAI(req.body?.question || "", res, "Chat");
+});
+
+app.post("/chat-homework", async (req, res) => {
+  await askAI(req.body?.q || "", res, "Homework Solver");
+});
+
+app.post("/search-info", async (req, res) => {
+  await askAI(req.body?.query || "", res, "Knowledge Search");
+});
+
+app.post("/api/physics-explain", async (req, res) => {
+  await askAI(req.body?.question || "", res, "Physics Tutor");
+});
+
+app.post("/ai/create-planet", async (req, res) => {
+  await askAI("Invent a realistic exoplanet: " + JSON.stringify(req.body?.specs || {}), res, "Planet Builder");
+});
+
+app.post("/ai/create-rocket", async (req, res) => {
+  await askAI("Design a conceptual rocket.", res, "Rocket Engineer");
+});
+
+app.post("/ai/create-satellite", async (req, res) => {
+  await askAI("Design a conceptual satellite.", res, "Satellite Engineer");
+});
+
+app.post("/ai/create-universe", async (req, res) => {
+  await askAI("Create a fictional shared universe. Theme: " + (req.body?.theme || "space opera"), res, "Universe Creator");
 });
 
 // ---------- Start ----------

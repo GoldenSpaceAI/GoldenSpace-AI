@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Golden Assistant</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    .container {
+      width: 60%;
+      margin: auto;
+      background-color: #fff;
+      padding: 20px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    label {
+      font-weight: bold;
+    }
+    select, textarea, input[type="file"], button {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0;
+      font-size: 16px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background-color: #ff6f00;
+      color: #fff;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #ff8f3d;
+    }
+    #responseContainer {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Golden Assistant - Powered by Gemini & GPT</h1>
+
+  <div class="container">
+    <div class="form-group">
+      <label for="modelSelect">Choose an AI Model:</label>
+      <select id="modelSelect">
+        <option value="gemini_2_5_pro">Gemini 2.5 Pro</option>
+        <option value="gemini_flash">Gemini Flash</option>
+        <option value="gpt_4">GPT-4</option>
+        <option value="gpt_4o_mini">GPT-4o-mini</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="textInput">Enter Your Text:</label>
+      <textarea id="textInput" placeholder="Enter your question or text..."></textarea>
+    </div>
+
+    <div class="form-group">
+      <label for="imageInput">Upload an Image (optional):</label>
+      <input type="file" id="imageInput" accept="image/*">
+    </div>
+
+    <button onclick="submitRequest()">Submit</button>
+
+    <div id="responseContainer"></div>
+  </div>
+
+  <script>
+    async function submitRequest() {
+      const model = document.getElementById('modelSelect').value;
+      const text = document.getElementById('textInput').value;
+      const image = document.getElementById('imageInput').files[0];
+
+      const formData = new FormData();
+      formData.append('model', model);
+      formData.append('text', text);
+      if (image) formData.append('image', image);
+
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        body: formData
+      });
+
+      const result = await response.json();
+      document.getElementById('responseContainer').innerHTML = result.response;
+    }
+  </script>
+</body>
+</html>

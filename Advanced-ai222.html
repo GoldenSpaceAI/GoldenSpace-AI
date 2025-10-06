@@ -3,79 +3,162 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Golden Assistant</title>
+  <title>Advanced AI - GoldenSpace AI</title>
   <style>
+    /* General body styles */
     body {
       font-family: Arial, sans-serif;
-      background-color: #f5f5f5;
-      padding: 20px;
+      background-image: url('https://images.unsplash.com/photo-1533932022783-5a2ac4c5925d'); /* Space themed background */
+      background-size: cover;
+      background-position: center;
+      color: #fff;
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
     }
+
+    /* Container for chat */
+    .chat-container {
+      width: 100%;
+      max-width: 700px;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Header styles */
     h1 {
       text-align: center;
-      color: #333;
+      font-size: 36px;
+      margin-bottom: 20px;
+      color: #ffcc00;
+      text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.7);
     }
-    .container {
-      width: 60%;
-      margin: auto;
-      background-color: #fff;
-      padding: 20px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+
+    /* Chat log area */
+    .chat-log {
+      background-color: #1c1c1c;
+      padding: 15px;
+      height: 400px;
+      overflow-y: auto;
       border-radius: 8px;
+      margin-bottom: 20px;
+      display: flex;
+      flex-direction: column-reverse;
     }
-    .form-group {
-      margin-bottom: 15px;
+
+    /* Message bubble */
+    .message {
+      margin: 10px 0;
+      padding: 10px;
+      border-radius: 15px;
+      max-width: 80%;
+      color: #fff;
+      font-size: 16px;
+      word-wrap: break-word;
     }
-    label {
-      font-weight: bold;
+
+    .user-message {
+      background-color: #ffcc00;
+      align-self: flex-end;
     }
+
+    .ai-message {
+      background-color: #007bff;
+      align-self: flex-start;
+    }
+
+    /* Input section */
+    .input-section {
+      display: flex;
+      gap: 10px;
+      flex-direction: column;
+    }
+
     select, textarea, input[type="file"], button {
       width: 100%;
-      padding: 10px;
-      margin: 5px 0;
+      padding: 12px;
       font-size: 16px;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-    }
-    button {
-      background-color: #ff6f00;
+      border-radius: 8px;
+      border: none;
+      margin-top: 5px;
+      background-color: #222;
       color: #fff;
+    }
+
+    button {
+      background-color: #ffcc00;
+      color: #000;
       cursor: pointer;
     }
+
     button:hover {
-      background-color: #ff8f3d;
+      background-color: #ff9800;
     }
-    #responseContainer {
+
+    .message-box {
       margin-top: 20px;
+    }
+
+    /* Model selector */
+    label, .message-box {
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    /* Footer styles */
+    footer {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 14px;
+      color: #ccc;
     }
   </style>
 </head>
 <body>
-  <h1>Golden Assistant - Powered by Gemini & GPT</h1>
+  <div class="chat-container">
+    <h1>Golden Assistant - Powered by Gemini & GPT</h1>
 
-  <div class="container">
-    <div class="form-group">
-      <label for="modelSelect">Choose an AI Model:</label>
-      <select id="modelSelect">
-        <option value="gemini_2_5_pro">Gemini 2.5 Pro</option>
-        <option value="gemini_flash">Gemini Flash</option>
-        <option value="gpt_4">GPT-4</option>
-        <option value="gpt_4o_mini">GPT-4o-mini</option>
-      </select>
+    <!-- Chat log container -->
+    <div class="chat-log" id="chatLog"></div>
+
+    <!-- Model selection and input fields -->
+    <div class="input-section">
+      <div>
+        <label for="modelSelect">Choose an AI Model:</label>
+        <select id="modelSelect">
+          <option value="gemini_2_5_pro">Gemini 2.5 Pro</option>
+          <option value="gemini_flash">Gemini Flash</option>
+          <option value="gpt_4">GPT-4</option>
+          <option value="gpt_4o_mini">GPT-4o-mini</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="textInput">Enter Your Text:</label>
+        <textarea id="textInput" placeholder="Enter your question or text..." rows="4"></textarea>
+      </div>
+
+      <div>
+        <label for="imageInput">Upload an Image (optional):</label>
+        <input type="file" id="imageInput" accept="image/*">
+      </div>
+
+      <button onclick="submitRequest()">Submit</button>
     </div>
 
-    <div class="form-group">
-      <label for="textInput">Enter Your Text:</label>
-      <textarea id="textInput" placeholder="Enter your question or text..."></textarea>
+    <div class="message-box">
+      <div id="responseContainer"></div>
     </div>
 
-    <div class="form-group">
-      <label for="imageInput">Upload an Image (optional):</label>
-      <input type="file" id="imageInput" accept="image/*">
-    </div>
-
-    <button onclick="submitRequest()">Submit</button>
-
-    <div id="responseContainer"></div>
+    <footer>
+      <p>&copy; 2025 GoldenSpace AI | Powered by Gemini & GPT Models</p>
+    </footer>
   </div>
 
   <script>
@@ -83,19 +166,43 @@
       const model = document.getElementById('modelSelect').value;
       const text = document.getElementById('textInput').value;
       const image = document.getElementById('imageInput').files[0];
+      
+      // Add the user message to the chat log
+      addMessageToChatLog(text, "user-message");
 
       const formData = new FormData();
+      formData.append('q', text);
       formData.append('model', model);
-      formData.append('text', text);
       if (image) formData.append('image', image);
 
-      const response = await fetch('/api/chat', {
+      const response = await fetch('/chat-advanced-ai', {
         method: 'POST',
-        body: formData
+        body: formData,
       });
 
       const result = await response.json();
-      document.getElementById('responseContainer').innerHTML = result.response;
+      const reply = result.reply || "Sorry, I couldn't generate a response.";
+
+      // Add AI response to the chat log
+      addMessageToChatLog(reply, "ai-message");
+
+      if (result.imageURL) {
+        // Display the generated image if available
+        const imageElement = document.createElement("img");
+        imageElement.src = result.imageURL;
+        imageElement.alt = "Generated Image";
+        imageElement.style.maxWidth = "100%";
+        document.getElementById('responseContainer').appendChild(imageElement);
+      }
+    }
+
+    function addMessageToChatLog(message, className) {
+      const chatLog = document.getElementById("chatLog");
+      const messageDiv = document.createElement("div");
+      messageDiv.className = `message ${className}`;
+      messageDiv.textContent = message;
+      chatLog.appendChild(messageDiv);
+      chatLog.scrollTop = chatLog.scrollHeight; // Scroll to the bottom
     }
   </script>
 </body>

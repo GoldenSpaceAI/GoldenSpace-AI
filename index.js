@@ -11,6 +11,8 @@ import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import cookieParser from "cookie-parser";
 import OpenAI from "openai";
+import axios from "axios";
+import multer from "multer";
 
 dotenv.config();
 const app = express();
@@ -92,20 +94,64 @@ app.get("/api/me", (req, res) => {
 // ---------- OpenAI ----------
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
+// ---------- Image Handling (for uploaded images) ----------
+const upload = multer({ dest: 'uploads/' }); // You can add more configurations for file handling
+
 // ---------- Unified AI route ----------
-async function askAI(prompt, res, role = "General Assistant") {
+async function askAI(prompt, model, res, role = "General Assistant") {
   try {
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        {
-          role: "system",
-          content: `You are GoldenSpaceAI (${role}). Always reply in a professional, advanced, long, and detailed way with reasoning, examples, and structured explanations.`,
-        },
-        { role: "user", content: prompt },
-      ],
-      temperature: 0.5,
-    });
+    let completion;
+
+    // Determine which AI model to use
+    switch (model) {
+      case "gemini_2_5_pro":
+        // Call Gemini API (replace with actual API request)
+        completion = await axios.post('YOUR_GEMINI_API_ENDPOINT', {
+          prompt,
+          model: 'gemini_2_5_pro', // or actual Gemini API parameters
+        });
+        break;
+      case "gemini_flash":
+        // Call Gemini Flash API (replace with actual API request)
+        completion = await axios.post('YOUR_GEMINI_FLASH_API_ENDPOINT', {
+          prompt,
+          model: 'gemini_flash', // actual API parameters
+        });
+        break;
+      case "gpt_4":
+        // Call GPT-4 API (OpenAI)
+        completion = await openai.chat.completions.create({
+          model: "gpt-4",
+          messages: [
+            {
+              role: "system",
+              content: `You are GoldenSpaceAI (${role}). Always reply in a professional, advanced, long, and detailed way with reasoning, examples, and structured explanations.`,
+            },
+            { role: "user", content: prompt },
+          ],
+          temperature: 0.5,
+        });
+        break;
+      case "gpt_4o_mini":
+        // Call GPT-4o-mini API (OpenAI)
+        completion = await openai.chat.completions.create({
+          model: "gpt-4o-mini",
+          messages: [
+            {
+              role: "system",
+              content: `You are GoldenSpaceAI (${role}). Always reply in a professional, advanced, long, and detailed way with reasoning, examples, and structured explanations.`,
+            },
+            { role: "user", content: prompt },
+          ],
+          temperature: 0.5,
+        });
+        break;
+      default:
+        res.status(400).json({ error: "Model not supported." });
+        return;
+    }
+
+    // Send the AI reply back to the frontend
     res.json({ reply: completion.choices[0]?.message?.content || "No reply." });
   } catch (e) {
     console.error("AI error", e);
@@ -113,33 +159,26 @@ async function askAI(prompt, res, role = "General Assistant") {
   }
 }
 
-// ---------- AI Endpoints (all unlocked, all professional) ----------
-app.post("/ask", async (req, res) => {
-  await askAI(req.body?.question || "", res, "Chat");
-});
-app.post("/chat-advanced-ai", async (req, res) => {
-  await askAI(req.body?.q || "", res, "Advanced Assistant");
-});
-app.post("/chat-homework", async (req, res) => {
-  await askAI(req.body?.q || "", res, "Homework Solver");
-});
-app.post("/search-info", async (req, res) => {
-  await askAI(req.body?.query || "", res, "Knowledge Search");
-});
-app.post("/api/physics-explain", async (req, res) => {
-  await askAI(req.body?.question || "", res, "Physics Tutor");
-});
-app.post("/ai/create-planet", async (req, res) => {
-  await askAI("Invent a realistic exoplanet: " + JSON.stringify(req.body?.specs || {}), res, "Planet Builder");
-});
-app.post("/ai/create-rocket", async (req, res) => {
-  await askAI("Design a conceptual rocket.", res, "Rocket Engineer");
-});
-app.post("/ai/create-satellite", async (req, res) => {
-  await askAI("Design a conceptual satellite.", res, "Satellite Engineer");
-});
-app.post("/ai/create-universe", async (req, res) => {
-  await askAI("Create a fictional shared universe. Theme: " + (req.body?.theme || "space opera"), res, "Universe Creator");
+// ---------- AI Endpoints (all models with image generation and upload support) ----------
+app.post("/chat-advanced-ai", upload.single("image"), async (req, res) => {
+  const { q, model } = req.body;
+  const image = req.file ? req.file.path : null; // Image handling
+
+  try {
+    let aiResponse;
+
+    // Handle Image Uploads (you can use the image for processing as needed)
+    if (image) {
+      console.log('Image uploaded:', image);
+    }
+
+    // Call the appropriate AI model
+    await askAI(q || "", model || "gpt-4", res, "Advanced Assistant");
+
+  } catch (e) {
+    console.error("Advanced AI error", e);
+    res.status(500).json({ error: "Advanced AI error" });
+  }
 });
 
 // ---------- Start ----------

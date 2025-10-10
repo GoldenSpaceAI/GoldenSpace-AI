@@ -98,10 +98,15 @@
         border-radius:var(--radius);padding:12px;box-shadow:var(--shadow);display:grid;gap:10px;}
       .navbtn{display:flex;align-items:center;justify-content:center;padding:10px 12px;
         border-radius:999px;border:1px solid var(--border);color:#d7e2f4;background:rgba(255,255,255,.03);font-weight:900;}
-      .google{display:flex;align-items:center;justify-content:center;gap:10px;background:#fff;color:#333;
-        border-radius:999px;padding:10px 12px;font-weight:800;border:1px solid rgba(0,0,0,.12);box-shadow:0 6px 18px rgba(0,0,0,.35);} 
-      .google img{width:18px;height:18px}
+      .login-btn{display:flex;align-items:center;justify-content:center;gap:10px;background:var(--gold);color:#1b1300;
+        border-radius:999px;padding:10px 12px;font-weight:800;border:1px solid rgba(0,0,0,.12);box-shadow:0 6px 18px rgba(246,198,74,.35);} 
       .skip-login { color: var(--muted); font-size: 14px; text-decoration: underline; margin-top: 8px; display: inline-block; }
+
+      /* User Profile Styles */
+      .profile-pill{display:flex;align-items:center;gap:10px;justify-content:center;margin-bottom:10px}
+      .profile-pill img{width:32px;height:32px;border-radius:50%;object-fit:cover;border:1px solid var(--border)}
+      .profile-pill .welcome{font-weight:800;color:var(--gold)}
+      .logout-btn{background:transparent;color:var(--muted);border:1px solid var(--border);padding:6px 12px;border-radius:999px;font-size:12px;cursor:pointer}
 
       /* Sections: Your Space Pack + ChatAI Pack */
       .section{margin:24px auto 8px}
@@ -190,11 +195,7 @@
             <a class="navbtn" href="/privacy.html">Legal Pages</a>
           </nav>
           <div id="user-display" style="text-align: center;">
-              <a class="google" href="/auth/google" aria-label="Continue with Google">
-                <img src="https://developers.google.com/identity/images/g-logo.png" alt="">
-                Continue with Google
-              </a>
-              <a href="/" class="skip-login">Skip for later</a>
+            <!-- This will be populated by JavaScript -->
           </div>
         </aside>
       </section>
@@ -284,28 +285,59 @@
     <script>
       document.getElementById('yr').textContent = new Date().getFullYear();
       
-      // Replace Google button with user pill when signed in.
-      // Your backend should return JSON at /api/me: { email, name?, given_name?, picture? }
+      // User authentication display
       (async () => {
         try {
           const res = await fetch('/api/me', { credentials: 'include' });
-          if (!res.ok) return; // not signed in
           const user = await res.json();
-          if (!user || !user.email) return;
-
           const display = document.getElementById('user-display');
-          const first = user.given_name || (user.name ? user.name.split(' ')[0] : user.email.split('@')[0]);
-          const pic = user.picture || 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80"><circle cx="40" cy="40" r="40" fill="%23e7f4e9"/><circle cx="40" cy="32" r="14" fill="%230a0e15"/><path d="M12 70c6-14 20-22 28-22s22 8 28 22" fill="%230a0e15"/></svg>';
 
+          if (user.loggedIn && user.user) {
+            // User is logged in - show profile
+            const firstName = user.user.name ? user.user.name.split(' ')[0] : user.user.email.split('@')[0];
+            const profilePic = user.user.photo || 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80"><circle cx="40" cy="40" r="40" fill="%23f6c64a"/><circle cx="40" cy="32" r="14" fill="%230a0e15"/><path d="M12 70c6-14 20-22 28-22s22 8 28 22" fill="%230a0e15"/></svg>';
+
+            display.innerHTML = `
+              <div class="profile-pill">
+                <img src="${profilePic}" alt="Profile picture">
+                <div class="welcome">Welcome, ${firstName}</div>
+              </div>
+              <a class="navbtn" href="/chat-advancedai.html">Go to Advanced AI</a>
+              <button class="logout-btn" onclick="logout()">Logout</button>
+            `;
+          } else {
+            // User is not logged in - show login button
+            display.innerHTML = `
+              <a class="login-btn" href="/login-signup.html">
+                🔐 Login / Sign Up
+              </a>
+              <a href="/advanced-ai.html" class="skip-login">Skip for later</a>
+            `;
+          }
+        } catch (e) {
+          // If error, show login button
+          const display = document.getElementById('user-display');
           display.innerHTML = `
-            <div class="profile-pill" style="display:flex;align-items:center;gap:10px;justify-content:center;margin-bottom:10px">
-              <img src="${pic}" alt="profile" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:1px solid var(--border)"/>
-              <div style="font-weight:800">Welcome, ${first}</div>
-            </div>
-            <a class="navbtn" href="/chat-advancedai.html">Go to Advanced AI</a>
+            <a class="login-btn" href="/login-signup.html">
+              🔐 Login / Sign Up
+            </a>
+            <a href="/advanced-ai.html" class="skip-login">Skip for later</a>
           `;
-        } catch (e) { /* ignore */ }
+        }
       })();
+
+      // Logout function
+      async function logout() {
+        try {
+          await fetch('/logout', {
+            method: 'POST',
+            credentials: 'include'
+          });
+          window.location.reload();
+        } catch (e) {
+          window.location.reload();
+        }
+      }
 
       // (Your existing modal script can stay here)
     </script>

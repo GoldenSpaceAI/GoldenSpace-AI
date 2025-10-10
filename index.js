@@ -1,4 +1,4 @@
-// index.js — GoldenSpaceAI with Complete Subscription System
+// index.js — GoldenSpaceAI Complete Launch Version
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -128,15 +128,23 @@ function ensureUserExists(user) {
 
 // ==================== FEATURE SUBSCRIPTION SYSTEM ====================
 
-// Feature pricing configuration
+// Feature pricing configuration - UPDATED WITH YOUR PRICING
 const FEATURE_PRICES = {
+  // 4G Features
   search_info: 4,
   learn_physics: 4,
   create_planet: 4,
-  advanced_planet: 10,
-  solve_homework: 20,
-  search_lessons: 20,
-  advanced_ai: 20
+  advanced_planet: 4,
+  create_rocket: 4,
+  create_satellite: 4,
+  your_space: 4,
+  
+  // 10G Features
+  search_lessons: 10,
+  
+  // 20G Features
+  chat_advancedai: 20,
+  homework_helper: 20
 };
 
 // Calculate hours remaining until expiration
@@ -302,6 +310,51 @@ app.get("/login", (req, res) => {
   res.sendFile(path.join(__dirname, "login-signup.html"));
 });
 
+// Serve feature pages with proper pricing
+app.get("/search-info.html", (req, res) => {
+  res.sendFile(path.join(__dirname, "search-info.html"));
+});
+
+app.get("/learn-physics.html", (req, res) => {
+  res.sendFile(path.join(__dirname, "learn-physics.html"));
+});
+
+app.get("/create-planet.html", (req, res) => {
+  res.sendFile(path.join(__dirname, "create-planet.html"));
+});
+
+app.get("/create-advanced-planet.html", (req, res) => {
+  res.sendFile(path.join(__dirname, "create-advanced-planet.html"));
+});
+
+app.get("/create-rocket.html", (req, res) => {
+  res.sendFile(path.join(__dirname, "create-rocket.html"));
+});
+
+app.get("/create-satellite.html", (req, res) => {
+  res.sendFile(path.join(__dirname, "create-satellite.html"));
+});
+
+app.get("/your-space.html", (req, res) => {
+  res.sendFile(path.join(__dirname, "your-space.html"));
+});
+
+app.get("/chat-advancedai.html", (req, res) => {
+  res.sendFile(path.join(__dirname, "chat-advancedai.html"));
+});
+
+app.get("/search-lessons.html", (req, res) => {
+  res.sendFile(path.join(__dirname, "search-lessons.html"));
+});
+
+app.get("/homework-helper.html", (req, res) => {
+  res.sendFile(path.join(__dirname, "homework-helper.html"));
+});
+
+app.get("/buy-golden.html", (req, res) => {
+  res.sendFile(path.join(__dirname, "buy-golden.html"));
+});
+
 // ---------- API: User info ----------
 app.get("/api/me", (req, res) => {
   if (req.user) {
@@ -445,7 +498,7 @@ app.post("/api/unlock-feature", (req, res) => {
   }
 });
 
-// ==================== AI ENDPOINTS (ALL WORKING) ====================
+// ==================== AI ENDPOINTS (ALL WORKING WITH LOCKS) ====================
 
 // ---------- OpenAI ----------
 const openai = new OpenAI({ 
@@ -516,7 +569,7 @@ app.post("/ask", async (req, res) => {
   }
 });
 
-// ---------- PREMIUM AI Endpoints ----------
+// ---------- PREMIUM AI Endpoints (With Subscription Locks) ----------
 
 // Search Information - 4G/month
 app.post("/search-info", async (req, res) => {
@@ -585,7 +638,7 @@ app.post("/api/physics-explain", async (req, res) => {
       return res.status(400).json({ error: "Question is required" });
     }
 
-    const prompt = `Explain this physics concept in detail: ${question}. Provide clear explanations and examples.`;
+    const prompt = `Explain this physics concept in detail: ${question}. Provide clear explanations, formulas, and real-world examples.`;
     const result = await askAI(prompt, "gpt-4o-mini");
     
     if (result.success) {
@@ -602,7 +655,190 @@ app.post("/api/physics-explain", async (req, res) => {
   }
 });
 
-// Homework Helper - 20G/month (FIXED 404 ERROR)
+// Create Planet - 4G/month
+app.post("/ai/create-planet", async (req, res) => {
+  try {
+    // Check if user has access
+    if (!req.user) {
+      return res.status(401).json({ error: 'Login required' });
+    }
+    
+    const userId = getUserIdentifier(req);
+    const featureStatus = isFeatureUnlocked(userId, 'create_planet');
+    
+    if (!featureStatus.unlocked) {
+      return res.status(403).json({ 
+        error: 'Feature locked', 
+        message: 'Create Planet requires 4G to unlock',
+        requiredGolden: 4
+      });
+    }
+
+    const { specs = {} } = req.body;
+    const prompt = `Create a detailed description of a fictional planet with these specifications: ${JSON.stringify(specs)}. Include details about atmosphere, geography, life forms, climate, and unique characteristics.`;
+    const result = await askAI(prompt, "gpt-4o-mini");
+    
+    if (result.success) {
+      res.json({ 
+        planet: result.reply,
+        model: result.model
+      });
+    } else {
+      res.status(500).json({ error: result.error });
+    }
+  } catch (error) {
+    console.error("Create planet error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Advanced Planet - 4G/month
+app.post("/ai/create-advanced-planet", async (req, res) => {
+  try {
+    // Check if user has access
+    if (!req.user) {
+      return res.status(401).json({ error: 'Login required' });
+    }
+    
+    const userId = getUserIdentifier(req);
+    const featureStatus = isFeatureUnlocked(userId, 'advanced_planet');
+    
+    if (!featureStatus.unlocked) {
+      return res.status(403).json({ 
+        error: 'Feature locked', 
+        message: 'Advanced Planet Builder requires 4G to unlock',
+        requiredGolden: 4
+      });
+    }
+
+    const { specs = {} } = req.body;
+    const prompt = `Create an advanced detailed description of a fictional planet with advanced specifications: ${JSON.stringify(specs)}. Include complex atmospheric composition, geological features, ecosystem, and scientific plausibility.`;
+    const result = await askAI(prompt, "gpt-4o-mini");
+    
+    if (result.success) {
+      res.json({ 
+        planet: result.reply,
+        model: result.model
+      });
+    } else {
+      res.status(500).json({ error: result.error });
+    }
+  } catch (error) {
+    console.error("Advanced planet error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Create Rocket - 4G/month
+app.post("/ai/create-rocket", async (req, res) => {
+  try {
+    // Check if user has access
+    if (!req.user) {
+      return res.status(401).json({ error: 'Login required' });
+    }
+    
+    const userId = getUserIdentifier(req);
+    const featureStatus = isFeatureUnlocked(userId, 'create_rocket');
+    
+    if (!featureStatus.unlocked) {
+      return res.status(403).json({ 
+        error: 'Feature locked', 
+        message: 'Create Rocket requires 4G to unlock',
+        requiredGolden: 4
+      });
+    }
+
+    const prompt = "Design a detailed conceptual space rocket with specifications including propulsion system, payload capacity, fuel type, dimensions, mission capabilities, and technical specifications.";
+    const result = await askAI(prompt, "gpt-4o-mini");
+    
+    if (result.success) {
+      res.json({ 
+        rocket: result.reply,
+        model: result.model
+      });
+    } else {
+      res.status(500).json({ error: result.error });
+    }
+  } catch (error) {
+    console.error("Create rocket error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Create Satellite - 4G/month
+app.post("/ai/create-satellite", async (req, res) => {
+  try {
+    // Check if user has access
+    if (!req.user) {
+      return res.status(401).json({ error: 'Login required' });
+    }
+    
+    const userId = getUserIdentifier(req);
+    const featureStatus = isFeatureUnlocked(userId, 'create_satellite');
+    
+    if (!featureStatus.unlocked) {
+      return res.status(403).json({ 
+        error: 'Feature locked', 
+        message: 'Create Satellite requires 4G to unlock',
+        requiredGolden: 4
+      });
+    }
+
+    const prompt = "Design a detailed conceptual satellite with specifications including orbit type, payload instruments, power source, communication systems, mission objectives, and technical details.";
+    const result = await askAI(prompt, "gpt-4o-mini");
+    
+    if (result.success) {
+      res.json({ 
+        satellite: result.reply,
+        model: result.model
+      });
+    } else {
+      res.status(500).json({ error: result.error });
+    }
+  } catch (error) {
+    console.error("Create satellite error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Your Space Universe - 4G/month
+app.post("/ai/your-space", async (req, res) => {
+  try {
+    // Check if user has access
+    if (!req.user) {
+      return res.status(401).json({ error: 'Login required' });
+    }
+    
+    const userId = getUserIdentifier(req);
+    const featureStatus = isFeatureUnlocked(userId, 'your_space');
+    
+    if (!featureStatus.unlocked) {
+      return res.status(403).json({ 
+        error: 'Feature locked', 
+        message: 'Your Space Universe requires 4G to unlock',
+        requiredGolden: 4
+      });
+    }
+
+    const { theme = "space exploration", elements = {} } = req.body;
+    const prompt = `Create a detailed fictional space universe with theme: ${theme}. Include elements: ${JSON.stringify(elements)}. Describe galaxies, planets, civilizations, technology, and story possibilities.`;
+    const result = await askAI(prompt, "gpt-4o-mini");
+    
+    if (result.success) {
+      res.json({ 
+        universe: result.reply,
+        model: result.model
+      });
+    } else {
+      res.status(500).json({ error: result.error });
+    }
+  } catch (error) {
+    console.error("Your space error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Homework Helper - 20G/month
 app.post("/chat-homework", async (req, res) => {
   try {
     // Check if user has access
@@ -611,12 +847,12 @@ app.post("/chat-homework", async (req, res) => {
     }
     
     const userId = getUserIdentifier(req);
-    const featureStatus = isFeatureUnlocked(userId, 'solve_homework');
+    const featureStatus = isFeatureUnlocked(userId, 'homework_helper');
     
     if (!featureStatus.unlocked) {
       return res.status(403).json({ 
         error: 'Feature locked', 
-        message: 'Homework Solver requires 20G to unlock',
+        message: 'Homework Helper requires 20G to unlock',
         requiredGolden: 20
       });
     }
@@ -627,7 +863,7 @@ app.post("/chat-homework", async (req, res) => {
       return res.status(400).json({ error: "Question is required" });
     }
 
-    const prompt = `Help solve this homework problem: ${q}. Provide step-by-step explanations and show your work.`;
+    const prompt = `Help solve this homework problem step by step: ${q}. Provide detailed explanations, show all work, explain concepts, and verify the solution.`;
     const result = await askAI(prompt, "gpt-4o-mini");
     
     if (result.success) {
@@ -653,12 +889,12 @@ app.post("/chat-advanced-ai", upload.single("image"), async (req, res) => {
     }
     
     const userId = getUserIdentifier(req);
-    const featureStatus = isFeatureUnlocked(userId, 'advanced_ai');
+    const featureStatus = isFeatureUnlocked(userId, 'chat_advancedai');
     
     if (!featureStatus.unlocked) {
       return res.status(403).json({ 
         error: 'Feature locked', 
-        message: 'Advanced AI requires 20G to unlock',
+        message: 'Advanced AI Chat requires 20G to unlock',
         requiredGolden: 20
       });
     }
@@ -672,7 +908,7 @@ app.post("/chat-advanced-ai", upload.single("image"), async (req, res) => {
 
     let prompt = q;
     if (image) {
-      prompt = `Regarding the uploaded image and the following question: ${q}. Please provide analysis.`;
+      prompt = `Regarding the uploaded image and the following question: ${q}. Please provide detailed analysis and insights.`;
       console.log('Image uploaded:', image.path);
     }
 
@@ -693,103 +929,7 @@ app.post("/chat-advanced-ai", upload.single("image"), async (req, res) => {
   }
 });
 
-// Creative Tools
-app.post("/ai/create-planet", async (req, res) => {
-  try {
-    // Check if user has access
-    if (!req.user) {
-      return res.status(401).json({ error: 'Login required' });
-    }
-    
-    const userId = getUserIdentifier(req);
-    const featureStatus = isFeatureUnlocked(userId, 'create_planet');
-    
-    if (!featureStatus.unlocked) {
-      return res.status(403).json({ 
-        error: 'Feature locked', 
-        message: 'Create Planet requires 4G to unlock',
-        requiredGolden: 4
-      });
-    }
-
-    const { specs = {} } = req.body;
-    const prompt = `Create a detailed description of a fictional planet: ${JSON.stringify(specs)}`;
-    const result = await askAI(prompt, "gpt-4o-mini");
-    
-    if (result.success) {
-      res.json({ 
-        planet: result.reply,
-        model: result.model
-      });
-    } else {
-      res.status(500).json({ error: result.error });
-    }
-  } catch (error) {
-    console.error("Create planet error:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
-
-// Free creative tools (no subscription required)
-app.post("/ai/create-rocket", async (req, res) => {
-  try {
-    const prompt = "Design a conceptual space rocket with specifications.";
-    const result = await askAI(prompt, "gpt-4o-mini");
-    
-    if (result.success) {
-      res.json({ 
-        rocket: result.reply,
-        model: result.model
-      });
-    } else {
-      res.status(500).json({ error: result.error });
-    }
-  } catch (error) {
-    console.error("Create rocket error:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
-
-app.post("/ai/create-satellite", async (req, res) => {
-  try {
-    const prompt = "Design a conceptual satellite with specifications.";
-    const result = await askAI(prompt, "gpt-4o-mini");
-    
-    if (result.success) {
-      res.json({ 
-        satellite: result.reply,
-        model: result.model
-      });
-    } else {
-      res.status(500).json({ error: result.error });
-    }
-  } catch (error) {
-    console.error("Create satellite error:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
-
-app.post("/ai/create-universe", async (req, res) => {
-  try {
-    const { theme = "space opera" } = req.body;
-    const prompt = `Create a fictional shared universe with theme: ${theme}`;
-    const result = await askAI(prompt, "gpt-4o-mini");
-    
-    if (result.success) {
-      res.json({ 
-        universe: result.reply,
-        model: result.model
-      });
-    } else {
-      res.status(500).json({ error: result.error });
-    }
-  } catch (error) {
-    console.error("Create universe error:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
-
-// Search Lessons - 20G/month
+// Search Lessons - 10G/month
 app.post("/search-lessons", async (req, res) => {
   try {
     // Check if user has access
@@ -803,8 +943,8 @@ app.post("/search-lessons", async (req, res) => {
     if (!featureStatus.unlocked) {
       return res.status(403).json({ 
         error: 'Feature locked', 
-        message: 'Search Lessons requires 20G to unlock',
-        requiredGolden: 20
+        message: 'Search Lessons requires 10G to unlock',
+        requiredGolden: 10
       });
     }
 
@@ -814,7 +954,7 @@ app.post("/search-lessons", async (req, res) => {
       return res.status(400).json({ error: "Query is required" });
     }
 
-    const prompt = `Create an educational lesson about: ${query}. Include key concepts, examples, and learning objectives.`;
+    const prompt = `Create a comprehensive educational lesson about: ${query}. Include learning objectives, key concepts, detailed explanations, examples, practice questions, and real-world applications.`;
     const result = await askAI(prompt, "gpt-4o-mini");
     
     if (result.success) {
@@ -907,12 +1047,14 @@ setTimeout(checkForNewPayments, 5000);
 app.get("/health", (req, res) => {
   res.json({ 
     status: "OK", 
-    message: "GoldenSpaceAI is running with complete subscription system",
+    message: "GoldenSpaceAI LAUNCH READY - All systems operational!",
     features: Object.keys(FEATURE_PRICES),
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    launch: "READY"
   });
 });
 
 // ---------- Start ----------
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 GoldenSpaceAI running on ${PORT} (COMPLETE SYSTEM READY FOR LAUNCH!)`));
+app.listen(PORT, () => console.log(`🚀 GOLDENSPACEAI LAUNCHED SUCCESSFULLY on port ${PORT}! 
+🎯 ALL FEATURES READY • 🔒 SUBSCRIPTION SYSTEM ACTIVE • 🤖 AI WORKING PERFECTLY`));

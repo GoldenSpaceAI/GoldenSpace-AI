@@ -14,6 +14,7 @@ import cookieParser from "cookie-parser";
 import OpenAI from "openai";
 import axios from "axios";
 import multer from "multer";
+import fs from "fs";
 
 dotenv.config();
 const app = express();
@@ -49,6 +50,78 @@ passport.deserializeUser((obj, done) => done(null, obj));
 app.use(passport.initialize());
 app.use(passport.session());
 
+// ==================== GOLDEN DATABASE SYSTEM ====================
+
+const GOLDEN_DB_PATH = path.join(__dirname, 'golden_database.json');
+
+// Load Golden database
+function loadGoldenDB() {
+  try {
+    if (fs.existsSync(GOLDEN_DB_PATH)) {
+      return JSON.parse(fs.readFileSync(GOLDEN_DB_PATH, 'utf8'));
+    }
+  } catch (error) {
+    console.error('Error loading Golden DB:', error);
+  }
+  return { users: {} };
+}
+
+// Save Golden database
+function saveGoldenDB(data) {
+  try {
+    fs.writeFileSync(GOLDEN_DB_PATH, JSON.stringify(data, null, 2));
+    return true;
+  } catch (error) {
+    console.error('Error saving Golden DB:', error);
+    return false;
+  }
+}
+
+// Get user's unique ID (works for both Google & GitHub)
+function getUserIdentifier(req) {
+  if (!req.user) return null;
+  return `${req.user.id}@${req.user.provider}`;
+}
+
+// Get user's Golden balance
+function getUserGoldenBalance(userId) {
+  const db = loadGoldenDB();
+  return db.users[userId]?.golden_balance || 0;
+}
+
+// Update user's Golden balance
+function updateUserGoldenBalance(userId, userData, newBalance) {
+  const db = loadGoldenDB();
+  
+  if (!db.users[userId]) {
+    // Create new user entry
+    db.users[userId] = {
+      email: userData.email,
+      name: userData.name,
+      golden_balance: newBalance,
+      created_at: new Date().toISOString(),
+      last_login: new Date().toISOString()
+    };
+  } else {
+    // Update existing user
+    db.users[userId].golden_balance = newBalance;
+    db.users[userId].last_login = new Date().toISOString();
+    db.users[userId].name = userData.name; // Update name if changed
+  }
+  
+  return saveGoldenDB(db);
+}
+
+// Auto-create user on first login
+function ensureUserExists(user) {
+  const userId = `${user.id}@${user.provider}`;
+  const currentBalance = getUserGoldenBalance(userId);
+  if (currentBalance === 0 && !loadGoldenDB().users[userId]) {
+    updateUserGoldenBalance(userId, user, 0); // Create with 0 balance
+    console.log(`✅ Created new user: ${userId}`);
+  }
+}
+
 // ---------- Google OAuth ----------
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
   passport.use(
@@ -67,6 +140,10 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
           photo: profile.photos?.[0]?.value || "",
           provider: "google"
         };
+
+        // Auto-create user in Golden database
+        ensureUserExists(user);
+
         return done(null, user);
       }
     )
@@ -100,6 +177,10 @@ if (process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET) {
           username: profile.username,
           provider: "github"
         };
+
+        // Auto-create user in Golden database
+        ensureUserExists(user);
+
         return done(null, user);
       }
     )
@@ -158,6 +239,60 @@ app.post("/logout", (req, res) => {
       res.json({ ok: true, message: "Logged out successfully" });
     });
   });
+});
+
+// ==================== GOLDEN BALANCE API ====================
+
+// Get user's Golden balance
+app.get("/api/golden-balance", (req, res) => {
+  if (!req.user) return res.json({ balance: 0, loggedIn: false });
+  
+  const userId = getUserIdentifier(req);
+  const balance = getUserGoldenBalance(userId);
+  
+  res.json({ 
+    balance, 
+    loggedIn: true,
+    user: req.user 
+  });
+});
+
+// Get available Golden packages
+app.get("/api/golden-packages", (req, res) => {
+  res.json({
+    20: 5,    // 20 Golden = $5
+    40: 10,   // 40 Golden = $10
+    60: 15,   // 60 Golden = $15
+    80: 20,   // 80 Golden = $20
+    100: 25,  // 100 Golden = $25
+    200: 50,  // 200 Golden = $50
+    400: 100, // 400 Golden = $100
+    600: 150, // 600 Golden = $150
+    800: 200, // 800 Golden = $200
+    1000: 250 // 1000 Golden = $250
+  });
+});
+
+// Add Golden to user account
+app.post("/api/add-golden", (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'Login required' });
+  
+  const { goldenAmount } = req.body;
+  const userId = getUserIdentifier(req);
+  const currentBalance = getUserGoldenBalance(userId);
+  const newBalance = currentBalance + goldenAmount;
+  
+  const success = updateUserGoldenBalance(userId, req.user, newBalance);
+  
+  if (success) {
+    res.json({
+      success: true,
+      newBalance: newBalance,
+      message: `Added ${goldenAmount} Golden coins`
+    });
+  } else {
+    res.status(500).json({ error: 'Failed to update balance' });
+  }
 });
 
 // ---------- OpenAI ----------
@@ -272,24 +407,9 @@ app.post("/ai/create-universe", async (req, res) => {
   await askAI("Create a fictional shared universe. Theme: " + (req.body?.theme || "space opera"), "gpt-4o-mini", res, "Universe Creator");
 });
 
-// ==================== GOLDEN COIN PAYMENT SYSTEM ====================
+// ==================== PAYMENT DETECTION SYSTEM ====================
 
-let userBalances = new Map(); // user_id -> golden balance
 let processedTransactions = new Set(); // track processed payments
-
-// Golden package prices (Golden coins -> USD)
-const goldenPackages = {
-  20: 5,    // 20 Golden = $5
-  40: 10,   // 40 Golden = $10
-  60: 15,   // 60 Golden = $15
-  80: 20,   // 80 Golden = $20
-  100: 25,  // 100 Golden = $25
-  200: 50,  // 200 Golden = $50
-  400: 100, // 400 Golden = $100
-  600: 150, // 600 Golden = $150
-  800: 200, // 800 Golden = $200
-  1000: 250 // 1000 Golden = $250
-};
 
 // Check for new payments every 2 minutes
 async function checkForNewPayments() {
@@ -374,40 +494,6 @@ setInterval(checkForNewPayments, 120000);
 // Also check immediately when server starts
 setTimeout(checkForNewPayments, 5000);
 
-// ==================== GOLDEN BALANCE API ====================
-
-// Get user's Golden balance
-app.get("/api/golden-balance", (req, res) => {
-  if (!req.user) return res.json({ balance: 0, loggedIn: false });
-  
-  const balance = userBalances.get(req.user.id) || 0;
-  res.json({ 
-    balance, 
-    loggedIn: true,
-    user: req.user 
-  });
-});
-
-// Get available Golden packages
-app.get("/api/golden-packages", (req, res) => {
-  res.json(goldenPackages);
-});
-
-// Manual Golden addition (for testing)
-app.post("/api/add-golden", (req, res) => {
-  if (!req.user) return res.status(401).json({ error: 'Login required' });
-  
-  const { goldenAmount } = req.body;
-  const currentBalance = userBalances.get(req.user.id) || 0;
-  userBalances.set(req.user.id, currentBalance + goldenAmount);
-  
-  res.json({
-    success: true,
-    newBalance: currentBalance + goldenAmount,
-    message: `Added ${goldenAmount} Golden coins`
-  });
-});
-
 // ---------- Health Check ----------
 app.get("/health", (req, res) => {
   res.json({ status: "OK", message: "GoldenSpaceAI is running" });
@@ -415,4 +501,4 @@ app.get("/health", (req, res) => {
 
 // ---------- Start ----------
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 GoldenSpaceAI running on ${PORT} (ALL UNLOCKED + PAYMENT SYSTEM)`));
+app.listen(PORT, () => console.log(`🚀 GoldenSpaceAI running on ${PORT} (ALL UNLOCKED + PERSISTENT GOLDEN SYSTEM)`));

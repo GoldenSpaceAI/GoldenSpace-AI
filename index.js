@@ -1,4 +1,4 @@
-// index.js — GoldenSpaceAI Complete Launch Version
+// index.js — GoldenSpaceAI Complete Launch Version WITH PAGE LOCKS
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -225,6 +225,157 @@ function unlockFeatureForUser(userId, feature, cost) {
   }
 }
 
+// ==================== PAGE PROTECTION MIDDLEWARE ====================
+
+// Middleware to check if user can access a premium page
+function requirePremiumPage(feature, price) {
+  return (req, res, next) => {
+    if (!req.user) {
+      // Redirect to login if not authenticated
+      return res.redirect('/login-signup.html');
+    }
+    
+    const userId = getUserIdentifier(req);
+    const featureStatus = isFeatureUnlocked(userId, feature);
+    
+    if (!featureStatus.unlocked) {
+      // Serve the locked version of the page
+      const lockedPage = generateLockedPage(feature, price);
+      return res.send(lockedPage);
+    }
+    
+    // User has access, serve the actual page
+    next();
+  };
+}
+
+// Generate locked page HTML
+function generateLockedPage(feature, price) {
+  const featureNames = {
+    'search_info': 'Search Information',
+    'learn_physics': 'Learn Physics', 
+    'create_planet': 'Create Planet',
+    'advanced_planet': 'Advanced Planet Builder',
+    'create_rocket': 'Create Rocket',
+    'create_satellite': 'Create Satellite',
+    'your_space': 'Your Space Universe',
+    'search_lessons': 'Search Lessons',
+    'chat_advancedai': 'Advanced AI Chat',
+    'homework_helper': 'Homework Helper'
+  };
+  
+  return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${featureNames[feature]} • GoldenSpaceAI</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            background: linear-gradient(135deg, #0c0c2e 0%, #1a1a4a 50%, #2d1b69 100%);
+            min-height: 100vh; color: #e7f4e9; font-family: 'Segoe UI', sans-serif;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .lock-container { 
+            background: linear-gradient(135deg, #0f1624, #0b1320);
+            border: 2px solid #f6c64a; border-radius: 20px; padding: 40px;
+            text-align: center; max-width: 500px; width: 90%;
+            box-shadow: 0 20px 60px rgba(246, 198, 74, 0.3);
+        }
+        .lock-icon { font-size: 80px; margin-bottom: 20px; }
+        .title { color: #f6c64a; font-size: 28px; margin-bottom: 15px; }
+        .description { color: #cfc6a5; margin-bottom: 25px; line-height: 1.6; }
+        .price { font-size: 42px; font-weight: bold; color: #f6c64a; margin: 20px 0; }
+        .price span { font-size: 18px; color: #cfc6a5; }
+        .unlock-btn {
+            background: linear-gradient(135deg, #f6c64a, #eb8b36);
+            color: #1a1300; border: none; border-radius: 12px;
+            padding: 16px 40px; font-size: 18px; font-weight: bold;
+            cursor: pointer; margin: 15px 0; width: 100%;
+            box-shadow: 0 8px 25px rgba(246, 198, 74, 0.4);
+        }
+        .balance-info { color: #cfc6a5; margin: 15px 0; }
+        .back-link { color: #f6c64a; text-decoration: none; margin-top: 20px; display: inline-block; }
+    </style>
+</head>
+<body>
+    <div class="lock-container">
+        <div class="lock-icon">🔒</div>
+        <h1 class="title">Unlock ${featureNames[feature]}</h1>
+        <p class="description">Access this premium feature for 30 days with Golden coins</p>
+        <div class="price">${price}G <span>per month</span></div>
+        <div class="balance-info">Your balance: <span id="balance">0</span>G</div>
+        <button class="unlock-btn" onclick="unlockFeature()">UNLOCK FOR ${price}G</button>
+        <div id="status" style="margin: 15px 0; min-height: 20px;"></div>
+        <a href="/" class="back-link">← Back to Home</a>
+        <a href="/buy-golden.html" class="back-link" style="margin-left: 20px;">Buy More Golden →</a>
+    </div>
+
+    <script>
+        let currentFeature = '${feature}';
+        let currentPrice = ${price};
+
+        async function loadBalance() {
+            try {
+                const response = await fetch('/api/golden-balance', { credentials: 'include' });
+                const data = await response.json();
+                document.getElementById('balance').textContent = data.balance;
+            } catch (error) {
+                console.error('Failed to load balance:', error);
+            }
+        }
+
+        async function unlockFeature() {
+            const btn = document.querySelector('.unlock-btn');
+            const status = document.getElementById('status');
+            
+            btn.disabled = true;
+            btn.textContent = 'Processing...';
+            status.textContent = '';
+            
+            try {
+                const response = await fetch('/api/unlock-feature', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        feature: currentFeature,
+                        cost: currentPrice
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    status.textContent = '✅ Success! Unlocking feature...';
+                    status.style.color = '#90ee90';
+                    setTimeout(() => {
+                        window.location.reload(); // Reload to access the page
+                    }, 1500);
+                } else {
+                    status.textContent = '❌ ' + (data.error || 'Failed to unlock');
+                    status.style.color = '#ff6b6b';
+                    btn.disabled = false;
+                    btn.textContent = 'UNLOCK FOR ${price}G';
+                }
+            } catch (error) {
+                status.textContent = '❌ Network error. Please try again.';
+                status.style.color = '#ff6b6b';
+                btn.disabled = false;
+                btn.textContent = 'UNLOCK FOR ${price}G';
+            }
+        }
+
+        // Load balance when page loads
+        loadBalance();
+    </script>
+</body>
+</html>
+  `;
+}
+
 // ---------- Google OAuth ----------
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
   passport.use(
@@ -310,47 +461,52 @@ app.get("/login", (req, res) => {
   res.sendFile(path.join(__dirname, "login-signup.html"));
 });
 
-// Serve feature pages with proper pricing
-app.get("/search-info.html", (req, res) => {
+// ==================== PROTECTED PAGE ROUTES ====================
+
+// 4G Features
+app.get("/search-info.html", requirePremiumPage('search_info', 4), (req, res) => {
   res.sendFile(path.join(__dirname, "search-info.html"));
 });
 
-app.get("/learn-physics.html", (req, res) => {
+app.get("/learn-physics.html", requirePremiumPage('learn_physics', 4), (req, res) => {
   res.sendFile(path.join(__dirname, "learn-physics.html"));
 });
 
-app.get("/create-planet.html", (req, res) => {
+app.get("/create-planet.html", requirePremiumPage('create_planet', 4), (req, res) => {
   res.sendFile(path.join(__dirname, "create-planet.html"));
 });
 
-app.get("/create-advanced-planet.html", (req, res) => {
+app.get("/create-advanced-planet.html", requirePremiumPage('advanced_planet', 4), (req, res) => {
   res.sendFile(path.join(__dirname, "create-advanced-planet.html"));
 });
 
-app.get("/create-rocket.html", (req, res) => {
+app.get("/create-rocket.html", requirePremiumPage('create_rocket', 4), (req, res) => {
   res.sendFile(path.join(__dirname, "create-rocket.html"));
 });
 
-app.get("/create-satellite.html", (req, res) => {
+app.get("/create-satellite.html", requirePremiumPage('create_satellite', 4), (req, res) => {
   res.sendFile(path.join(__dirname, "create-satellite.html"));
 });
 
-app.get("/your-space.html", (req, res) => {
+app.get("/your-space.html", requirePremiumPage('your_space', 4), (req, res) => {
   res.sendFile(path.join(__dirname, "your-space.html"));
 });
 
-app.get("/chat-advancedai.html", (req, res) => {
-  res.sendFile(path.join(__dirname, "chat-advancedai.html"));
-});
-
-app.get("/search-lessons.html", (req, res) => {
+// 10G Features
+app.get("/search-lessons.html", requirePremiumPage('search_lessons', 10), (req, res) => {
   res.sendFile(path.join(__dirname, "search-lessons.html"));
 });
 
-app.get("/homework-helper.html", (req, res) => {
+// 20G Features
+app.get("/chat-advancedai.html", requirePremiumPage('chat_advancedai', 20), (req, res) => {
+  res.sendFile(path.join(__dirname, "chat-advancedai.html"));
+});
+
+app.get("/homework-helper.html", requirePremiumPage('homework_helper', 20), (req, res) => {
   res.sendFile(path.join(__dirname, "homework-helper.html"));
 });
 
+// Free pages (no protection needed)
 app.get("/buy-golden.html", (req, res) => {
   res.sendFile(path.join(__dirname, "buy-golden.html"));
 });
@@ -364,7 +520,7 @@ app.get("/api/me", (req, res) => {
       email: req.user.email,
       name: req.user.name,
       picture: req.user.photo,
-      plan: "ultra", // always ultra (everything unlocked)
+      plan: "ultra",
       provider: req.user.provider
     });
   } else {
@@ -511,7 +667,6 @@ const upload = multer({ dest: 'uploads/' });
 // ---------- FIXED AI Function ----------
 async function askAI(prompt, model = "gpt-4o-mini") {
   try {
-    // Use chat completion for text responses
     const completion = await openai.chat.completions.create({
       model: model,
       messages: [
@@ -542,373 +697,246 @@ async function askAI(prompt, model = "gpt-4o-mini") {
   }
 }
 
-// ---------- FREE AI Endpoints (No subscription required) ----------
-
-// Free chat endpoint
+// ---------- FREE AI Endpoints ----------
 app.post("/ask", async (req, res) => {
   try {
     const { question } = req.body;
-    
-    if (!question) {
-      return res.status(400).json({ error: "Question is required" });
-    }
+    if (!question) return res.status(400).json({ error: "Question is required" });
 
     const result = await askAI(question, "gpt-4o-mini");
-    
     if (result.success) {
-      res.json({ 
-        answer: result.reply,
-        model: result.model
-      });
+      res.json({ answer: result.reply, model: result.model });
     } else {
       res.status(500).json({ error: result.error });
     }
   } catch (error) {
-    console.error("Ask endpoint error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
 
-// ---------- PREMIUM AI Endpoints (With Subscription Locks) ----------
+// ---------- PREMIUM AI Endpoints ----------
 
-// Search Information - 4G/month
+// Helper function to check feature access
+async function checkFeatureAccess(req, res, feature) {
+  if (!req.user) {
+    return { allowed: false, error: 'Login required' };
+  }
+  
+  const userId = getUserIdentifier(req);
+  const featureStatus = isFeatureUnlocked(userId, feature);
+  
+  if (!featureStatus.unlocked) {
+    return { 
+      allowed: false, 
+      error: 'Feature locked',
+      message: `This feature requires ${FEATURE_PRICES[feature]}G to unlock`,
+      requiredGolden: FEATURE_PRICES[feature]
+    };
+  }
+  
+  return { allowed: true };
+}
+
+// Search Information - 4G
 app.post("/search-info", async (req, res) => {
   try {
-    // Check if user has access
-    if (!req.user) {
-      return res.status(401).json({ error: 'Login required' });
-    }
-    
-    const userId = getUserIdentifier(req);
-    const featureStatus = isFeatureUnlocked(userId, 'search_info');
-    
-    if (!featureStatus.unlocked) {
-      return res.status(403).json({ 
-        error: 'Feature locked', 
-        message: 'Search Information requires 4G to unlock',
-        requiredGolden: 4
-      });
-    }
+    const access = await checkFeatureAccess(req, res, 'search_info');
+    if (!access.allowed) return res.status(403).json(access);
 
     const { query } = req.body;
-    
-    if (!query) {
-      return res.status(400).json({ error: "Query is required" });
-    }
+    if (!query) return res.status(400).json({ error: "Query is required" });
 
-    const prompt = `Provide a comprehensive and structured overview of: ${query}. Use 3-6 well-organized paragraphs with clear information.`;
+    const prompt = `Provide a comprehensive overview of: ${query}. Use 3-6 well-organized paragraphs.`;
     const result = await askAI(prompt, "gpt-4o-mini");
     
     if (result.success) {
-      res.json({ 
-        answer: result.reply,
-        model: result.model
-      });
+      res.json({ answer: result.reply, model: result.model });
     } else {
       res.status(500).json({ error: result.error });
     }
   } catch (error) {
-    console.error("Search info error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
 
-// Learn Physics - 4G/month  
+// Learn Physics - 4G
 app.post("/api/physics-explain", async (req, res) => {
   try {
-    // Check if user has access
-    if (!req.user) {
-      return res.status(401).json({ error: 'Login required' });
-    }
-    
-    const userId = getUserIdentifier(req);
-    const featureStatus = isFeatureUnlocked(userId, 'learn_physics');
-    
-    if (!featureStatus.unlocked) {
-      return res.status(403).json({ 
-        error: 'Feature locked', 
-        message: 'Learn Physics requires 4G to unlock',
-        requiredGolden: 4
-      });
-    }
+    const access = await checkFeatureAccess(req, res, 'learn_physics');
+    if (!access.allowed) return res.status(403).json(access);
 
     const { question } = req.body;
-    
-    if (!question) {
-      return res.status(400).json({ error: "Question is required" });
-    }
+    if (!question) return res.status(400).json({ error: "Question is required" });
 
-    const prompt = `Explain this physics concept in detail: ${question}. Provide clear explanations, formulas, and real-world examples.`;
+    const prompt = `Explain this physics concept: ${question}. Provide clear explanations and examples.`;
     const result = await askAI(prompt, "gpt-4o-mini");
     
     if (result.success) {
-      res.json({ 
-        answer: result.reply,
-        model: result.model
-      });
+      res.json({ answer: result.reply, model: result.model });
     } else {
       res.status(500).json({ error: result.error });
     }
   } catch (error) {
-    console.error("Physics explain error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
 
-// Create Planet - 4G/month
+// Create Planet - 4G
 app.post("/ai/create-planet", async (req, res) => {
   try {
-    // Check if user has access
-    if (!req.user) {
-      return res.status(401).json({ error: 'Login required' });
-    }
-    
-    const userId = getUserIdentifier(req);
-    const featureStatus = isFeatureUnlocked(userId, 'create_planet');
-    
-    if (!featureStatus.unlocked) {
-      return res.status(403).json({ 
-        error: 'Feature locked', 
-        message: 'Create Planet requires 4G to unlock',
-        requiredGolden: 4
-      });
-    }
+    const access = await checkFeatureAccess(req, res, 'create_planet');
+    if (!access.allowed) return res.status(403).json(access);
 
     const { specs = {} } = req.body;
-    const prompt = `Create a detailed description of a fictional planet with these specifications: ${JSON.stringify(specs)}. Include details about atmosphere, geography, life forms, climate, and unique characteristics.`;
+    const prompt = `Create a detailed planet description: ${JSON.stringify(specs)}`;
     const result = await askAI(prompt, "gpt-4o-mini");
     
     if (result.success) {
-      res.json({ 
-        planet: result.reply,
-        model: result.model
-      });
+      res.json({ planet: result.reply, model: result.model });
     } else {
       res.status(500).json({ error: result.error });
     }
   } catch (error) {
-    console.error("Create planet error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
 
-// Advanced Planet - 4G/month
+// Advanced Planet - 4G
 app.post("/ai/create-advanced-planet", async (req, res) => {
   try {
-    // Check if user has access
-    if (!req.user) {
-      return res.status(401).json({ error: 'Login required' });
-    }
-    
-    const userId = getUserIdentifier(req);
-    const featureStatus = isFeatureUnlocked(userId, 'advanced_planet');
-    
-    if (!featureStatus.unlocked) {
-      return res.status(403).json({ 
-        error: 'Feature locked', 
-        message: 'Advanced Planet Builder requires 4G to unlock',
-        requiredGolden: 4
-      });
-    }
+    const access = await checkFeatureAccess(req, res, 'advanced_planet');
+    if (!access.allowed) return res.status(403).json(access);
 
     const { specs = {} } = req.body;
-    const prompt = `Create an advanced detailed description of a fictional planet with advanced specifications: ${JSON.stringify(specs)}. Include complex atmospheric composition, geological features, ecosystem, and scientific plausibility.`;
+    const prompt = `Create an advanced planet description: ${JSON.stringify(specs)}`;
     const result = await askAI(prompt, "gpt-4o-mini");
     
     if (result.success) {
-      res.json({ 
-        planet: result.reply,
-        model: result.model
-      });
+      res.json({ planet: result.reply, model: result.model });
     } else {
       res.status(500).json({ error: result.error });
     }
   } catch (error) {
-    console.error("Advanced planet error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
 
-// Create Rocket - 4G/month
+// Create Rocket - 4G
 app.post("/ai/create-rocket", async (req, res) => {
   try {
-    // Check if user has access
-    if (!req.user) {
-      return res.status(401).json({ error: 'Login required' });
-    }
-    
-    const userId = getUserIdentifier(req);
-    const featureStatus = isFeatureUnlocked(userId, 'create_rocket');
-    
-    if (!featureStatus.unlocked) {
-      return res.status(403).json({ 
-        error: 'Feature locked', 
-        message: 'Create Rocket requires 4G to unlock',
-        requiredGolden: 4
-      });
-    }
+    const access = await checkFeatureAccess(req, res, 'create_rocket');
+    if (!access.allowed) return res.status(403).json(access);
 
-    const prompt = "Design a detailed conceptual space rocket with specifications including propulsion system, payload capacity, fuel type, dimensions, mission capabilities, and technical specifications.";
+    const prompt = "Design a detailed conceptual space rocket with specifications.";
     const result = await askAI(prompt, "gpt-4o-mini");
     
     if (result.success) {
-      res.json({ 
-        rocket: result.reply,
-        model: result.model
-      });
+      res.json({ rocket: result.reply, model: result.model });
     } else {
       res.status(500).json({ error: result.error });
     }
   } catch (error) {
-    console.error("Create rocket error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
 
-// Create Satellite - 4G/month
+// Create Satellite - 4G
 app.post("/ai/create-satellite", async (req, res) => {
   try {
-    // Check if user has access
-    if (!req.user) {
-      return res.status(401).json({ error: 'Login required' });
-    }
-    
-    const userId = getUserIdentifier(req);
-    const featureStatus = isFeatureUnlocked(userId, 'create_satellite');
-    
-    if (!featureStatus.unlocked) {
-      return res.status(403).json({ 
-        error: 'Feature locked', 
-        message: 'Create Satellite requires 4G to unlock',
-        requiredGolden: 4
-      });
-    }
+    const access = await checkFeatureAccess(req, res, 'create_satellite');
+    if (!access.allowed) return res.status(403).json(access);
 
-    const prompt = "Design a detailed conceptual satellite with specifications including orbit type, payload instruments, power source, communication systems, mission objectives, and technical details.";
+    const prompt = "Design a detailed conceptual satellite with specifications.";
     const result = await askAI(prompt, "gpt-4o-mini");
     
     if (result.success) {
-      res.json({ 
-        satellite: result.reply,
-        model: result.model
-      });
+      res.json({ satellite: result.reply, model: result.model });
     } else {
       res.status(500).json({ error: result.error });
     }
   } catch (error) {
-    console.error("Create satellite error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
 
-// Your Space Universe - 4G/month
+// Your Space - 4G
 app.post("/ai/your-space", async (req, res) => {
   try {
-    // Check if user has access
-    if (!req.user) {
-      return res.status(401).json({ error: 'Login required' });
-    }
-    
-    const userId = getUserIdentifier(req);
-    const featureStatus = isFeatureUnlocked(userId, 'your_space');
-    
-    if (!featureStatus.unlocked) {
-      return res.status(403).json({ 
-        error: 'Feature locked', 
-        message: 'Your Space Universe requires 4G to unlock',
-        requiredGolden: 4
-      });
-    }
+    const access = await checkFeatureAccess(req, res, 'your_space');
+    if (!access.allowed) return res.status(403).json(access);
 
-    const { theme = "space exploration", elements = {} } = req.body;
-    const prompt = `Create a detailed fictional space universe with theme: ${theme}. Include elements: ${JSON.stringify(elements)}. Describe galaxies, planets, civilizations, technology, and story possibilities.`;
+    const { theme = "space", elements = {} } = req.body;
+    const prompt = `Create a space universe with theme: ${theme} and elements: ${JSON.stringify(elements)}`;
     const result = await askAI(prompt, "gpt-4o-mini");
     
     if (result.success) {
-      res.json({ 
-        universe: result.reply,
-        model: result.model
-      });
+      res.json({ universe: result.reply, model: result.model });
     } else {
       res.status(500).json({ error: result.error });
     }
   } catch (error) {
-    console.error("Your space error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
 
-// Homework Helper - 20G/month
+// Search Lessons - 10G
+app.post("/search-lessons", async (req, res) => {
+  try {
+    const access = await checkFeatureAccess(req, res, 'search_lessons');
+    if (!access.allowed) return res.status(403).json(access);
+
+    const { query } = req.body;
+    if (!query) return res.status(400).json({ error: "Query is required" });
+
+    const prompt = `Create an educational lesson about: ${query}`;
+    const result = await askAI(prompt, "gpt-4o-mini");
+    
+    if (result.success) {
+      res.json({ answer: result.reply, model: result.model });
+    } else {
+      res.status(500).json({ error: result.error });
+    }
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Homework Helper - 20G
 app.post("/chat-homework", async (req, res) => {
   try {
-    // Check if user has access
-    if (!req.user) {
-      return res.status(401).json({ error: 'Login required' });
-    }
-    
-    const userId = getUserIdentifier(req);
-    const featureStatus = isFeatureUnlocked(userId, 'homework_helper');
-    
-    if (!featureStatus.unlocked) {
-      return res.status(403).json({ 
-        error: 'Feature locked', 
-        message: 'Homework Helper requires 20G to unlock',
-        requiredGolden: 20
-      });
-    }
+    const access = await checkFeatureAccess(req, res, 'homework_helper');
+    if (!access.allowed) return res.status(403).json(access);
 
     const { q } = req.body;
-    
-    if (!q) {
-      return res.status(400).json({ error: "Question is required" });
-    }
+    if (!q) return res.status(400).json({ error: "Question is required" });
 
-    const prompt = `Help solve this homework problem step by step: ${q}. Provide detailed explanations, show all work, explain concepts, and verify the solution.`;
+    const prompt = `Solve this homework problem: ${q}. Provide step-by-step explanations.`;
     const result = await askAI(prompt, "gpt-4o-mini");
     
     if (result.success) {
-      res.json({ 
-        answer: result.reply,
-        model: result.model
-      });
+      res.json({ answer: result.reply, model: result.model });
     } else {
       res.status(500).json({ error: result.error });
     }
   } catch (error) {
-    console.error("Homework helper error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
 
-// Advanced AI Chat - 20G/month
+// Advanced AI Chat - 20G
 app.post("/chat-advanced-ai", upload.single("image"), async (req, res) => {
   try {
-    // Check if user has access
-    if (!req.user) {
-      return res.status(401).json({ error: 'Login required' });
-    }
-    
-    const userId = getUserIdentifier(req);
-    const featureStatus = isFeatureUnlocked(userId, 'chat_advancedai');
-    
-    if (!featureStatus.unlocked) {
-      return res.status(403).json({ 
-        error: 'Feature locked', 
-        message: 'Advanced AI Chat requires 20G to unlock',
-        requiredGolden: 20
-      });
-    }
+    const access = await checkFeatureAccess(req, res, 'chat_advancedai');
+    if (!access.allowed) return res.status(403).json(access);
 
     const { q, model = "gpt-4o-mini" } = req.body;
     const image = req.file;
     
-    if (!q) {
-      return res.status(400).json({ error: "Question is required" });
-    }
+    if (!q) return res.status(400).json({ error: "Question is required" });
 
     let prompt = q;
     if (image) {
-      prompt = `Regarding the uploaded image and the following question: ${q}. Please provide detailed analysis and insights.`;
+      prompt = `Regarding the uploaded image: ${q}`;
       console.log('Image uploaded:', image.path);
     }
 
@@ -924,49 +952,6 @@ app.post("/chat-advanced-ai", upload.single("image"), async (req, res) => {
       res.status(500).json({ error: result.error });
     }
   } catch (error) {
-    console.error("Advanced AI error:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
-
-// Search Lessons - 10G/month
-app.post("/search-lessons", async (req, res) => {
-  try {
-    // Check if user has access
-    if (!req.user) {
-      return res.status(401).json({ error: 'Login required' });
-    }
-    
-    const userId = getUserIdentifier(req);
-    const featureStatus = isFeatureUnlocked(userId, 'search_lessons');
-    
-    if (!featureStatus.unlocked) {
-      return res.status(403).json({ 
-        error: 'Feature locked', 
-        message: 'Search Lessons requires 10G to unlock',
-        requiredGolden: 10
-      });
-    }
-
-    const { query } = req.body;
-    
-    if (!query) {
-      return res.status(400).json({ error: "Query is required" });
-    }
-
-    const prompt = `Create a comprehensive educational lesson about: ${query}. Include learning objectives, key concepts, detailed explanations, examples, practice questions, and real-world applications.`;
-    const result = await askAI(prompt, "gpt-4o-mini");
-    
-    if (result.success) {
-      res.json({ 
-        answer: result.reply,
-        model: result.model
-      });
-    } else {
-      res.status(500).json({ error: result.error });
-    }
-  } catch (error) {
-    console.error("Search lessons error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -977,16 +962,13 @@ let processedTransactions = new Set();
 
 async function checkForNewPayments() {
   console.log("🔍 Checking for new payments...");
-  
   try {
     const [btcData, ltcData, tronData] = await Promise.all([
       checkBitcoinPayments(),
       checkLitecoinPayments(), 
       checkTronPayments()
     ]);
-    
     await processDetectedPayments(btcData, ltcData, tronData);
-    
   } catch (error) {
     console.error('Payment check error:', error);
   }
@@ -998,7 +980,6 @@ async function checkBitcoinPayments() {
     const data = await response.json();
     return { coin: 'BTC', data, source: 'blockstream' };
   } catch (error) {
-    console.error('Bitcoin check failed:', error);
     return { coin: 'BTC', data: null, error: true };
   }
 }
@@ -1009,7 +990,6 @@ async function checkLitecoinPayments() {
     const data = await response.json();
     return { coin: 'LTC', data, source: 'blockcypher' };
   } catch (error) {
-    console.error('Litecoin check failed:', error);
     return { coin: 'LTC', data: null, error: true };
   }
 }
@@ -1020,7 +1000,6 @@ async function checkTronPayments() {
     const data = await response.json();
     return { coin: 'TRON', data, source: 'tronscan' };
   } catch (error) {
-    console.error('TRON check failed:', error);
     return { coin: 'TRON', data: null, error: true };
   }
 }
@@ -1029,11 +1008,9 @@ async function processDetectedPayments(btcResult, ltcResult, tronResult) {
   if (btcResult.data && btcResult.data.chain_stats.tx_count > 0) {
     console.log('💰 Bitcoin transactions found:', btcResult.data.chain_stats.tx_count);
   }
-  
   if (ltcResult.data && ltcResult.data.n_tx > 0) {
     console.log('💰 Litecoin transactions found:', ltcResult.data.n_tx);
   }
-  
   if (tronResult.data && tronResult.data.trc20token_balances.length > 0) {
     console.log('💰 TRON USDT transactions found');
   }
@@ -1046,15 +1023,14 @@ setTimeout(checkForNewPayments, 5000);
 // ---------- Health Check ----------
 app.get("/health", (req, res) => {
   res.json({ 
-    status: "OK", 
-    message: "GoldenSpaceAI LAUNCH READY - All systems operational!",
+    status: "LAUNCH READY", 
+    message: "GoldenSpaceAI completely locked and ready for launch!",
     features: Object.keys(FEATURE_PRICES),
-    timestamp: new Date().toISOString(),
-    launch: "READY"
+    timestamp: new Date().toISOString()
   });
 });
 
 // ---------- Start ----------
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 GOLDENSPACEAI LAUNCHED SUCCESSFULLY on port ${PORT}! 
-🎯 ALL FEATURES READY • 🔒 SUBSCRIPTION SYSTEM ACTIVE • 🤖 AI WORKING PERFECTLY`));
+app.listen(PORT, () => console.log(`🚀 GOLDENSPACEAI FULLY LOCKED & LAUNCHED on port ${PORT}! 
+🔒 ALL PAGES PROTECTED • 💰 GOLDEN SYSTEM ACTIVE • 🤖 AI WORKING PERFECTLY`));

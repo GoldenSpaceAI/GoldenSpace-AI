@@ -100,13 +100,19 @@ function updateUserGoldenBalance(userId, userData, newBalance) {
       name: userData.name,
       golden_balance: newBalance,
       created_at: new Date().toISOString(),
-      last_login: new Date().toISOString()
+      last_login: new Date().toISOString(),
+      subscriptions: {}
     };
   } else {
     // Update existing user
     db.users[userId].golden_balance = newBalance;
     db.users[userId].last_login = new Date().toISOString();
     db.users[userId].name = userData.name; // Update name if changed
+    
+    // Ensure subscriptions object exists
+    if (!db.users[userId].subscriptions) {
+      db.users[userId].subscriptions = {};
+    }
   }
   
   return saveGoldenDB(db);
@@ -119,6 +125,88 @@ function ensureUserExists(user) {
   if (currentBalance === 0 && !loadGoldenDB().users[userId]) {
     updateUserGoldenBalance(userId, user, 0); // Create with 0 balance
     console.log(`✅ Created new user: ${userId}`);
+  }
+}
+
+// ==================== FEATURE SUBSCRIPTION SYSTEM ====================
+
+// Feature pricing configuration
+const FEATURE_PRICES = {
+  search_info: 4,
+  learn_physics: 4,
+  create_planet: 4,
+  advanced_planet: 10,
+  solve_homework: 20,
+  search_lessons: 20,
+  advanced_ai: 20
+};
+
+// Calculate hours remaining until expiration
+function getHoursRemaining(expiryDate) {
+  const now = new Date();
+  const expiry = new Date(expiryDate);
+  const diffMs = expiry - now;
+  const diffHours = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60)));
+  return diffHours;
+}
+
+// Check if a feature is unlocked for user
+function isFeatureUnlocked(userId, feature) {
+  const db = loadGoldenDB();
+  const user = db.users[userId];
+  
+  if (!user || !user.subscriptions || !user.subscriptions[feature]) {
+    return { unlocked: false, remainingHours: 0 };
+  }
+  
+  const expiryDate = user.subscriptions[feature];
+  const remainingHours = getHoursRemaining(expiryDate);
+  
+  return {
+    unlocked: remainingHours > 0,
+    remainingHours: remainingHours
+  };
+}
+
+// Unlock a feature for user (deduct Golden and set expiry)
+function unlockFeatureForUser(userId, feature, cost) {
+  const db = loadGoldenDB();
+  const user = db.users[userId];
+  
+  if (!user) {
+    return { success: false, error: 'User not found' };
+  }
+  
+  // Check if user has enough Golden balance
+  if (user.golden_balance < cost) {
+    return { success: false, error: 'Insufficient Golden balance' };
+  }
+  
+  // Calculate expiry date (30 days from now)
+  const expiryDate = new Date();
+  expiryDate.setDate(expiryDate.getDate() + 30);
+  
+  // Deduct Golden balance
+  user.golden_balance -= cost;
+  
+  // Add/update subscription
+  if (!user.subscriptions) {
+    user.subscriptions = {};
+  }
+  user.subscriptions[feature] = expiryDate.toISOString();
+  
+  // Save to database
+  const success = saveGoldenDB(db);
+  
+  if (success) {
+    return { 
+      success: true, 
+      newBalance: user.golden_balance,
+      expiryDate: expiryDate.toISOString(),
+      remainingHours: 720 // 30 days * 24 hours
+    };
+  } else {
+    return { success: false, error: 'Failed to save database' };
   }
 }
 
@@ -154,351 +242,4 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
   app.get(
     "/auth/google/callback",
     passport.authenticate("google", { failureRedirect: "/login-signup.html" }),
-    (req, res) => res.redirect("https://goldenspaceai.space")
-  );
-}
-
-// ---------- GitHub OAuth ----------
-if (process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET) {
-  passport.use(
-    new GitHubStrategy(
-      {
-        clientID: process.env.GITHUB_CLIENT_ID,
-        clientSecret: process.env.GITHUB_CLIENT_SECRET,
-        callbackURL: "/auth/github/callback",
-        proxy: true,
-      },
-      (_accessToken, _refreshToken, profile, done) => {
-        const user = {
-          id: profile.id,
-          name: profile.displayName || profile.username,
-          email: profile.emails?.[0]?.value || `${profile.username}@github.user`,
-          photo: profile.photos?.[0]?.value || "",
-          username: profile.username,
-          provider: "github"
-        };
-
-        // Auto-create user in Golden database
-        ensureUserExists(user);
-
-        return done(null, user);
-      }
-    )
-  );
-
-  app.get("/auth/github", passport.authenticate("github", { scope: ["user:email"] }));
-  
-  app.get(
-    "/auth/github/callback",
-    passport.authenticate("github", { failureRedirect: "/login-signup.html" }),
-    (req, res) => res.redirect("https://goldenspaceai.space")
-  );
-}
-
-// ---------- Routes ----------
-
-// Serve login page as first page
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "login-signup.html"));
-});
-
-// Serve login page directly
-app.get("/login", (req, res) => {
-  res.sendFile(path.join(__dirname, "login-signup.html"));
-});
-
-// ---------- API: User info ----------
-app.get("/api/me", (req, res) => {
-  if (req.user) {
-    res.json({
-      loggedIn: true,
-      user: req.user,
-      email: req.user.email,
-      name: req.user.name,
-      picture: req.user.photo,
-      plan: "ultra", // always ultra (everything unlocked)
-      provider: req.user.provider
-    });
-  } else {
-    res.json({
-      loggedIn: false,
-      user: null,
-      plan: "free"
-    });
-  }
-});
-
-// ---------- Logout ----------
-app.post("/logout", (req, res) => {
-  req.logout((err) => {
-    if (err) {
-      return res.status(500).json({ error: "Logout failed" });
-    }
-    req.session.destroy(() => {
-      res.clearCookie("connect.sid");
-      res.json({ ok: true, message: "Logged out successfully" });
-    });
-  });
-});
-
-// ==================== GOLDEN BALANCE API ====================
-
-// Get user's Golden balance
-app.get("/api/golden-balance", (req, res) => {
-  if (!req.user) return res.json({ balance: 0, loggedIn: false });
-  
-  const userId = getUserIdentifier(req);
-  const balance = getUserGoldenBalance(userId);
-  
-  res.json({ 
-    balance, 
-    loggedIn: true,
-    user: req.user 
-  });
-});
-
-// Get available Golden packages
-app.get("/api/golden-packages", (req, res) => {
-  res.json({
-    20: 5,    // 20 Golden = $5
-    40: 10,   // 40 Golden = $10
-    60: 15,   // 60 Golden = $15
-    80: 20,   // 80 Golden = $20
-    100: 25,  // 100 Golden = $25
-    200: 50,  // 200 Golden = $50
-    400: 100, // 400 Golden = $100
-    600: 150, // 600 Golden = $150
-    800: 200, // 800 Golden = $200
-    1000: 250 // 1000 Golden = $250
-  });
-});
-
-// Add Golden to user account
-app.post("/api/add-golden", (req, res) => {
-  if (!req.user) return res.status(401).json({ error: 'Login required' });
-  
-  const { goldenAmount } = req.body;
-  const userId = getUserIdentifier(req);
-  const currentBalance = getUserGoldenBalance(userId);
-  const newBalance = currentBalance + goldenAmount;
-  
-  const success = updateUserGoldenBalance(userId, req.user, newBalance);
-  
-  if (success) {
-    res.json({
-      success: true,
-      newBalance: newBalance,
-      message: `Added ${goldenAmount} Golden coins`
-    });
-  } else {
-    res.status(500).json({ error: 'Failed to update balance' });
-  }
-});
-
-// ---------- OpenAI ----------
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-// ---------- Image Handling ----------
-const upload = multer({ dest: 'uploads/' });
-
-// ---------- Unified AI route ----------
-async function askAI(prompt, model, res, role = "General Assistant") {
-  try {
-    let completion;
-    let imageURL;
-
-    switch (model) {
-      case "gemini_2_5_pro":
-        // Call Gemini API (replace with actual Gemini 2.5 Pro API request)
-        completion = await axios.post('YOUR_GEMINI_API_ENDPOINT', {
-          prompt,
-          model: 'gemini_2_5_pro',
-        });
-        imageURL = completion.data?.image_url || null;
-        break;
-
-      case "gemini_flash":
-        // Call Gemini Flash API (replace with actual Gemini Flash API request)
-        completion = await axios.post('YOUR_GEMINI_FLASH_API_ENDPOINT', {
-          prompt,
-          model: 'gemini_flash',
-        });
-        imageURL = completion.data?.image_url || null;
-        break;
-
-      case "gpt_4":
-        // Use OpenAI's DALL-E for image generation
-        completion = await openai.images.create({
-          prompt: prompt,
-          n: 1,
-          size: "1024x1024",
-        });
-        imageURL = completion.data?.data[0]?.url || null;
-        break;
-
-      case "gpt_4o_mini":
-        // GPT-4o-mini doesn't support image generation
-        res.status(400).json({ error: "GPT-4o-mini does not support image generation." });
-        return;
-
-      default:
-        res.status(400).json({ error: "Model not supported." });
-        return;
-    }
-
-    if (imageURL) {
-      res.json({ reply: "Image generated successfully", imageURL });
-    } else {
-      res.json({ reply: completion.choices[0]?.message?.content || "No reply." });
-    }
-  } catch (e) {
-    console.error("AI error", e);
-    res.status(500).json({ error: "AI error" });
-  }
-}
-
-// ---------- AI Endpoints (all models with image generation and upload support) ----------
-app.post("/chat-advanced-ai", upload.single("image"), async (req, res) => {
-  const { q, model } = req.body;
-  const image = req.file ? req.file.path : null;
-
-  try {
-    if (image) {
-      console.log('Image uploaded:', image);
-    }
-
-    await askAI(q || "", model || "gpt-4", res, "Advanced Assistant");
-
-  } catch (e) {
-    console.error("Advanced AI error", e);
-    res.status(500).json({ error: "Advanced AI error" });
-  }
-});
-
-app.post("/ask", async (req, res) => {
-  await askAI(req.body?.question || "", "gpt-4o-mini", res, "Chat");
-});
-
-app.post("/chat-homework", async (req, res) => {
-  await askAI(req.body?.q || "", "gpt-4o-mini", res, "Homework Solver");
-});
-
-app.post("/search-info", async (req, res) => {
-  await askAI(req.body?.query || "", "gpt-4o-mini", res, "Knowledge Search");
-});
-
-app.post("/api/physics-explain", async (req, res) => {
-  await askAI(req.body?.question || "", "gpt-4o-mini", res, "Physics Tutor");
-});
-
-app.post("/ai/create-planet", async (req, res) => {
-  await askAI("Invent a realistic exoplanet: " + JSON.stringify(req.body?.specs || {}), "gpt-4o-mini", res, "Planet Builder");
-});
-
-app.post("/ai/create-rocket", async (req, res) => {
-  await askAI("Design a conceptual rocket.", "gpt-4o-mini", res, "Rocket Engineer");
-});
-
-app.post("/ai/create-satellite", async (req, res) => {
-  await askAI("Design a conceptual satellite.", "gpt-4o-mini", res, "Satellite Engineer");
-});
-
-app.post("/ai/create-universe", async (req, res) => {
-  await askAI("Create a fictional shared universe. Theme: " + (req.body?.theme || "space opera"), "gpt-4o-mini", res, "Universe Creator");
-});
-
-// ==================== PAYMENT DETECTION SYSTEM ====================
-
-let processedTransactions = new Set(); // track processed payments
-
-// Check for new payments every 2 minutes
-async function checkForNewPayments() {
-  console.log("🔍 Checking for new payments...");
-  
-  try {
-    // Check all coins in parallel
-    const [btcData, ltcData, tronData] = await Promise.all([
-      checkBitcoinPayments(),
-      checkLitecoinPayments(), 
-      checkTronPayments()
-    ]);
-    
-    // Process detected payments
-    await processDetectedPayments(btcData, ltcData, tronData);
-    
-  } catch (error) {
-    console.error('Payment check error:', error);
-  }
-}
-
-// Bitcoin payments (Blockstream.info)
-async function checkBitcoinPayments() {
-  try {
-    const response = await fetch('https://blockstream.info/api/address/bc1qz5wtz2d329xsm7gcs9e3jwls9supg2fk2hkxtd');
-    const data = await response.json();
-    return { coin: 'BTC', data, source: 'blockstream' };
-  } catch (error) {
-    console.error('Bitcoin check failed:', error);
-    return { coin: 'BTC', data: null, error: true };
-  }
-}
-
-// Litecoin payments (BlockCypher)
-async function checkLitecoinPayments() {
-  try {
-    const response = await fetch('https://api.blockcypher.com/v1/ltc/main/addrs/ltc1qngssav372fl4sw0s8w66h4c8v5yftqw4qrkhdn');
-    const data = await response.json();
-    return { coin: 'LTC', data, source: 'blockcypher' };
-  } catch (error) {
-    console.error('Litecoin check failed:', error);
-    return { coin: 'LTC', data: null, error: true };
-  }
-}
-
-// TRON payments (TRONSCAN)
-async function checkTronPayments() {
-  try {
-    const response = await fetch('https://apilist.tronscan.org/api/account?address=TCN6eVtHFNtPAJNfebgGGm8c2h71NWYY9P');
-    const data = await response.json();
-    return { coin: 'TRON', data, source: 'tronscan' };
-  } catch (error) {
-    console.error('TRON check failed:', error);
-    return { coin: 'TRON', data: null, error: true };
-  }
-}
-
-// Process detected payments
-async function processDetectedPayments(btcResult, ltcResult, tronResult) {
-  // Process Bitcoin payments
-  if (btcResult.data && btcResult.data.chain_stats.tx_count > 0) {
-    console.log('💰 Bitcoin transactions found:', btcResult.data.chain_stats.tx_count);
-    // We'll implement transaction details later
-  }
-  
-  // Process Litecoin payments
-  if (ltcResult.data && ltcResult.data.n_tx > 0) {
-    console.log('💰 Litecoin transactions found:', ltcResult.data.n_tx);
-    // Process LTC transactions
-  }
-  
-  // Process TRON payments (USDT)
-  if (tronResult.data && tronResult.data.trc20token_balances.length > 0) {
-    console.log('💰 TRON USDT transactions found');
-    // Process USDT transactions
-  }
-}
-
-// Start checking every 2 minutes (120,000 milliseconds)
-setInterval(checkForNewPayments, 120000);
-
-// Also check immediately when server starts
-setTimeout(checkForNewPayments, 5000);
-
-// ---------- Health Check ----------
-app.get("/health", (req, res) => {
-  res.json({ status: "OK", message: "GoldenSpaceAI is running" });
-});
-
-// ---------- Start ----------
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 GoldenSpaceAI running on ${PORT} (ALL UNLOCKED + PERSISTENT GOLDEN SYSTEM)`));
+    (req, res) => res.redirect("https://gold

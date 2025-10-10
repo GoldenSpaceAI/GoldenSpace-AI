@@ -59,7 +59,137 @@
   </style>
 </head>
 <body>
-  <div class="container">
+  <!-- ==================== GOLDEN UNLOCK OVERLAY ==================== -->
+<div id="goldenOverlay" class="golden-overlay">
+  <div class="golden-unlock">
+    <div class="lock-icon">🔒</div>
+    <h2>Unlock This Feature</h2>
+    <p class="description">Access this premium feature for 30 days</p>
+    <div class="price">4G <span>per month</span></div>
+    <div class="balance-info">Your balance: <span id="userBalance">0</span>G</div>
+    <button class="unlock-btn" onclick="unlockFeature()">UNLOCK FOR 4G</button>
+    <div id="statusMessage"></div>
+    <div class="links">
+      <a href="/buy-golden.html">Need Golden? Buy here</a>
+      <a href="/">Back to Home</a>
+    </div>
+  </div>
+</div>
+
+<style>
+.golden-overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+  background: rgba(11, 16, 32, 0.95); backdrop-filter: blur(10px);
+  display: flex; align-items: center; justify-content: center; z-index: 10000;
+}
+.golden-unlock {
+  background: linear-gradient(135deg, #0f1624, #0b1320); border: 2px solid #f6c64a;
+  border-radius: 20px; padding: 30px; text-align: center; max-width: 400px; width: 90%;
+}
+.lock-icon { font-size: 60px; margin-bottom: 15px; }
+.golden-unlock h2 { color: #f6c64a; margin-bottom: 10px; }
+.description { color: #cfc6a5; margin-bottom: 20px; }
+.price { font-size: 36px; font-weight: bold; color: #f6c64a; margin: 15px 0; }
+.price span { font-size: 16px; color: #cfc6a5; }
+.balance-info { color: #cfc6a5; margin: 10px 0; }
+.unlock-btn {
+  background: linear-gradient(135deg, #f6c64a, #eb8b36); color: #1a1300;
+  border: none; border-radius: 10px; padding: 12px 30px; font-size: 16px;
+  font-weight: bold; cursor: pointer; margin: 10px 0; width: 100%;
+}
+.links { margin-top: 15px; }
+.links a { color: #f6c64a; margin: 0 10px; }
+#statusMessage { margin: 10px 0; min-height: 20px; }
+</style>
+
+<script>
+// Get current page feature name
+function getFeatureName() {
+  const path = window.location.pathname;
+  if (path.includes('search-info')) return 'search_info';
+  if (path.includes('learn-physics')) return 'learn_physics';
+  if (path.includes('create-planet')) return 'create_planet';
+  if (path.includes('create-advanced-planet')) return 'advanced_planet';
+  if (path.includes('create-rocket')) return 'create_rocket';
+  if (path.includes('create-satellite')) return 'create_satellite';
+  if (path.includes('your-space')) return 'your_space';
+  return 'unknown';
+}
+
+async function checkAccess() {
+  try {
+    const userRes = await fetch('/api/me', { credentials: 'include' });
+    const userData = await userRes.json();
+    
+    if (!userData.loggedIn) {
+      window.location.href = '/login-signup.html';
+      return;
+    }
+
+    const feature = getFeatureName();
+    const featureRes = await fetch(`/api/feature-status?feature=${feature}`, {
+      credentials: 'include'
+    });
+    
+    if (featureRes.ok) {
+      const featureData = await featureRes.json();
+      if (featureData.unlocked) {
+        document.getElementById('goldenOverlay').style.display = 'none';
+      }
+    }
+
+    // Load balance
+    const balanceRes = await fetch('/api/golden-balance', { credentials: 'include' });
+    const balanceData = await balanceRes.json();
+    document.getElementById('userBalance').textContent = balanceData.balance;
+    
+  } catch (error) {
+    console.error('Access check failed:', error);
+  }
+}
+
+async function unlockFeature() {
+  const btn = document.querySelector('.unlock-btn');
+  const status = document.getElementById('statusMessage');
+  
+  btn.disabled = true;
+  btn.textContent = 'Processing...';
+  status.textContent = '';
+  
+  try {
+    const feature = getFeatureName();
+    const response = await fetch('/api/unlock-feature', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ feature: feature, cost: 4 })
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      status.textContent = '✅ Unlocked! Loading...';
+      status.style.color = '#90ee90';
+      setTimeout(() => {
+        document.getElementById('goldenOverlay').style.display = 'none';
+      }, 1000);
+    } else {
+      status.textContent = '❌ ' + data.error;
+      status.style.color = '#ff6b6b';
+      btn.disabled = false;
+      btn.textContent = 'UNLOCK FOR 4G';
+    }
+  } catch (error) {
+    status.textContent = '❌ Network error';
+    status.style.color = '#ff6b6b';
+    btn.disabled = false;
+    btn.textContent = 'UNLOCK FOR 4G';
+  }
+}
+
+// Check access when page loads
+document.addEventListener('DOMContentLoaded', checkAccess);
+</script>  <div class="container">
     <div class="header">
       <div class="logo" aria-hidden="true"></div>
       <div>

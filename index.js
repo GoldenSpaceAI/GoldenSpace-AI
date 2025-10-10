@@ -9,6 +9,7 @@ import { fileURLToPath } from "url";
 import session from "express-session";
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
+import { Strategy as GitHubStrategy } from "passport-github2";
 import cookieParser from "cookie-parser";
 import OpenAI from "openai";
 import axios from "axios";
@@ -42,7 +43,13 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 app.use(express.static(__dirname));
 
-// ---------- Google OAuth (if enabled) ----------
+// ---------- Passport Setup ----------
+passport.serializeUser((user, done) => done(null, user));
+passport.deserializeUser((obj, done) => done(null, obj));
+app.use(passport.initialize());
+app.use(passport.session());
+
+// ---------- Google OAuth ----------
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
   passport.use(
     new GoogleStrategy(
@@ -52,50 +59,112 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
         callbackURL: "/auth/google/callback",
         proxy: true,
       },
-      (_at, _rt, profile, done) => {
+      (_accessToken, _refreshToken, profile, done) => {
         const user = {
           id: profile.id,
           name: profile.displayName,
           email: profile.emails?.[0]?.value || "",
           photo: profile.photos?.[0]?.value || "",
+          provider: "google"
         };
         return done(null, user);
       }
     )
   );
-  passport.serializeUser((u, d) => d(null, u));
-  passport.deserializeUser((o, d) => d(null, o));
-  app.use(passport.initialize());
-  app.use(passport.session());
 
   app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
+  
   app.get(
     "/auth/google/callback",
-    passport.authenticate("google", { failureRedirect: "/login.html" }),
-    (req, res) => res.redirect("/")
+    passport.authenticate("google", { failureRedirect: "/login-signup.html" }),
+    (req, res) => res.redirect("https://goldenspaceai.space")
   );
-  app.post("/logout", (req, res) => {
-    req.logout?.(() => {
-      req.session.destroy(() => res.json({ ok: true }));
-    });
-  });
 }
+
+// ---------- GitHub OAuth ----------
+if (process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET) {
+  passport.use(
+    new GitHubStrategy(
+      {
+        clientID: process.env.GITHUB_CLIENT_ID,
+        clientSecret: process.env.GITHUB_CLIENT_SECRET,
+        callbackURL: "/auth/github/callback",
+        proxy: true,
+      },
+      (_accessToken, _refreshToken, profile, done) => {
+        const user = {
+          id: profile.id,
+          name: profile.displayName || profile.username,
+          email: profile.emails?.[0]?.value || `${profile.username}@github.user`,
+          photo: profile.photos?.[0]?.value || "",
+          username: profile.username,
+          provider: "github"
+        };
+        return done(null, user);
+      }
+    )
+  );
+
+  app.get("/auth/github", passport.authenticate("github", { scope: ["user:email"] }));
+  
+  app.get(
+    "/auth/github/callback",
+    passport.authenticate("github", { failureRedirect: "/login-signup.html" }),
+    (req, res) => res.redirect("https://goldenspaceai.space")
+  );
+}
+
+// ---------- Routes ----------
+
+// Serve login page as first page
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "login-signup.html"));
+});
+
+// Serve login page directly
+app.get("/login", (req, res) => {
+  res.sendFile(path.join(__dirname, "login-signup.html"));
+});
 
 // ---------- API: User info ----------
 app.get("/api/me", (req, res) => {
-  res.json({
-    loggedIn: !!req.user,
-    email: req.user?.email || null,
-    picture: req.user?.photo || null,
-    plan: "ultra", // always ultra (everything unlocked)
+  if (req.user) {
+    res.json({
+      loggedIn: true,
+      user: req.user,
+      email: req.user.email,
+      name: req.user.name,
+      picture: req.user.photo,
+      plan: "ultra", // always ultra (everything unlocked)
+      provider: req.user.provider
+    });
+  } else {
+    res.json({
+      loggedIn: false,
+      user: null,
+      plan: "free"
+    });
+  }
+});
+
+// ---------- Logout ----------
+app.post("/logout", (req, res) => {
+  req.logout((err) => {
+    if (err) {
+      return res.status(500).json({ error: "Logout failed" });
+    }
+    req.session.destroy(() => {
+      res.clearCookie("connect.sid");
+      res.json({ ok: true, message: "Logged out successfully" });
+    });
   });
 });
 
 // ---------- OpenAI ----------
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-// ---------- Image Handling (for uploaded images) ----------
-const upload = multer({ dest: 'uploads/' }); // You can add more configurations for file handling
+// ---------- Image Handling ----------
+const upload = multer({ dest: 'uploads/' });
 
 // ---------- Unified AI route ----------
 async function askAI(prompt, model, res, role = "General Assistant") {
@@ -108,7 +177,7 @@ async function askAI(prompt, model, res, role = "General Assistant") {
         // Call Gemini API (replace with actual Gemini 2.5 Pro API request)
         completion = await axios.post('YOUR_GEMINI_API_ENDPOINT', {
           prompt,
-          model: 'gemini_2_5_pro', // Adjust Gemini API parameters
+          model: 'gemini_2_5_pro',
         });
         imageURL = completion.data?.image_url || null;
         break;
@@ -117,17 +186,17 @@ async function askAI(prompt, model, res, role = "General Assistant") {
         // Call Gemini Flash API (replace with actual Gemini Flash API request)
         completion = await axios.post('YOUR_GEMINI_FLASH_API_ENDPOINT', {
           prompt,
-          model: 'gemini_flash', // Adjust Gemini Flash API parameters
+          model: 'gemini_flash',
         });
         imageURL = completion.data?.image_url || null;
         break;
 
       case "gpt_4":
-        // Use OpenAI's DALL-E for image generation (GPT-4 with DALL-E)
+        // Use OpenAI's DALL-E for image generation
         completion = await openai.images.create({
-          prompt: prompt, // Text prompt to generate an image
-          n: 1, // Number of images to generate
-          size: "1024x1024", // Image size (can be 256x256, 512x512, 1024x1024)
+          prompt: prompt,
+          n: 1,
+          size: "1024x1024",
         });
         imageURL = completion.data?.data[0]?.url || null;
         break;
@@ -156,17 +225,13 @@ async function askAI(prompt, model, res, role = "General Assistant") {
 // ---------- AI Endpoints (all models with image generation and upload support) ----------
 app.post("/chat-advanced-ai", upload.single("image"), async (req, res) => {
   const { q, model } = req.body;
-  const image = req.file ? req.file.path : null; // Image handling
+  const image = req.file ? req.file.path : null;
 
   try {
-    let aiResponse;
-
-    // Handle Image Uploads (you can use the image for processing as needed)
     if (image) {
       console.log('Image uploaded:', image);
     }
 
-    // Call the appropriate AI model
     await askAI(q || "", model || "gpt-4", res, "Advanced Assistant");
 
   } catch (e) {
@@ -176,35 +241,40 @@ app.post("/chat-advanced-ai", upload.single("image"), async (req, res) => {
 });
 
 app.post("/ask", async (req, res) => {
-  await askAI(req.body?.question || "", res, "Chat");
+  await askAI(req.body?.question || "", "gpt-4o-mini", res, "Chat");
 });
 
 app.post("/chat-homework", async (req, res) => {
-  await askAI(req.body?.q || "", res, "Homework Solver");
+  await askAI(req.body?.q || "", "gpt-4o-mini", res, "Homework Solver");
 });
 
 app.post("/search-info", async (req, res) => {
-  await askAI(req.body?.query || "", res, "Knowledge Search");
+  await askAI(req.body?.query || "", "gpt-4o-mini", res, "Knowledge Search");
 });
 
 app.post("/api/physics-explain", async (req, res) => {
-  await askAI(req.body?.question || "", res, "Physics Tutor");
+  await askAI(req.body?.question || "", "gpt-4o-mini", res, "Physics Tutor");
 });
 
 app.post("/ai/create-planet", async (req, res) => {
-  await askAI("Invent a realistic exoplanet: " + JSON.stringify(req.body?.specs || {}), res, "Planet Builder");
+  await askAI("Invent a realistic exoplanet: " + JSON.stringify(req.body?.specs || {}), "gpt-4o-mini", res, "Planet Builder");
 });
 
 app.post("/ai/create-rocket", async (req, res) => {
-  await askAI("Design a conceptual rocket.", res, "Rocket Engineer");
+  await askAI("Design a conceptual rocket.", "gpt-4o-mini", res, "Rocket Engineer");
 });
 
 app.post("/ai/create-satellite", async (req, res) => {
-  await askAI("Design a conceptual satellite.", res, "Satellite Engineer");
+  await askAI("Design a conceptual satellite.", "gpt-4o-mini", res, "Satellite Engineer");
 });
 
 app.post("/ai/create-universe", async (req, res) => {
-  await askAI("Create a fictional shared universe. Theme: " + (req.body?.theme || "space opera"), res, "Universe Creator");
+  await askAI("Create a fictional shared universe. Theme: " + (req.body?.theme || "space opera"), "gpt-4o-mini", res, "Universe Creator");
+});
+
+// ---------- Health Check ----------
+app.get("/health", (req, res) => {
+  res.json({ status: "OK", message: "GoldenSpaceAI is running" });
 });
 
 // ---------- Start ----------

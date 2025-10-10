@@ -49,6 +49,83 @@
     .spacer{flex:1}
     .wrap{ max-width:1000px; margin:0 auto; padding: 8px 16px 120px; }
 
+    /* Golden Unlock Styles */
+    .golden-unlock {
+      background: linear-gradient(180deg, rgba(247, 201, 72, 0.15), rgba(247, 201, 72, 0.05));
+      border: 1px solid rgba(247, 201, 72, 0.3);
+      border-radius: 16px;
+      padding: 20px;
+      text-align: center;
+      margin: 40px auto;
+      max-width: 500px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.45);
+    }
+    .golden-unlock .icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+    .golden-unlock h2 {
+      color: var(--accent);
+      margin: 0 0 12px 0;
+      font-size: 24px;
+    }
+    .golden-unlock .price {
+      font-size: 32px;
+      font-weight: 900;
+      color: var(--accent);
+      margin: 16px 0;
+      text-shadow: 0 0 10px rgba(247, 201, 72, 0.5);
+    }
+    .golden-unlock .price span {
+      font-size: 16px;
+      color: var(--subtle);
+    }
+    .golden-unlock .description {
+      color: var(--subtle);
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+    .unlock-btn {
+      background: linear-gradient(180deg, var(--accent), var(--accent-2));
+      color: #2c2100;
+      border: none;
+      border-radius: 12px;
+      padding: 14px 32px;
+      font-weight: 900;
+      font-size: 16px;
+      cursor: pointer;
+      box-shadow: 0 10px 30px rgba(247, 201, 72, 0.4);
+      transition: all 0.3s ease;
+      margin: 10px 0;
+    }
+    .unlock-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 15px 35px rgba(247, 201, 72, 0.6);
+    }
+    .unlock-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .time-remaining {
+      background: rgba(247, 201, 72, 0.1);
+      border: 1px solid rgba(247, 201, 72, 0.2);
+      border-radius: 10px;
+      padding: 12px;
+      margin: 15px 0;
+      font-size: 14px;
+    }
+    .time-remaining .label {
+      color: var(--subtle);
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+    .time-remaining .time {
+      color: var(--accent);
+      font-weight: 800;
+      font-size: 18px;
+    }
+
     .searchBox{
       display:flex; gap:10px; align-items:center;
       border:1px solid var(--border); border-radius:16px;
@@ -112,10 +189,13 @@
 
     .footnote{ text-align:center; margin-top:16px; color:var(--subtle); font-size:12px; }
 
+    .hidden { display: none; }
+
     @media (max-width:640px){
       .title{ font-size:22px }
       .searchBox{ padding:8px }
       .btn{ padding:10px 14px }
+      .golden-unlock { margin: 20px auto; padding: 16px; }
     }
   </style>
 </head>
@@ -127,41 +207,156 @@
   </div>
 
   <div class="wrap">
-    <div class="searchBox" aria-label="Search form">
-      <input id="q" type="text" placeholder="Search GoldenSpaceAI… missions, physics, planets, more" autofocus />
-      <button id="go" class="btn">Search</button>
-    </div>
-
-    <div class="chips" id="chips">
-      <button class="chip">Planets</button>
-      <button class="chip">Black holes</button>
-      <button class="chip">Exoplanets</button>
-      <button class="chip">James Webb discoveries</button>
-      <button class="chip">Rocket equation</button>
-      <button class="chip">Orbit types</button>
-      <button class="chip">Cosmic microwave background</button>
-      <button class="chip">Mars missions</button>
-      <button class="chip">International Space Station</button>
-      <button class="chip">Galaxy formation</button>
-      <button class="chip">Dark matter</button>
-      <button class="chip">Astrobiology</button>
-      <button class="chip">Gravity assist</button>
-      <button class="chip">Relativity vs Newton</button>
-      <button class="chip">Telescope resolution</button>
-    </div>
-
-    <div class="panel">
-      <div class="resultsHead">
-        <div class="muted" id="status">Type a query or pick a topic.</div>
-        <div class="muted" id="count"></div>
+    <!-- Golden Unlock Section -->
+    <div id="unlockSection" class="golden-unlock">
+      <div class="icon">🔒</div>
+      <h2>Unlock Search Information</h2>
+      <p class="description">Access powerful AI-powered search with comprehensive summaries and insights</p>
+      <div class="price">4G <span>per month</span></div>
+      <div id="timeRemaining" class="time-remaining hidden">
+        <div class="label">TIME REMAINING</div>
+        <div class="time" id="remainingTime">720 hours left</div>
       </div>
-      <div id="results" class="results"></div>
+      <button id="unlockBtn" class="unlock-btn">UNLOCK FOR 4G</button>
+      <div id="unlockStatus" class="muted" style="margin-top: 10px;"></div>
     </div>
 
-    <div class="footnote">Results are AI‑generated summaries. Double‑check important facts.</div>
+    <!-- Search Interface (Initially Hidden) -->
+    <div id="searchInterface" class="hidden">
+      <div class="searchBox" aria-label="Search form">
+        <input id="q" type="text" placeholder="Search GoldenSpaceAI… missions, physics, planets, more" autofocus />
+        <button id="go" class="btn">Search</button>
+      </div>
+
+      <div class="chips" id="chips">
+        <button class="chip">Planets</button>
+        <button class="chip">Black holes</button>
+        <button class="chip">Exoplanets</button>
+        <button class="chip">James Webb discoveries</button>
+        <button class="chip">Rocket equation</button>
+        <button class="chip">Orbit types</button>
+        <button class="chip">Cosmic microwave background</button>
+        <button class="chip">Mars missions</button>
+        <button class="chip">International Space Station</button>
+        <button class="chip">Galaxy formation</button>
+        <button class="chip">Dark matter</button>
+        <button class="chip">Astrobiology</button>
+        <button class="chip">Gravity assist</button>
+        <button class="chip">Relativity vs Newton</button>
+        <button class="chip">Telescope resolution</button>
+      </div>
+
+      <div class="panel">
+        <div class="resultsHead">
+          <div class="muted" id="status">Type a query or pick a topic.</div>
+          <div class="muted" id="count"></div>
+        </div>
+        <div id="results" class="results"></div>
+      </div>
+
+      <div class="footnote">Results are AI‑generated summaries. Double‑check important facts.</div>
+    </div>
   </div>
 
   <script>
+    // Check if feature is unlocked
+    async function checkFeatureStatus() {
+      try {
+        const response = await fetch('/api/feature-status?feature=search_info', {
+          credentials: 'include'
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          return data;
+        }
+      } catch (error) {
+        console.error('Error checking feature status:', error);
+      }
+      
+      return { unlocked: false, remainingHours: 0 };
+    }
+
+    // Unlock feature
+    async function unlockFeature() {
+      const unlockBtn = document.getElementById('unlockBtn');
+      const unlockStatus = document.getElementById('unlockStatus');
+      
+      unlockBtn.disabled = true;
+      unlockStatus.textContent = 'Processing...';
+      
+      try {
+        const response = await fetch('/api/unlock-feature', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            feature: 'search_info',
+            cost: 4
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          unlockStatus.textContent = '✅ Successfully unlocked!';
+          unlockStatus.style.color = '#90EE90';
+          
+          // Show the search interface
+          setTimeout(() => {
+            document.getElementById('unlockSection').classList.add('hidden');
+            document.getElementById('searchInterface').classList.remove('hidden');
+            updateTimeRemaining(720); // 30 days * 24 hours
+          }, 1000);
+        } else {
+          unlockStatus.textContent = data.error || 'Failed to unlock feature';
+          unlockStatus.style.color = '#FF6B6B';
+          unlockBtn.disabled = false;
+        }
+      } catch (error) {
+        unlockStatus.textContent = 'Network error. Please try again.';
+        unlockStatus.style.color = '#FF6B6B';
+        unlockBtn.disabled = false;
+      }
+    }
+
+    // Update time remaining display
+    function updateTimeRemaining(hours) {
+      const timeRemaining = document.getElementById('timeRemaining');
+      const remainingTime = document.getElementById('remainingTime');
+      
+      if (hours > 0) {
+        timeRemaining.classList.remove('hidden');
+        const days = Math.floor(hours / 24);
+        const remainingHours = hours % 24;
+        remainingTime.textContent = `${days}d ${remainingHours}h left`;
+      } else {
+        timeRemaining.classList.add('hidden');
+      }
+    }
+
+    // Initialize page
+    async function initializePage() {
+      const status = await checkFeatureStatus();
+      
+      if (status.unlocked) {
+        // Feature is already unlocked - show search interface
+        document.getElementById('unlockSection').classList.add('hidden');
+        document.getElementById('searchInterface').classList.remove('hidden');
+        updateTimeRemaining(status.remainingHours);
+      } else {
+        // Feature is locked - show unlock section
+        document.getElementById('unlockSection').classList.remove('hidden');
+        document.getElementById('searchInterface').classList.add('hidden');
+      }
+    }
+
+    // Event listeners
+    document.getElementById('unlockBtn').addEventListener('click', unlockFeature);
+
+    // Original search functionality
     const qEl = document.getElementById('q');
     const goEl = document.getElementById('go');
     const resultsEl = document.getElementById('results');
@@ -221,8 +416,6 @@
       goEl.disabled = true;
 
       try{
-        // IMPORTANT: your backend /ask must read req.body.question
-        // and respond with either { answer: "..."} or { reply: "..."}
         const res = await fetch('/ask', {
           method:'POST',
           headers:{ 'Content-Type':'application/json' },
@@ -240,7 +433,6 @@
         const textRaw = (data.answer ?? data.reply ?? '').toString().trim();
 
         if(!textRaw){
-          // show why it’s empty to help debugging
           throw new Error('Empty response from /ask. Check that your route sends { answer: text } or { reply: text }.');
         }
 
@@ -260,6 +452,9 @@
         goEl.disabled = false;
       }
     }
+
+    // Initialize the page
+    initializePage();
   </script>
 </body>
 </html>

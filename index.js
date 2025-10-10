@@ -272,6 +272,142 @@ app.post("/ai/create-universe", async (req, res) => {
   await askAI("Create a fictional shared universe. Theme: " + (req.body?.theme || "space opera"), "gpt-4o-mini", res, "Universe Creator");
 });
 
+// ==================== GOLDEN COIN PAYMENT SYSTEM ====================
+
+let userBalances = new Map(); // user_id -> golden balance
+let processedTransactions = new Set(); // track processed payments
+
+// Golden package prices (Golden coins -> USD)
+const goldenPackages = {
+  20: 5,    // 20 Golden = $5
+  40: 10,   // 40 Golden = $10
+  60: 15,   // 60 Golden = $15
+  80: 20,   // 80 Golden = $20
+  100: 25,  // 100 Golden = $25
+  200: 50,  // 200 Golden = $50
+  400: 100, // 400 Golden = $100
+  600: 150, // 600 Golden = $150
+  800: 200, // 800 Golden = $200
+  1000: 250 // 1000 Golden = $250
+};
+
+// Check for new payments every 2 minutes
+async function checkForNewPayments() {
+  console.log("🔍 Checking for new payments...");
+  
+  try {
+    // Check all coins in parallel
+    const [btcData, ltcData, tronData] = await Promise.all([
+      checkBitcoinPayments(),
+      checkLitecoinPayments(), 
+      checkTronPayments()
+    ]);
+    
+    // Process detected payments
+    await processDetectedPayments(btcData, ltcData, tronData);
+    
+  } catch (error) {
+    console.error('Payment check error:', error);
+  }
+}
+
+// Bitcoin payments (Blockstream.info)
+async function checkBitcoinPayments() {
+  try {
+    const response = await fetch('https://blockstream.info/api/address/bc1qz5wtz2d329xsm7gcs9e3jwls9supg2fk2hkxtd');
+    const data = await response.json();
+    return { coin: 'BTC', data, source: 'blockstream' };
+  } catch (error) {
+    console.error('Bitcoin check failed:', error);
+    return { coin: 'BTC', data: null, error: true };
+  }
+}
+
+// Litecoin payments (BlockCypher)
+async function checkLitecoinPayments() {
+  try {
+    const response = await fetch('https://api.blockcypher.com/v1/ltc/main/addrs/ltc1qngssav372fl4sw0s8w66h4c8v5yftqw4qrkhdn');
+    const data = await response.json();
+    return { coin: 'LTC', data, source: 'blockcypher' };
+  } catch (error) {
+    console.error('Litecoin check failed:', error);
+    return { coin: 'LTC', data: null, error: true };
+  }
+}
+
+// TRON payments (TRONSCAN)
+async function checkTronPayments() {
+  try {
+    const response = await fetch('https://apilist.tronscan.org/api/account?address=TCN6eVtHFNtPAJNfebgGGm8c2h71NWYY9P');
+    const data = await response.json();
+    return { coin: 'TRON', data, source: 'tronscan' };
+  } catch (error) {
+    console.error('TRON check failed:', error);
+    return { coin: 'TRON', data: null, error: true };
+  }
+}
+
+// Process detected payments
+async function processDetectedPayments(btcResult, ltcResult, tronResult) {
+  // Process Bitcoin payments
+  if (btcResult.data && btcResult.data.chain_stats.tx_count > 0) {
+    console.log('💰 Bitcoin transactions found:', btcResult.data.chain_stats.tx_count);
+    // We'll implement transaction details later
+  }
+  
+  // Process Litecoin payments
+  if (ltcResult.data && ltcResult.data.n_tx > 0) {
+    console.log('💰 Litecoin transactions found:', ltcResult.data.n_tx);
+    // Process LTC transactions
+  }
+  
+  // Process TRON payments (USDT)
+  if (tronResult.data && tronResult.data.trc20token_balances.length > 0) {
+    console.log('💰 TRON USDT transactions found');
+    // Process USDT transactions
+  }
+}
+
+// Start checking every 2 minutes (120,000 milliseconds)
+setInterval(checkForNewPayments, 120000);
+
+// Also check immediately when server starts
+setTimeout(checkForNewPayments, 5000);
+
+// ==================== GOLDEN BALANCE API ====================
+
+// Get user's Golden balance
+app.get("/api/golden-balance", (req, res) => {
+  if (!req.user) return res.json({ balance: 0, loggedIn: false });
+  
+  const balance = userBalances.get(req.user.id) || 0;
+  res.json({ 
+    balance, 
+    loggedIn: true,
+    user: req.user 
+  });
+});
+
+// Get available Golden packages
+app.get("/api/golden-packages", (req, res) => {
+  res.json(goldenPackages);
+});
+
+// Manual Golden addition (for testing)
+app.post("/api/add-golden", (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'Login required' });
+  
+  const { goldenAmount } = req.body;
+  const currentBalance = userBalances.get(req.user.id) || 0;
+  userBalances.set(req.user.id, currentBalance + goldenAmount);
+  
+  res.json({
+    success: true,
+    newBalance: currentBalance + goldenAmount,
+    message: `Added ${goldenAmount} Golden coins`
+  });
+});
+
 // ---------- Health Check ----------
 app.get("/health", (req, res) => {
   res.json({ status: "OK", message: "GoldenSpaceAI is running" });
@@ -279,4 +415,4 @@ app.get("/health", (req, res) => {
 
 // ---------- Start ----------
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 GoldenSpaceAI running on ${PORT} (ALL UNLOCKED)`));
+app.listen(PORT, () => console.log(`🚀 GoldenSpaceAI running on ${PORT} (ALL UNLOCKED + PAYMENT SYSTEM)`));

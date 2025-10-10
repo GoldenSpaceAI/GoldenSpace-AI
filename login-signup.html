@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - GoldenSpaceAI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0c0c2e 0%, #1a1a4a 50%, #2d1b69 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Animated Space Background */
+        .space-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 215, 0, 0.2) 0%, transparent 50%);
+            animation: pulse 8s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 0.8; }
+        }
+
+        .stars {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(2px 2px at 20px 30px, #eee, transparent),
+                radial-gradient(2px 2px at 40px 70px, #fff, transparent);
+            background-repeat: repeat;
+            background-size: 200px 100px;
+        }
+
+        .login-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 40px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            position: relative;
+            z-index: 10;
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo h1 {
+            color: #1a1a4a;
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .logo .tagline {
+            color: #666;
+            font-size: 16px;
+            font-weight: 400;
+        }
+
+        .welcome-text {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .welcome-text h2 {
+            color: #1a1a4a;
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .welcome-text p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        /* Social Login Buttons */
+        .social-login {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        .social-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 14px 20px;
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
+            background: white;
+            color: #333;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .social-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .social-btn.google {
+            border-color: #4285f4;
+            color: #4285f4;
+        }
+
+        .social-btn.github {
+            border-color: #333;
+            background: #333;
+            color: white;
+        }
+
+        .social-btn i {
+            margin-right: 12px;
+            font-size: 18px;
+        }
+
+        /* Trust Indicators */
+        .trust-indicators {
+            text-align: center;
+            margin-top: 25px;
+            padding-top: 25px;
+            border-top: 1px solid #e1e5e9;
+        }
+
+        .trust-badges {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+
+        .badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #666;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .stats {
+            color: #888;
+            font-size: 13px;
+            margin-bottom: 10px;
+        }
+
+        .security-note {
+            color: #28a745;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #FFD700;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="space-bg"></div>
+    <div class="stars"></div>
+
+    <div class="login-container">
+        <div class="logo">
+            <h1>🚀 GoldenSpaceAI</h1>
+            <div class="tagline">Access Your AI Universe</div>
+        </div>
+
+        <div class="welcome-text">
+            <h2>Welcome Back</h2>
+            <p>Sign in to access AI-powered space tools and learning</p>
+        </div>
+
+        <div class="social-login">
+            <!-- Google Sign In -->
+            <button class="social-btn google" onclick="signInWithGoogle()">
+                <i class="fab fa-google"></i>
+                Continue with Google
+            </button>
+
+            <!-- GitHub Sign In -->
+            <button class="social-btn github" onclick="signInWithGitHub()">
+                <i class="fab fa-github"></i>
+                Continue with GitHub
+            </button>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="loading-spinner"></div>
+            <p>Launching to GoldenSpaceAI...</p>
+        </div>
+
+        <div class="trust-indicators">
+            <div class="trust-badges">
+                <div class="badge">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Secure</span>
+                </div>
+                <div class="badge">
+                    <i class="fas fa-globe"></i>
+                    <span>Global</span>
+                </div>
+                <div class="badge">
+                    <i class="fas fa-bolt"></i>
+                    <span>Fast</span>
+                </div>
+            </div>
+            <div class="stats">Trusted by 1,000+ space enthusiasts</div>
+            <div class="security-note">
+                <i class="fas fa-lock"></i>
+                Bank-level encryption & privacy
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showLoading() {
+            document.getElementById('loading').style.display = 'block';
+        }
+
+        function signInWithGoogle() {
+            showLoading();
+            // Replace with your actual Google OAuth endpoint
+            window.location.href = '/auth/google';
+        }
+
+        function signInWithGitHub() {
+            showLoading();
+            // Replace with your actual GitHub OAuth endpoint
+            window.location.href = '/auth/github';
+        }
+
+        // Auto-redirect if already authenticated (you can remove this)
+        function checkAuthStatus() {
+            // This is where you'd check if user is already logged in
+            // For now, it's commented out
+            /*
+            fetch('/api/auth/status')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.authenticated) {
+                        window.location.href = 'https://goldenspaceai.space';
+                    }
+                });
+            */
+        }
+
+        // Check auth status when page loads
+        document.addEventListener('DOMContentLoaded', checkAuthStatus);
+    </script>
+</body>
+</html>

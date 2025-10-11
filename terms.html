@@ -72,6 +72,20 @@
         display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap;
       }
       .links a { color: #e7f4e9; }
+      .warning-box {
+        background: linear-gradient(135deg, rgba(220, 53, 69, 0.1), rgba(220, 53, 69, 0.05));
+        border: 2px solid #dc3545;
+        border-radius: 15px;
+        padding: 25px;
+        margin: 25px 0;
+      }
+      .rules-box {
+        background: linear-gradient(135deg, rgba(246, 198, 74, 0.1), rgba(246, 198, 74, 0.05));
+        border: 2px solid var(--gold);
+        border-radius: 15px;
+        padding: 25px;
+        margin: 25px 0;
+      }
     </style>
   </head>
   <body>
@@ -89,115 +103,65 @@
         <h1>Terms of Service</h1>
         <p class="muted">Last updated: <span id="lastUpdated"></span></p>
 
-        <h2>1) Acceptance of Terms</h2>
-        <p>
-          These Terms of Service (“Terms”) govern your access to and use of GoldenSpaceAI (the “Service”).
-          By using the Service, you agree to be bound by these Terms and our
-          <a href="/privacy.html">Privacy Policy</a> and <a href="/refund.html">Refund Policy</a>.
-          If you do not agree, do not use the Service.
-        </p>
+        <!-- IMPORTANT RULES SECTION -->
+        <div class="rules-box">
+          <h2 style="color: var(--gold); margin-top: 0;">🚨 Important Rules & Guidelines</h2>
+          <p><strong>Please read these rules carefully. Violation may result in immediate account suspension.</strong></p>
+        </div>
 
-        <h2>2) Who We Are & Contact</h2>
-        <p>
-          GoldenSpaceAI operates from Lebanon. For questions about these Terms or your account, contact
-          <a href="mailto:goldenspaceais@gmail.com">goldenspaceais@gmail.com</a>.
-        </p>
+        <h2>1. Our AI Powered Features</h2>
+        <p>We offer AI powered features to help you with daily life. Any complaint about a user not following these rules may result in a flag for his or her account.</p>
 
-        <h2>3) Services</h2>
-        <p>
-          We provide educational and creative AI tools (e.g., AI chat, study helpers, simulations).
-          Features and allowances vary by subscription plan and may change over time.
-        </p>
+        <h2>2. AI Usage Disclaimer</h2>
+        <div class="warning-box">
+          <p><strong>⚠️ IMPORTANT: AI is a generative tool - don't trust it fully even if it is powered by Gemini and OpenAI.</strong></p>
+          <p>Our AI systems are designed to assist and provide information, but they may occasionally generate inaccurate or incomplete responses. Always verify important information from multiple reliable sources.</p>
+        </div>
 
-        <h2>4) Accounts & Security</h2>
+        <h2>3. Prohibited Content</h2>
+        <p><strong>Any harmful question is forbidden to be asked to the AI.</strong> This includes but is not limited to:</p>
         <ul>
-          <li>You may be required to sign in (e.g., via Google) to access certain features.</li>
-          <li>You are responsible for the accuracy of your information and for maintaining the security of your account.</li>
-          <li>You must promptly notify us of any unauthorized use or security incident.</li>
+          <li>Requests for illegal activities</li>
+          <li>Harmful or dangerous content</li>
+          <li>Hate speech or harassment</li>
+          <li>Malicious code or hacking instructions</li>
+          <li>Personal information of others without consent</li>
         </ul>
 
-        <h2>5) Payments, Billing & Merchant of Record</h2>
-        <p>
-          Purchases are processed by <strong>Paddle.com Market Limited</strong> and affiliates (“Paddle”), who act as the
-          <em>Merchant of Record</em>. Paddle handles payment processing, invoicing, tax (VAT/GST) calculation and collection,
-          compliance, and chargebacks on our behalf.
+        <h2>4. Zero Tolerance for Hacking</h2>
+        <div class="warning-box">
+          <p><strong>🚫 ANY HACKING DETECTED FROM OUR ADVANCED SYSTEMS WILL LEAD TO PERMANENT BAN:</strong></p>
+          <p>The user email or information that hacked will be blocked not only from our site but from all sites plus any Google site forever.</p>
+          <p>We employ advanced security monitoring and any attempt to compromise our systems will result in immediate and permanent termination of access across all associated services.</p>
+        </div>
+
+        <h2>5. Proper Feature Usage</h2>
+        <p><strong>Use the features like they are meant to be used.</strong> Any other use not related to the feature or what it is giving you will result in an account flag.</p>
+        <p>Each feature has a specific purpose. Using features in unintended ways or for purposes they were not designed for is strictly prohibited.</p>
+
+        <h2>6. Account Flagging Consequences</h2>
+        <div class="warning-box">
+          <p><strong>🔴 WHEN AN ACCOUNT IS FLAGGED:</strong></p>
+          <p>This account's Golden will be temporarily non-refundable neither usable. Not only the Golden but the full site access will be suspended during investigation.</p>
+          <p>Flagged accounts undergo security review. During this period, all Golden coins become frozen and inaccessible until the investigation is complete.</p>
+        </div>
+
+        <h2>7. Reporting Suspicious Activity</h2>
+        <p><strong>Thank you for your respect to our rules Golden Space AI.</strong></p>
+        <p>Please inform us of any suspicious activity - like anything related to your Golden or anything unusual in this site. Inform us immediately at:</p>
+        <p style="text-align: center; font-size: 1.2rem; margin: 15px 0;">
+          <strong>📧 <a href="mailto:goldenspaceais@gmail.com">goldenspaceais@gmail.com</a></strong>
         </p>
-        <ul>
-          <li><strong>Auto-renewal:</strong> Subscriptions renew automatically at the end of each billing period unless cancelled before renewal.</li>
-          <li><strong>Manage subscription:</strong> Use the “Manage Subscription” link in your Paddle receipt/invoice email to update payment details, cancel, or view invoices.</li>
-          <li><strong>No refunds:</strong> All sales are final as described in our <a href="/refund.html">Refund Policy</a>. No pro-rata credits for partial periods.</li>
-          <li><strong>Taxes:</strong> Applicable taxes are calculated and collected by Paddle and shown at checkout and on your receipt.</li>
-        </ul>
+        <p><strong>We will reply instantly</strong> to any security concerns or suspicious activity reports.</p>
 
-        <h2>6) Fair Use & Acceptable Use</h2>
-        <ul>
-          <li>Usage limits (e.g., daily prompts) apply by plan. Attempts to bypass limits (e.g., automation/bots, multiple accounts) are prohibited.</li>
-          <li>You may not use the Service to violate any law, infringe IP rights, distribute malware, or harass others.</li>
-          <li>Reselling or sharing accounts without permission is not allowed.</li>
-        </ul>
+        <h2>8. General Terms</h2>
+        <p>By using GoldenSpaceAI, you agree to these terms and our commitment to maintaining a safe and secure environment for all users.</p>
 
-        <h2>7) User Content & AI Processing</h2>
-        <p>
-          You retain ownership of content you submit to the Service. You grant us a non-exclusive, worldwide,
-          royalty-free license to host, process, and display that content solely to provide the Service and operate features
-          (including sending content to AI providers when you invoke AI features). You are responsible for your content and for
-          ensuring you have the necessary rights to submit it.
-        </p>
+        <h2>9. Payment & Refund Policy</h2>
+        <p>All payments are processed securely through cryptocurrency. Please refer to our <a href="/refund.html">Refund Policy</a> for details on refund eligibility and procedures.</p>
 
-        <h2>8) Intellectual Property</h2>
-        <p>
-          The Service, including software, design, and trademarks, is owned by GoldenSpaceAI or its licensors and is protected by law.
-          Except as expressly permitted, you may not copy, modify, reverse engineer, or create derivative works of the Service.
-        </p>
-
-        <h2>9) Availability, Changes & Support</h2>
-        <p>
-          We aim to keep the Service available, but it may be unavailable or change from time to time. We may add, remove,
-          or modify features at our discretion. For support, contact
-          <a href="mailto:goldenspaceais@gmail.com">goldenspaceais@gmail.com</a>.
-        </p>
-
-        <h2>10) Termination</h2>
-        <p>
-          We may suspend or terminate access if you violate these Terms or misuse the Service. You may cancel at any time
-          (see Section 5). Upon termination, your right to use the Service ceases. Certain provisions survive termination,
-          including ownership, disclaimers, limitations of liability, and governing law.
-        </p>
-
-        <h2>11) Disclaimers</h2>
-        <p>
-          THE SERVICE IS PROVIDED “AS IS” AND “AS AVAILABLE” WITHOUT WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED,
-          INCLUDING IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
-        </p>
-
-        <h2>12) Limitation of Liability</h2>
-        <p>
-          TO THE MAXIMUM EXTENT PERMITTED BY LAW, GOLDENSPACEAI AND ITS PROVIDERS SHALL NOT BE LIABLE FOR ANY INDIRECT,
-          INCIDENTAL, SPECIAL, CONSEQUENTIAL, EXEMPLARY, OR PUNITIVE DAMAGES, OR ANY LOSS OF PROFITS, REVENUE, DATA,
-          OR GOODWILL, ARISING OUT OF OR RELATED TO YOUR USE OF THE SERVICE. IN NO EVENT SHALL OUR TOTAL LIABILITY
-          EXCEED THE AMOUNT YOU PAID FOR THE SERVICE IN THE TWELVE (12) MONTHS BEFORE THE EVENT GIVING RISE TO THE CLAIM.
-          SOME JURISDICTIONS DO NOT ALLOW CERTAIN LIMITATIONS; IN SUCH CASES, THESE LIMITS APPLY TO THE FULLEST EXTENT PERMITTED.
-        </p>
-
-        <h2>13) Governing Law & Disputes</h2>
-        <p>
-          These Terms are governed by the laws of Lebanon, without regard to conflict-of-laws principles.
-          Courts located in Lebanon shall have exclusive jurisdiction over disputes arising out of or relating to these Terms or the Service.
-        </p>
-
-        <h2>14) Changes to these Terms</h2>
-        <p>
-          We may update these Terms from time to time. The “Last updated” date reflects the latest version.
-          Material changes will be communicated in-app or by email when appropriate. Your continued use of the Service
-          after changes become effective constitutes acceptance of the new Terms.
-        </p>
-
-        <h2>15) Miscellaneous</h2>
-        <ul>
-          <li><strong>Third-party links/services:</strong> We are not responsible for third-party websites or services linked from the Service.</li>
-          <li><strong>Severability:</strong> If any provision is found unenforceable, the remaining provisions remain in effect.</li>
-          <li><strong>Entire agreement:</strong> These Terms, together with the policies referenced above, constitute the entire agreement between you and GoldenSpaceAI regarding the Service.</li>
-        </ul>
+        <h2>10. Changes to Terms</h2>
+        <p>We may update these Terms of Service to reflect changes in our services or legal requirements. Continued use of our services after changes constitutes acceptance of the new terms.</p>
 
         <div class="footer">
           <div>©️ <span id="yr"></span> GoldenSpaceAI</div>

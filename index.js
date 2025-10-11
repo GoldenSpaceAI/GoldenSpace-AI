@@ -1,4 +1,4 @@
-// index.js — GoldenSpaceAI COMPLETE AUTOMATIC SYSTEM (BTC/LTC ONLY)
+// index.js — GoldenSpaceAI COMPLETE AUTOMATIC SYSTEM (WITH REAL TRUST WALLET)
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -292,6 +292,13 @@ function savePaymentDB(data) {
   }
 }
 
+// ==================== REAL TRUST WALLET ADDRESSES ====================
+
+const TRUST_WALLET_ADDRESSES = {
+  BTC: 'bc1qz5wtz2d329xsm7gcs9e3jwls9supg2fk2hkxtd',
+  LTC: 'ltc1qngssav372fl4sw0s8w66h4c8v5yftqw4qrkhdn'
+};
+
 // ==================== REAL BLOCKCYPHER API INTEGRATION ====================
 
 const BLOCKCHAIN_APIS = {
@@ -374,20 +381,11 @@ async function checkAddressForPayments(coin, address) {
   }
 }
 
-// Enhanced address generation with realistic formats
+// REAL ADDRESS GENERATION - ALWAYS RETURNS YOUR TRUST WALLET
 function generatePackageAddress(userId, coin, packageSize) {
-  const timestamp = Date.now().toString(16);
-  const userHash = userId.substring(0, 8);
-  
-  // More realistic looking addresses
-  switch (coin) {
-    case 'BTC':
-      return `bc1q${userHash}${packageSize}${timestamp}`.substring(0, 42).toLowerCase();
-    case 'LTC':
-      return `L${userHash}${packageSize}${timestamp}`.substring(0, 34);
-    default:
-      return `${coin}_${userHash}_${packageSize}_${timestamp}`;
-  }
+  // ALWAYS return your real Trust Wallet addresses
+  console.log(`🎯 Using REAL Trust Wallet for ${coin}: ${TRUST_WALLET_ADDRESSES[coin]}`);
+  return TRUST_WALLET_ADDRESSES[coin];
 }
 
 // Get or create user's package deposit address
@@ -755,8 +753,8 @@ app.get("/api/package-status-detailed", async (req, res) => {
 // Test endpoint to verify BlockCypher API
 app.get("/test-blockchain", async (req, res) => {
   try {
-    // Test with Satoshi's famous Bitcoin address
-    const testAddress = "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa";
+    // Test with YOUR REAL Trust Wallet address
+    const testAddress = TRUST_WALLET_ADDRESSES.BTC;
     const result = await checkBitcoinAddress(testAddress);
     
     res.json({
@@ -767,7 +765,7 @@ app.get("/test-blockchain", async (req, res) => {
       balance: result.balance + " BTC",
       transactions: result.transactions,
       confirmed: result.confirmed,
-      message: "Real blockchain API is operational! Your payment system is LIVE! 🚀"
+      message: "Real blockchain API is operational! Payments going to YOUR Trust Wallet! 🚀"
     });
   } catch (error) {
     res.status(500).json({ 
@@ -985,7 +983,8 @@ app.get("/health", (req, res) => {
     features: "ALL OPERATIONAL",
     payments: "REAL BLOCKCHAIN SCANNING ACTIVE",
     blockchain: "BLOCKCYPHER INTEGRATED ✅",
-    supported_coins: "BTC & LTC ONLY"
+    supported_coins: "BTC & LTC ONLY",
+    trust_wallet: "ACTIVE - All payments go to your Trust Wallet"
   });
 });
 
@@ -996,6 +995,7 @@ app.listen(PORT, () => console.log(`🚀 GOLDENSPACEAI FULLY AUTOMATIC SYSTEM LA
 ✅ REAL BLOCKCYPHER FOR BTC & LTC ONLY
 ✅ AUTOMATIC PAYMENT PROCESSING EVERY 30 SECONDS
 ✅ ALL AI ENDPOINTS WORKING  
-✅ BLOCKCHAIN TEST: Visit /test-blockchain
-✅ CLEAN & SIMPLE: No USDT complications
+✅ TRUST WALLET INTEGRATED: All payments go to YOUR addresses
+✅ BTC: bc1qz5wtz2d329xsm7gcs9e3jwls9supg2fk2hkxtd
+✅ LTC: ltc1qngssav372fl4sw0s8w66h4c8v5yftqw4qrkhdn
 ✅ READY FOR MONDAY LAUNCH!`));

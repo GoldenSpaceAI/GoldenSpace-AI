@@ -42,6 +42,43 @@
             font-size: 1.2rem;
         }
 
+        /* Trust Banner */
+        .trust-banner {
+            background: linear-gradient(135deg, rgba(76, 175, 80, 0.2), rgba(76, 175, 80, 0.1));
+            border: 1px solid rgba(76, 175, 80, 0.4);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 25px;
+            backdrop-filter: blur(10px);
+        }
+
+        .trust-banner h3 {
+            color: #4CAF50;
+            margin-bottom: 10px;
+            font-size: 1.3rem;
+        }
+
+        .trust-features {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+
+        .trust-feature {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+
+        .trust-feature i {
+            color: #4CAF50;
+            font-size: 1.1rem;
+        }
+
         .golden-balance {
             background: linear-gradient(135deg, rgba(246, 198, 74, 0.1), rgba(246, 198, 74, 0.05));
             border: 1px solid rgba(246, 198, 74, 0.3);
@@ -117,6 +154,41 @@
             transform: rotate(45deg);
             font-size: 0.8rem;
             font-weight: bold;
+        }
+
+        .delivery-time {
+            background: rgba(33, 150, 243, 0.1);
+            border: 1px solid rgba(33, 150, 243, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .delivery-time h4 {
+            color: #2196F3;
+            margin-bottom: 8px;
+        }
+
+        .time-options {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 10px;
+        }
+
+        .time-option {
+            text-align: center;
+        }
+
+        .time-option .crypto-icon {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+
+        .time-option .time {
+            font-size: 0.9rem;
+            color: #cfc6a5;
         }
 
         .payment-section {
@@ -262,6 +334,46 @@
             flex-shrink: 0;
         }
 
+        .refund-notice {
+            background: rgba(255, 193, 7, 0.1);
+            border: 1px solid rgba(255, 193, 7, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .refund-notice h4 {
+            color: #FFC107;
+            margin-bottom: 8px;
+        }
+
+        .status-check {
+            background: rgba(246, 198, 74, 0.1);
+            border: 1px solid rgba(246, 198, 74, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .status-btn {
+            background: #f6c64a;
+            color: #1a1300;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .status-info {
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: #cfc6a5;
+        }
+
         .action-buttons {
             display: flex;
             gap: 15px;
@@ -341,32 +453,6 @@
             font-size: 0.9rem;
         }
 
-        .status-check {
-            background: rgba(246, 198, 74, 0.1);
-            border: 1px solid rgba(246, 198, 74, 0.3);
-            border-radius: 10px;
-            padding: 15px;
-            margin-top: 20px;
-            text-align: center;
-        }
-
-        .status-btn {
-            background: #f6c64a;
-            color: #1a1300;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-            margin: 10px 0;
-        }
-
-        .status-info {
-            margin-top: 10px;
-            font-size: 0.9rem;
-            color: #cfc6a5;
-        }
-
         @media (max-width: 768px) {
             .packages-grid {
                 grid-template-columns: 1fr;
@@ -379,8 +465,14 @@
             .action-buttons {
                 flex-direction: column;
             }
+            
+            .trust-features {
+                flex-direction: column;
+                gap: 10px;
+            }
         }
     </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <div class="container">
@@ -389,10 +481,52 @@
             <div class="tagline">Buy Golden Coins - Fuel Your AI Journey</div>
         </div>
 
+        <!-- Trust Banner -->
+        <div class="trust-banner">
+            <h3>🔒 Secure & Trusted Payments</h3>
+            <div class="trust-features">
+                <div class="trust-feature">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>100% Secure Blockchain</span>
+                </div>
+                <div class="trust-feature">
+                    <i class="fas fa-clock"></i>
+                    <span>Automatic Golden Delivery</span>
+                </div>
+                <div class="trust-feature">
+                    <i class="fas fa-hand-holding-usd"></i>
+                    <span>Instant Refunds Anytime</span>
+                </div>
+                <div class="trust-feature">
+                    <i class="fas fa-headset"></i>
+                    <span>24/7 Support</span>
+                </div>
+            </div>
+        </div>
+
         <div class="golden-balance">
             <div class="balance-label">Your Golden Balance</div>
             <div class="balance-amount" id="user-balance">0</div>
             <div class="balance-label">Golden Coins</div>
+        </div>
+
+        <!-- Delivery Time Info -->
+        <div class="delivery-time">
+            <h4>⏱️ Expected Delivery Time</h4>
+            <p>Your Golden will be automatically added within:</p>
+            <div class="time-options">
+                <div class="time-option">
+                    <div class="crypto-icon">₿</div>
+                    <div class="time">~1 Hour (Bitcoin)</div>
+                </div>
+                <div class="time-option">
+                    <div class="crypto-icon">Ł</div>
+                    <div class="time">~15 Minutes (Litecoin)</div>
+                </div>
+            </div>
+            <p style="margin-top: 10px; font-size: 0.9rem; color: #cfc6a5;">
+                * Times may vary based on blockchain network conditions
+            </p>
         </div>
 
         <div class="packages-grid" id="packages-container">
@@ -406,12 +540,12 @@
                 <div class="crypto-option" data-coin="BTC">
                     <div class="crypto-icon">₿</div>
                     <div class="crypto-name">Bitcoin (BTC)</div>
-                    <div class="crypto-desc">Most popular • 30-60 min</div>
+                    <div class="crypto-desc">Most popular • 30-60 min delivery</div>
                 </div>
                 <div class="crypto-option" data-coin="LTC">
                     <div class="crypto-icon">Ł</div>
                     <div class="crypto-name">Litecoin (LTC)</div>
-                    <div class="crypto-desc">Fast • 10-15 min</div>
+                    <div class="crypto-desc">Fast • 10-15 min delivery</div>
                 </div>
             </div>
 
@@ -440,8 +574,17 @@
                     </div>
                     <div class="instruction-step">
                         <div class="step-number">3</div>
-                        <div>Golden coins will be added automatically within 30 seconds</div>
+                        <div>Golden coins will be added automatically within 1 hour (BTC) or 15 minutes (LTC)</div>
                     </div>
+                </div>
+
+                <!-- Refund Notice -->
+                <div class="refund-notice">
+                    <h4>💸 Instant Refund Guarantee</h4>
+                    <p>Not satisfied? Get instant refund anytime! No questions asked.</p>
+                    <p style="font-size: 0.9rem; margin-top: 8px;">
+                        Just email: <strong>support@goldenspaceai.space</strong> with your transaction details
+                    </p>
                 </div>
 
                 <div class="status-check">
@@ -468,7 +611,7 @@
         </div>
 
         <div class="footer">
-            © 2024 GoldenSpaceAI • Secure Crypto Payments • Support: support@goldenspaceai.space
+            © 2024 GoldenSpaceAI • Secure Crypto Payments • Instant Refunds • Support: support@goldenspaceai.space
         </div>
     </div>
 
@@ -640,14 +783,15 @@
                 const completedPackages = data.packages.filter(pkg => pkg.status === 'completed');
                 
                 if (completedPackages.length > 0) {
-                    showNotification(`✅ ${completedPackages.length} payments completed!`);
+                    showNotification(`✅ ${completedPackages.length} payments completed! Golden added to your account.`);
                     loadUserBalance(); // Refresh balance
                 }
                 
                 if (pendingPackages.length > 0) {
                     document.getElementById('status-info').innerHTML = `
                         <strong>${pendingPackages.length} pending payments</strong><br>
-                        System checking automatically...
+                        System checking automatically...<br>
+                        <small>Expected delivery: ${selectedCrypto === 'BTC' ? '~1 hour' : '~15 minutes'}</small>
                     `;
                 } else {
                     document.getElementById('status-info').innerHTML = `
@@ -669,7 +813,7 @@
                 return;
             }
             
-            showNotification(`✅ Ready! Send ${currentRequiredAmount} ${selectedCrypto} to complete purchase.`);
+            showNotification(`✅ Ready! Send ${currentRequiredAmount} ${selectedCrypto} to complete purchase. Golden will be added within ${selectedCrypto === 'BTC' ? '1 hour' : '15 minutes'}!`);
             
             // Scroll to payment details
             document.getElementById('payment-details').scrollIntoView({ 

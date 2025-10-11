@@ -99,7 +99,6 @@
     </main>
 
     <script>
-      // === Keep same UI; only wiring changed to /api/homework with fields: image + prompt ===
       const fileInput = document.getElementById('file');
       const preview = document.getElementById('preview');
       const removeBtn = document.getElementById('removeImg');
@@ -147,19 +146,26 @@
         resultEl.textContent = '';
 
         const fd = new FormData();
-        fd.append('image', currentFile);      // <-- field name expected by backend
-        fd.append('prompt', text || 'Solve this step by step.'); // <-- text field
+        fd.append('image', currentFile);      // Image file
+        fd.append('q', text || 'Solve this homework step by step.'); // Use 'q' parameter that your backend expects
 
         try{
-          const res = await fetch('/api/homework', { method:'POST', body: fd, credentials: 'include' });
+          // Use the correct endpoint that exists in your backend
+          const res = await fetch('/chat-advanced-ai', { 
+            method:'POST', 
+            body: fd, 
+            credentials: 'include' 
+          });
+          
           const data = await res.json().catch(()=> ({}));
 
           if(!res.ok){
             statusEl.textContent = data?.error ? ('Error: ' + data.error) : ('Server error ('+res.status+')');
             return;
           }
+          
           statusEl.textContent = 'Solved';
-          resultEl.textContent = data.reply || 'No reply';
+          resultEl.textContent = data.reply || data.answer || 'No reply received';
           resultEl.style.display = 'block';
         }catch(e){
           console.error(e);

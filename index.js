@@ -782,7 +782,7 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const upload = multer({ dest: 'uploads/' });
 
 // Fixed AI function
-async function askAI(prompt, model = "gpt-4o-mini") {
+async function askAI(prompt, model = "gpt-4o") {
   try {
     const completion = await openai.chat.completions.create({
       model: model,

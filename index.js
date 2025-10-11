@@ -1,4 +1,4 @@
-// index.js — GoldenSpaceAI COMPLETE AUTOMATIC SYSTEM WITH REAL BLOCKCHAIN
+// index.js — GoldenSpaceAI COMPLETE AUTOMATIC SYSTEM (BTC/LTC ONLY)
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -225,57 +225,47 @@ function unlockFeatureForUser(userId, feature, cost) {
 // Payment tracking database
 const PAYMENT_DB_PATH = path.join(__dirname, 'payment_database.json');
 
-// Golden packages with required payment amounts (based on $1 = 4G)
+// Golden packages with BTC & LTC ONLY (based on $1 = 4G)
 const GOLDEN_PACKAGES = {
   20: { 
     BTC: 0.00008333,  // $5 worth of BTC
-    LTC: 0.0625,      // $5 worth of LTC  
-    USDT: 5           // $5 USDT
+    LTC: 0.0625       // $5 worth of LTC  
   },
   40: {
     BTC: 0.00016666,  // $10 worth of BTC
-    LTC: 0.125,       // $10 worth of LTC
-    USDT: 10          // $10 USDT
+    LTC: 0.125        // $10 worth of LTC
   },
   60: {
     BTC: 0.00025,     // $15 worth of BTC
-    LTC: 0.1875,      // $15 worth of LTC
-    USDT: 15          // $15 USDT
+    LTC: 0.1875       // $15 worth of LTC
   },
   80: {
     BTC: 0.00033333,  // $20 worth of BTC
-    LTC: 0.25,        // $20 worth of LTC
-    USDT: 20          // $20 USDT
+    LTC: 0.25         // $20 worth of LTC
   },
   100: {
     BTC: 0.00041666,  // $25 worth of BTC
-    LTC: 0.3125,      // $25 worth of LTC
-    USDT: 25          // $25 USDT
+    LTC: 0.3125       // $25 worth of LTC
   },
   200: {
     BTC: 0.00083333,  // $50 worth of BTC
-    LTC: 0.625,       // $50 worth of LTC
-    USDT: 50          // $50 USDT
+    LTC: 0.625        // $50 worth of LTC
   },
   400: {
     BTC: 0.00166666,  // $100 worth of BTC
-    LTC: 1.25,        // $100 worth of LTC
-    USDT: 100         // $100 USDT
+    LTC: 1.25         // $100 worth of LTC
   },
   600: {
     BTC: 0.0025,      // $150 worth of BTC
-    LTC: 1.875,       // $150 worth of LTC
-    USDT: 150         // $150 USDT
+    LTC: 1.875        // $150 worth of LTC
   },
   800: {
     BTC: 0.00333333,  // $200 worth of BTC
-    LTC: 2.5,         // $200 worth of LTC
-    USDT: 200         // $200 USDT
+    LTC: 2.5          // $200 worth of LTC
   },
   1000: {
     BTC: 0.00416666,  // $250 worth of BTC
-    LTC: 3.125,       // $250 worth of LTC
-    USDT: 250         // $250 USDT
+    LTC: 3.125        // $250 worth of LTC
   }
 };
 
@@ -312,10 +302,6 @@ const BLOCKCHAIN_APIS = {
   LTC: {
     explorer: 'https://api.blockcypher.com/v1/ltc/main', 
     apiKey: process.env.BLOCKCYPHER_TOKEN
-  },
-  USDT: {
-    explorer: 'https://api.omniexplorer.info/v1',
-    method: 'omni'
   }
 };
 
@@ -335,7 +321,8 @@ async function checkBitcoinAddress(address) {
       final_balance: response.data.final_balance / 100000000,
       transactions: response.data.n_tx,
       unconfirmed_balance: response.data.unconfirmed_balance / 100000000,
-      confirmed: response.data.unconfirmed_balance === 0
+      confirmed: response.data.unconfirmed_balance === 0,
+      real: true
     };
   } catch (error) {
     console.error('❌ Error checking Bitcoin address via BlockCypher:', error.message);
@@ -359,7 +346,8 @@ async function checkLitecoinAddress(address) {
       final_balance: response.data.final_balance / 100000000, 
       transactions: response.data.n_tx,
       unconfirmed_balance: response.data.unconfirmed_balance / 100000000,
-      confirmed: response.data.unconfirmed_balance === 0
+      confirmed: response.data.unconfirmed_balance === 0,
+      real: true
     };
   } catch (error) {
     console.error('❌ Error checking Litecoin address via BlockCypher:', error.message);
@@ -367,32 +355,7 @@ async function checkLitecoinAddress(address) {
   }
 }
 
-// USDT checking (Omni Layer)
-async function checkUSDTAddress(address) {
-  try {
-    const response = await axios.get(`https://api.omniexplorer.info/v1/address/addr/${address}`);
-    const usdtTransactions = (response.data.transactions || []).filter(tx => 
-      tx.propertyid === 31 // USDT property ID
-    );
-    
-    const totalUSDT = usdtTransactions.reduce((sum, tx) => {
-      return sum + (parseFloat(tx.amount) || 0);
-    }, 0);
-    
-    console.log(`💰 USDT Balance for ${address}: ${totalUSDT} USDT`);
-    
-    return {
-      balance: totalUSDT,
-      transactions: usdtTransactions.length,
-      confirmed: true
-    };
-  } catch (error) {
-    console.error('❌ Error checking USDT address:', error.message);
-    return { balance: 0, transactions: 0, error: true, message: error.message };
-  }
-}
-
-// Universal address checker
+// Universal address checker - BTC & LTC ONLY
 async function checkAddressForPayments(coin, address) {
   try {
     console.log(`🔍 Checking REAL ${coin} address: ${address}`);
@@ -402,8 +365,6 @@ async function checkAddressForPayments(coin, address) {
         return await checkBitcoinAddress(address);
       case 'LTC':
         return await checkLitecoinAddress(address);
-      case 'USDT':
-        return await checkUSDTAddress(address);
       default:
         return { balance: 0, transactions: 0, error: 'Unsupported coin' };
     }
@@ -424,8 +385,6 @@ function generatePackageAddress(userId, coin, packageSize) {
       return `bc1q${userHash}${packageSize}${timestamp}`.substring(0, 42).toLowerCase();
     case 'LTC':
       return `L${userHash}${packageSize}${timestamp}`.substring(0, 34);
-    case 'USDT':
-      return `1${userHash}${packageSize}${timestamp}`.substring(0, 34);
     default:
       return `${coin}_${userHash}_${packageSize}_${timestamp}`;
   }
@@ -722,6 +681,11 @@ app.get("/api/package-address", (req, res) => {
     return res.status(400).json({ error: 'Invalid package size' });
   }
   
+  // Validate coin is supported
+  if (coin !== 'BTC' && coin !== 'LTC') {
+    return res.status(400).json({ error: 'Only BTC and LTC are supported' });
+  }
+  
   const packageInfo = getUserPackageAddress(userId, coin, parseInt(packageSize));
   
   res.json({
@@ -859,7 +823,7 @@ app.post("/ask", async (req, res) => {
   }
 });
 
-// PREMIUM AI Endpoints (NO LOCKS - All features accessible)
+// PREMIUM AI Endpoints
 app.post("/search-info", async (req, res) => {
   try {
     const { query } = req.body;
@@ -1020,7 +984,8 @@ app.get("/health", (req, res) => {
     packages: Object.keys(GOLDEN_PACKAGES).length + " available",
     features: "ALL OPERATIONAL",
     payments: "REAL BLOCKCHAIN SCANNING ACTIVE",
-    blockchain: "BLOCKCYPHER INTEGRATED ✅"
+    blockchain: "BLOCKCYPHER INTEGRATED ✅",
+    supported_coins: "BTC & LTC ONLY"
   });
 });
 
@@ -1028,8 +993,9 @@ app.get("/health", (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 GOLDENSPACEAI FULLY AUTOMATIC SYSTEM LAUNCHED! Port ${PORT}
 ✅ ALL 10 GOLDEN PACKAGES AVAILABLE
-✅ REAL BLOCKCYPHER BLOCKCHAIN INTEGRATION
+✅ REAL BLOCKCYPHER FOR BTC & LTC ONLY
 ✅ AUTOMATIC PAYMENT PROCESSING EVERY 30 SECONDS
 ✅ ALL AI ENDPOINTS WORKING  
 ✅ BLOCKCHAIN TEST: Visit /test-blockchain
+✅ CLEAN & SIMPLE: No USDT complications
 ✅ READY FOR MONDAY LAUNCH!`));

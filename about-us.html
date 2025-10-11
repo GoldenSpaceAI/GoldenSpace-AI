@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Us - GoldenSpaceAI</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary: #FFD700;
+            --secondary: #1a1a2e;
+            --accent: #4a00e0;
+            --light: #f8f9fa;
+            --dark: #162447;
+            --text: #333;
+            --text-light: #6c757d;
+        }
+
+        body {
+            background-color: var(--light);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header Styles */
+        header {
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--dark) 100%);
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .logo i {
+            font-size: 2rem;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+            padding: 5px 10px;
+            border-radius: 4px;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--dark) 100%);
+            color: white;
+            padding: 5rem 0;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" fill="%23FFD700" opacity="0.05"><polygon points="0,0 1000,50 1000,100 0,100"/></svg>');
+            background-size: cover;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(to right, var(--primary), #ffed4e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            font-size: 1.3rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        /* Content Sections */
+        .content-section {
+            padding: 5rem 0;
+        }
+
+        .section-title {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .section-title h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: var(--dark);
+            position: relative;
+            display: inline-block;
+        }
+
+        .section-title h2::after {
+            content: "";
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background: var(--primary);
+            border-radius: 2px;
+        }
+
+        .section-title p {
+            color: var(--text-light);
+            font-size: 1.2rem;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        /* Story Section */
+        .story-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            align-items: center;
+        }
+
+        .story-text h3 {
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            color: var(--dark);
+        }
+
+        .story-text p {
+            margin-bottom: 1.5rem;
+            font-size: 1.1rem;
+            color: var(--text);
+        }
+
+        .story-highlight {
+            background: linear-gradient(135deg, #fff9e6 0%, #fff0b3 100%);
+            padding: 2rem;
+            border-radius: 10px;
+            border-left: 5px solid var(--primary);
+            margin: 2rem 0;
+        }
+
+        .story-highlight i {
+            color: var(--primary);
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+
+        .icon-display {
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--dark) 100%);
+            height: 100%;
+            min-height: 350px;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .icon-display i {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+        }
+
+        .icon-display h3 {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Values Section */
+        .values-section {
+            background: var(--secondary);
+            color: white;
+        }
+
+        .values-section .section-title h2 {
+            color: white;
+        }
+
+        .values-section .section-title p {
+            color: rgba(255,255,255,0.8);
+        }
+
+        .values-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .value-card {
+            background: rgba(255,255,255,0.05);
+            padding: 2.5rem 2rem;
+            border-radius: 10px;
+            text-align: center;
+            transition: transform 0.3s, background 0.3s;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .value-card:hover {
+            transform: translateY(-10px);
+            background: rgba(255,255,255,0.1);
+        }
+
+        .value-card i {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+        }
+
+        .value-card h4 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Founder Section */
+        .founder-section {
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .founder-card {
+            background: white;
+            padding: 3rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            margin-top: 2rem;
+            position: relative;
+        }
+
+        .founder-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(to right, var(--primary), var(--accent));
+            border-radius: 15px 15px 0 0;
+        }
+
+        .founder-icon {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--dark) 100%);
+            margin: 0 auto 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            font-size: 3rem;
+            border: 5px solid var(--primary);
+        }
+
+        .founder-card h3 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: var(--dark);
+        }
+
+        .founder-title {
+            color: var(--primary);
+            font-weight: bold;
+            margin-bottom: 1.5rem;
+            font-size: 1.2rem;
+        }
+
+        .youtube-promo {
+            background: linear-gradient(135deg, #ff0000, #cc0000);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 1.5rem;
+            text-decoration: none;
+            font-weight: bold;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .youtube-promo:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(255, 0, 0, 0.3);
+        }
+
+        /* CTA Section */
+        .cta-section {
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--dark) 100%);
+            color: white;
+            padding: 5rem 0;
+            text-align: center;
+        }
+
+        .cta-section h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .cta-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background: var(--primary);
+            color: var(--dark);
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: transform 0.3s, box-shadow 0.3s;
+            border: none;
+            cursor: pointer;
+            font-size: 1.1rem;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.4);
+        }
+
+        .cta-button.secondary {
+            background: transparent;
+            color: white;
+            border: 2px solid var(--primary);
+        }
+
+        .cta-button.secondary:hover {
+            background: rgba(255, 215, 0, 0.1);
+        }
+
+        /* Footer */
+        footer {
+            background: var(--dark);
+            color: white;
+            padding: 4rem 0 2rem;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .footer-section h4 {
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+            font-size: 1.3rem;
+        }
+
+        .footer-section p {
+            margin-bottom: 1rem;
+            opacity: 0.8;
+        }
+
+        .footer-links {
+            list-style: none;
+        }
+
+        .footer-links li {
+            margin-bottom: 0.8rem;
+        }
+
+        .footer-links a {
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer-links a:hover {
+            color: var(--primary);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            opacity: 0.7;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .story-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .nav-links {
+                flex-direction: column;
+                gap: 1rem;
+                margin-top: 1rem;
+            }
+            
+            nav {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <nav class="container">
+            <div class="logo">
+                <i class="fas fa-robot"></i>
+                <span>GoldenSpaceAI</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="about-us.html">About</a></li>
+                <li><a href="pricing.html">Pricing</a></li>
+                <li><a href="contact.html">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1>Democratizing Advanced AI</h1>
+                <p>Making cutting-edge AI technology accessible to everyone at an affordable price</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Our Story -->
+    <section class="content-section">
+        <div class="container">
+            <div class="story-grid">
+                <div class="story-text">
+                    <h3>Our Mission: AI for All</h3>
+                    <p>GoldenSpaceAI was founded with a simple but powerful vision: to break down the financial barriers that prevent people from accessing the most advanced artificial intelligence technology.</p>
+                    
+                    <div class="story-highlight">
+                        <p><i class="fas fa-bullseye"></i> While others charge $20 for premium AI, we provide the same advanced capabilities for just $5, because we believe everyone deserves access to transformative technology.</p>
+                    </div>
+                    
+                    <p>Our unique Golden System allows users to purchase "Golden" credits for their balance, which they can spend on our suite of advanced AI tools. This flexible approach puts you in control of your AI usage.</p>
+                    
+                    <p>At the heart of everything we do is a commitment to fairness and respect. We believe in treating our users the way we would want to be treated.</p>
+                </div>
+                <div class="icon-display">
+                    <i class="fas fa-gem"></i>
+                    <h3>The Golden System</h3>
+                    <p>Purchase Golden credits and use them across our advanced AI platform. Simple, flexible, and affordable.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Values Section -->
+    <section class="content-section values-section">
+        <div class="container">
+            <div class="section-title">
+                <h2>Our Core Values</h2>
+                <p>The principles that guide everything we do at GoldenSpaceAI</p>
+            </div>
+            <div class="values-grid">
+                <div class="value-card">
+                    <i class="fas fa-hand-holding-usd"></i>
+                    <h4>Fair Pricing</h4>
+                    <p>We provide access to advanced AI like GPT-5 at a fraction of the cost of our competitors, because technology should be accessible to all.</p>
+                </div>
+                <div class="value-card">
+                    <i class="fas fa-shield-alt"></i>
+                    <h4>Total Privacy</h4>
+                    <p>Your privacy is our priority. We use top-tier SSL security to ensure your data, Golden balance, and email remain completely confidential.</p>
+                </div>
+                <div class="value-card">
+                    <i class="fas fa-heart"></i>
+                    <h4>Caring & Respect</h4>
+                    <p>Our number one rule is caring for our users. We offer refunds at any time for any amount of Golden in your balance, no questions asked.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Founder Section -->
+    <section class="content-section">
+        <div class="container">
+            <div class="section-title">
+                <h2>Our Founder</h2>
+                <p>The vision behind GoldenSpaceAI</p>
+            </div>
+            <div class="founder-section">
+                <div class="founder-card">
+                    <div class="founder-icon">
+                        <i class="fas fa-user-tie"></i>
+                    </div>
+                    <h3>Faris</h3>
+                    <div class="founder-title">Manager & Visionary</div>
+                    <p>"My dream was to build a platform that connects all people to advanced AI technology. I created GoldenSpaceAI to make powerful AI tools accessible to everyone, not just those who can afford expensive subscriptions."</p>
+                    <p>I believe in fairness above all else. That's why we offer instant refunds - just provide your crypto address and we'll return your payment, no ID required. It's simply the right thing to do.</p>
+                    
+                    <a href="https://www.youtube.com/@SaveEarth-w2f" class="youtube-promo" target="_blank">
+                        <i class="fab fa-youtube"></i>
+                        Check out my YouTube Channel
+                    </a>
+                    <p style="margin-top: 10px; font-size: 0.9rem; opacity: 0.8;">Join our growing community of 14 subscribers and counting!</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="container">
+            <h2>Ready to Experience Affordable Advanced AI?</h2>
+            <p>Join thousands of users who are already benefiting from our Golden System</p>
+            <div class="cta-buttons">
+                <a href="signup.html" class="cta-button">Get Started Now</a>
+                <a href="pricing.html" class="cta-button secondary">View Pricing</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>GoldenSpaceAI</h4>
+                    <p>Democratizing advanced AI technology with fair pricing, respect, and top-tier security for all users.</p>
+                    <p>Email: contact@goldenspaceai.space</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul class="footer-links">
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="about-us.html">About Us</a></li>
+                        <li><a href="pricing.html">Pricing</a></li>
+                        <li><a href="contact.html">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Legal</h4>
+                    <ul class="footer-links">
+                        <li><a href="privacy-policy.html">Privacy Policy</a></li>
+                        <li><a href="terms-of-service.html">Terms of Service</a></li>
+                        <li><a href="refund.html">Refund Policy</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2023 GoldenSpaceAI. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

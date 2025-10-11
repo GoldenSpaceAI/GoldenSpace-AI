@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Us - GoldenSpaceAI</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary: #FFD700;
+            --secondary: #1a1a2e;
+            --accent: #4a00e0;
+            --light: #f8f9fa;
+            --dark: #162447;
+            --text: #333;
+            --text-light: #6c757d;
+        }
+
+        body {
+            background-color: var(--light);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header Styles */
+        header {
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--dark) 100%);
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .logo i {
+            font-size: 2rem;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+            padding: 5px 10px;
+            border-radius: 4px;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--dark) 100%);
+            color: white;
+            padding: 4rem 0;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" fill="%23FFD700" opacity="0.05"><polygon points="0,0 1000,50 1000,100 0,100"/></svg>');
+            background-size: cover;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(to right, var(--primary), #ffed4e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        /* Content Sections */
+        .content-section {
+            padding: 5rem 0;
+        }
+
+        .section-title {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .section-title h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: var(--dark);
+            position: relative;
+            display: inline-block;
+        }
+
+        .section-title h2::after {
+            content: "";
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background: var(--primary);
+            border-radius: 2px;
+        }
+
+        .section-title p {
+            color: var(--text-light);
+            font-size: 1.2rem;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        /* Problems Section */
+        .problems-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 4rem;
+        }
+
+        .problem-card {
+            background: white;
+            padding: 2.5rem 2rem;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            transition: transform 0.3s, box-shadow 0.3s;
+            border-left: 4px solid var(--primary);
+        }
+
+        .problem-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+        }
+
+        .problem-card i {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+        }
+
+        .problem-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--dark);
+        }
+
+        .problem-card p {
+            color: var(--text-light);
+            margin-bottom: 1.5rem;
+        }
+
+        .urgent-notice {
+            background: linear-gradient(135deg, #fff9e6 0%, #fff0b3 100%);
+            padding: 1.5rem;
+            border-radius: 8px;
+            border-left: 5px solid #ffcc00;
+            margin-top: 1rem;
+        }
+
+        .urgent-notice i {
+            color: #ff9900;
+            margin-right: 10px;
+        }
+
+        /* Contact Options */
+        .contact-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .contact-card {
+            background: white;
+            padding: 2.5rem 2rem;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            text-align: center;
+            transition: transform 0.3s;
+        }
+
+        .contact-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .contact-card i {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+        }
+
+        .contact-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--dark);
+        }
+
+        .contact-card p {
+            color: var(--text-light);
+            margin-bottom: 1.5rem;
+        }
+
+        .contact-email {
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--dark) 100%);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            display: inline-block;
+            text-decoration: none;
+            font-weight: bold;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .contact-email:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            color: white;
+        }
+
+        /* FAQ Section */
+        .faq-section {
+            background: var(--light);
+            padding: 5rem 0;
+        }
+
+        .faq-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .faq-item {
+            background: white;
+            margin-bottom: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+
+        .faq-question {
+            padding: 1.5rem;
+            font-weight: 600;
+            font-size: 1.1rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--dark);
+        }
+
+        .faq-question i {
+            color: var(--primary);
+            transition: transform 0.3s;
+        }
+
+        .faq-answer {
+            padding: 0 1.5rem 1.5rem;
+            color: var(--text-light);
+            display: none;
+        }
+
+        .faq-item.active .faq-answer {
+            display: block;
+        }
+
+        .faq-item.active .faq-question i {
+            transform: rotate(180deg);
+        }
+
+        /* Response Time */
+        .response-time {
+            text-align: center;
+            margin-top: 3rem;
+            padding: 2rem;
+            background: linear-gradient(135deg, #e6f7ff 0%, #b3e0ff 100%);
+            border-radius: 10px;
+            border-left: 5px solid #0099ff;
+        }
+
+        .response-time i {
+            color: #0099ff;
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Footer */
+        footer {
+            background: var(--dark);
+            color: white;
+            padding: 4rem 0 2rem;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .footer-section h4 {
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+            font-size: 1.3rem;
+        }
+
+        .footer-section p {
+            margin-bottom: 1rem;
+            opacity: 0.8;
+        }
+
+        .footer-links {
+            list-style: none;
+        }
+
+        .footer-links li {
+            margin-bottom: 0.8rem;
+        }
+
+        .footer-links a {
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer-links a:hover {
+            color: var(--primary);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            opacity: 0.7;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .nav-links {
+                flex-direction: column;
+                gap: 1rem;
+                margin-top: 1rem;
+            }
+            
+            nav {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .problems-grid, .contact-options {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <nav class="container">
+            <div class="logo">
+                <i class="fas fa-robot"></i>
+                <span>GoldenSpaceAI</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="about-us.html">About</a></li>
+                <li><a href="pricing.html">Pricing</a></li>
+                <li><a href="contact.html">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1>We're Here to Help</h1>
+                <p>Get instant support for any issues with your GoldenSpaceAI experience</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Problems Section -->
+    <section class="content-section">
+        <div class="container">
+            <div class="section-title">
+                <h2>Common Issues & Solutions</h2>
+                <p>Having problems? You're not alone. Here are solutions to frequent issues</p>
+            </div>
+            
+            <div class="problems-grid">
+                <div class="problem-card">
+                    <i class="fas fa-coins"></i>
+                    <h3>Golden Balance Issues</h3>
+                    <p>Problems with purchasing Golden credits, balance not updating, or incorrect charge amounts.</p>
+                    <div class="urgent-notice">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <strong>If you were charged but didn't receive Golden</strong>, contact us immediately with your transaction details.
+                    </div>
+                </div>
+                
+                <div class="problem-card">
+                    <i class="fas fa-robot"></i>
+                    <h3>AI Not Responding</h3>
+                    <p>The AI is slow to respond, gives error messages, or doesn't generate the expected output quality.</p>
+                    <div class="urgent-notice">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <strong>Server maintenance alerts</strong> are posted on our status page. Check there first during outages.
+                    </div>
+                </div>
+                
+                <div class="problem-card">
+                    <i class="fas fa-user-lock"></i>
+                    <h3>Account Access Problems</h3>
+                    <p>Can't log in, forgot password, account locked, or suspicious activity detected.</p>
+                    <div class="urgent-notice">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <strong>We'll never ask for your password</strong> via email. Change it immediately if you suspect compromise.
+                    </div>
+                </div>
+                
+                <div class="problem-card">
+                    <i class="fas fa-shield-alt"></i>
+                    <h3>Security & Privacy Concerns</h3>
+                    <p>Worried about data handling, SSL certificate issues, or privacy policy questions.</p>
+                    <div class="urgent-notice">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <strong>Your privacy is our priority</strong>. We use top-tier encryption to protect your data.
+                    </div>
+                </div>
+                
+                <div class="problem-card">
+                    <i class="fas fa-sync-alt"></i>
+                    <h3>Refund Requests</h3>
+                    <p>Need a refund for Golden credits? Our fair policy ensures you get your money back.</p>
+                    <div class="urgent-notice">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <strong>No ID required</strong> - just provide your crypto address and we'll process your refund.
+                    </div>
+                </div>
+                
+                <div class="problem-card">
+                    <i class="fas fa-bug"></i>
+                    <h3>Technical Glitches</h3>
+                    <p>Website not loading properly, buttons not working, or strange visual issues.</p>
+                    <div class="urgent-notice">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <strong>Try clearing your cache first</strong>, then contact us if the problem persists.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section-title">
+                <h2>Get Help Now</h2>
+                <p>Our support team is ready to resolve your issues quickly</p>
+            </div>
+            
+            <div class="contact-options">
+                <div class="contact-card">
+                    <i class="fas fa-envelope"></i>
+                    <h3>Email Support</h3>
+                    <p>For all technical issues, billing questions, and account assistance</p>
+                    <a href="mailto:support@goldenspaceai.space" class="contact-email">
+                        support@goldenspaceai.space
+                    </a>
+                </div>
+                
+                <div class="contact-card">
+                    <i class="fas fa-clock"></i>
+                    <h3>Response Time</h3>
+                    <p>We pride ourselves on quick responses to all customer inquiries</p>
+                    <div class="response-time">
+                        <i class="fas fa-bolt"></i>
+                        <h4>Instant Response</h4>
+                        <p>We typically reply within minutes during business hours</p>
+                    </div>
+                </div>
+                
+                <div class="contact-card">
+                    <i class="fas fa-history"></i>
+                    <h3>Refund Requests</h3>
+                    <p>Our fair refund policy ensures you're always satisfied</p>
+                    <a href="refund.html" class="contact-email" style="background: linear-gradient(135deg, #00cc66, #00b359);">
+                        View Refund Policy
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="faq-section">
+        <div class="container">
+            <div class="section-title">
+                <h2>Frequently Asked Questions</h2>
+                <p>Quick answers to common questions</p>
+            </div>
+            
+            <div class="faq-container">
+                <div class="faq-item">
+                    <div class="faq-question">
+                        How long does support take to respond?
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        We typically respond within minutes during business hours (9 AM - 6 PM GMT). Even outside these hours, we strive to reply within a few hours at most.
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">
+                        What information should I include when contacting support?
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        Please include your username, email address, a detailed description of the issue, any error messages you're seeing, and steps to reproduce the problem if possible.
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">
+                        Do you offer refunds for Golden credits?
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        Yes! We offer refunds at any time for any amount of Golden in your balance. No ID is required - just provide your crypto address and we'll send your refund.
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">
+                        Is my data secure with GoldenSpaceAI?
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        Absolutely. We use top-tier SSL security to ensure your information, Golden balance, and email remain completely private and inaccessible to anyone but you.
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">
+                        The AI isn't producing quality results. What can I do?
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        Try being more specific in your prompts, providing examples of what you want, or breaking complex tasks into smaller steps. If problems persist, contact us for personalized assistance.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>GoldenSpaceAI</h4>
+                    <p>Democratizing advanced AI technology with fair pricing, respect, and top-tier security for all users.</p>
+                    <p>Email: support@goldenspaceai.space</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul class="footer-links">
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="about-us.html">About Us</a></li>
+                        <li><a href="pricing.html">Pricing</a></li>
+                        <li><a href="contact.html">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Legal</h4>
+                    <ul class="footer-links">
+                        <li><a href="privacy-policy.html">Privacy Policy</a></li>
+                        <li><a href="terms-of-service.html">Terms of Service</a></li>
+                        <li><a href="refund.html">Refund Policy</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2023 GoldenSpaceAI. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // FAQ toggle functionality
+        document.querySelectorAll('.faq-question').forEach(question => {
+            question.addEventListener('click', () => {
+                const item = question.parentNode;
+                item.classList.toggle('active');
+            });
+        });
+        
+        // Auto-expand first FAQ item
+        document.querySelector('.faq-item').classList.add('active');
+    </script>
+</body>
+</html>

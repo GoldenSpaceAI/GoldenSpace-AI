@@ -341,6 +341,32 @@
             font-size: 0.9rem;
         }
 
+        .status-check {
+            background: rgba(246, 198, 74, 0.1);
+            border: 1px solid rgba(246, 198, 74, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .status-btn {
+            background: #f6c64a;
+            color: #1a1300;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .status-info {
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: #cfc6a5;
+        }
+
         @media (max-width: 768px) {
             .packages-grid {
                 grid-template-columns: 1fr;
@@ -387,46 +413,48 @@
                     <div class="crypto-name">Litecoin (LTC)</div>
                     <div class="crypto-desc">Fast • 10-15 min</div>
                 </div>
-                <div class="crypto-option" data-coin="USDT">
-                    <div class="crypto-icon">💎</div>
-                    <div class="crypto-name">USDT (TRC20)</div>
-                    <div class="crypto-desc">Fastest • 2-5 min</div>
-                </div>
             </div>
 
             <div class="payment-details" id="payment-details">
-                <div class="amount-display" id="crypto-amount">Send: 0.000416 BTC ($25.00)</div>
+                <div class="amount-display" id="crypto-amount">Select package and cryptocurrency</div>
                 
                 <div class="wallet-address">
-                    <div id="wallet-address-text">bc1qz5wtz2d329xsm7gcs9e3jwls9supg2fk2hkxtd</div>
+                    <div id="wallet-address-text">Select package to generate address</div>
                     <button class="copy-btn" onclick="copyAddress()">Copy</button>
                 </div>
 
                 <div class="qr-code">
                     <div class="qr-placeholder">
-                        QR Code<br>Placeholder
+                        QR Code<br>Will Generate
                     </div>
                 </div>
 
                 <div class="instructions">
                     <div class="instruction-step">
                         <div class="step-number">1</div>
-                        <div>Send <strong id="instruction-amount">0.000416 BTC</strong> to the address above</div>
+                        <div>Send <strong id="instruction-amount">exact amount</strong> to the address above</div>
                     </div>
                     <div class="instruction-step">
                         <div class="step-number">2</div>
-                        <div>Wait for blockchain confirmation (<span id="confirmation-time">30-60 minutes</span>)</div>
+                        <div>Wait for blockchain confirmation (<span id="confirmation-time">varies</span>)</div>
                     </div>
                     <div class="instruction-step">
                         <div class="step-number">3</div>
-                        <div>Golden coins will be added to your account automatically</div>
+                        <div>Golden coins will be added automatically within 30 seconds</div>
+                    </div>
+                </div>
+
+                <div class="status-check">
+                    <button class="status-btn" onclick="checkPaymentStatus()">Check Payment Status</button>
+                    <div class="status-info" id="status-info">
+                        System automatically checks every 30 seconds
                     </div>
                 </div>
             </div>
 
             <div class="loading" id="loading">
                 <div class="loading-spinner"></div>
-                <div>Processing your selection...</div>
+                <div>Generating payment address...</div>
             </div>
         </div>
 
@@ -449,29 +477,16 @@
     </div>
 
     <script>
-        // Wallet addresses
-        const walletAddresses = {
-            'BTC': 'bc1qz5wtz2d329xsm7gcs9e3jwls9supg2fk2hkxtd',
-            'LTC': 'ltc1qngssav372fl4sw0s8w66h4c8v5yftqw4qrkhdn',
-            'USDT': 'TCN6eVtHFNtPAJNfebgGGm8c2h71NWYY9P'
-        };
-
-        // Current prices (you would update these from an API)
-        const cryptoPrices = {
-            'BTC': 60000, // $60,000 per BTC
-            'LTC': 80,    // $80 per LTC
-            'USDT': 1     // $1 per USDT
-        };
-
         // Confirmation times
         const confirmationTimes = {
             'BTC': '30-60 minutes',
-            'LTC': '10-15 minutes',
-            'USDT': '2-5 minutes'
+            'LTC': '10-15 minutes'
         };
 
         let selectedPackage = null;
         let selectedCrypto = null;
+        let currentAddress = null;
+        let currentRequiredAmount = null;
 
         // Load user balance
         async function loadUserBalance() {
@@ -480,9 +495,15 @@
                     credentials: 'include'
                 });
                 const data = await response.json();
-                document.getElementById('user-balance').textContent = data.balance;
+                if (data.loggedIn) {
+                    document.getElementById('user-balance').textContent = data.balance;
+                } else {
+                    window.location.href = '/login-signup.html';
+                }
             } catch (error) {
                 console.error('Failed to load balance:', error);
+                showNotification('Please login to purchase Golden coins');
+                setTimeout(() => window.location.href = '/login-signup.html', 2000);
             }
         }
 
@@ -510,6 +531,7 @@
                 });
             } catch (error) {
                 console.error('Failed to load packages:', error);
+                showNotification('Error loading packages');
             }
         }
 
@@ -529,9 +551,9 @@
                 option.style.cursor = 'pointer';
             });
             
-            // If crypto already selected, update payment details
+            // If crypto already selected, generate address
             if (selectedCrypto) {
-                updatePaymentDetails();
+                generatePaymentAddress();
             }
         }
 
@@ -545,36 +567,119 @@
             });
             event.currentTarget.classList.add('selected');
             
-            // Show payment details
-            document.getElementById('payment-details').classList.add('active');
-            
-            // Update payment details
-            updatePaymentDetails();
-            
-            // Enable purchase button
-            document.getElementById('purchase-btn').disabled = false;
+            // Generate payment address if package is selected
+            if (selectedPackage) {
+                generatePaymentAddress();
+            }
         }
 
-        // Update payment details based on selection
-        function updatePaymentDetails() {
+        // Generate payment address from backend
+        async function generatePaymentAddress() {
             if (!selectedPackage || !selectedCrypto) return;
             
-            const cryptoAmount = (selectedPackage.usd / cryptoPrices[selectedCrypto]).toFixed(6);
-            const address = walletAddresses[selectedCrypto];
+            showLoading(true);
             
-            document.getElementById('crypto-amount').textContent = 
-                `Send: ${cryptoAmount} ${selectedCrypto} ($${selectedPackage.usd}.00)`;
-            document.getElementById('wallet-address-text').textContent = address;
-            document.getElementById('instruction-amount').textContent = `${cryptoAmount} ${selectedCrypto}`;
-            document.getElementById('confirmation-time').textContent = confirmationTimes[selectedCrypto];
+            try {
+                const response = await fetch(`/api/package-address?coin=${selectedCrypto}&packageSize=${selectedPackage.golden}`, {
+                    credentials: 'include'
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to generate address');
+                }
+                
+                const data = await response.json();
+                
+                currentAddress = data.address;
+                currentRequiredAmount = data.requiredAmount;
+                
+                // Update payment details
+                document.getElementById('crypto-amount').textContent = 
+                    `Send: ${data.requiredAmount} ${selectedCrypto} ($${data.usdPrice})`;
+                document.getElementById('wallet-address-text').textContent = data.address;
+                document.getElementById('instruction-amount').textContent = `${data.requiredAmount} ${selectedCrypto}`;
+                document.getElementById('confirmation-time').textContent = confirmationTimes[selectedCrypto];
+                
+                // Show payment details
+                document.getElementById('payment-details').classList.add('active');
+                
+                // Enable purchase button
+                document.getElementById('purchase-btn').disabled = false;
+                
+                showNotification('Payment address generated successfully!');
+                
+            } catch (error) {
+                console.error('Error generating address:', error);
+                showNotification('Error generating payment address');
+            } finally {
+                showLoading(false);
+            }
         }
 
         // Copy wallet address
         function copyAddress() {
-            const address = document.getElementById('wallet-address-text').textContent;
-            navigator.clipboard.writeText(address).then(() => {
+            if (!currentAddress) {
+                showNotification('No address to copy');
+                return;
+            }
+            
+            navigator.clipboard.writeText(currentAddress).then(() => {
                 showNotification('Address copied to clipboard!');
             });
+        }
+
+        // Check payment status
+        async function checkPaymentStatus() {
+            try {
+                const response = await fetch('/api/package-status', {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                
+                const pendingPackages = data.packages.filter(pkg => pkg.status === 'pending');
+                const completedPackages = data.packages.filter(pkg => pkg.status === 'completed');
+                
+                if (completedPackages.length > 0) {
+                    showNotification(`✅ ${completedPackages.length} payments completed!`);
+                    loadUserBalance(); // Refresh balance
+                }
+                
+                if (pendingPackages.length > 0) {
+                    document.getElementById('status-info').innerHTML = `
+                        <strong>${pendingPackages.length} pending payments</strong><br>
+                        System checking automatically...
+                    `;
+                } else {
+                    document.getElementById('status-info').innerHTML = `
+                        No pending payments<br>
+                        System checks every 30 seconds
+                    `;
+                }
+                
+            } catch (error) {
+                console.error('Error checking status:', error);
+                showNotification('Error checking payment status');
+            }
+        }
+
+        // Complete purchase
+        function completePurchase() {
+            if (!selectedPackage || !selectedCrypto || !currentAddress) {
+                showNotification('Please select package and cryptocurrency first');
+                return;
+            }
+            
+            showNotification(`✅ Ready! Send ${currentRequiredAmount} ${selectedCrypto} to complete purchase.`);
+            
+            // Scroll to payment details
+            document.getElementById('payment-details').scrollIntoView({ 
+                behavior: 'smooth' 
+            });
+        }
+
+        // Show loading state
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
         }
 
         // Show notification
@@ -584,19 +689,7 @@
             notification.style.display = 'block';
             setTimeout(() => {
                 notification.style.display = 'none';
-            }, 3000);
-        }
-
-        // Complete purchase
-        function completePurchase() {
-            if (!selectedPackage || !selectedCrypto) return;
-            
-            showNotification(`Payment instructions ready! Send ${selectedCrypto} to complete your purchase.`);
-            
-            // In a real implementation, you would:
-            // 1. Create a pending transaction record
-            // 2. Start monitoring for the payment
-            // 3. Show transaction status
+            }, 4000);
         }
 
         // Initialize page
@@ -607,6 +700,12 @@
             // Add click listeners to crypto options
             document.querySelectorAll('.crypto-option').forEach(option => {
                 option.addEventListener('click', () => selectCrypto(option.dataset.coin));
+            });
+            
+            // Initially disable crypto options until package is selected
+            document.querySelectorAll('.crypto-option').forEach(option => {
+                option.style.opacity = '0.5';
+                option.style.cursor = 'not-allowed';
             });
         });
     </script>

@@ -103,7 +103,353 @@
   </style>
 </head>
 <body>
-  <div class="stars"></div>
+  <!-- ==================== 20G MONTHLY SUBSCRIPTION LOCK ==================== -->
+<div id="goldenLockOverlay" class="golden-lock-overlay">
+  <div class="golden-unlock-container">
+    <div class="lock-header">
+      <div class="lock-icon">🔒</div>
+      <h2>Premium Feature Locked</h2>
+    </div>
+    
+    <div class="feature-description">
+      This premium feature requires a monthly subscription
+    </div>
+    
+    <div class="pricing-section">
+      <div class="price-main">20G</div>
+      <div class="price-period">per month</div>
+    </div>
+    
+    <div class="balance-section">
+      <div class="balance-label">Your Golden Balance:</div>
+      <div class="balance-amount" id="currentUserBalance">0G</div>
+    </div>
+    
+    <div class="features-included">
+      <h3>What you get:</h3>
+      <div class="feature-item">✅ Full access to this feature</div>
+      <div class="feature-item">✅ 30-day unlimited usage</div>
+      <div class="feature-item">✅ Priority support</div>
+      <div class="feature-item">✅ All future updates</div>
+    </div>
+    
+    <button class="subscribe-btn" onclick="unlockMonthlyFeature()">
+      UNLOCK FOR 20G/MONTH
+    </button>
+    
+    <div id="unlockStatus" class="status-message"></div>
+    
+    <div class="action-links">
+      <a href="/buy-golden.html" class="buy-link">💰 Buy More Golden</a>
+      <a href="/" class="home-link">🏠 Back to Home</a>
+    </div>
+  </div>
+</div>
+
+<style>
+.golden-lock-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(12, 12, 46, 0.95);
+  backdrop-filter: blur(10px);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  padding: 20px;
+}
+
+.golden-unlock-container {
+  background: linear-gradient(135deg, #0f1624, #0b1320);
+  border: 2px solid #f6c64a;
+  border-radius: 20px;
+  padding: 40px 30px;
+  text-align: center;
+  max-width: 450px;
+  width: 100%;
+  color: #e7f4e9;
+  box-shadow: 0 20px 40px rgba(246, 198, 74, 0.2);
+}
+
+.lock-header {
+  margin-bottom: 20px;
+}
+
+.lock-icon {
+  font-size: 3.5rem;
+  margin-bottom: 15px;
+}
+
+.lock-header h2 {
+  color: #f6c64a;
+  margin: 0;
+  font-size: 1.8rem;
+}
+
+.feature-description {
+  color: #cfc6a5;
+  margin-bottom: 25px;
+  font-size: 1.1rem;
+}
+
+.pricing-section {
+  background: rgba(246, 198, 74, 0.1);
+  border: 1px solid rgba(246, 198, 74, 0.3);
+  border-radius: 15px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.price-main {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #f6c64a;
+  line-height: 1;
+}
+
+.price-period {
+  color: #cfc6a5;
+  font-size: 1rem;
+  margin-top: 5px;
+}
+
+.balance-section {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  padding: 15px;
+  margin: 20px 0;
+}
+
+.balance-label {
+  color: #cfc6a5;
+  font-size: 0.9rem;
+  margin-bottom: 5px;
+}
+
+.balance-amount {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #f6c64a;
+}
+
+.features-included {
+  text-align: left;
+  margin: 25px 0;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 10px;
+}
+
+.features-included h3 {
+  color: #f6c64a;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.feature-item {
+  padding: 8px 0;
+  color: #e7f4e9;
+  font-size: 0.95rem;
+}
+
+.subscribe-btn {
+  background: linear-gradient(135deg, #f6c64a, #eb8b36);
+  color: #1a1300;
+  border: none;
+  padding: 18px 30px;
+  border-radius: 12px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  cursor: pointer;
+  width: 100%;
+  margin: 20px 0;
+  transition: all 0.3s ease;
+}
+
+.subscribe-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(246, 198, 74, 0.4);
+}
+
+.subscribe-btn:disabled {
+  background: #666;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.status-message {
+  margin: 15px 0;
+  padding: 12px;
+  border-radius: 8px;
+  font-weight: bold;
+  display: none;
+}
+
+.status-message.success {
+  background: rgba(40, 167, 69, 0.2);
+  border: 1px solid #28a745;
+  color: #28a745;
+  display: block;
+}
+
+.status-message.error {
+  background: rgba(220, 53, 69, 0.2);
+  border: 1px solid #dc3545;
+  color: #dc3545;
+  display: block;
+}
+
+.action-links {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.buy-link, .home-link {
+  color: #f6c64a;
+  text-decoration: none;
+  padding: 10px 15px;
+  border: 1px solid #f6c64a;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  flex: 1;
+  margin: 0 5px;
+}
+
+.buy-link:hover, .home-link:hover {
+  background: rgba(246, 198, 74, 0.1);
+  transform: translateY(-1px);
+}
+</style>
+
+<script>
+// Show the Golden lock overlay
+function showGoldenLock() {
+  loadUserBalance();
+  document.getElementById('goldenLockOverlay').style.display = 'flex';
+}
+
+// Hide the Golden lock overlay
+function hideGoldenLock() {
+  document.getElementById('goldenLockOverlay').style.display = 'none';
+}
+
+// Load user balance
+async function loadUserBalance() {
+  try {
+    const response = await fetch('/api/golden-balance', {
+      credentials: 'include'
+    });
+    const data = await response.json();
+    if (data.loggedIn) {
+      document.getElementById('currentUserBalance').textContent = data.balance + 'G';
+    } else {
+      window.location.href = '/login-signup.html';
+    }
+  } catch (error) {
+    console.error('Failed to load balance:', error);
+  }
+}
+
+// Unlock feature for 20G/month
+async function unlockMonthlyFeature() {
+  const statusElement = document.getElementById('unlockStatus');
+  const button = document.querySelector('.subscribe-btn');
+  
+  // Show loading state
+  button.disabled = true;
+  button.textContent = 'PROCESSING...';
+  statusElement.style.display = 'none';
+  
+  try {
+    const response = await fetch('/api/unlock-feature', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({
+        feature: 'premium_monthly',
+        cost: 20
+      })
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      statusElement.className = 'status-message success';
+      statusElement.textContent = `✅ Success! Feature unlocked. New balance: ${result.newBalance}G`;
+      statusElement.style.display = 'block';
+      
+      // Update balance display
+      document.getElementById('currentUserBalance').textContent = result.newBalance + 'G';
+      
+      // Hide overlay after success
+      setTimeout(() => {
+        hideGoldenLock();
+        // Reload the page to show unlocked feature
+        location.reload();
+      }, 2000);
+      
+    } else {
+      statusElement.className = 'status-message error';
+      statusElement.textContent = `❌ Error: ${result.error}`;
+      statusElement.style.display = 'block';
+      
+      if (result.error.includes('Insufficient')) {
+        // Redirect to buy Golden page if insufficient balance
+        setTimeout(() => {
+          window.location.href = '/buy-golden.html';
+        }, 1500);
+      }
+    }
+    
+  } catch (error) {
+    console.error('Unlock error:', error);
+    statusElement.className = 'status-message error';
+    statusElement.textContent = '❌ Network error. Please try again.';
+    statusElement.style.display = 'block';
+  } finally {
+    // Reset button
+    button.disabled = false;
+    button.textContent = 'UNLOCK FOR 20G/MONTH';
+  }
+}
+
+// Check if feature is already unlocked
+async function checkFeatureAccess() {
+  try {
+    const response = await fetch('/api/feature-status?feature=premium_monthly', {
+      credentials: 'include'
+    });
+    const data = await response.json();
+    
+    if (data.unlocked) {
+      // Feature is unlocked, hide the lock
+      hideGoldenLock();
+      return true;
+    } else {
+      // Feature is locked, show the lock
+      showGoldenLock();
+      return false;
+    }
+  } catch (error) {
+    console.error('Feature check error:', error);
+    showGoldenLock();
+    return false;
+  }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+  // Check if user has access to this premium feature
+  checkFeatureAccess();
+});
+</script>  <div class="stars"></div>
   <div class="twinkle"></div>
 
   <div class="wrap">

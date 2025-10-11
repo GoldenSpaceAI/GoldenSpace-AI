@@ -324,6 +324,13 @@
             font-size: 1.2rem;
         }
 
+        .social-links {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
         .youtube-promo {
             background: linear-gradient(135deg, #ff0000, #cc0000);
             color: white;
@@ -332,7 +339,6 @@
             display: inline-flex;
             align-items: center;
             gap: 10px;
-            margin-top: 1.5rem;
             text-decoration: none;
             font-weight: bold;
             transition: transform 0.3s, box-shadow 0.3s;
@@ -341,6 +347,24 @@
         .youtube-promo:hover {
             transform: translateY(-3px);
             box-shadow: 0 5px 15px rgba(255, 0, 0, 0.3);
+        }
+
+        .whatsapp-promo {
+            background: linear-gradient(135deg, #25D366, #128C7E);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .whatsapp-promo:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(37, 211, 102, 0.3);
         }
 
         /* CTA Section */
@@ -477,7 +501,7 @@
             <ul class="nav-links">
                 <li><a href="index.html">Home</a></li>
                 <li><a href="about-us.html">About</a></li>
-                <li><a href="buy-golden.html">Pricing</a></li>
+                <li><a href="pricing.html">Pricing</a></li>
                 <li><a href="contact.html">Contact</a></li>
             </ul>
         </nav>
@@ -545,40 +569,40 @@
         </div>
     </section>
 
- <!-- Founder Section -->
-<section class="content-section">
-    <div class="container">
-        <div class="section-title">
-            <h2>Our Founder</h2>
-            <p>The vision behind GoldenSpaceAI</p>
-        </div>
-        <div class="founder-section">
-            <div class="founder-card">
-                <div class="founder-icon">
-                    <i class="fas fa-user-tie"></i>
-                </div>
-                <h3>Faris</h3>
-                <div class="founder-title">Manager & Visionary</div>
-                <p>"My dream was to build a platform that connects all people to advanced AI technology. I created GoldenSpaceAI to make powerful AI tools accessible to everyone, not just those who can afford expensive subscriptions."</p>
-                <p>I believe in fairness above all else. That's why we offer instant refunds - just provide your crypto address and we'll return your payment, no ID required. It's simply the right thing to do.</p>
-                
-                <div class="social-links">
-                    <a href="https://www.youtube.com/@SaveEarth-w2f" class="youtube-promo" target="_blank">
-                        <i class="fab fa-youtube"></i>
-                        Check out my YouTube Channel
-                    </a>
-                    <p style="margin-top: 10px; font-size: 0.9rem; opacity: 0.8;">Join our growing community of 14 subscribers and counting!</p>
+    <!-- Founder Section -->
+    <section class="content-section">
+        <div class="container">
+            <div class="section-title">
+                <h2>Our Founder</h2>
+                <p>The vision behind GoldenSpaceAI</p>
+            </div>
+            <div class="founder-section">
+                <div class="founder-card">
+                    <div class="founder-icon">
+                        <i class="fas fa-user-tie"></i>
+                    </div>
+                    <h3>Faris</h3>
+                    <div class="founder-title">Manager & Visionary</div>
+                    <p>"My dream was to build a platform that connects all people to advanced AI technology. I created GoldenSpaceAI to make powerful AI tools accessible to everyone, not just those who can afford expensive subscriptions."</p>
+                    <p>I believe in fairness above all else. That's why we offer instant refunds - just provide your crypto address and we'll return your payment, no ID required. It's simply the right thing to do.</p>
                     
-                    <a href="https://whatsapp.com/channel/0029Vb8waSHwXbF3xYZYA3Z" class="whatsapp-promo" target="_blank">
-                        <i class="fab fa-whatsapp"></i>
-                        Join our WhatsApp Channel
-                    </a>
-                    <p style="margin-top: 10px; font-size: 0.9rem; opacity: 0.8;">Get instant updates and announcements</p>
+                    <div class="social-links">
+                        <a href="https://www.youtube.com/@SaveEarth-w2f" class="youtube-promo" target="_blank">
+                            <i class="fab fa-youtube"></i>
+                            Check out my YouTube Channel
+                        </a>
+                        <p style="margin-top: 10px; font-size: 0.9rem; opacity: 0.8;">Join our growing community of 14 subscribers and counting!</p>
+                        
+                        <a href="https://whatsapp.com/channel/0029Vb8waSHwXbF3xYZYA3Z" class="whatsapp-promo" target="_blank">
+                            <i class="fab fa-whatsapp"></i>
+                            Join our WhatsApp Channel
+                        </a>
+                        <p style="margin-top: 10px; font-size: 0.9rem; opacity: 0.8;">Get instant updates and announcements</p>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-</section>
+    </section>
 
     <!-- CTA Section -->
     <section class="cta-section">
@@ -587,7 +611,7 @@
             <p>Join thousands of users who are already benefiting from our Golden System</p>
             <div class="cta-buttons">
                 <a href="signup.html" class="cta-button">Get Started Now</a>
-                <a href="buy-golden.html" class="cta-button secondary">View Pricing</a>
+                <a href="pricing.html" class="cta-button secondary">View Pricing</a>
             </div>
         </div>
     </section>
@@ -599,22 +623,22 @@
                 <div class="footer-section">
                     <h4>GoldenSpaceAI</h4>
                     <p>Democratizing advanced AI technology with fair pricing, respect, and top-tier security for all users.</p>
-                    <p>Email: support@goldenspaceai.space</p>
+                    <p>Email: contact@goldenspaceai.space</p>
                 </div>
                 <div class="footer-section">
                     <h4>Quick Links</h4>
                     <ul class="footer-links">
                         <li><a href="index.html">Home</a></li>
                         <li><a href="about-us.html">About Us</a></li>
-                        <li><a href="buy-golden.html">Pricing</a></li>
+                        <li><a href="pricing.html">Pricing</a></li>
                         <li><a href="contact.html">Contact</a></li>
                     </ul>
                 </div>
                 <div class="footer-section">
                     <h4>Legal</h4>
                     <ul class="footer-links">
-                        <li><a href="privacy.html">Privacy Policy</a></li>
-                        <li><a href="terms.html">Terms of Service</a></li>
+                        <li><a href="privacy-policy.html">Privacy Policy</a></li>
+                        <li><a href="terms-of-service.html">Terms of Service</a></li>
                         <li><a href="refund.html">Refund Policy</a></li>
                     </ul>
                 </div>

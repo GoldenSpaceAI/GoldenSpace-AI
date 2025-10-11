@@ -68,6 +68,30 @@
         display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap;
       }
       .links a { color:#e7f4e9; }
+      .refund-cta {
+        background: linear-gradient(135deg, rgba(246,198,74,0.1), rgba(246,198,74,0.05));
+        border: 2px solid var(--gold);
+        border-radius: 15px;
+        padding: 25px;
+        text-align: center;
+        margin: 30px 0;
+      }
+      .refund-btn {
+        background: linear-gradient(135deg, var(--gold), var(--gold2));
+        color: #1a1300;
+        border: none;
+        padding: 15px 30px;
+        border-radius: 12px;
+        font-size: 1.2rem;
+        font-weight: bold;
+        cursor: pointer;
+        margin-top: 15px;
+        transition: all 0.3s ease;
+      }
+      .refund-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(246,198,74,0.4);
+      }
     </style>
   </head>
   <body>
@@ -85,66 +109,75 @@
         <h1>Refund Policy</h1>
         <p class="muted">Last updated: <span id="lastUpdated"></span></p>
 
+        <!-- NEW REFUND OFFER SECTION -->
+        <div class="refund-cta">
+          <h2 style="color: var(--gold); margin-top: 0;">💰 Flexible Refund Policy</h2>
+          <p><strong>We offer refunds no matter when - you can refund your Golden that is not used in your current balance!</strong></p>
+          
+          <p>If Golden prices dropped or increased, you will be refunded the amount you paid when you purchased the Golden.</p>
+          
+          <p><strong>Flexible Refund Options:</strong> We can refund you to your wallet by either LTC or BTC - even if you paid with LTC and you want the refund in BTC, we can offer it to you.</p>
+          
+          <a href="/refund-golden.html">
+            <button class="refund-btn">Refund Now</button>
+          </a>
+          
+          <p class="muted" style="margin-top: 15px; margin-bottom: 0;">
+            Instant processing • No questions asked • Any unused Golden balance
+          </p>
+        </div>
+
         <h2>1) Merchant of Record (Payments)</h2>
         <p>
-          Purchases for GoldenSpaceAI are processed by <strong>Paddle.com Market Limited</strong> and affiliates (“Paddle”), who act as the
-          <em>Merchant of Record</em> for your transaction. Paddle handles payment processing, invoicing, tax (VAT/GST) calculation and collection, compliance, and chargebacks on our behalf.
+          Purchases for GoldenSpaceAI are processed directly through our secure cryptocurrency payment system. 
+          All transactions are handled on the blockchain with full transparency.
         </p>
 
-        <h2>2) No Refunds</h2>
+        <h2>2) Generous Refund Policy</h2>
         <p class="note">
-          <strong>All sales are final.</strong> GoldenSpaceAI does not offer refunds or credits once a subscription or digital product has been purchased, regardless of usage.
+          <strong>We believe in fair treatment:</strong> You can request a refund for any unused Golden coins in your balance at any time, regardless of when you purchased them.
         </p>
         <p>
-          By completing a purchase, you acknowledge and agree to this <strong>no-refund policy</strong>.
-          We encourage you to evaluate our free tier or materials before upgrading.
+          We refund the original purchase amount in either BTC or LTC (your choice), protecting you from cryptocurrency price fluctuations.
         </p>
 
-        <h2>3) Limited Exceptions (via Paddle)</h2>
+        <h2>3) Refund Eligibility</h2>
         <p>
-          While our policy is no refunds, Paddle may, at its discretion and subject to law, issue a refund in limited cases such as:
+          You qualify for a refund if:
         </p>
         <ul>
-          <li>Duplicate payment or accidental multiple charges</li>
-          <li>Confirmed fraudulent/unauthorized payment</li>
-          <li>Clear, provable technical failure preventing access immediately after purchase</li>
+          <li>You have unused Golden coins in your balance</li>
+          <li>You want to convert between BTC/LTC refund options</li>
+          <li>Golden prices have changed since your purchase</li>
+          <li>You're unsatisfied with our service</li>
         </ul>
-        <p>
-          If you believe one of these applies, contact us first at
-          <a href="mailto:goldenspaceais@gmail.com">goldenspaceais@gmail.com</a> with your order number, or use the link in your Paddle receipt to manage the purchase.
-        </p>
 
-        <h2>4) Cancellations & Renewals</h2>
+        <h2>4) How Refunds Work</h2>
         <ul>
-          <li><strong>Cancel anytime:</strong> You can cancel your subscription at any time. Your access continues until the end of the current billing period.</li>
-          <li><strong>No pro-rata credits:</strong> We don’t offer partial or pro-rated refunds for unused time in a billing cycle.</li>
-          <li><strong>Auto-renewal:</strong> Subscriptions renew automatically unless cancelled before the renewal date shown on your Paddle receipt.</li>
-          <li><strong>Manage billing:</strong> Use the “Manage Subscription” link in your Paddle email receipt/Invoice to update payment details, cancel, or view invoices.</li>
+          <li><strong>Instant Processing:</strong> Refunds are processed within 24 hours</li>
+          <li><strong>Flexible Currency:</strong> Choose BTC or LTC regardless of original payment method</li>
+          <li><strong>Price Protection:</strong> Refunded at your original purchase price</li>
+          <li><strong>No Fees:</strong> We don't charge any processing fees for refunds</li>
         </ul>
 
-        <h2>5) Trials, Coupons, & One-time Purchases</h2>
+        <h2>5) Subscription Cancellations</h2>
         <ul>
-          <li><strong>Trials:</strong> If a free trial is offered, you won’t be charged until the trial ends. Cancel before the trial ends to avoid being charged.</li>
-          <li><strong>Coupons/Promos:</strong> Discounts apply only to the specified term. Renewals occur at then-current pricing unless stated otherwise.</li>
-          <li><strong>One-time items:</strong> Digital one-time purchases are non-refundable once delivered/activated.</li>
+          <li><strong>Cancel anytime:</strong> You can cancel your subscription at any time</li>
+          <li><strong>Refund unused portion:</strong> Get refunded for unused subscription time</li>
+          <li><strong>No questions asked:</strong> We don't require explanations for refunds</li>
         </ul>
 
-        <h2>6) Taxes & Invoices</h2>
+        <h2>6) How to Request a Refund</h2>
         <p>
-          Paddle calculates and collects applicable taxes (e.g., VAT/GST) based on your location and provides compliant invoices/receipts. Tax amounts are shown at checkout and on your receipt.
-        </p>
-
-        <h2>7) Legal Rights</h2>
-        <p>
-          This policy applies to the maximum extent permitted by applicable law and does not limit any <em>mandatory consumer rights</em> you may have in your jurisdiction.
-          Where the law provides a non-waivable right of withdrawal or refund, Paddle will handle such requests in accordance with those laws.
-        </p>
-
-        <h2>8) How to Contact Us</h2>
-        <p>
-          If you have questions about a charge, billing, or believe you were charged in error, contact us:
+          Simply click the <strong>"Refund Now"</strong> button above or contact us directly:
           <br />
           <strong>Email:</strong> <a href="mailto:goldenspaceais@gmail.com">goldenspaceais@gmail.com</a>
+        </p>
+
+        <h2>7) Our Commitment</h2>
+        <p>
+          We're committed to your satisfaction. If our service doesn't meet your expectations, 
+          we'll gladly refund your unused Golden coins. Your happiness is our priority.
         </p>
 
         <div class="footer">
@@ -168,4 +201,3 @@
     </script>
   </body>
 </html>
-```0

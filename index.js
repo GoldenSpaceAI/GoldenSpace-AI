@@ -495,8 +495,8 @@ async function processPackagePayments() {
 }
 
 // Start checking every 30 seconds
-setInterval(processPackagePayments, 30000);
-setTimeout(processPackagePayments, 10000);
+setInterval(processPackagePayments,60000);
+setTimeout(processPackagePayments, 30000);
 
 // ---------- Google OAuth ----------
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {

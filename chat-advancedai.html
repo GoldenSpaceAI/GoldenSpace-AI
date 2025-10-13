@@ -103,7 +103,7 @@
   </style>
 </head>
 <body>
-  <!-- ==================== 20G MONTHLY SUBSCRIPTION LOCK ==================== -->
+<!-- ==================== 20G MONTHLY SUBSCRIPTION LOCK ==================== -->
 <div id="goldenLockOverlay" class="golden-lock-overlay">
   <div class="golden-unlock-container">
     <div class="lock-header">
@@ -147,6 +147,134 @@
 </div>
 
 <style>
+.status-message {
+    padding: 10px;
+    border-radius: 5px;
+    margin: 10px 0;
+    text-align: center;
+    font-weight: bold;
+}
+
+.status-message.success {
+    background: rgba(0, 255, 0, 0.1);
+    border: 1px solid #00ff00;
+    color: #00ff00;
+}
+
+.status-message.error {
+    background: rgba(255, 0, 0, 0.1);
+    border: 1px solid #ff4444;
+    color: #ff4444;
+}
+
+.status-message.processing {
+    background: rgba(255, 215, 0, 0.1);
+    border: 1px solid gold;
+    color: gold;
+}
+</style>
+
+<script>
+async function unlockMonthlyFeature() {
+    const unlockBtn = document.querySelector('.subscribe-btn');
+    const statusDiv = document.getElementById('unlockStatus');
+    
+    try {
+        unlockBtn.disabled = true;
+        unlockBtn.textContent = 'PROCESSING...';
+        statusDiv.innerHTML = '⏳ Processing your request...';
+        statusDiv.className = 'status-message processing';
+
+        // First, check the user's current balance and feature status
+        const balanceResponse = await fetch('/api/golden-balance');
+        const balanceData = await balanceResponse.json();
+        
+        if (!balanceData.loggedIn) {
+            statusDiv.innerHTML = '❌ Please log in to unlock features';
+            statusDiv.className = 'status-message error';
+            unlockBtn.disabled = false;
+            unlockBtn.textContent = 'UNLOCK FOR 20G/MONTH';
+            return;
+        }
+
+        // Check if user has enough Golden
+        if (balanceData.balance < 20) {
+            statusDiv.innerHTML = '❌ Insufficient Golden balance. You need 20G to unlock this feature.';
+            statusDiv.className = 'status-message error';
+            unlockBtn.disabled = false;
+            unlockBtn.textContent = 'UNLOCK FOR 20G/MONTH';
+            return;
+        }
+
+        // Unlock the feature - USING CORRECT FEATURE NAME WITH UNDERSCORE
+        const unlockResponse = await fetch('/api/unlock-feature', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                feature: 'chat_advancedai', // CORRECT: using underscore, not dash
+                cost: 20
+            })
+        });
+
+        const unlockData = await unlockResponse.json();
+
+        if (unlockData.success) {
+            statusDiv.innerHTML = '✅ Feature unlocked successfully! You now have 30 days of access.';
+            statusDiv.className = 'status-message success';
+            
+            // Update the displayed balance
+            document.getElementById('currentUserBalance').textContent = unlockData.newBalance + 'G';
+            
+            // Close the overlay after success
+            setTimeout(() => {
+                document.getElementById('goldenLockOverlay').style.display = 'none';
+                // Enable the feature here
+                enablePremiumFeature();
+            }, 2000);
+            
+        } else {
+            statusDiv.innerHTML = '❌ ' + (unlockData.error || 'Failed to unlock feature');
+            statusDiv.className = 'status-message error';
+        }
+
+    } catch (error) {
+        console.error('Error unlocking feature:', error);
+        statusDiv.innerHTML = '❌ Network error. Please try again.';
+        statusDiv.className = 'status-message error';
+    } finally {
+        unlockBtn.disabled = false;
+        unlockBtn.textContent = 'UNLOCK FOR 20G/MONTH';
+    }
+}
+
+// Function to enable the premium feature after unlocking
+function enablePremiumFeature() {
+    // Add your code here to enable the actual feature
+    console.log('Premium feature enabled!');
+    // Example: show the chat interface, enable buttons, etc.
+    // document.getElementById('chatInterface').style.display = 'block';
+}
+
+// Update balance when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    updateGoldenBalance();
+});
+
+function updateGoldenBalance() {
+    fetch('/api/golden-balance')
+        .then(response => response.json())
+        .then(data => {
+            if (data.loggedIn) {
+                document.getElementById('currentUserBalance').textContent = data.balance + 'G';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching balance:', error);
+        });
+}
+</script><style>
 .status-message {
     padding: 10px;
     border-radius: 5px;

@@ -103,15 +103,15 @@
   </style>
 </head>
 <body>
-<!-- ==================== 20G MONTHLY SUBSCRIPTION LOCK ==================== -->
-<div id="goldenLockOverlay" class="golden-lock-overlay">
+<!-- ==================== UNIVERSAL 20G MONTHLY LOCK ==================== -->
+<div id="goldenLockOverlay20G" class="golden-lock-overlay">
   <div class="golden-unlock-container">
     <div class="lock-header">
       <div class="lock-icon">🔒</div>
-      <h2>Premium Feature Locked</h2>
+      <h2 id="lockFeatureTitle">Premium Feature Locked</h2>
     </div>
     
-    <div class="feature-description">
+    <div class="feature-description" id="lockFeatureDescription">
       This premium feature requires a monthly subscription
     </div>
     
@@ -122,7 +122,7 @@
     
     <div class="balance-section">
       <div class="balance-label">Your Golden Balance:</div>
-      <div class="balance-amount" id="currentUserBalance">0G</div>
+      <div class="balance-amount" id="currentUserBalance20G">0G</div>
     </div>
     
     <div class="features-included">
@@ -133,11 +133,11 @@
       <div class="feature-item">✅ All future updates</div>
     </div>
     
-    <button class="subscribe-btn" onclick="unlockMonthlyFeature()">
+    <button class="subscribe-btn" onclick="unlockUniversal20G()">
       UNLOCK FOR 20G/MONTH
     </button>
     
-    <div id="unlockStatus" class="status-message"></div>
+    <div id="unlockStatus20G" class="status-message"></div>
     
     <div class="action-links">
       <a href="/buy-golden.html" class="buy-link">💰 Buy More Golden</a>
@@ -147,6 +147,148 @@
 </div>
 
 <style>
+.golden-lock-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+}
+
+.golden-unlock-container {
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    padding: 30px;
+    border-radius: 15px;
+    border: 2px solid gold;
+    max-width: 400px;
+    width: 90%;
+    text-align: center;
+    color: white;
+}
+
+.lock-header {
+    margin-bottom: 20px;
+}
+
+.lock-icon {
+    font-size: 3em;
+    margin-bottom: 10px;
+}
+
+.lock-header h2 {
+    color: gold;
+    margin: 0;
+}
+
+.feature-description {
+    color: #ccc;
+    margin-bottom: 20px;
+    font-size: 1.1em;
+}
+
+.pricing-section {
+    margin-bottom: 20px;
+}
+
+.price-main {
+    font-size: 3em;
+    color: gold;
+    font-weight: bold;
+}
+
+.price-period {
+    color: #ccc;
+    font-size: 0.9em;
+}
+
+.balance-section {
+    background: rgba(255, 215, 0, 0.1);
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    border: 1px solid rgba(255, 215, 0, 0.3);
+}
+
+.balance-label {
+    color: #ccc;
+    font-size: 0.9em;
+    margin-bottom: 5px;
+}
+
+.balance-amount {
+    color: gold;
+    font-size: 1.5em;
+    font-weight: bold;
+}
+
+.features-included {
+    text-align: left;
+    margin-bottom: 25px;
+}
+
+.features-included h3 {
+    color: gold;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.feature-item {
+    padding: 5px 0;
+    color: #ccc;
+}
+
+.subscribe-btn {
+    background: linear-gradient(45deg, #ffd700, #ffed4e);
+    color: black;
+    border: none;
+    padding: 15px 30px;
+    font-size: 1.1em;
+    font-weight: bold;
+    border-radius: 10px;
+    cursor: pointer;
+    width: 100%;
+    margin-bottom: 15px;
+    transition: all 0.3s ease;
+}
+
+.subscribe-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 215, 0, 0.4);
+}
+
+.subscribe-btn:disabled {
+    background: #666;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.action-links {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.buy-link, .home-link {
+    color: gold;
+    text-decoration: none;
+    padding: 8px 15px;
+    border: 1px solid gold;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+    flex: 1;
+    text-align: center;
+}
+
+.buy-link:hover, .home-link:hover {
+    background: rgba(255, 215, 0, 0.1);
+}
+
 .status-message {
     padding: 10px;
     border-radius: 5px;
@@ -175,9 +317,28 @@
 </style>
 
 <script>
-async function unlockMonthlyFeature() {
-    const unlockBtn = document.querySelector('.subscribe-btn');
-    const statusDiv = document.getElementById('unlockStatus');
+// Global variables to track which feature is being unlocked
+let current20GFeature = '';
+let current20GCallback = null;
+
+// Function to show the universal 20G lock
+function show20GLock(featureName, featureTitle, featureDescription, unlockCallback) {
+    current20GFeature = featureName;
+    current20GCallback = unlockCallback;
+    
+    // Update the lock UI with feature-specific info
+    document.getElementById('lockFeatureTitle').textContent = featureTitle + ' Locked';
+    document.getElementById('lockFeatureDescription').textContent = featureDescription;
+    
+    // Update balance and show overlay
+    update20GBalance();
+    document.getElementById('goldenLockOverlay20G').style.display = 'flex';
+}
+
+// Function to unlock universal 20G feature
+async function unlockUniversal20G() {
+    const unlockBtn = document.querySelector('#goldenLockOverlay20G .subscribe-btn');
+    const statusDiv = document.getElementById('unlockStatus20G');
     
     try {
         unlockBtn.disabled = true;
@@ -185,7 +346,7 @@ async function unlockMonthlyFeature() {
         statusDiv.innerHTML = '⏳ Processing your request...';
         statusDiv.className = 'status-message processing';
 
-        // First, check the user's current balance and feature status
+        // Check user's balance
         const balanceResponse = await fetch('/api/golden-balance');
         const balanceData = await balanceResponse.json();
         
@@ -206,14 +367,14 @@ async function unlockMonthlyFeature() {
             return;
         }
 
-        // Unlock the feature - USING CORRECT FEATURE NAME WITH UNDERSCORE
+        // Unlock the universal 20G feature
         const unlockResponse = await fetch('/api/unlock-feature', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                feature: 'chat_advancedai', // CORRECT: using underscore, not dash
+                feature: 'premium_monthly', // Using the universal 20G feature
                 cost: 20
             })
         });
@@ -225,13 +386,17 @@ async function unlockMonthlyFeature() {
             statusDiv.className = 'status-message success';
             
             // Update the displayed balance
-            document.getElementById('currentUserBalance').textContent = unlockData.newBalance + 'G';
+            document.getElementById('currentUserBalance20G').textContent = unlockData.newBalance + 'G';
             
-            // Close the overlay after success
+            // Close the overlay after success and call the feature-specific callback
             setTimeout(() => {
-                document.getElementById('goldenLockOverlay').style.display = 'none';
-                // Enable the feature here
-                enablePremiumFeature();
+                document.getElementById('goldenLockOverlay20G').style.display = 'none';
+                if (current20GCallback) {
+                    current20GCallback();
+                }
+                // Reset for next use
+                current20GFeature = '';
+                current20GCallback = null;
             }, 2000);
             
         } else {
@@ -249,58 +414,25 @@ async function unlockMonthlyFeature() {
     }
 }
 
-// Function to enable the premium feature after unlocking
-function enablePremiumFeature() {
-    // Add your code here to enable the actual feature
-    console.log('Premium feature enabled!');
-    // Example: show the chat interface, enable buttons, etc.
-    // document.getElementById('chatInterface').style.display = 'block';
-}
-
-// Update balance when page loads
-document.addEventListener('DOMContentLoaded', function() {
-    updateGoldenBalance();
-});
-
-function updateGoldenBalance() {
+// Update balance for 20G overlay
+function update20GBalance() {
     fetch('/api/golden-balance')
         .then(response => response.json())
         .then(data => {
             if (data.loggedIn) {
-                document.getElementById('currentUserBalance').textContent = data.balance + 'G';
+                document.getElementById('currentUserBalance20G').textContent = data.balance + 'G';
             }
         })
         .catch(error => {
             console.error('Error fetching balance:', error);
         });
 }
-</script><style>
-.status-message {
-    padding: 10px;
-    border-radius: 5px;
-    margin: 10px 0;
-    text-align: center;
-    font-weight: bold;
-}
 
-.status-message.success {
-    background: rgba(0, 255, 0, 0.1);
-    border: 1px solid #00ff00;
-    color: #00ff00;
-}
-
-.status-message.error {
-    background: rgba(255, 0, 0, 0.1);
-    border: 1px solid #ff4444;
-    color: #ff4444;
-}
-
-.status-message.processing {
-    background: rgba(255, 215, 0, 0.1);
-    border: 1px solid gold;
-    color: gold;
-}
-</style>
+// Initialize balance when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    update20GBalance();
+});
+</script>
 
 <script>
 async function unlockMonthlyFeature() {

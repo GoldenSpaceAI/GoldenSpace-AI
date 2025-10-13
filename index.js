@@ -137,7 +137,7 @@ const FEATURE_PRICES = {
   create_rocket: 4,
   create_satellite: 4,
   your_space: 4,
-  search_lessons: 10,
+  search_lessons: 4,
   chat_advancedai: 20,
   homework_helper: 20
 };

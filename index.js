@@ -564,10 +564,9 @@ if (process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET) {
 // ---------- Routes ----------
 app.get("/", (req, res) => res.sendFile(path.join(__dirname, "login-signup.html")));
 app.get("/login", (req, res) => res.sendFile(path.join(__dirname, "login-signup.html")));
-
-// Serve all HTML files directly
-app.get("/:page.html", (req, res) => {
-  res.sendFile(path.join(__dirname, req.params.page + ".html"));
+// Serve admin page
+app.get("/admin-page-golden.html", (req, res) => {
+  res.sendFile(path.join(__dirname, "admin-page-golden.html"));
 });
 
 // ---------- API: User info ----------
@@ -775,8 +774,267 @@ app.get("/test-blockchain", async (req, res) => {
     });
   }
 });
+// ==================== ADMIN GOLDEN MANAGEMENT ====================
 
-// ==================== AI ENDPOINTS (ALL WORKING) ====================
+// Simple admin authentication
+const ADMIN_SECRET_KEY = process.env.ADMIN_SECRET_KEY || "golden-admin-secret-2024";
+
+const requireAdminAuth = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Admin authentication required' });
+  }
+  
+  const token = authHeader.substring(7);
+  
+  if (token !== ADMIN_SECRET_KEY) {
+    return res.status(403).json({ error: 'Invalid admin token' });
+  }
+  
+  next();
+};
+
+// Get all users with their Golden balances
+app.get("/api/admin/all-users", requireAdminAuth, (req, res) => {
+  const db = loadGoldenDB();
+  const users = [];
+  
+  for (const [userId, userData] of Object.entries(db.users)) {
+    users.push({
+      userId,
+      name: userData.name,
+      email: userData.email,
+      golden_balance: userData.golden_balance || 0,
+      created_at: userData.created_at,
+      last_login: userData.last_login,
+      provider: userId.split('@')[1] // Extract provider from userId
+    });
+  }
+  
+  // Sort by highest balance first
+  users.sort((a, b) => b.golden_balance - a.golden_balance);
+  
+  res.json({
+    totalUsers: users.length,
+    totalGolden: users.reduce((sum, user) => sum + user.golden_balance, 0),
+    users: users
+  });
+});
+
+// Add Golden to user account
+app.post("/api/admin/add-golden", requireAdminAuth, (req, res) => {
+  const { userId, amount, reason } = req.body;
+  
+  if (!userId || !amount) {
+    return res.status(400).json({ error: 'User ID and amount are required' });
+  }
+  
+  const db = loadGoldenDB();
+  
+  if (!db.users[userId]) {
+    return res.status(404).json({ error: 'User not found' });
+  }
+  
+  const currentBalance = db.users[userId].golden_balance || 0;
+  const newBalance = currentBalance + parseInt(amount);
+  
+  db.users[userId].golden_balance = newBalance;
+  
+  // Add to transaction history
+  if (!db.users[userId].admin_transactions) {
+    db.users[userId].admin_transactions = [];
+  }
+  
+  db.users[userId].admin_transactions.push({
+    type: 'add',
+    amount: parseInt(amount),
+    previous_balance: currentBalance,
+    new_balance: newBalance,
+    reason: reason || 'Admin adjustment',
+    timestamp: new Date().toISOString(),
+    admin: true
+  });
+  
+  const success = saveGoldenDB(db);
+  
+  if (success) {
+    res.json({
+      success: true,
+      userId,
+      amountAdded: amount,
+      previousBalance: currentBalance,
+      newBalance: newBalance,
+      reason: reason || 'Admin adjustment'
+    });
+  } else {
+    res.status(500).json({ error: 'Failed to update database' });
+  }
+});
+
+// Subtract Golden from user account
+app.post("/api/admin/subtract-golden", requireAdminAuth, (req, res) => {
+  const { userId, amount, reason } = req.body;
+  
+  if (!userId || !amount) {
+    return res.status(400).json({ error: 'User ID and amount are required' });
+  }
+  
+  const db = loadGoldenDB();
+  
+  if (!db.users[userId]) {
+    return res.status(404).json({ error: 'User not found' });
+  }
+  
+  const currentBalance = db.users[userId].golden_balance || 0;
+  
+  if (currentBalance < amount) {
+    return res.status(400).json({ 
+      error: 'Insufficient balance', 
+      currentBalance,
+      attemptedSubtraction: amount 
+    });
+  }
+  
+  const newBalance = currentBalance - parseInt(amount);
+  db.users[userId].golden_balance = newBalance;
+  
+  // Add to transaction history
+  if (!db.users[userId].admin_transactions) {
+    db.users[userId].admin_transactions = [];
+  }
+  
+  db.users[userId].admin_transactions.push({
+    type: 'subtract',
+    amount: parseInt(amount),
+    previous_balance: currentBalance,
+    new_balance: newBalance,
+    reason: reason || 'Admin adjustment',
+    timestamp: new Date().toISOString(),
+    admin: true
+  });
+  
+  const success = saveGoldenDB(db);
+  
+  if (success) {
+    res.json({
+      success: true,
+      userId,
+      amountSubtracted: amount,
+      previousBalance: currentBalance,
+      newBalance: newBalance,
+      reason: reason || 'Admin adjustment'
+    });
+  } else {
+    res.status(500).json({ error: 'Failed to update database' });
+  }
+});
+
+// Set specific Golden balance for user
+app.post("/api/admin/set-golden", requireAdminAuth, (req, res) => {
+  const { userId, balance, reason } = req.body;
+  
+  if (!userId || balance === undefined) {
+    return res.status(400).json({ error: 'User ID and balance are required' });
+  }
+  
+  const db = loadGoldenDB();
+  
+  if (!db.users[userId]) {
+    return res.status(404).json({ error: 'User not found' });
+  }
+  
+  const currentBalance = db.users[userId].golden_balance || 0;
+  const newBalance = parseInt(balance);
+  
+  db.users[userId].golden_balance = newBalance;
+  
+  // Add to transaction history
+  if (!db.users[userId].admin_transactions) {
+    db.users[userId].admin_transactions = [];
+  }
+  
+  db.users[userId].admin_transactions.push({
+    type: 'set',
+    amount: newBalance - currentBalance,
+    previous_balance: currentBalance,
+    new_balance: newBalance,
+    reason: reason || 'Admin set balance',
+    timestamp: new Date().toISOString(),
+    admin: true
+  });
+  
+  const success = saveGoldenDB(db);
+  
+  if (success) {
+    res.json({
+      success: true,
+      userId,
+      previousBalance: currentBalance,
+      newBalance: newBalance,
+      reason: reason || 'Admin set balance'
+    });
+  } else {
+    res.status(500).json({ error: 'Failed to update database' });
+  }
+});
+
+// Get user transaction history
+app.get("/api/admin/user-transactions/:userId", requireAdminAuth, (req, res) => {
+  const { userId } = req.params;
+  
+  const db = loadGoldenDB();
+  const user = db.users[userId];
+  
+  if (!user) {
+    return res.status(404).json({ error: 'User not found' });
+  }
+  
+  res.json({
+    userId,
+    name: user.name,
+    email: user.email,
+    current_balance: user.golden_balance || 0,
+    transactions: user.admin_transactions || [],
+    total_transactions: (user.admin_transactions || []).length
+  });
+});
+
+// Search users by email or name
+app.get("/api/admin/search-users", requireAdminAuth, (req, res) => {
+  const { query } = req.query;
+  
+  if (!query) {
+    return res.status(400).json({ error: 'Search query is required' });
+  }
+  
+  const db = loadGoldenDB();
+  const results = [];
+  const searchTerm = query.toLowerCase();
+  
+  for (const [userId, userData] of Object.entries(db.users)) {
+    if (
+      userData.email?.toLowerCase().includes(searchTerm) ||
+      userData.name?.toLowerCase().includes(searchTerm) ||
+      userId.toLowerCase().includes(searchTerm)
+    ) {
+      results.push({
+        userId,
+        name: userData.name,
+        email: userData.email,
+        golden_balance: userData.golden_balance || 0,
+        created_at: userData.created_at,
+        last_login: userData.last_login
+      });
+    }
+  }
+  
+  res.json({
+    query,
+    resultsFound: results.length,
+    users: results
+  });
+});// ==================== AI ENDPOINTS (ALL WORKING) ====================
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const upload = multer({ dest: 'uploads/' });
@@ -957,8 +1215,8 @@ app.post("/ai/your-space", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
-
-app.post("/search-lessons", async (req, res) => {
+// Serve admin page
+;app.post("/search-lessons", async (req, res) => {
   try {
     const { query } = req.body;
     if (!query) return res.status(400).json({ error: "Query is required" });

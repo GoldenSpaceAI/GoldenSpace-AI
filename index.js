@@ -329,6 +329,7 @@ const FEATURE_PRICES = {
   search_lessons: 4,
   chat_advancedai: 20,
   homework_helper: 20
+  premium_monthly: 20 
 };
 
 // Calculate hours remaining until expiration

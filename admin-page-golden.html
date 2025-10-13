@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GoldenSpaceAI - Admin Golden Management</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #0c0c0c, #1a1a2e);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 215, 0, 0.1);
+            border-radius: 15px;
+            border: 2px solid gold;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            color: gold;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+            margin-bottom: 10px;
+        }
+
+        .admin-panel {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+
+        .auth-section {
+            display: flex;
+            gap: 10px;
+            align-items: end;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            flex: 1;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: gold;
+            font-weight: bold;
+        }
+
+        input, select, button {
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        input, select {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            width: 100%;
+        }
+
+        button {
+            background: linear-gradient(45deg, #ffd700, #ffed4e);
+            color: black;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.4);
+        }
+
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .danger {
+            background: linear-gradient(45deg, #ff4444, #ff6666) !important;
+        }
+
+        .success {
+            background: linear-gradient(45deg, #00aa00, #00cc00) !important;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: rgba(255, 215, 0, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: gold;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .users-table {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+
+        .users-table th {
+            background: rgba(255, 215, 0, 0.2);
+            padding: 15px;
+            text-align: left;
+            color: gold;
+            font-weight: bold;
+        }
+
+        .users-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .users-table tr:hover {
+            background: rgba(255, 215, 0, 0.05);
+        }
+
+        .golden-amount {
+            color: gold;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .user-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .user-actions button {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: #1a1a2e;
+            padding: 30px;
+            border-radius: 15px;
+            border: 2px solid gold;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .modal h3 {
+            color: gold;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            display: none;
+        }
+
+        .alert.success {
+            background: rgba(0, 255, 0, 0.1);
+            border: 1px solid #00ff00;
+            color: #00ff00;
+        }
+
+        .alert.error {
+            background: rgba(255, 0, 0, 0.1);
+            border: 1px solid #ff4444;
+            color: #ff4444;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: gold;
+        }
+
+        @media (max-width: 768px) {
+            .auth-section, .controls {
+                flex-direction: column;
+            }
+            
+            .search-box {
+                min-width: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛡️ GoldenSpaceAI Admin</h1>
+            <p>Manage User Golden Balances</p>
+        </div>
+
+        <div class="admin-panel">
+            <div class="auth-section">
+                <div class="input-group">
+                    <label for="adminKey">Admin Secret Key</label>
+                    <input type="password" id="adminKey" placeholder="Enter admin secret key">
+                </div>
+                <button onclick="authenticate()">Authenticate</button>
+            </div>
+
+            <div id="alert" class="alert"></div>
+
+            <div id="authenticatedSection" style="display: none;">
+                <div class="stats">
+                    <div class="stat-card">
+                        <div class="stat-label">Total Users</div>
+                        <div class="stat-number" id="totalUsers">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Total Golden</div>
+                        <div class="stat-number" id="totalGolden">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Average Balance</div>
+                        <div class="stat-number" id="avgBalance">0</div>
+                    </div>
+                </div>
+
+                <div class="controls">
+                    <div class="input-group search-box">
+                        <label for="searchUsers">Search Users</label>
+                        <input type="text" id="searchUsers" placeholder="Search by email, name, or user ID..." oninput="searchUsers()">
+                    </div>
+                    <button onclick="loadAllUsers()">Refresh All Users</button>
+                    <button class="success" onclick="exportData()">Export Data</button>
+                </div>
+
+                <div id="usersList">
+                    <div class="loading">Loading users...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="adjustModal" class="modal">
+        <div class="modal-content">
+            <h3 id="modalTitle">Adjust Golden Balance</h3>
+            <div class="input-group">
+                <label for="adjustAmount">Amount</label>
+                <input type="number" id="adjustAmount" placeholder="Enter amount">
+            </div>
+            <div class="input-group">
+                <label for="adjustReason">Reason</label>
+                <input type="text" id="adjustReason" placeholder="Reason for adjustment">
+            </div>
+            <div class="modal-actions">
+                <button onclick="closeModal('adjustModal')">Cancel</button>
+                <button id="confirmAdjust" class="success">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="transactionsModal" class="modal">
+        <div class="modal-content">
+            <h3>Transaction History</h3>
+            <div id="transactionsList"></div>
+            <div class="modal-actions">
+                <button onclick="closeModal('transactionsModal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentAdminKey = '';
+        let currentUsers = [];
+        let currentEditingUserId = '';
+
+        function showAlert(message, type = 'error') {
+            const alert = document.getElementById('alert');
+            alert.textContent = message;
+            alert.className = `alert ${type}`;
+            alert.style.display = 'block';
+            setTimeout(() => {
+                alert.style.display = 'none';
+            }, 5000);
+        }
+
+        function authenticate() {
+            const adminKey = document.getElementById('adminKey').value;
+            if (!adminKey) {
+                showAlert('Please enter admin secret key');
+                return;
+            }
+
+            currentAdminKey = adminKey;
+            document.getElementById('authenticatedSection').style.display = 'block';
+            showAlert('Successfully authenticated!', 'success');
+            loadAllUsers();
+        }
+
+        async function makeAdminRequest(url, options = {}) {
+            try {
+                const response = await fetch(url, {
+                    ...options,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${currentAdminKey}`,
+                        ...options.headers
+                    }
+                });
+
+                if (response.status === 401 || response.status === 403) {
+                    showAlert('Authentication failed. Please check your admin key.');
+                    return null;
+                }
+
+                return await response.json();
+            } catch (error) {
+                showAlert('Network error: ' + error.message);
+                return null;
+            }
+        }
+
+        async function loadAllUsers() {
+            const response = await makeAdminRequest('/api/admin/all-users');
+            if (response) {
+                currentUsers = response.users;
+                displayUsers(currentUsers);
+                updateStats(response);
+            }
+        }
+
+        async function searchUsers() {
+            const query = document.getElementById('searchUsers').value;
+            if (!query) {
+                loadAllUsers();
+                return;
+            }
+
+            const response = await makeAdminRequest(`/api/admin/search-users?query=${encodeURIComponent(query)}`);
+            if (response) {
+                currentUsers = response.users;
+                displayUsers(currentUsers);
+            }
+        }
+
+        function displayUsers(users) {
+            const container = document.getElementById('usersList');
+            
+            if (users.length === 0) {
+                container.innerHTML = '<div class="loading">No users found</div>';
+                return;
+            }
+
+            let html = `
+                <table class="users-table">
+                    <thead>
+                        <tr>
+                            <th>User ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Golden Balance</th>
+                            <th>Provider</th>
+                            <th>Last Login</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            users.forEach(user => {
+                html += `
+                    <tr>
+                        <td title="${user.userId}">${user.userId.substring(0, 20)}...</td>
+                        <td>${user.name || 'N/A'}</td>
+                        <td>${user.email || 'N/A'}</td>
+                        <td class="golden-amount">${user.golden_balance}G</td>
+                        <td>${user.provider || 'N/A'}</td>
+                        <td>${new Date(user.last_login).toLocaleDateString()}</td>
+                        <td class="user-actions">
+                            <button class="success" onclick="openAddModal('${user.userId}')">+ Add</button>
+                            <button class="danger" onclick="openSubtractModal('${user.userId}')">- Subtract</button>
+                            <button onclick="openSetModal('${user.userId}')">Set</button>
+                            <button onclick="viewTransactions('${user.userId}')">History</button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        function updateStats(data) {
+            document.getElementById('totalUsers').textContent = data.totalUsers;
+            document.getElementById('totalGolden').textContent = data.totalGolden;
+            document.getElementById('avgBalance').textContent = data.totalUsers > 0 ? 
+                Math.round(data.totalGolden / data.totalUsers) : 0;
+        }
+
+        function openAddModal(userId) {
+            currentEditingUserId = userId;
+            document.getElementById('modalTitle').textContent = `Add Golden to ${userId.substring(0, 15)}...`;
+            document.getElementById('confirmAdjust').className = 'success';
+            document.getElementById('confirmAdjust').textContent = 'Add Golden';
+            document.getElementById('confirmAdjust').onclick = addGolden;
+            document.getElementById('adjustModal').style.display = 'flex';
+        }
+
+        function openSubtractModal(userId) {
+            currentEditingUserId = userId;
+            document.getElementById('modalTitle').textContent = `Subtract Golden from ${userId.substring(0, 15)}...`;
+            document.getElementById('confirmAdjust').className = 'danger';
+            document.getElementById('confirmAdjust').textContent = 'Subtract Golden';
+            document.getElementById('confirmAdjust').onclick = subtractGolden;
+            document.getElementById('adjustModal').style.display = 'flex';
+        }
+
+        function openSetModal(userId) {
+            currentEditingUserId = userId;
+            document.getElementById('modalTitle').textContent = `Set Golden Balance for ${userId.substring(0, 15)}...`;
+            document.getElementById('confirmAdjust').className = '';
+            document.getElementById('confirmAdjust').textContent = 'Set Balance';
+            document.getElementById('confirmAdjust').onclick = setGolden;
+            document.getElementById('adjustModal').style.display = 'flex';
+        }
+
+        async function addGolden() {
+            const amount = parseInt(document.getElementById('adjustAmount').value);
+            const reason = document.getElementById('adjustReason').value;
+
+            if (!amount || amount <= 0) {
+                showAlert('Please enter a valid positive amount');
+                return;
+            }
+
+            const response = await makeAdminRequest('/api/admin/add-golden', {
+                method: 'POST',
+                body: JSON.stringify({
+                    userId: currentEditingUserId,
+                    amount: amount,
+                    reason: reason
+                })
+            });
+
+            if (response && response.success) {
+                showAlert(`Successfully added ${amount}G to user!`, 'success');
+                closeModal('adjustModal');
+                loadAllUsers();
+            }
+        }
+
+        async function subtractGolden() {
+            const amount = parseInt(document.getElementById('adjustAmount').value);
+            const reason = document.getElementById('adjustReason').value;
+
+            if (!amount || amount <= 0) {
+                showAlert('Please enter a valid positive amount');
+                return;
+            }
+
+            const response = await makeAdminRequest('/api/admin/subtract-golden', {
+                method: 'POST',
+                body: JSON.stringify({
+                    userId: currentEditingUserId,
+                    amount: amount,
+                    reason: reason
+                })
+            });
+
+            if (response && response.success) {
+                showAlert(`Successfully subtracted ${amount}G from user!`, 'success');
+                closeModal('adjustModal');
+                loadAllUsers();
+            }
+        }
+
+        async function setGolden() {
+            const balance = parseInt(document.getElementById('adjustAmount').value);
+            const reason = document.getElementById('adjustReason').value;
+
+            if (balance < 0) {
+                showAlert('Balance cannot be negative');
+                return;
+            }
+
+            const response = await makeAdminRequest('/api/admin/set-golden', {
+                method: 'POST',
+                body: JSON.stringify({
+                    userId: currentEditingUserId,
+                    balance: balance,
+                    reason: reason
+                })
+            });
+
+            if (response && response.success) {
+                showAlert(`Successfully set user balance to ${balance}G!`, 'success');
+                closeModal('adjustModal');
+                loadAllUsers();
+            }
+        }
+
+        async function viewTransactions(userId) {
+            const response = await makeAdminRequest(`/api/admin/user-transactions/${userId}`);
+            if (response) {
+                const container = document.getElementById('transactionsList');
+                
+                if (response.transactions.length === 0) {
+                    container.innerHTML = '<p>No transactions found</p>';
+                } else {
+                    let html = '<div style="max-height: 400px; overflow-y: auto;">';
+                    response.transactions.reverse().forEach(tx => {
+                        const typeColor = tx.type === 'add' ? '#00ff00' : tx.type === 'subtract' ? '#ff4444' : '#ffd700';
+                        html += `
+                            <div style="border-bottom: 1px solid #333; padding: 10px 0;">
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span style="color: ${typeColor}; font-weight: bold;">${tx.type.toUpperCase()}</span>
+                                    <span style="color: gold; font-weight: bold;">${tx.amount > 0 ? '+' : ''}${tx.amount}G</span>
+                                </div>
+                                <div style="font-size: 0.9em; color: #ccc;">
+                                    Balance: ${tx.previous_balance}G → ${tx.new_balance}G
+                                </div>
+                                <div style="font-size: 0.8em; color: #999;">
+                                    ${tx.reason} • ${new Date(tx.timestamp).toLocaleString()}
+                                </div>
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                    container.innerHTML = html;
+                }
+
+                document.getElementById('transactionsModal').style.display = 'flex';
+            }
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+            document.getElementById('adjustAmount').value = '';
+            document.getElementById('adjustReason').value = '';
+        }
+
+        function exportData() {
+            const csv = convertToCSV(currentUsers);
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `golden-users-${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+            showAlert('Data exported successfully!', 'success');
+        }
+
+        function convertToCSV(users) {
+            const headers = ['User ID', 'Name', 'Email', 'Golden Balance', 'Provider', 'Created At', 'Last Login'];
+            const rows = users.map(user => [
+                user.userId,
+                user.name || '',
+                user.email || '',
+                user.golden_balance,
+                user.provider || '',
+                user.created_at,
+                user.last_login
+            ]);
+
+            return [headers, ...rows].map(row => 
+                row.map(field => `"${String(field).replace(/"/g, '""')}"`).join(',')
+            ).join('\n');
+        }
+
+        // Close modals when clicking outside
+        window.onclick = function(event) {
+            const modals = document.getElementsByClassName('modal');
+            for (let modal of modals) {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            }
+        }
+
+        // Enter key support for admin key
+        document.getElementById('adminKey').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                authenticate();
+            }
+        });
+    </script>
+</body>
+</html>

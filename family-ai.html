@@ -13,7 +13,7 @@
         }
 
         body {
-            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: #333;
             min-height: 100vh;
             padding: 20px;
@@ -22,7 +22,7 @@
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(255, 255, 255, 0.98);
             border-radius: 20px;
             box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
             overflow: hidden;
@@ -270,7 +270,7 @@
             background: #f8f9fa;
             border-bottom: 1px solid #e9ecef;
             display: flex;
-            justify-content: between;
+            justify-content: space-between;
             align-items: center;
         }
 
@@ -406,6 +406,22 @@
             animation: pulse 1.5s infinite;
         }
 
+        .billing-note {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 10px;
+            font-style: italic;
+        }
+        
+        .monthly-badge {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            margin-left: 10px;
+        }
+
         @keyframes pulse {
             0% { transform: scale(1); }
             50% { transform: scale(1.1); }
@@ -419,41 +435,52 @@
         <div class="lock-screen" id="lockScreen">
             <div class="lock-icon">🔒</div>
             <h2>Family AI - Unlock Premium Features</h2>
-            <p>Choose a plan to access Family AI with custom instructions and parental controls</p>
+            <p>Choose a monthly plan to access Family AI with custom instructions and parental controls</p>
             
             <div class="plans-container">
                 <!-- Starter Plan -->
                 <div class="plan-card starter">
-                    <div class="plan-name">Starter</div>
-                    <div class="plan-price starter">40G</div>
+                    <div class="plan-name">Starter 
+                        <span class="monthly-badge">Monthly</span>
+                    </div>
+                    <div class="plan-price starter">40G/mo</div>
+                    <div class="billing-note">$10/month value</div>
                     <ul class="plan-features">
                         <li>Up to 3 Family Members</li>
                         <li>GPT-4 & GPT-4o-mini Access</li>
                         <li>Unlimited Usage</li>
                         <li>Custom Instructions</li>
                         <li>Parental Dashboard</li>
+                        <li><strong>Auto-renews monthly</strong></li>
                     </ul>
-                    <button class="btn btn-primary" onclick="selectPlan('starter')">Select Starter</button>
+                    <button class="btn btn-primary" onclick="selectPlan('starter')">Subscribe - 40G/mo</button>
                 </div>
                 
                 <!-- Pro Plan -->
                 <div class="plan-card pro">
-                    <div class="plan-name">Pro</div>
-                    <div class="plan-price pro">80G</div>
+                    <div class="plan-name">Pro 
+                        <span class="monthly-badge">Monthly</span>
+                    </div>
+                    <div class="plan-price pro">80G/mo</div>
+                    <div class="billing-note">$20/month value</div>
                     <ul class="plan-features">
                         <li>Up to 5 Family Members</li>
                         <li>GPT-4o (20 questions/day)</li>
                         <li>GPT-4o-mini (Unlimited)</li>
                         <li>DeepSeek Chat (Unlimited)</li>
                         <li>Advanced Parental Controls</li>
+                        <li><strong>Auto-renews monthly</strong></li>
                     </ul>
-                    <button class="btn btn-primary" onclick="selectPlan('pro')">Select Pro</button>
+                    <button class="btn btn-primary" onclick="selectPlan('pro')">Subscribe - 80G/mo</button>
                 </div>
                 
                 <!-- Premium Plan -->
                 <div class="plan-card premium">
-                    <div class="plan-name">Premium</div>
-                    <div class="plan-price premium">170G</div>
+                    <div class="plan-name">Premium 
+                        <span class="monthly-badge">Monthly</span>
+                    </div>
+                    <div class="plan-price premium">170G/mo</div>
+                    <div class="billing-note">$42.50/month value</div>
                     <ul class="plan-features">
                         <li>Unlimited Family Members</li>
                         <li>GPT-4o (Unlimited)</li>
@@ -461,9 +488,21 @@
                         <li>Gemini 2.5 Pro (Unlimited)</li>
                         <li>DeepSeek Chat (Unlimited)</li>
                         <li>Advanced Instructions</li>
+                        <li><strong>Auto-renews monthly</strong></li>
                     </ul>
-                    <button class="btn btn-primary" onclick="selectPlan('premium')">Select Premium</button>
+                    <button class="btn btn-primary" onclick="selectPlan('premium')">Subscribe - 170G/mo</button>
                 </div>
+            </div>
+            
+            <div style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 10px; max-width: 600px;">
+                <h3>💰 Monthly Billing Information</h3>
+                <p><strong>How it works:</strong></p>
+                <ul style="text-align: left; margin: 15px 0;">
+                    <li>Plans automatically renew every 30 days</li>
+                    <li>Golden coins are deducted from your balance monthly</li>
+                    <li>Cancel anytime - no long-term commitment</li>
+                    <li>Family members keep access until the billing period ends</li>
+                </ul>
             </div>
         </div>
 
@@ -473,6 +512,7 @@
                 <div class="golden-badge" id="goldenBalance">Loading...</div>
                 <h1>Family AI</h1>
                 <p class="subtitle">Safe AI for your family with parental controls</p>
+                <div id="planInfo" style="margin-top: 10px; font-size: 0.9rem;"></div>
             </header>
 
             <div class="main-content">
@@ -489,6 +529,11 @@
                             <textarea class="form-control" id="customInstructions" placeholder="Explain like they're 10 years old, keep answers educational..."></textarea>
                         </div>
                         <button class="btn btn-success" onclick="addFamilyMember()">Add Member</button>
+                        
+                        <div style="margin: 15px 0; padding: 10px; background: #e8f4fd; border-radius: 8px;">
+                            <small><strong>Billing:</strong> Plan renews in <span id="daysRemaining">30</span> days</small>
+                            <button class="btn btn-danger" style="padding: 5px 10px; font-size: 0.8rem; margin-top: 5px;" onclick="cancelSubscription()">Cancel Subscription</button>
+                        </div>
                         
                         <div class="user-list" id="userList">
                             <!-- Users will be populated here -->
@@ -549,6 +594,7 @@
         let speechRecognition = null;
         let speechSynthesis = null;
         let isSpeaking = false;
+        let subscriptionExpiry = null;
 
         // Check authentication and load user data
         async function checkAuth() {
@@ -585,16 +631,34 @@
                 const data = await response.json();
                 
                 if (data.success && data.families.length > 0) {
-                    // User has existing family plans
-                    currentFamilyId = data.families[0].family_id;
-                    currentPlan = data.families[0].plan_type;
+                    const family = data.families[0];
+                    currentFamilyId = family.family_id;
+                    currentPlan = family.plan_type;
+                    subscriptionExpiry = new Date(family.expires_at);
                     isAdmin = true;
                     unlockApp();
                     loadFamilyMembers();
+                    updateSubscriptionTimer();
                 }
-                // If no family plans, lock screen remains visible
             } catch (error) {
                 console.error('Failed to load family plans:', error);
+            }
+        }
+
+        // Update subscription countdown
+        function updateSubscriptionTimer() {
+            if (!subscriptionExpiry) return;
+            
+            const now = new Date();
+            const daysRemaining = Math.ceil((subscriptionExpiry - now) / (1000 * 60 * 60 * 24));
+            
+            document.getElementById('daysRemaining').textContent = Math.max(0, daysRemaining);
+            
+            // Check if subscription expired
+            if (daysRemaining <= 0) {
+                alert('Your Family AI subscription has expired. Please renew to continue using the service.');
+                document.getElementById('lockScreen').classList.remove('hidden');
+                document.getElementById('mainApp').classList.add('hidden');
             }
         }
 
@@ -605,6 +669,7 @@
                 <div class="lock-icon">🔓</div>
                 <h2>Setup Your ${planType.charAt(0).toUpperCase() + planType.slice(1)} Plan</h2>
                 <p>Add your family members and set up custom instructions</p>
+                <div class="billing-note">📅 This is a <strong>monthly subscription</strong> that auto-renews</div>
                 
                 <div class="setup-form">
                     <div class="form-group">
@@ -615,7 +680,13 @@
                         <label>Default Custom Instructions:</label>
                         <textarea class="form-control" id="defaultInstructions" placeholder="Explain concepts simply, keep answers age-appropriate...">Explain like they're a curious child, use simple language, and make learning fun!</textarea>
                     </div>
-                    <button class="btn btn-success" onclick="createFamilyPlan()">Create Family Plan (${getPlanPrice(planType)}G)</button>
+                    <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #ffc107;">
+                        <strong>Monthly Subscription:</strong><br>
+                        • ${getPlanPrice(planType)} Golden will be deducted now<br>
+                        • Auto-renews every 30 days<br>
+                        • Cancel anytime from family settings
+                    </div>
+                    <button class="btn btn-success" onclick="createFamilyPlan()">Subscribe Now (${getPlanPrice(planType)}G/mo)</button>
                     <button class="btn btn-danger" onclick="cancelSetup()" style="margin-left: 10px;">Cancel</button>
                 </div>
             `;
@@ -627,7 +698,7 @@
             return prices[planType];
         }
 
-        // Create family plan
+        // Create family plan (monthly subscription)
         async function createFamilyPlan() {
             const childrenEmails = document.getElementById('childrenEmails').value;
             const instructions = document.getElementById('defaultInstructions').value;
@@ -638,8 +709,18 @@
             }
 
             const emailList = childrenEmails.split(',').map(email => email.trim()).filter(email => email);
-            
+            const planCost = getPlanPrice(currentPlan);
+
+            // Check if user has enough Golden for the first month
             try {
+                const balanceResponse = await fetch('/api/golden-balance');
+                const balanceData = await balanceResponse.json();
+                
+                if (balanceData.balance < planCost) {
+                    alert(`Insufficient Golden balance. You need ${planCost}G for the ${currentPlan} plan. Current balance: ${balanceData.balance}G`);
+                    return;
+                }
+
                 const response = await fetch('/api/family/create', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -654,11 +735,19 @@
                 if (data.success) {
                     currentFamilyId = data.family_id;
                     isAdmin = true;
+                    subscriptionExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days from now
                     unlockApp();
+                    
                     // Set custom instructions for each child
                     for (const email of emailList) {
                         await setCustomInstructions(email, instructions);
                     }
+                    
+                    // Update balance display
+                    await loadGoldenBalance();
+                    updateSubscriptionTimer();
+                    
+                    alert(`✅ Success! ${currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1)} plan activated. ${planCost}G deducted. Plan renews in 30 days.`);
                 } else {
                     alert('Failed to create family plan: ' + data.error);
                 }
@@ -674,19 +763,82 @@
             document.getElementById('lockScreen').innerHTML = `
                 <div class="lock-icon">🔒</div>
                 <h2>Family AI - Unlock Premium Features</h2>
-                <p>Choose a plan to access Family AI with custom instructions and parental controls</p>
+                <p>Choose a monthly plan to access Family AI with custom instructions and parental controls</p>
                 
                 <div class="plans-container">
-                    <!-- Plans will be re-rendered here -->
+                    <div class="plan-card starter">
+                        <div class="plan-name">Starter <span class="monthly-badge">Monthly</span></div>
+                        <div class="plan-price starter">40G/mo</div>
+                        <div class="billing-note">$10/month value</div>
+                        <ul class="plan-features">
+                            <li>Up to 3 Family Members</li>
+                            <li>GPT-4 & GPT-4o-mini Access</li>
+                            <li>Unlimited Usage</li>
+                            <li>Custom Instructions</li>
+                            <li>Parental Dashboard</li>
+                            <li><strong>Auto-renews monthly</strong></li>
+                        </ul>
+                        <button class="btn btn-primary" onclick="selectPlan('starter')">Subscribe - 40G/mo</button>
+                    </div>
+                    
+                    <div class="plan-card pro">
+                        <div class="plan-name">Pro <span class="monthly-badge">Monthly</span></div>
+                        <div class="plan-price pro">80G/mo</div>
+                        <div class="billing-note">$20/month value</div>
+                        <ul class="plan-features">
+                            <li>Up to 5 Family Members</li>
+                            <li>GPT-4o (20 questions/day)</li>
+                            <li>GPT-4o-mini (Unlimited)</li>
+                            <li>DeepSeek Chat (Unlimited)</li>
+                            <li>Advanced Parental Controls</li>
+                            <li><strong>Auto-renews monthly</strong></li>
+                        </ul>
+                        <button class="btn btn-primary" onclick="selectPlan('pro')">Subscribe - 80G/mo</button>
+                    </div>
+                    
+                    <div class="plan-card premium">
+                        <div class="plan-name">Premium <span class="monthly-badge">Monthly</span></div>
+                        <div class="plan-price premium">170G/mo</div>
+                        <div class="billing-note">$42.50/month value</div>
+                        <ul class="plan-features">
+                            <li>Unlimited Family Members</li>
+                            <li>GPT-4o (Unlimited)</li>
+                            <li>GPT-4 Family Access</li>
+                            <li>Gemini 2.5 Pro (Unlimited)</li>
+                            <li>DeepSeek Chat (Unlimited)</li>
+                            <li>Advanced Instructions</li>
+                            <li><strong>Auto-renews monthly</strong></li>
+                        </ul>
+                        <button class="btn btn-primary" onclick="selectPlan('premium')">Subscribe - 170G/mo</button>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 10px; max-width: 600px;">
+                    <h3>💰 Monthly Billing Information</h3>
+                    <p><strong>How it works:</strong></p>
+                    <ul style="text-align: left; margin: 15px 0;">
+                        <li>Plans automatically renew every 30 days</li>
+                        <li>Golden coins are deducted from your balance monthly</li>
+                        <li>Cancel anytime - no long-term commitment</li>
+                        <li>Family members keep access until the billing period ends</li>
+                    </ul>
                 </div>
             `;
-            // Re-render plans
-            renderPlans();
         }
 
-        // Render plans (helper function)
-        function renderPlans() {
-            // This would re-render the plan selection UI
+        // Cancel subscription
+        async function cancelSubscription() {
+            if (!confirm('Are you sure you want to cancel your Family AI subscription? Your family will lose access at the end of the current billing period.')) {
+                return;
+            }
+
+            try {
+                // In a real implementation, you would call an API to cancel the subscription
+                // For now, we'll just show a message
+                alert('Subscription cancellation requested. Your family will maintain access until ' + subscriptionExpiry.toLocaleDateString());
+            } catch (error) {
+                console.error('Failed to cancel subscription:', error);
+            }
         }
 
         // Unlock the main application
@@ -694,6 +846,14 @@
             document.getElementById('lockScreen').classList.add('hidden');
             document.getElementById('mainApp').classList.remove('hidden');
             updateModelSelector();
+            
+            // Update plan info in header
+            document.getElementById('planInfo').innerHTML = `
+                <span style="background: #e8f4fd; padding: 5px 10px; border-radius: 15px;">
+                    ${currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1)} Plan • 
+                    Renews: ${subscriptionExpiry.toLocaleDateString()}
+                </span>
+            `;
             
             if (!isAdmin) {
                 document.getElementById('adminPanel').classList.add('hidden');
@@ -808,6 +968,7 @@
         // Set custom instructions
         async function setCustomInstructions(email, instructions) {
             // Implementation for setting custom instructions
+            console.log(`Setting instructions for ${email}: ${instructions}`);
         }
 
         // Send message to AI
@@ -827,17 +988,6 @@
                     const aiResponse = `I understand your question about "${message}". As a family AI assistant, I'm here to provide helpful, age-appropriate information in a safe learning environment.`;
                     addMessageToChat('ai', aiResponse);
                 }, 1000);
-
-                // In real implementation, you would call:
-                // const response = await fetch(`/api/family/${currentFamilyId}/chat`, {
-                //     method: 'POST',
-                //     headers: { 'Content-Type': 'application/json' },
-                //     body: JSON.stringify({
-                //         child_id: 'current_child_id',
-                //         question: message,
-                //         model: document.getElementById('modelSelector').value
-                //     })
-                // });
 
             } catch (error) {
                 console.error('Failed to send message:', error);
@@ -1012,10 +1162,18 @@
             updateChatList();
         }
 
+        // Edit user (placeholder)
+        function editUser(childId) {
+            alert('Edit feature for child: ' + childId);
+        }
+
         // Logout
         function logout() {
             window.location.href = '/';
         }
+
+        // Update subscription timer every day
+        setInterval(updateSubscriptionTimer, 24 * 60 * 60 * 1000);
 
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {

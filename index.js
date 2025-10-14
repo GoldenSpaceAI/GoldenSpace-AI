@@ -328,7 +328,7 @@ const FEATURE_PRICES = {
   your_space: 4,
   search_lessons: 4,
   chat_advancedai: 20,
-  homework_helper: 20
+  homework_helper: 20,
   premium_monthly: 20 
 };
 

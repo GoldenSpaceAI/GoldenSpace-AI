@@ -9,11 +9,11 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: Arial, sans-serif;
         }
 
         body {
-            background: #667eea;
+            background: #4a6572;
             color: #333;
             min-height: 100vh;
             padding: 20px;
@@ -23,26 +23,16 @@
             max-width: 1200px;
             margin: 0 auto;
             background: white;
-            border-radius: 20px;
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
             overflow: hidden;
-            position: relative;
         }
 
+        /* LOCK SCREEN STYLES */
         .lock-screen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: white;
-            z-index: 1000;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 40px;
+            padding: 40px 20px;
             text-align: center;
+            background: white;
         }
 
         .lock-screen.hidden {
@@ -50,60 +40,9 @@
         }
 
         .lock-icon {
-            font-size: 4rem;
-            color: #FFD700;
+            font-size: 60px;
+            color: gold;
             margin-bottom: 20px;
-        }
-
-        header {
-            background: #2c3e50;
-            color: white;
-            padding: 25px;
-            text-align: center;
-            position: relative;
-        }
-
-        .golden-badge {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: #FFD700;
-            color: #333;
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-weight: bold;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        }
-
-        h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-        }
-
-        .subtitle {
-            font-size: 1.2rem;
-            opacity: 0.9;
-        }
-
-        .main-content {
-            display: flex;
-            min-height: 600px;
-        }
-
-        .sidebar {
-            width: 300px;
-            background: #f8f9fa;
-            border-right: 1px solid #e9ecef;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .chat-area {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background: white;
         }
 
         .plans-container {
@@ -116,18 +55,11 @@
 
         .plan-card {
             background: white;
-            border-radius: 15px;
-            padding: 25px;
-            width: 300px;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s, box-shadow 0.3s;
-            text-align: center;
-            border: 3px solid transparent;
-        }
-
-        .plan-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+            border-radius: 10px;
+            padding: 20px;
+            width: 280px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border: 2px solid #ddd;
         }
 
         .plan-card.starter {
@@ -143,26 +75,16 @@
         }
 
         .plan-name {
-            font-size: 1.8rem;
+            font-size: 24px;
             font-weight: bold;
             margin-bottom: 10px;
+            color: #2c3e50;
         }
 
         .plan-price {
-            font-size: 2.5rem;
+            font-size: 32px;
             font-weight: bold;
             margin: 15px 0;
-        }
-
-        .plan-price.starter {
-            color: #3498db;
-        }
-
-        .plan-price.pro {
-            color: #9b59b6;
-        }
-
-        .plan-price.premium {
             color: #e74c3c;
         }
 
@@ -174,26 +96,24 @@
 
         .plan-features li {
             padding: 8px 0;
-            border-bottom: 1px solid #f1f1f1;
+            border-bottom: 1px solid #eee;
         }
 
         .plan-features li:before {
             content: "✓";
-            color: #2ecc71;
+            color: #27ae60;
             font-weight: bold;
             margin-right: 10px;
         }
 
         .btn {
-            padding: 12px 25px;
+            padding: 12px 24px;
             border: none;
-            border-radius: 50px;
-            font-size: 1rem;
+            border-radius: 25px;
+            font-size: 16px;
             font-weight: bold;
             cursor: pointer;
-            transition: all 0.3s;
-            display: inline-block;
-            text-align: center;
+            margin: 10px 5px;
         }
 
         .btn-primary {
@@ -201,17 +121,9 @@
             color: white;
         }
 
-        .btn-primary:hover {
-            background: #2980b9;
-        }
-
         .btn-success {
-            background: #2ecc71;
-            color: white;
-        }
-
-        .btn-success:hover {
             background: #27ae60;
+            color: white;
         }
 
         .btn-danger {
@@ -219,399 +131,260 @@
             color: white;
         }
 
-        .btn-danger:hover {
-            background: #c0392b;
+        /* MAIN APP STYLES */
+        #mainApp {
+            display: none;
         }
 
-        .setup-form {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-            max-width: 500px;
-            width: 100%;
-            margin-top: 20px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-            text-align: left;
-        }
-
-        .form-group label {
+        #mainApp:not(.hidden) {
             display: block;
-            margin-bottom: 8px;
+        }
+
+        header {
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+
+        .golden-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: gold;
+            color: #333;
+            padding: 8px 15px;
+            border-radius: 15px;
             font-weight: bold;
-            color: #2c3e50;
         }
 
-        .form-control {
-            width: 100%;
-            padding: 12px 15px;
-            border: 2px solid #e9ecef;
-            border-radius: 10px;
-            font-size: 1rem;
-            transition: border-color 0.3s;
+        .main-content {
+            display: flex;
+            min-height: 500px;
         }
 
-        .form-control:focus {
-            border-color: #3498db;
-            outline: none;
+        .sidebar {
+            width: 300px;
+            background: #f8f9fa;
+            padding: 20px;
+            border-right: 1px solid #ddd;
         }
 
-        .chat-container {
+        .chat-area {
+            flex: 1;
+            background: white;
             display: flex;
             flex-direction: column;
-            height: 100%;
-        }
-
-        .chat-header {
-            padding: 15px 20px;
-            background: #f8f9fa;
-            border-bottom: 1px solid #e9ecef;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .model-selector {
-            padding: 8px 15px;
-            border: 2px solid #e9ecef;
-            border-radius: 10px;
-            font-size: 0.9rem;
-            background: white;
         }
 
         .chat-messages {
             flex: 1;
             padding: 20px;
             overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            max-height: 500px;
+            max-height: 400px;
+            border-bottom: 1px solid #eee;
         }
 
         .message {
+            margin: 10px 0;
+            padding: 12px;
+            border-radius: 10px;
             max-width: 80%;
-            padding: 15px;
-            border-radius: 15px;
-            position: relative;
         }
 
         .message.user {
-            align-self: flex-end;
             background: #3498db;
             color: white;
+            margin-left: auto;
         }
 
         .message.ai {
-            align-self: flex-start;
-            background: #f1f3f4;
+            background: #ecf0f1;
             color: #333;
-        }
-
-        .message-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        .action-btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 1.2rem;
-            color: #666;
-            transition: color 0.3s;
-        }
-
-        .action-btn:hover {
-            color: #3498db;
         }
 
         .chat-input-container {
             padding: 20px;
-            border-top: 1px solid #e9ecef;
             display: flex;
             gap: 10px;
         }
 
         .chat-input {
             flex: 1;
-            padding: 15px;
-            border: 2px solid #e9ecef;
-            border-radius: 25px;
-            font-size: 1rem;
-            resize: none;
-            height: 60px;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 20px;
+            font-size: 16px;
         }
 
         .send-btn {
-            background: #2ecc71;
+            background: #27ae60;
             color: white;
             border: none;
             border-radius: 50%;
-            width: 60px;
-            height: 60px;
-            font-size: 1.5rem;
+            width: 50px;
+            height: 50px;
+            font-size: 18px;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
 
         .user-management {
             background: white;
-            padding: 20px;
-            border-radius: 15px;
-            margin-top: 20px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .form-group {
+            margin: 15px 0;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-top: 5px;
         }
 
         .user-list {
-            list-style: none;
             margin-top: 15px;
         }
 
         .user-item {
-            padding: 12px;
-            border: 1px solid #e9ecef;
-            border-radius: 8px;
-            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin: 5px 0;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        .user-info {
-            flex: 1;
-        }
-
-        .user-email {
-            font-weight: bold;
-            color: #2c3e50;
-        }
-
-        .user-instructions {
-            font-size: 0.9rem;
-            color: #666;
-            margin-top: 5px;
-        }
-
         .hidden {
             display: none !important;
-        }
-
-        .speaking {
-            animation: pulse 1.5s infinite;
-        }
-
-        .billing-note {
-            font-size: 0.9rem;
-            color: #666;
-            margin-top: 10px;
-            font-style: italic;
-        }
-        
-        .monthly-badge {
-            background: #e74c3c;
-            color: white;
-            padding: 4px 10px;
-            border-radius: 15px;
-            font-size: 0.8rem;
-            margin-left: 10px;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Lock Screen -->
+        <!-- LOCK SCREEN -->
         <div class="lock-screen" id="lockScreen">
             <div class="lock-icon">🔒</div>
-            <h2>Family AI - Unlock Premium Features</h2>
-            <p>Choose a monthly plan to access Family AI with custom instructions and parental controls</p>
+            <h1>Family AI - Unlock Premium Features</h1>
+            <p>Choose a monthly plan to access Family AI with custom instructions</p>
             
             <div class="plans-container">
-                <!-- Starter Plan -->
                 <div class="plan-card starter">
-                    <div class="plan-name">Starter 
-                        <span class="monthly-badge">Monthly</span>
-                    </div>
-                    <div class="plan-price starter">40G/mo</div>
-                    <div class="billing-note">$10/month value</div>
+                    <div class="plan-name">Starter Plan</div>
+                    <div class="plan-price">40G/month</div>
                     <ul class="plan-features">
                         <li>Up to 3 Family Members</li>
                         <li>GPT-4 & GPT-4o-mini Access</li>
                         <li>Unlimited Usage</li>
                         <li>Custom Instructions</li>
                         <li>Parental Dashboard</li>
-                        <li><strong>Auto-renews monthly</strong></li>
                     </ul>
-                    <button class="btn btn-primary" onclick="selectPlan('starter')">Subscribe - 40G/mo</button>
+                    <button class="btn btn-primary" onclick="selectPlan('starter')">Select Starter</button>
                 </div>
                 
-                <!-- Pro Plan -->
                 <div class="plan-card pro">
-                    <div class="plan-name">Pro 
-                        <span class="monthly-badge">Monthly</span>
-                    </div>
-                    <div class="plan-price pro">80G/mo</div>
-                    <div class="billing-note">$20/month value</div>
+                    <div class="plan-name">Pro Plan</div>
+                    <div class="plan-price">80G/month</div>
                     <ul class="plan-features">
                         <li>Up to 5 Family Members</li>
                         <li>GPT-4o (20 questions/day)</li>
                         <li>GPT-4o-mini (Unlimited)</li>
                         <li>DeepSeek Chat (Unlimited)</li>
                         <li>Advanced Parental Controls</li>
-                        <li><strong>Auto-renews monthly</strong></li>
                     </ul>
-                    <button class="btn btn-primary" onclick="selectPlan('pro')">Subscribe - 80G/mo</button>
+                    <button class="btn btn-primary" onclick="selectPlan('pro')">Select Pro</button>
                 </div>
                 
-                <!-- Premium Plan -->
                 <div class="plan-card premium">
-                    <div class="plan-name">Premium 
-                        <span class="monthly-badge">Monthly</span>
-                    </div>
-                    <div class="plan-price premium">170G/mo</div>
-                    <div class="billing-note">$42.50/month value</div>
+                    <div class="plan-name">Premium Plan</div>
+                    <div class="plan-price">170G/month</div>
                     <ul class="plan-features">
                         <li>Unlimited Family Members</li>
                         <li>GPT-4o (Unlimited)</li>
                         <li>GPT-4 Family Access</li>
                         <li>Gemini 2.5 Pro (Unlimited)</li>
                         <li>DeepSeek Chat (Unlimited)</li>
-                        <li>Advanced Instructions</li>
-                        <li><strong>Auto-renews monthly</strong></li>
                     </ul>
-                    <button class="btn btn-primary" onclick="selectPlan('premium')">Subscribe - 170G/mo</button>
+                    <button class="btn btn-primary" onclick="selectPlan('premium')">Select Premium</button>
                 </div>
-            </div>
-            
-            <div style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 10px; max-width: 600px;">
-                <h3>💰 Monthly Billing Information</h3>
-                <p><strong>How it works:</strong></p>
-                <ul style="text-align: left; margin: 15px 0;">
-                    <li>Plans automatically renew every 30 days</li>
-                    <li>Golden coins are deducted from your balance monthly</li>
-                    <li>Cancel anytime - no long-term commitment</li>
-                    <li>Family members keep access until the billing period ends</li>
-                </ul>
             </div>
         </div>
 
-        <!-- Main App (Hidden until unlocked) -->
+        <!-- MAIN APP (Initially hidden) -->
         <div id="mainApp" class="hidden">
             <header>
                 <div class="golden-badge" id="goldenBalance">150G</div>
                 <h1>Family AI</h1>
-                <p class="subtitle">Safe AI for your family with parental controls</p>
-                <div id="planInfo" style="margin-top: 10px; font-size: 0.9rem;"></div>
+                <p>Safe AI for your family with parental controls</p>
             </header>
 
             <div class="main-content">
                 <!-- Sidebar -->
                 <div class="sidebar">
-                    <div class="user-management" id="adminPanel">
+                    <div class="user-management">
                         <h3>Family Management</h3>
                         <div class="form-group">
-                            <label>Add Family Member Email:</label>
+                            <label>Add Family Member:</label>
                             <input type="email" class="form-control" id="newMemberEmail" placeholder="child@example.com">
                         </div>
                         <div class="form-group">
                             <label>Custom Instructions:</label>
-                            <textarea class="form-control" id="customInstructions" placeholder="Explain like they're 10 years old, keep answers educational..."></textarea>
+                            <textarea class="form-control" id="customInstructions" placeholder="Age-appropriate instructions..."></textarea>
                         </div>
                         <button class="btn btn-success" onclick="addFamilyMember()">Add Member</button>
                         
-                        <div style="margin: 15px 0; padding: 10px; background: #e8f4fd; border-radius: 8px;">
-                            <small><strong>Billing:</strong> Plan renews in <span id="daysRemaining">30</span> days</small>
-                            <button class="btn btn-danger" style="padding: 5px 10px; font-size: 0.8rem; margin-top: 5px;" onclick="cancelSubscription()">Cancel Subscription</button>
-                        </div>
-                        
                         <div class="user-list" id="userList">
                             <div class="user-item">
-                                <div class="user-info">
-                                    <div class="user-email">john@family.com</div>
-                                    <div class="user-instructions">Explain like to a 12-year-old</div>
+                                <div>
+                                    <strong>john@family.com</strong><br>
+                                    <small>Explain like to a 12-year-old</small>
                                 </div>
-                                <button class="btn btn-primary" onclick="editUser('child1')">Edit</button>
+                                <button class="btn btn-primary" style="padding: 5px 10px; font-size: 12px;">Edit</button>
                             </div>
                             <div class="user-item">
-                                <div class="user-info">
-                                    <div class="user-email">sara@family.com</div>
-                                    <div class="user-instructions">Keep answers simple and educational</div>
+                                <div>
+                                    <strong>sara@family.com</strong><br>
+                                    <small>Keep answers simple</small>
                                 </div>
-                                <button class="btn btn-primary" onclick="editUser('child2')">Edit</button>
+                                <button class="btn btn-primary" style="padding: 5px 10px; font-size: 12px;">Edit</button>
                             </div>
                         </div>
                     </div>
                     
-                    <div class="chat-history">
+                    <div style="margin-top: 20px;">
                         <h3>Chat Sessions</h3>
-                        <button class="btn btn-primary" onclick="newChat()">New Chat</button>
-                        <div id="chatList">
-                            <div class="user-item">
-                                <div>Today's Chat</div>
-                                <button class="btn btn-danger" onclick="deleteChat('chat1')">Delete</button>
-                            </div>
-                            <div class="user-item">
-                                <div>Yesterday's Chat</div>
-                                <button class="btn btn-danger" onclick="deleteChat('chat2')">Delete</button>
-                            </div>
-                        </div>
+                        <button class="btn btn-primary" onclick="newChat()" style="width: 100%;">New Chat</button>
                     </div>
                 </div>
 
                 <!-- Chat Area -->
                 <div class="chat-area">
-                    <div class="chat-container">
-                        <div class="chat-header">
-                            <select class="model-selector" id="modelSelector">
-                                <option value="gpt-4o-mini">GPT-4o-mini (Fast)</option>
-                                <option value="gpt-4o">GPT-4o (Smart)</option>
-                                <option value="deepseek-chat">DeepSeek Chat</option>
-                                <option value="gemini-2.5-pro">Gemini 2.5 Pro (Premium)</option>
-                            </select>
-                            <div>
-                                <span id="currentUser">Admin</span>
-                                <button class="btn btn-danger" onclick="logout()">Logout</button>
-                            </div>
+                    <div class="chat-messages" id="chatMessages">
+                        <div class="message ai">
+                            <strong>AI Assistant:</strong><br>
+                            Welcome to Family AI! I'm here to help your family learn safely. How can I assist you today?
                         </div>
-
-                        <div class="chat-messages" id="chatMessages">
-                            <div class="message ai">
-                                <p>Welcome to Family AI! I'm here to help your family learn and explore safely. How can I assist you today?</p>
-                                <div class="message-actions">
-                                    <button class="action-btn" onclick="speakText(this)">🔊</button>
-                                </div>
-                            </div>
-                            <div class="message user">
-                                <p>Hello! Can you explain how rockets work?</p>
-                                <div class="message-actions">
-                                    <button class="action-btn" onclick="speakText(this)">🔊</button>
-                                </div>
-                            </div>
-                            <div class="message ai">
-                                <p>Of course! Rockets work on a principle called Newton's Third Law: for every action, there's an equal and opposite reaction. When rocket fuel burns, it creates hot gases that shoot out the bottom very fast, which pushes the rocket upward into space! 🚀</p>
-                                <div class="message-actions">
-                                    <button class="action-btn" onclick="speakText(this)">🔊</button>
-                                </div>
-                            </div>
+                        <div class="message user">
+                            <strong>You:</strong><br>
+                            Hello! Can you explain how rockets work?
                         </div>
-
-                        <div class="chat-input-container">
-                            <textarea class="chat-input" id="chatInput" placeholder="Type your message or click the mic to speak..." rows="1"></textarea>
-                            <button class="action-btn" onclick="toggleSpeech()">🎤</button>
-                            <button class="send-btn" onclick="sendMessage()">➤</button>
+                        <div class="message ai">
+                            <strong>AI Assistant:</strong><br>
+                            Rockets work on Newton's Third Law! When fuel burns, hot gases shoot downward, pushing the rocket upward into space! 🚀
                         </div>
+                    </div>
+                    
+                    <div class="chat-input-container">
+                        <input type="text" class="chat-input" id="chatInput" placeholder="Type your message...">
+                        <button class="send-btn" onclick="sendMessage()">➤</button>
                     </div>
                 </div>
             </div>
@@ -619,300 +392,90 @@
     </div>
 
     <script>
-        // Global variables
-        let currentPlan = null;
-        let currentFamilyId = null;
-        let isAdmin = true; // Set to true for demo
-        let currentChatId = 'default';
-        let speechRecognition = null;
-        let speechSynthesis = null;
-        let isSpeaking = false;
-        let subscriptionExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days from now
-
-        // Initialize the app - SIMPLIFIED VERSION
-        function initApp() {
-            // Show the lock screen by default
-            document.getElementById('lockScreen').classList.remove('hidden');
-            document.getElementById('mainApp').classList.add('hidden');
-            
-            // Set up event listeners
-            document.getElementById('chatInput').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    sendMessage();
-                }
-            });
-        }
-
-        // Select plan and show setup form
+        // SIMPLE JAVASCRIPT THAT WILL DEFINITELY WORK
         function selectPlan(planType) {
-            currentPlan = planType;
-            document.getElementById('lockScreen').innerHTML = `
-                <div class="lock-icon">🔓</div>
-                <h2>Setup Your ${planType.charAt(0).toUpperCase() + planType.slice(1)} Plan</h2>
-                <p>Add your family members and set up custom instructions</p>
-                <div class="billing-note">📅 This is a <strong>monthly subscription</strong> that auto-renews</div>
-                
-                <div class="setup-form">
-                    <div class="form-group">
-                        <label>Your Children's Emails (comma separated):</label>
-                        <input type="text" class="form-control" id="childrenEmails" placeholder="child1@email.com, child2@email.com" value="john@family.com, sara@family.com">
-                    </div>
-                    <div class="form-group">
-                        <label>Default Custom Instructions:</label>
-                        <textarea class="form-control" id="defaultInstructions" placeholder="Explain concepts simply, keep answers age-appropriate...">Explain like they're curious children, use simple language, and make learning fun!</textarea>
-                    </div>
-                    <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #ffc107;">
-                        <strong>Monthly Subscription:</strong><br>
-                        • ${getPlanPrice(planType)} Golden will be deducted now<br>
-                        • Auto-renews every 30 days<br>
-                        • Cancel anytime from family settings
-                    </div>
-                    <button class="btn btn-success" onclick="createFamilyPlan()">Subscribe Now (${getPlanPrice(planType)}G/mo)</button>
-                    <button class="btn btn-danger" onclick="cancelSetup()" style="margin-left: 10px;">Cancel</button>
-                </div>
-            `;
-        }
-
-        // Get plan price
-        function getPlanPrice(planType) {
-            const prices = { starter: 40, pro: 80, premium: 170 };
-            return prices[planType];
-        }
-
-        // Create family plan (monthly subscription) - SIMPLIFIED
-        function createFamilyPlan() {
-            const childrenEmails = document.getElementById('childrenEmails').value;
+            alert('Selected ' + planType + ' plan! This would normally process payment.');
             
-            if (!childrenEmails) {
-                alert('Please enter at least one child email');
-                return;
-            }
-
-            // For demo purposes, just unlock the app
-            currentPlan = currentPlan || 'starter';
-            isAdmin = true;
-            subscriptionExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-            
-            unlockApp();
-            updateSubscriptionTimer();
-            
-            alert(`✅ Success! ${currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1)} plan activated. ${getPlanPrice(currentPlan)}G deducted. Plan renews in 30 days.`);
-        }
-
-        // Cancel setup
-        function cancelSetup() {
-            currentPlan = null;
-            initApp(); // Reset to initial state
-        }
-
-        // Cancel subscription
-        function cancelSubscription() {
-            if (!confirm('Are you sure you want to cancel your Family AI subscription? Your family will lose access at the end of the current billing period.')) {
-                return;
-            }
-            alert('Subscription cancellation requested. Your family will maintain access until ' + subscriptionExpiry.toLocaleDateString());
-        }
-
-        // Unlock the main application
-        function unlockApp() {
+            // Show the main app
             document.getElementById('lockScreen').classList.add('hidden');
             document.getElementById('mainApp').classList.remove('hidden');
-            updateModelSelector();
-            
-            // Update plan info in header
-            document.getElementById('planInfo').innerHTML = `
-                <span style="background: #e8f4fd; padding: 5px 10px; border-radius: 15px;">
-                    ${currentPlan ? currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1) : 'Starter'} Plan • 
-                    Renews: ${subscriptionExpiry.toLocaleDateString()}
-                </span>
-            `;
         }
 
-        // Update subscription countdown
-        function updateSubscriptionTimer() {
-            if (!subscriptionExpiry) return;
-            
-            const now = new Date();
-            const daysRemaining = Math.ceil((subscriptionExpiry - now) / (1000 * 60 * 60 * 24));
-            
-            document.getElementById('daysRemaining').textContent = Math.max(0, daysRemaining);
-        }
-
-        // Update model selector based on plan
-        function updateModelSelector() {
-            const selector = document.getElementById('modelSelector');
-            selector.innerHTML = '';
-            
-            const models = {
-                starter: ['gpt-4o-mini', 'gpt-4o'],
-                pro: ['gpt-4o-mini', 'gpt-4o', 'deepseek-chat'],
-                premium: ['gpt-4o-mini', 'gpt-4o', 'deepseek-chat', 'gemini-2.5-pro']
-            };
-            
-            const planModels = models[currentPlan] || models.starter;
-            
-            planModels.forEach(model => {
-                const option = document.createElement('option');
-                option.value = model;
-                option.textContent = getModelDisplayName(model);
-                selector.appendChild(option);
-            });
-        }
-
-        // Get model display name
-        function getModelDisplayName(model) {
-            const names = {
-                'gpt-4o-mini': 'GPT-4o-mini (Fast)',
-                'gpt-4o': 'GPT-4o (Smart)',
-                'deepseek-chat': 'DeepSeek Chat',
-                'gemini-2.5-pro': 'Gemini 2.5 Pro'
-            };
-            return names[model] || model;
-        }
-
-        // Add family member
         function addFamilyMember() {
             const email = document.getElementById('newMemberEmail').value;
             const instructions = document.getElementById('customInstructions').value;
             
             if (!email) {
-                alert('Please enter an email');
+                alert('Please enter an email address');
                 return;
             }
-
-            // Add to the user list
+            
             const userList = document.getElementById('userList');
-            const userItem = document.createElement('div');
-            userItem.className = 'user-item';
-            userItem.innerHTML = `
-                <div class="user-info">
-                    <div class="user-email">${email}</div>
-                    <div class="user-instructions">${instructions || 'No custom instructions'}</div>
+            const newUser = document.createElement('div');
+            newUser.className = 'user-item';
+            newUser.innerHTML = `
+                <div>
+                    <strong>${email}</strong><br>
+                    <small>${instructions || 'No custom instructions'}</small>
                 </div>
-                <button class="btn btn-primary" onclick="editUser('new')">Edit</button>
+                <button class="btn btn-primary" style="padding: 5px 10px; font-size: 12px;">Edit</button>
             `;
-            userList.appendChild(userItem);
-
-            // Clear the form
+            
+            userList.appendChild(newUser);
+            
+            // Clear form
             document.getElementById('newMemberEmail').value = '';
             document.getElementById('customInstructions').value = '';
             
             alert('Family member added successfully!');
         }
 
-        // Send message to AI
         function sendMessage() {
             const input = document.getElementById('chatInput');
             const message = input.value.trim();
             
             if (!message) return;
-
-            // Add user message to chat
-            addMessageToChat('user', message);
+            
+            const chatMessages = document.getElementById('chatMessages');
+            
+            // Add user message
+            const userMsg = document.createElement('div');
+            userMsg.className = 'message user';
+            userMsg.innerHTML = `<strong>You:</strong><br>${message}`;
+            chatMessages.appendChild(userMsg);
+            
+            // Clear input
             input.value = '';
-
+            
             // Simulate AI response after 1 second
             setTimeout(() => {
-                const responses = [
-                    `I understand your question about "${message}". As a family AI assistant, I'm here to provide helpful, age-appropriate information!`,
-                    `That's a great question! Let me explain "${message}" in a way that's easy to understand...`,
-                    `I'd be happy to help with "${message}"! Here's what you need to know in simple terms...`,
-                    `Interesting question about "${message}"! Let me break this down for you...`
-                ];
-                const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-                addMessageToChat('ai', randomResponse);
+                const aiMsg = document.createElement('div');
+                aiMsg.className = 'message ai';
+                aiMsg.innerHTML = `<strong>AI Assistant:</strong><br>I understand your question about "${message}". As a family AI, I provide safe, educational answers for all ages!`;
+                chatMessages.appendChild(aiMsg);
+                
+                // Scroll to bottom
+                chatMessages.scrollTop = chatMessages.scrollHeight;
             }, 1000);
         }
 
-        // Add message to chat
-        function addMessageToChat(sender, text) {
-            const chatMessages = document.getElementById('chatMessages');
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${sender}`;
-            
-            messageDiv.innerHTML = `
-                <p>${text}</p>
-                <div class="message-actions">
-                    <button class="action-btn" onclick="speakText(this)">🔊</button>
-                </div>
-            `;
-            
-            chatMessages.appendChild(messageDiv);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
-
-        // Speak text
-        function speakText(button) {
-            const text = button.closest('.message').querySelector('p').textContent;
-            
-            if ('speechSynthesis' in window) {
-                if (isSpeaking) {
-                    speechSynthesis.cancel();
-                    isSpeaking = false;
-                    button.textContent = '🔊';
-                    button.classList.remove('speaking');
-                } else {
-                    const utterance = new SpeechSynthesisUtterance(text);
-                    utterance.rate = 0.8;
-                    utterance.pitch = 1;
-                    utterance.volume = 0.8;
-                    
-                    button.textContent = '⏹️';
-                    button.classList.add('speaking');
-                    isSpeaking = true;
-                    
-                    utterance.onend = function() {
-                        button.textContent = '🔊';
-                        button.classList.remove('speaking');
-                        isSpeaking = false;
-                    };
-                    
-                    speechSynthesis.speak(utterance);
-                }
-            } else {
-                alert('Text-to-speech not supported in this browser');
-            }
-        }
-
-        // Toggle speech recognition
-        function toggleSpeech() {
-            alert('Speech recognition would be enabled in a real implementation. For now, please type your message.');
-        }
-
-        // New chat
         function newChat() {
-            document.getElementById('chatMessages').innerHTML = `
-                <div class="message ai">
-                    <p>Welcome to your new chat! How can I help you today?</p>
-                    <div class="message-actions">
-                        <button class="action-btn" onclick="speakText(this)">🔊</button>
+            if (confirm('Start a new chat? Current chat will be saved.')) {
+                document.getElementById('chatMessages').innerHTML = `
+                    <div class="message ai">
+                        <strong>AI Assistant:</strong><br>
+                        Welcome to your new chat! How can I help your family today?
                     </div>
-                </div>
-            `;
-        }
-
-        // Delete chat
-        function deleteChat(chatId) {
-            if (confirm('Are you sure you want to delete this chat?')) {
-                alert('Chat deleted!');
+                `;
             }
         }
 
-        // Edit user
-        function editUser(childId) {
-            alert('Edit feature for child would open here');
-        }
-
-        // Logout
-        function logout() {
-            if (confirm('Are you sure you want to logout?')) {
-                initApp(); // Reset to lock screen
+        // Allow pressing Enter to send messages
+        document.getElementById('chatInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
             }
-        }
-
-        // Initialize the application when page loads
-        document.addEventListener('DOMContentLoaded', initApp);
+        });
     </script>
 </body>
 </html>

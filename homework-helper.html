@@ -69,19 +69,237 @@
         font-size: 11px;
         font-weight: bold;
       }
+
+      /* Golden Access Button */
+      .golden-access-btn {
+        background: linear-gradient(45deg, #ffd700, #ffed4e) !important;
+        color: #1a1300 !important;
+        border: 1px solid rgba(255, 215, 0, 0.5) !important;
+        font-weight: 800 !important;
+      }
+      .golden-access-btn:hover {
+        background: linear-gradient(45deg, #ffed4e, #ffd700) !important;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3) !important;
+      }
+
+      /* Universal 20G Lock Styles */
+      .golden-lock-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.95);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 10000;
+        backdrop-filter: blur(10px);
+      }
+
+      .golden-unlock-container {
+        background: linear-gradient(135deg, #0c0c0c, #1a1a2e);
+        padding: 35px 30px;
+        border-radius: 20px;
+        border: 3px solid gold;
+        max-width: 450px;
+        width: 95%;
+        text-align: center;
+        color: white;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        animation: slideIn 0.3s ease-out;
+      }
+
+      @keyframes slideIn {
+        from { transform: scale(0.9); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+      }
+
+      .lock-header {
+        margin-bottom: 25px;
+      }
+
+      .lock-icon {
+        font-size: 4em;
+        margin-bottom: 15px;
+        animation: pulse 2s infinite;
+      }
+
+      @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+      }
+
+      .lock-header h2 {
+        color: gold;
+        margin: 0;
+        font-size: 1.8em;
+        text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+      }
+
+      .feature-description {
+        color: #ccc;
+        margin-bottom: 25px;
+        font-size: 1.2em;
+        line-height: 1.4;
+      }
+
+      .pricing-section {
+        margin-bottom: 25px;
+        background: rgba(255, 215, 0, 0.1);
+        padding: 20px;
+        border-radius: 15px;
+        border: 2px solid rgba(255, 215, 0, 0.3);
+      }
+
+      .price-main {
+        font-size: 3.5em;
+        color: gold;
+        font-weight: bold;
+        text-shadow: 0 0 15px rgba(255, 215, 0, 0.7);
+      }
+
+      .price-period {
+        color: #ffed4e;
+        font-size: 1.1em;
+        font-weight: bold;
+      }
+
+      .balance-section {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 25px;
+        border: 1px solid rgba(255, 215, 0, 0.2);
+      }
+
+      .balance-label {
+        color: #aaa;
+        font-size: 0.95em;
+        margin-bottom: 8px;
+      }
+
+      .balance-amount {
+        color: gold;
+        font-size: 1.8em;
+        font-weight: bold;
+      }
+
+      .features-included {
+        text-align: left;
+        margin-bottom: 30px;
+        background: rgba(255, 255, 255, 0.03);
+        padding: 20px;
+        border-radius: 10px;
+      }
+
+      .features-included h3 {
+        color: gold;
+        margin-bottom: 15px;
+        text-align: center;
+        font-size: 1.3em;
+      }
+
+      .feature-item {
+        padding: 8px 0;
+        color: #ddd;
+        font-size: 1em;
+      }
+
+      .subscribe-btn {
+        background: linear-gradient(45deg, #ffd700, #ffed4e);
+        color: black;
+        border: none;
+        padding: 18px 30px;
+        font-size: 1.2em;
+        font-weight: bold;
+        border-radius: 12px;
+        cursor: pointer;
+        width: 100%;
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      .subscribe-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(255, 215, 0, 0.5);
+        background: linear-gradient(45deg, #ffed4e, #ffd700);
+      }
+
+      .subscribe-btn:disabled {
+        background: #666;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+
+      .action-links {
+        display: flex;
+        justify-content: space-between;
+        gap: 15px;
+      }
+
+      .buy-link, .home-link {
+        color: gold;
+        text-decoration: none;
+        padding: 12px 20px;
+        border: 2px solid gold;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        flex: 1;
+        text-align: center;
+        font-weight: bold;
+        background: rgba(255, 215, 0, 0.1);
+      }
+
+      .buy-link:hover, .home-link:hover {
+        background: rgba(255, 215, 0, 0.2);
+        transform: translateY(-2px);
+      }
+
+      .status-message {
+        padding: 15px;
+        border-radius: 8px;
+        margin: 15px 0;
+        text-align: center;
+        font-weight: bold;
+        font-size: 1em;
+      }
+
+      .status-message.success {
+        background: rgba(0, 255, 0, 0.15);
+        border: 2px solid #00ff00;
+        color: #00ff00;
+      }
+
+      .status-message.error {
+        background: rgba(255, 0, 0, 0.15);
+        border: 2px solid #ff4444;
+        color: #ff4444;
+      }
+
+      .status-message.processing {
+        background: rgba(255, 215, 0, 0.15);
+        border: 2px solid gold;
+        color: gold;
+      }
     </style>
   </head>
   <body>
-    <!-- ==================== 20G MONTHLY SUBSCRIPTION LOCK ==================== -->
-    <div id="goldenLockOverlay" class="golden-lock-overlay">
+    <!-- ==================== UNIVERSAL 20G LOCK ==================== -->
+    <div id="goldenLockOverlay20G" class="golden-lock-overlay">
       <div class="golden-unlock-container">
         <div class="lock-header">
           <div class="lock-icon">🔒</div>
-          <h2>Premium Feature Locked</h2>
+          <h2 id="lockFeatureTitle">Homework Helper Locked</h2>
         </div>
         
-        <div class="feature-description">
-          This premium feature requires a monthly subscription
+        <div class="feature-description" id="lockFeatureDescription">
+          Access our AI homework solver with image recognition and step-by-step explanations
         </div>
         
         <div class="pricing-section">
@@ -91,26 +309,27 @@
         
         <div class="balance-section">
           <div class="balance-label">Your Golden Balance:</div>
-          <div class="balance-amount" id="currentUserBalance">0G</div>
+          <div class="balance-amount" id="currentUserBalance20G">0G</div>
         </div>
         
         <div class="features-included">
           <h3>What you get:</h3>
-          <div class="feature-item">✅ Full access to this feature</div>
-          <div class="feature-item">✅ 30-day unlimited usage</div>
-          <div class="feature-item">✅ Priority support</div>
-          <div class="feature-item">✅ All future updates</div>
+          <div class="feature-item">✅ AI Homework Solver with GPT-4o Vision</div>
+          <div class="feature-item">✅ Image recognition for math & science</div>
+          <div class="feature-item">✅ Step-by-step explanations</div>
+          <div class="feature-item">✅ 30-day unlimited access</div>
+          <div class="feature-item">✅ Camera & file upload support</div>
         </div>
         
-        <button class="subscribe-btn" onclick="unlockMonthlyFeature()">
+        <button class="subscribe-btn" onclick="unlockUniversal20G()">
           UNLOCK FOR 20G/MONTH
         </button>
         
-        <div id="unlockStatus" class="status-message"></div>
+        <div id="unlockStatus20G" class="status-message"></div>
         
         <div class="action-links">
           <a href="/buy-golden.html" class="buy-link">💰 Buy More Golden</a>
-          <a href="/" class="home-link">🏠 Back to Home</a>
+          <button class="home-link" onclick="closeUniversalLock()">❌ Cancel</button>
         </div>
       </div>
     </div>
@@ -118,6 +337,10 @@
     <div class="top">
       <div class="brand"><span class="dot"></span> GoldenSpaceAI</div>
       <div class="spacer"></div>
+
+      <!-- Golden Access Button -->
+      <button class="pill golden-access-btn" onclick="showUniversalLockForHomework()" title="Access Homework Helper">💰 20G Access</button>
+      
       <a class="pill" href="/">Home</a>
       <a class="pill" href="/plans.html">Plans</a>
     </div>
@@ -156,290 +379,184 @@
       </div>
     </main>
 
-    <style>
-      .golden-lock-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(12, 12, 46, 0.95);
-        backdrop-filter: blur(10px);
-        display: none;
-        justify-content: center;
-        align-items: center;
-        z-index: 9999;
-        padding: 20px;
-      }
-
-      .golden-unlock-container {
-        background: linear-gradient(135deg, #0f1624, #0b1320);
-        border: 2px solid #f6c64a;
-        border-radius: 20px;
-        padding: 40px 30px;
-        text-align: center;
-        max-width: 450px;
-        width: 100%;
-        color: #e7f4e9;
-        box-shadow: 0 20px 40px rgba(246, 198, 74, 0.2);
-      }
-
-      .lock-header {
-        margin-bottom: 20px;
-      }
-
-      .lock-icon {
-        font-size: 3.5rem;
-        margin-bottom: 15px;
-      }
-
-      .lock-header h2 {
-        color: #f6c64a;
-        margin: 0;
-        font-size: 1.8rem;
-      }
-
-      .feature-description {
-        color: #cfc6a5;
-        margin-bottom: 25px;
-        font-size: 1.1rem;
-      }
-
-      .pricing-section {
-        background: rgba(246, 198, 74, 0.1);
-        border: 1px solid rgba(246, 198, 74, 0.3);
-        border-radius: 15px;
-        padding: 20px;
-        margin-bottom: 20px;
-      }
-
-      .price-main {
-        font-size: 2.5rem;
-        font-weight: bold;
-        color: #f6c64a;
-        line-height: 1;
-      }
-
-      .price-period {
-        color: #cfc6a5;
-        font-size: 1rem;
-        margin-top: 5px;
-      }
-
-      .balance-section {
-        background: rgba(255, 255, 255, 0.05);
-        border-radius: 10px;
-        padding: 15px;
-        margin: 20px 0;
-      }
-
-      .balance-label {
-        color: #cfc6a5;
-        font-size: 0.9rem;
-        margin-bottom: 5px;
-      }
-
-      .balance-amount {
-        font-size: 1.5rem;
-        font-weight: bold;
-        color: #f6c64a;
-      }
-
-      .features-included {
-        text-align: left;
-        margin: 25px 0;
-        padding: 20px;
-        background: rgba(255, 255, 255, 0.03);
-        border-radius: 10px;
-      }
-
-      .features-included h3 {
-        color: #f6c64a;
-        margin-bottom: 15px;
-        text-align: center;
-      }
-
-      .feature-item {
-        padding: 8px 0;
-        color: #e7f4e9;
-        font-size: 0.95rem;
-      }
-
-      .subscribe-btn {
-        background: linear-gradient(135deg, #f6c64a, #eb8b36);
-        color: #1a1300;
-        border: none;
-        padding: 18px 30px;
-        border-radius: 12px;
-        font-size: 1.2rem;
-        font-weight: bold;
-        cursor: pointer;
-        width: 100%;
-        margin: 20px 0;
-        transition: all 0.3s ease;
-      }
-
-      .subscribe-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(246, 198, 74, 0.4);
-      }
-
-      .subscribe-btn:disabled {
-        background: #666;
-        cursor: not-allowed;
-        transform: none;
-        box-shadow: none;
-      }
-
-      .status-message {
-        margin: 15px 0;
-        padding: 12px;
-        border-radius: 8px;
-        font-weight: bold;
-        display: none;
-      }
-
-      .status-message.success {
-        background: rgba(40, 167, 69, 0.2);
-        border: 1px solid #28a745;
-        color: #28a745;
-        display: block;
-      }
-
-      .status-message.error {
-        background: rgba(220, 53, 69, 0.2);
-        border: 1px solid #dc3545;
-        color: #dc3545;
-        display: block;
-      }
-
-      .action-links {
-        display: flex;
-        justify-content: space-between;
-        margin-top: 20px;
-      }
-
-      .buy-link, .home-link {
-        color: #f6c64a;
-        text-decoration: none;
-        padding: 10px 15px;
-        border: 1px solid #f6c64a;
-        border-radius: 8px;
-        transition: all 0.3s ease;
-        flex: 1;
-        margin: 0 5px;
-      }
-
-      .buy-link:hover, .home-link:hover {
-        background: rgba(246, 198, 74, 0.1);
-        transform: translateY(-1px);
-      }
-    </style>
-
     <script>
-      // ==================== GOLDEN LOCK SYSTEM ====================
-      function showGoldenLock() {
-        loadUserBalance();
-        document.getElementById('goldenLockOverlay').style.display = 'flex';
+      // ==================== UNIVERSAL 20G LOCK FUNCTIONS ====================
+
+      // Global variables to track which feature is being unlocked
+      let current20GFeature = '';
+      let current20GCallback = null;
+
+      // Function to show the universal 20G lock
+      function show20GLock(featureName, featureTitle, featureDescription, unlockCallback) {
+          current20GFeature = featureName;
+          current20GCallback = unlockCallback;
+          
+          // Update the lock UI with feature-specific info
+          document.getElementById('lockFeatureTitle').textContent = featureTitle;
+          document.getElementById('lockFeatureDescription').textContent = featureDescription;
+          
+          // Update balance and show overlay
+          update20GBalance();
+          document.getElementById('goldenLockOverlay20G').style.display = 'flex';
       }
 
-      function hideGoldenLock() {
-        document.getElementById('goldenLockOverlay').style.display = 'none';
+      // Function to close the lock
+      function closeUniversalLock() {
+          document.getElementById('goldenLockOverlay20G').style.display = 'none';
+          resetUniversalLock();
       }
 
-      async function loadUserBalance() {
-        try {
-          const response = await fetch('/api/golden-balance', {
-            credentials: 'include'
-          });
-          const data = await response.json();
-          if (data.loggedIn) {
-            document.getElementById('currentUserBalance').textContent = data.balance + 'G';
-          } else {
-            window.location.href = '/login-signup.html';
+      // Function to reset lock state
+      function resetUniversalLock() {
+          current20GFeature = '';
+          current20GCallback = null;
+          const statusDiv = document.getElementById('unlockStatus20G');
+          statusDiv.style.display = 'none';
+          statusDiv.className = 'status-message';
+      }
+
+      // Function to unlock universal 20G feature
+      async function unlockUniversal20G() {
+          const unlockBtn = document.querySelector('#goldenLockOverlay20G .subscribe-btn');
+          const statusDiv = document.getElementById('unlockStatus20G');
+          
+          try {
+              unlockBtn.disabled = true;
+              unlockBtn.textContent = 'PROCESSING...';
+              statusDiv.innerHTML = '⏳ Processing your request...';
+              statusDiv.className = 'status-message processing';
+              statusDiv.style.display = 'block';
+
+              // Check user's balance
+              const balanceResponse = await fetch('/api/golden-balance');
+              const balanceData = await balanceResponse.json();
+              
+              if (!balanceData.loggedIn) {
+                  statusDiv.innerHTML = '❌ Please log in to unlock features';
+                  statusDiv.className = 'status-message error';
+                  unlockBtn.disabled = false;
+                  unlockBtn.textContent = 'UNLOCK FOR 20G/MONTH';
+                  return;
+              }
+
+              // Check if user has enough Golden
+              if (balanceData.balance < 20) {
+                  statusDiv.innerHTML = '❌ Insufficient Golden balance. You need 20G to unlock this feature.';
+                  statusDiv.className = 'status-message error';
+                  unlockBtn.disabled = false;
+                  unlockBtn.textContent = 'UNLOCK FOR 20G/MONTH';
+                  return;
+              }
+
+              // Unlock the universal 20G feature
+              const unlockResponse = await fetch('/api/unlock-feature', {
+                  method: 'POST',
+                  headers: {
+                      'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                      feature: 'premium_monthly',
+                      cost: 20
+                  })
+              });
+
+              const unlockData = await unlockResponse.json();
+
+              if (unlockData.success) {
+                  statusDiv.innerHTML = '✅ Homework Helper unlocked successfully! You now have 30 days of access.';
+                  statusDiv.className = 'status-message success';
+                  
+                  // Update the displayed balance
+                  document.getElementById('currentUserBalance20G').textContent = unlockData.newBalance + 'G';
+                  
+                  // Close the overlay after success and call the feature-specific callback
+                  setTimeout(() => {
+                      closeUniversalLock();
+                      if (current20GCallback) {
+                          current20GCallback();
+                      }
+                  }, 2000);
+                  
+              } else {
+                  statusDiv.innerHTML = '❌ ' + (unlockData.error || 'Failed to unlock feature');
+                  statusDiv.className = 'status-message error';
+                  unlockBtn.disabled = false;
+                  unlockBtn.textContent = 'UNLOCK FOR 20G/MONTH';
+              }
+
+          } catch (error) {
+              console.error('Error unlocking feature:', error);
+              statusDiv.innerHTML = '❌ Network error. Please try again.';
+              statusDiv.className = 'status-message error';
+              unlockBtn.disabled = false;
+              unlockBtn.textContent = 'UNLOCK FOR 20G/MONTH';
           }
-        } catch (error) {
-          console.error('Failed to load balance:', error);
-        }
       }
 
-      async function unlockMonthlyFeature() {
-        const statusElement = document.getElementById('unlockStatus');
-        const button = document.querySelector('.subscribe-btn');
-        
-        button.disabled = true;
-        button.textContent = 'PROCESSING...';
-        statusElement.style.display = 'none';
-        
-        try {
-          const response = await fetch('/api/unlock-feature', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            credentials: 'include',
-            body: JSON.stringify({
-              feature: 'premium_monthly',
-              cost: 20
-            })
-          });
-          
-          const result = await response.json();
-          
-          if (result.success) {
-            statusElement.className = 'status-message success';
-            statusElement.textContent = `✅ Success! Feature unlocked. New balance: ${result.newBalance}G`;
-            statusElement.style.display = 'block';
-            
-            document.getElementById('currentUserBalance').textContent = result.newBalance + 'G';
-            
-            setTimeout(() => {
-              hideGoldenLock();
-              location.reload();
-            }, 2000);
-            
-          } else {
-            statusElement.className = 'status-message error';
-            statusElement.textContent = `❌ Error: ${result.error}`;
-            statusElement.style.display = 'block';
-            
-            if (result.error.includes('Insufficient')) {
-              setTimeout(() => {
-                window.location.href = '/buy-golden.html';
-              }, 1500);
-            }
-          }
-          
-        } catch (error) {
-          console.error('Unlock error:', error);
-          statusElement.className = 'status-message error';
-          statusElement.textContent = '❌ Network error. Please try again.';
-          statusElement.style.display = 'block';
-        } finally {
-          button.disabled = false;
-          button.textContent = 'UNLOCK FOR 20G/MONTH';
-        }
+      // Update balance for 20G overlay
+      function update20GBalance() {
+          fetch('/api/golden-balance')
+              .then(response => response.json())
+              .then(data => {
+                  if (data.loggedIn) {
+                      document.getElementById('currentUserBalance20G').textContent = data.balance + 'G';
+                  }
+              })
+              .catch(error => {
+                  console.error('Error fetching balance:', error);
+              });
       }
 
-      async function checkFeatureAccess() {
-        try {
-          const response = await fetch('/api/feature-status?feature=premium_monthly', {
-            credentials: 'include'
-          });
-          const data = await response.json();
-          
-          if (data.unlocked) {
-            hideGoldenLock();
-            return true;
-          } else {
-            showGoldenLock();
-            return false;
+      // Close lock when clicking outside
+      document.getElementById('goldenLockOverlay20G').addEventListener('click', function(e) {
+          if (e.target === this) {
+              closeUniversalLock();
           }
-        } catch (error) {
-          console.error('Feature check error:', error);
-          showGoldenLock();
-          return false;
-        }
+      });
+
+      // ==================== HOMEWORK HELPER FEATURE INTEGRATION ====================
+
+      // Show the universal lock when page loads
+      document.addEventListener('DOMContentLoaded', function() {
+          // Check if user has access to this premium feature
+          checkHomeworkHelperAccess();
+      });
+
+      // Check if Homework Helper feature is unlocked
+      async function checkHomeworkHelperAccess() {
+          try {
+              const response = await fetch('/api/feature-status?feature=premium_monthly', {
+                  credentials: 'include'
+              });
+              const data = await response.json();
+              
+              if (data.unlocked) {
+                  // Feature is unlocked - enable the homework helper
+                  enableHomeworkHelper();
+              } else {
+                  // Feature is locked - show the universal lock
+                  showUniversalLockForHomework();
+              }
+          } catch (error) {
+              console.error('Feature check error:', error);
+              showUniversalLockForHomework();
+          }
+      }
+
+      // Show universal lock for Homework Helper
+      function showUniversalLockForHomework() {
+          show20GLock(
+              'premium_monthly',
+              'Homework Helper Locked',
+              'Access our AI homework solver with image recognition and step-by-step explanations',
+              enableHomeworkHelper
+          );
+      }
+
+      // Enable the Homework Helper feature after unlocking
+      function enableHomeworkHelper() {
+          console.log('Homework Helper enabled!');
+          // The homework helper interface will work normally now
       }
 
       // ==================== HOMEWORK SOLVER SYSTEM ====================
@@ -453,20 +570,20 @@
       let currentFile = null;
 
       function renderPreview(){
-        preview.innerHTML = '';
-        if(!currentFile){
-          const d = document.createElement('div');
-          d.className = 'status';
-          d.textContent = 'No image yet';
-          preview.appendChild(d);
-          removeBtn.style.display = 'none';
-          return;
-        }
-        const img = document.createElement('img');
-        img.alt = 'preview';
-        img.src = URL.createObjectURL(currentFile);
-        preview.appendChild(img);
-        removeBtn.style.display = 'inline-flex';
+          preview.innerHTML = '';
+          if(!currentFile){
+              const d = document.createElement('div');
+              d.className = 'status';
+              d.textContent = 'No image yet';
+              preview.appendChild(d);
+              removeBtn.style.display = 'none';
+              return;
+          }
+          const img = document.createElement('img');
+          img.alt = 'preview';
+          img.src = URL.createObjectURL(currentFile);
+          preview.appendChild(img);
+          removeBtn.style.display = 'inline-flex';
       }
 
       document.getElementById('openCam').addEventListener('click', ()=> fileInput.click());
@@ -474,57 +591,56 @@
       removeBtn.addEventListener('click', ()=>{ currentFile = null; renderPreview(); });
 
       fileInput.addEventListener('change', ()=>{
-        const f = fileInput.files?.[0];
-        if (f && f.type.startsWith('image/')) currentFile = f;
-        renderPreview();
+          const f = fileInput.files?.[0];
+          if (f && f.type.startsWith('image/')) currentFile = f;
+          renderPreview();
       });
 
       document.getElementById('send').addEventListener('click', async ()=>{
-        // Check if feature is unlocked first
-        const hasAccess = await checkFeatureAccess();
-        if (!hasAccess) return;
+          // Check if feature is unlocked first
+          const hasAccess = await checkHomeworkHelperAccess();
+          if (!hasAccess) return;
 
-        const text = (msg.value||'').trim();
-        if(!currentFile){
-          statusEl.textContent = 'Please add an image';
-          return;
-        }
-        statusEl.innerHTML = '<span class="spinner"></span> Analyzing image with GPT-4o...';
-        resultEl.style.display = 'none';
-        resultEl.textContent = '';
-
-        const fd = new FormData();
-        fd.append('image', currentFile);
-        fd.append('q', text || 'Solve this homework step by step and explain your reasoning.');
-        fd.append('model', 'gpt-4o'); // FORCE GPT-4o FOR IMAGE VISION
-
-        try{
-          const res = await fetch('/chat-advanced-ai', { 
-            method:'POST', 
-            body: fd, 
-            credentials: 'include' 
-          });
-          
-          const data = await res.json().catch(()=> ({}));
-
-          if(!res.ok){
-            statusEl.textContent = data?.error ? ('Error: ' + data.error) : ('Server error ('+res.status+')');
-            return;
+          const text = (msg.value||'').trim();
+          if(!currentFile){
+              statusEl.textContent = 'Please add an image';
+              return;
           }
-          
-          statusEl.textContent = 'Solved with GPT-4o Vision ✅';
-          resultEl.textContent = data.reply || data.answer || 'No reply received';
-          resultEl.style.display = 'block';
-        }catch(e){
-          console.error(e);
-          statusEl.textContent = 'Request failed: ' + (e?.message || e);
-        }
+          statusEl.innerHTML = '<span class="spinner"></span> Analyzing image with GPT-4o...';
+          resultEl.style.display = 'none';
+          resultEl.textContent = '';
+
+          const fd = new FormData();
+          fd.append('image', currentFile);
+          fd.append('q', text || 'Solve this homework step by step and explain your reasoning.');
+          fd.append('model', 'gpt-4o'); // FORCE GPT-4o FOR IMAGE VISION
+
+          try{
+              const res = await fetch('/chat-advanced-ai', { 
+                  method:'POST', 
+                  body: fd, 
+                  credentials: 'include' 
+              });
+              
+              const data = await res.json().catch(()=> ({}));
+
+              if(!res.ok){
+                  statusEl.textContent = data?.error ? ('Error: ' + data.error) : ('Server error ('+res.status+')');
+                  return;
+              }
+              
+              statusEl.textContent = 'Solved with GPT-4o Vision ✅';
+              resultEl.textContent = data.reply || data.answer || 'No reply received';
+              resultEl.style.display = 'block';
+          }catch(e){
+              console.error(e);
+              statusEl.textContent = 'Request failed: ' + (e?.message || e);
+          }
       });
 
       // Initialize
       document.addEventListener('DOMContentLoaded', function() {
-        renderPreview();
-        checkFeatureAccess();
+          renderPreview();
       });
     </script>
   </body>

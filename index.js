@@ -1552,8 +1552,106 @@ app.get("/health", (req, res) => {
     }
   });
 });
+// ==================== REFUND REQUEST SYSTEM ====================
 
-// ---------- Start ----------
+// Submit refund request
+app.post("/api/request-refund", (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'Login required' });
+  
+  const { amount, reason, walletType, walletAddress } = req.body;
+  const userId = getUserIdentifier(req);
+  
+  if (!amount || amount <= 0) {
+    return res.status(400).json({ error: 'Valid amount is required' });
+  }
+  
+  if (!reason || reason.trim().length < 10) {
+    return res.status(400).json({ error: 'Reason must be at least 10 characters' });
+  }
+  
+  if (!walletType || !walletAddress) {
+    return res.status(400).json({ error: 'Wallet type and address are required' });
+  }
+  
+  const goldenDB = loadGoldenDB();
+  const user = goldenDB.users[userId];
+  
+  if (!user) {
+    return res.status(404).json({ error: 'User not found' });
+  }
+  
+  // Check if user has enough Golden for refund
+  if (user.golden_balance < amount) {
+    return res.status(400).json({ error: 'Insufficient Golden balance for refund' });
+  }
+  
+  const refundDB = loadRefundDB();
+  const requestId = `refund_${Date.now()}_${userId}`;
+  
+  // Calculate USD value (1G = $0.25, so 4G = $1)
+  const usdValue = (amount / 4).toFixed(2);
+  
+  // Calculate crypto amounts based on current rates (you can update these)
+  const cryptoAmounts = {
+    BTC: (usdValue * 0.000025).toFixed(8),  // Approx $40,000 per BTC
+    LTC: (usdValue * 0.0035).toFixed(6)     // Approx $70 per LTC
+  };
+  
+  refundDB.refund_requests[requestId] = {
+    requestId,
+    userId,
+    userName: user.name,
+    userEmail: user.email,
+    userProvider: userId.split('@')[1],
+    amount: parseInt(amount),
+    usdValue: parseFloat(usdValue),
+    cryptoAmount: cryptoAmounts[walletType],
+    walletType,
+    walletAddress,
+    reason: reason.trim(),
+    current_balance: user.golden_balance,
+    status: 'pending',
+    submitted_at: new Date().toISOString(),
+    cryptoAmounts: cryptoAmounts // Store all calculated amounts
+  };
+  
+  const success = saveRefundDB(refundDB);
+  
+  if (success) {
+    // Immediately deduct the Golden from user's balance
+    user.golden_balance -= parseInt(amount);
+    saveGoldenDB(goldenDB);
+    
+    res.json({ 
+      success: true, 
+      requestId, 
+      message: 'Refund request submitted successfully',
+      goldenDeducted: amount,
+      newBalance: user.golden_balance,
+      cryptoAmount: cryptoAmounts[walletType],
+      walletType
+    });
+  } else {
+    res.status(500).json({ error: 'Failed to save refund request' });
+  }
+});
+
+// Get user's refund history
+app.get("/api/my-refunds", (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'Login required' });
+  
+  const userId = getUserIdentifier(req);
+  const refundDB = loadRefundDB();
+  
+  const userRefunds = Object.values(refundDB.refund_requests || {})
+    .filter(refund => refund.userId === userId)
+    .sort((a, b) => new Date(b.submitted_at) - new Date(a.submitted_at));
+  
+  res.json({
+    totalRefunds: userRefunds.length,
+    refunds: userRefunds
+  });
+});// ---------- Start ----------
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 GOLDENSPACEAI FULLY AUTOMATIC SYSTEM LAUNCHED! Port ${PORT}
 ✅ ALL 10 GOLDEN PACKAGES AVAILABLE

@@ -3,89 +3,111 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Family AI - GoldenSpaceAI</title>
+    <title>Golden Family AI</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        :root {
+            --primary: #FFD700;
+            --secondary: #FFA500;
+            --accent: #FFC107;
+            --dark: #1a1a1a;
+            --darker: #0f0f0f;
+            --light: #f8f9fa;
+            --gray: #adb5bd;
+            --success: #4cc9f0;
+            --warning: #f72585;
+            --golden-bg: #2a2a1e;
+            --golden-light: #fff9c4;
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         body {
-            background: #4a6572;
-            color: #333;
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            background: linear-gradient(135deg, #1a1a1a 0%, #2a2a1e 100%);
+            color: var(--light);
+            display: flex;
+            height: 100vh;
             overflow: hidden;
         }
 
-        /* LOCK SCREEN STYLES */
+        /* Lock Screen */
         .lock-screen {
-            padding: 40px 20px;
-            text-align: center;
-            background: white;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--dark);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            padding: 20px;
         }
 
         .lock-screen.hidden {
             display: none;
         }
 
-        .lock-icon {
-            font-size: 60px;
-            color: gold;
+        .golden-logo {
+            font-size: 4rem;
+            color: var(--primary);
             margin-bottom: 20px;
         }
 
         .plans-container {
             display: flex;
-            justify-content: center;
             gap: 20px;
-            padding: 30px;
+            margin: 30px 0;
             flex-wrap: wrap;
+            justify-content: center;
         }
 
         .plan-card {
-            background: white;
-            border-radius: 10px;
-            padding: 20px;
-            width: 280px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            border: 2px solid #ddd;
+            background: var(--golden-bg);
+            border: 2px solid var(--primary);
+            border-radius: 15px;
+            padding: 25px;
+            width: 300px;
+            text-align: center;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
         }
 
-        .plan-card.starter {
-            border-color: #3498db;
+        .plan-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
         }
 
-        .plan-card.pro {
-            border-color: #9b59b6;
-        }
-
-        .plan-card.premium {
-            border-color: #e74c3c;
+        .plan-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(255, 215, 0, 0.2);
         }
 
         .plan-name {
-            font-size: 24px;
+            font-size: 1.8rem;
             font-weight: bold;
             margin-bottom: 10px;
-            color: #2c3e50;
+            color: var(--primary);
         }
 
         .plan-price {
-            font-size: 32px;
+            font-size: 2.5rem;
             font-weight: bold;
             margin: 15px 0;
-            color: #e74c3c;
+            color: var(--primary);
         }
 
         .plan-features {
@@ -96,157 +118,129 @@
 
         .plan-features li {
             padding: 8px 0;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .plan-features li:before {
             content: "✓";
-            color: #27ae60;
+            color: var(--primary);
             font-weight: bold;
             margin-right: 10px;
         }
 
         .btn {
-            padding: 12px 24px;
+            padding: 12px 25px;
             border: none;
             border-radius: 25px;
-            font-size: 16px;
+            font-size: 1rem;
             font-weight: bold;
             cursor: pointer;
-            margin: 10px 5px;
+            transition: all 0.3s;
         }
 
-        .btn-primary {
-            background: #3498db;
-            color: white;
+        .btn-golden {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--dark);
         }
 
-        .btn-success {
-            background: #27ae60;
-            color: white;
+        .btn-golden:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.4);
         }
 
-        .btn-danger {
-            background: #e74c3c;
-            color: white;
-        }
-
-        /* MAIN APP STYLES */
-        #mainApp {
-            display: none;
-        }
-
-        #mainApp:not(.hidden) {
-            display: block;
-        }
-
-        header {
-            background: #2c3e50;
-            color: white;
-            padding: 20px;
-            text-align: center;
-            position: relative;
-        }
-
-        .golden-badge {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: gold;
-            color: #333;
-            padding: 8px 15px;
+        /* Setup Form */
+        .setup-form {
+            background: var(--golden-bg);
+            padding: 30px;
             border-radius: 15px;
-            font-weight: bold;
-        }
-
-        .main-content {
-            display: flex;
-            min-height: 500px;
-        }
-
-        .sidebar {
-            width: 300px;
-            background: #f8f9fa;
-            padding: 20px;
-            border-right: 1px solid #ddd;
-        }
-
-        .chat-area {
-            flex: 1;
-            background: white;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .chat-messages {
-            flex: 1;
-            padding: 20px;
-            overflow-y: auto;
-            max-height: 400px;
-            border-bottom: 1px solid #eee;
-        }
-
-        .message {
-            margin: 10px 0;
-            padding: 12px;
-            border-radius: 10px;
-            max-width: 80%;
-        }
-
-        .message.user {
-            background: #3498db;
-            color: white;
-            margin-left: auto;
-        }
-
-        .message.ai {
-            background: #ecf0f1;
-            color: #333;
-        }
-
-        .chat-input-container {
-            padding: 20px;
-            display: flex;
-            gap: 10px;
-        }
-
-        .chat-input {
-            flex: 1;
-            padding: 12px;
-            border: 2px solid #ddd;
-            border-radius: 20px;
-            font-size: 16px;
-        }
-
-        .send-btn {
-            background: #27ae60;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            font-size: 18px;
-            cursor: pointer;
-        }
-
-        .user-management {
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 15px 0;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border: 2px solid var(--primary);
+            max-width: 500px;
+            width: 90%;
+            margin-top: 20px;
         }
 
         .form-group {
-            margin: 15px 0;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: var(--primary);
         }
 
         .form-control {
             width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            margin-top: 5px;
+            padding: 12px 15px;
+            border: 2px solid rgba(255, 215, 0, 0.3);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--light);
+            font-size: 1rem;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+
+        /* Main App */
+        .main-app {
+            display: none;
+            width: 100%;
+            height: 100%;
+        }
+
+        .main-app.active {
+            display: flex;
+        }
+
+        .sidebar {
+            width: 300px;
+            background: var(--darker);
+            display: flex;
+            flex-direction: column;
+            border-right: 2px solid var(--primary);
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255, 215, 0, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--golden-bg);
+        }
+
+        .logo {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: var(--dark);
+        }
+
+        .golden-balance {
+            background: var(--primary);
+            color: var(--dark);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            margin-left: auto;
+        }
+
+        .family-management {
+            padding: 20px;
+            background: var(--golden-bg);
+            margin: 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 215, 0, 0.3);
         }
 
         .user-list {
@@ -254,228 +248,809 @@
         }
 
         .user-item {
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            margin: 5px 0;
+            padding: 12px;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            border-radius: 8px;
+            margin-bottom: 10px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            background: rgba(255, 255, 255, 0.05);
         }
 
-        .hidden {
-            display: none !important;
+        .user-email {
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .user-instructions {
+            font-size: 0.9rem;
+            color: var(--gray);
+            margin-top: 5px;
+        }
+
+        .chat-history {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .chat-item {
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .chat-item:hover {
+            background: rgba(255, 215, 0, 0.1);
+        }
+
+        .chat-item.active {
+            background: rgba(255, 215, 0, 0.2);
+            border: 1px solid var(--primary);
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .header {
+            padding: 15px 25px;
+            border-bottom: 2px solid var(--primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--golden-bg);
+        }
+
+        .model-selector {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .model-btn {
+            background: rgba(255, 215, 0, 0.1);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            color: var(--light);
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .model-btn.active {
+            background: var(--primary);
+            color: var(--dark);
+            border-color: var(--primary);
+        }
+
+        .model-btn.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            background: var(--dark);
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 15px 20px;
+            border-radius: 18px;
+            line-height: 1.5;
+            position: relative;
+        }
+
+        .user-message {
+            align-self: flex-end;
+            background: var(--primary);
+            color: var(--dark);
+            border-bottom-right-radius: 5px;
+        }
+
+        .ai-message {
+            align-self: flex-start;
+            background: var(--golden-bg);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            border-bottom-left-radius: 5px;
+        }
+
+        .message-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 5px;
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .input-area {
+            padding: 20px;
+            border-top: 2px solid var(--primary);
+            display: flex;
+            gap: 10px;
+            background: var(--golden-bg);
+        }
+
+        .input-container {
+            flex: 1;
+            display: flex;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 5px;
+            border: 2px solid rgba(255, 215, 0, 0.3);
+        }
+
+        .text-input {
+            flex: 1;
+            background: none;
+            border: none;
+            padding: 12px 15px;
+            color: var(--light);
+            font-size: 16px;
+            outline: none;
+            resize: none;
+        }
+
+        .send-btn {
+            background: var(--primary);
+            color: var(--dark);
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: all 0.2s;
+        }
+
+        .send-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .typing-indicator {
+            display: flex;
+            gap: 5px;
+            padding: 15px 20px;
+            align-self: flex-start;
+            background: var(--golden-bg);
+            border-radius: 18px;
+            border-bottom-left-radius: 5px;
+            width: fit-content;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--primary);
+            animation: typing 1.4s infinite ease-in-out;
+        }
+
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes typing {
+            0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+
+        .plan-info {
+            background: rgba(255, 215, 0, 0.1);
+            padding: 10px 15px;
+            border-radius: 10px;
+            margin: 0 15px 15px 15px;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            font-size: 0.9rem;
+        }
+
+        .members-count {
+            color: var(--primary);
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- LOCK SCREEN -->
-        <div class="lock-screen" id="lockScreen">
-            <div class="lock-icon">🔒</div>
-            <h1>Family AI - Unlock Premium Features</h1>
-            <p>Choose a monthly plan to access Family AI with custom instructions</p>
+    <!-- Lock Screen -->
+    <div class="lock-screen" id="lockScreen">
+        <div class="golden-logo">👑</div>
+        <h1>Golden Family AI</h1>
+        <p>Unlock premium AI features for your family with Golden coins</p>
+        
+        <div class="plans-container">
+            <!-- Starter Plan -->
+            <div class="plan-card">
+                <div class="plan-name">Starter</div>
+                <div class="plan-price">40G/month</div>
+                <ul class="plan-features">
+                    <li>Up to 3 Family Members</li>
+                    <li>DeepSeek Chat Access</li>
+                    <li>GPT-4o-mini Access</li>
+                    <li>GPT-5-mini Access</li>
+                    <li>Basic Custom Instructions</li>
+                </ul>
+                <button class="btn btn-golden" onclick="selectPlan('starter')">Subscribe Now</button>
+            </div>
             
-            <div class="plans-container">
-                <div class="plan-card starter">
-                    <div class="plan-name">Starter Plan</div>
-                    <div class="plan-price">40G/month</div>
-                    <ul class="plan-features">
-                        <li>Up to 3 Family Members</li>
-                        <li>GPT-4 & GPT-4o-mini Access</li>
-                        <li>Unlimited Usage</li>
-                        <li>Custom Instructions</li>
-                        <li>Parental Dashboard</li>
-                    </ul>
-                    <button class="btn btn-primary" onclick="selectPlan('starter')">Select Starter</button>
-                </div>
-                
-                <div class="plan-card pro">
-                    <div class="plan-name">Pro Plan</div>
-                    <div class="plan-price">80G/month</div>
-                    <ul class="plan-features">
-                        <li>Up to 5 Family Members</li>
-                        <li>GPT-4o (20 questions/day)</li>
-                        <li>GPT-4o-mini (Unlimited)</li>
-                        <li>DeepSeek Chat (Unlimited)</li>
-                        <li>Advanced Parental Controls</li>
-                    </ul>
-                    <button class="btn btn-primary" onclick="selectPlan('pro')">Select Pro</button>
-                </div>
-                
-                <div class="plan-card premium">
-                    <div class="plan-name">Premium Plan</div>
-                    <div class="plan-price">170G/month</div>
-                    <ul class="plan-features">
-                        <li>Unlimited Family Members</li>
-                        <li>GPT-4o (Unlimited)</li>
-                        <li>GPT-4 Family Access</li>
-                        <li>Gemini 2.5 Pro (Unlimited)</li>
-                        <li>DeepSeek Chat (Unlimited)</li>
-                    </ul>
-                    <button class="btn btn-primary" onclick="selectPlan('premium')">Select Premium</button>
-                </div>
+            <!-- Pro Plan -->
+            <div class="plan-card">
+                <div class="plan-name">Pro</div>
+                <div class="plan-price">80G/month</div>
+                <ul class="plan-features">
+                    <li>Up to 5 Family Members</li>
+                    <li>All Starter Features</li>
+                    <li>GPT-4o Access (20/day)</li>
+                    <li>GPT-5 Access (10/day)</li>
+                    <li>Advanced Custom Instructions</li>
+                </ul>
+                <button class="btn btn-golden" onclick="selectPlan('pro')">Subscribe Now</button>
+            </div>
+            
+            <!-- Premium Plan -->
+            <div class="plan-card">
+                <div class="plan-name">Premium</div>
+                <div class="plan-price">170G/month</div>
+                <ul class="plan-features">
+                    <li>Unlimited Family Members</li>
+                    <li>All Pro Features</li>
+                    <li>GPT-4o Unlimited</li>
+                    <li>GPT-5 Unlimited</li>
+                    <li>Gemini 2.5 Pro Access</li>
+                    <li>Advanced AI Instructions</li>
+                </ul>
+                <button class="btn btn-golden" onclick="selectPlan('premium')">Subscribe Now</button>
             </div>
         </div>
+    </div>
 
-        <!-- MAIN APP (Initially hidden) -->
-        <div id="mainApp" class="hidden">
-            <header>
-                <div class="golden-badge" id="goldenBalance">150G</div>
-                <h1>Family AI</h1>
-                <p>Safe AI for your family with parental controls</p>
-            </header>
+    <!-- Main App -->
+    <div class="main-app" id="mainApp">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">👑</div>
+                <h2>Family AI</h2>
+                <div class="golden-balance" id="goldenBalance">150G</div>
+            </div>
 
-            <div class="main-content">
-                <!-- Sidebar -->
-                <div class="sidebar">
-                    <div class="user-management">
-                        <h3>Family Management</h3>
-                        <div class="form-group">
-                            <label>Add Family Member:</label>
-                            <input type="email" class="form-control" id="newMemberEmail" placeholder="child@example.com">
-                        </div>
-                        <div class="form-group">
-                            <label>Custom Instructions:</label>
-                            <textarea class="form-control" id="customInstructions" placeholder="Age-appropriate instructions..."></textarea>
-                        </div>
-                        <button class="btn btn-success" onclick="addFamilyMember()">Add Member</button>
-                        
-                        <div class="user-list" id="userList">
-                            <div class="user-item">
-                                <div>
-                                    <strong>john@family.com</strong><br>
-                                    <small>Explain like to a 12-year-old</small>
-                                </div>
-                                <button class="btn btn-primary" style="padding: 5px 10px; font-size: 12px;">Edit</button>
-                            </div>
-                            <div class="user-item">
-                                <div>
-                                    <strong>sara@family.com</strong><br>
-                                    <small>Keep answers simple</small>
-                                </div>
-                                <button class="btn btn-primary" style="padding: 5px 10px; font-size: 12px;">Edit</button>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div style="margin-top: 20px;">
-                        <h3>Chat Sessions</h3>
-                        <button class="btn btn-primary" onclick="newChat()" style="width: 100%;">New Chat</button>
-                    </div>
+            <div class="plan-info">
+                Plan: <span id="currentPlan">Starter</span> • 
+                Members: <span class="members-count" id="membersCount">1/3</span>
+            </div>
+
+            <div class="family-management">
+                <h3>Family Management</h3>
+                <div class="form-group">
+                    <label>Add Member Email:</label>
+                    <input type="email" class="form-control" id="newMemberEmail" placeholder="child@family.com">
                 </div>
-
-                <!-- Chat Area -->
-                <div class="chat-area">
-                    <div class="chat-messages" id="chatMessages">
-                        <div class="message ai">
-                            <strong>AI Assistant:</strong><br>
-                            Welcome to Family AI! I'm here to help your family learn safely. How can I assist you today?
-                        </div>
-                        <div class="message user">
-                            <strong>You:</strong><br>
-                            Hello! Can you explain how rockets work?
-                        </div>
-                        <div class="message ai">
-                            <strong>AI Assistant:</strong><br>
-                            Rockets work on Newton's Third Law! When fuel burns, hot gases shoot downward, pushing the rocket upward into space! 🚀
-                        </div>
-                    </div>
-                    
-                    <div class="chat-input-container">
-                        <input type="text" class="chat-input" id="chatInput" placeholder="Type your message...">
-                        <button class="send-btn" onclick="sendMessage()">➤</button>
-                    </div>
+                <div class="form-group">
+                    <label>Custom Instructions:</label>
+                    <textarea class="form-control" id="customInstructions" placeholder="How should AI respond to this member?"></textarea>
                 </div>
+                <button class="btn btn-golden" onclick="addFamilyMember()" style="width: 100%;">Add Member</button>
+                
+                <div class="user-list" id="userList">
+                    <!-- Users will be populated here -->
+                </div>
+            </div>
+
+            <div class="chat-history" id="chatHistory">
+                <!-- Chat history will be loaded here -->
+            </div>
+            
+            <button class="btn btn-golden" onclick="newChat()" style="margin: 15px;">New Chat</button>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="header">
+                <h1>Family AI Assistant</h1>
+                <div class="model-selector" id="modelSelector">
+                    <!-- Models will be populated based on plan -->
+                </div>
+            </div>
+
+            <div class="chat-container" id="chatContainer">
+                <div class="message ai-message">
+                    <div class="message-header">
+                        <i class="fas fa-robot"></i>
+                        <span>Family AI</span>
+                    </div>
+                    Welcome to your Family AI! I'm here to help your family learn and explore safely. How can I assist you today?
+                </div>
+            </div>
+
+            <div class="input-area">
+                <div class="input-container">
+                    <textarea class="text-input" id="messageInput" placeholder="Type your message here..." rows="1"></textarea>
+                </div>
+                <button class="send-btn" id="sendButton">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
             </div>
         </div>
     </div>
 
     <script>
-        // SIMPLE JAVASCRIPT THAT WILL DEFINITELY WORK
-        function selectPlan(planType) {
-            alert('Selected ' + planType + ' plan! This would normally process payment.');
-            
-            // Show the main app
-            document.getElementById('lockScreen').classList.add('hidden');
-            document.getElementById('mainApp').classList.remove('hidden');
+        // Family AI System
+        let currentPlan = null;
+        let familyMembers = [];
+        let currentUser = null;
+        let currentChatId = null;
+        let chats = {};
+        let goldenBalance = 150; // Starting balance
+
+        // Plan configurations
+        const PLANS = {
+            starter: {
+                price: 40,
+                maxMembers: 3,
+                models: ['deepseek-chat', 'gpt-4o-mini', 'gpt-5-mini'],
+                features: ['basic_instructions']
+            },
+            pro: {
+                price: 80,
+                maxMembers: 5,
+                models: ['deepseek-chat', 'gpt-4o-mini', 'gpt-5-mini', 'gpt-4o', 'gpt-5'],
+                limits: { 'gpt-4o': 20, 'gpt-5': 10 },
+                features: ['advanced_instructions']
+            },
+            premium: {
+                price: 170,
+                maxMembers: 999, // Practical unlimited
+                models: ['deepseek-chat', 'gpt-4o-mini', 'gpt-5-mini', 'gpt-4o', 'gpt-5', 'gemini-2.5-pro'],
+                features: ['advanced_instructions', 'unlimited_usage']
+            }
+        };
+
+        // Model display names
+        const MODEL_NAMES = {
+            'deepseek-chat': 'DeepSeek Chat',
+            'gpt-4o-mini': 'GPT-4o Mini',
+            'gpt-5-mini': 'GPT-5 Mini',
+            'gpt-4o': 'GPT-4o',
+            'gpt-5': 'GPT-5',
+            'gemini-2.5-pro': 'Gemini 2.5 Pro'
+        };
+
+        // Model endpoints
+        const MODEL_ENDPOINTS = {
+            'deepseek-chat': '/api/deepseek-chat',
+            'gpt-4o-mini': '/api/gpt-4o-mini',
+            'gpt-5-mini': '/api/gpt-5-mini',
+            'gpt-4o': '/api/gpt-4o',
+            'gpt-5': '/api/gpt-5',
+            'gemini-2.5-pro': '/api/gemini-2.5-pro'
+        };
+
+        // Initialize the application
+        function initApp() {
+            loadFromStorage();
+            updateGoldenBalance();
+            setupEventListeners();
         }
 
+        // Load data from localStorage
+        function loadFromStorage() {
+            const savedPlan = localStorage.getItem('familyAI_plan');
+            const savedMembers = localStorage.getItem('familyAI_members');
+            const savedChats = localStorage.getItem('familyAI_chats');
+            const savedBalance = localStorage.getItem('golden_balance');
+
+            if (savedPlan) {
+                currentPlan = savedPlan;
+                unlockApp();
+            }
+
+            if (savedMembers) {
+                familyMembers = JSON.parse(savedMembers);
+                updateUserList();
+            }
+
+            if (savedChats) {
+                chats = JSON.parse(savedChats);
+                loadChatHistory();
+            }
+
+            if (savedBalance) {
+                goldenBalance = parseInt(savedBalance);
+            }
+        }
+
+        // Save data to localStorage
+        function saveToStorage() {
+            localStorage.setItem('familyAI_plan', currentPlan);
+            localStorage.setItem('familyAI_members', JSON.stringify(familyMembers));
+            localStorage.setItem('familyAI_chats', JSON.stringify(chats));
+            localStorage.setItem('golden_balance', goldenBalance.toString());
+        }
+
+        // Select a plan
+        function selectPlan(planType) {
+            const plan = PLANS[planType];
+            if (goldenBalance < plan.price) {
+                alert(`Insufficient Golden balance! You need ${plan.price}G but only have ${goldenBalance}G.`);
+                return;
+            }
+
+            if (confirm(`Subscribe to ${planType} plan for ${plan.price}G/month? Golden will be deducted automatically each month.`)) {
+                // Deduct Golden
+                goldenBalance -= plan.price;
+                currentPlan = planType;
+                
+                // Create admin user
+                familyMembers = [{
+                    email: 'admin@family.com',
+                    role: 'admin',
+                    instructions: 'Provide helpful, educational responses suitable for family use.',
+                    joinedAt: new Date().toISOString()
+                }];
+
+                unlockApp();
+                saveToStorage();
+                updateGoldenBalance();
+                
+                alert(`✅ ${planType} plan activated! ${plan.price}G deducted. Welcome to Family AI!`);
+            }
+        }
+
+        // Unlock the main application
+        function unlockApp() {
+            document.getElementById('lockScreen').classList.add('hidden');
+            document.getElementById('mainApp').classList.add('active');
+            
+            updatePlanInfo();
+            setupModelSelector();
+            createNewChat();
+        }
+
+        // Update plan information display
+        function updatePlanInfo() {
+            document.getElementById('currentPlan').textContent = currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1);
+            document.getElementById('membersCount').textContent = `${familyMembers.length}/${PLANS[currentPlan].maxMembers}`;
+        }
+
+        // Setup model selector based on current plan
+        function setupModelSelector() {
+            const selector = document.getElementById('modelSelector');
+            selector.innerHTML = '';
+            
+            const availableModels = PLANS[currentPlan].models;
+            
+            availableModels.forEach(model => {
+                const button = document.createElement('button');
+                button.className = 'model-btn';
+                button.textContent = MODEL_NAMES[model];
+                button.dataset.model = model;
+                
+                if (model === 'deepseek-chat') {
+                    button.classList.add('active');
+                }
+                
+                button.addEventListener('click', () => {
+                    document.querySelectorAll('.model-btn').forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                });
+                
+                selector.appendChild(button);
+            });
+        }
+
+        // Add family member
         function addFamilyMember() {
-            const email = document.getElementById('newMemberEmail').value;
-            const instructions = document.getElementById('customInstructions').value;
+            const email = document.getElementById('newMemberEmail').value.trim();
+            const instructions = document.getElementById('customInstructions').value.trim();
             
             if (!email) {
                 alert('Please enter an email address');
                 return;
             }
-            
-            const userList = document.getElementById('userList');
-            const newUser = document.createElement('div');
-            newUser.className = 'user-item';
-            newUser.innerHTML = `
-                <div>
-                    <strong>${email}</strong><br>
-                    <small>${instructions || 'No custom instructions'}</small>
-                </div>
-                <button class="btn btn-primary" style="padding: 5px 10px; font-size: 12px;">Edit</button>
-            `;
-            
-            userList.appendChild(newUser);
-            
+
+            const plan = PLANS[currentPlan];
+            if (familyMembers.length >= plan.maxMembers) {
+                alert(`Your ${currentPlan} plan only allows ${plan.maxMembers} members. Upgrade to add more.`);
+                return;
+            }
+
+            // Check if email already exists
+            if (familyMembers.some(member => member.email === email)) {
+                alert('This email is already added to your family');
+                return;
+            }
+
+            const newMember = {
+                email: email,
+                role: 'member',
+                instructions: instructions || 'Provide age-appropriate, educational responses.',
+                joinedAt: new Date().toISOString()
+            };
+
+            familyMembers.push(newMember);
+            updateUserList();
+            updatePlanInfo();
+            saveToStorage();
+
             // Clear form
             document.getElementById('newMemberEmail').value = '';
             document.getElementById('customInstructions').value = '';
-            
-            alert('Family member added successfully!');
+
+            alert(`Family member ${email} added successfully! They can now access Family AI.`);
         }
 
-        function sendMessage() {
-            const input = document.getElementById('chatInput');
+        // Update user list in sidebar
+        function updateUserList() {
+            const userList = document.getElementById('userList');
+            userList.innerHTML = '';
+            
+            familyMembers.forEach(member => {
+                const userItem = document.createElement('div');
+                userItem.className = 'user-item';
+                userItem.innerHTML = `
+                    <div>
+                        <div class="user-email">${member.email}</div>
+                        <div class="user-instructions">${member.instructions}</div>
+                    </div>
+                    ${member.role === 'admin' ? '<span style="color: var(--primary);">👑</span>' : ''}
+                `;
+                userList.appendChild(userItem);
+            });
+        }
+
+        // Update Golden balance display
+        function updateGoldenBalance() {
+            document.getElementById('goldenBalance').textContent = `${goldenBalance}G`;
+        }
+
+        // Chat management functions
+        function createNewChat() {
+            const chatId = 'chat_' + Date.now();
+            currentChatId = chatId;
+            
+            chats[chatId] = {
+                id: chatId,
+                title: 'New Chat',
+                messages: [
+                    {
+                        role: 'ai',
+                        content: 'Welcome to your Family AI! How can I help you today?',
+                        timestamp: new Date().toISOString()
+                    }
+                ],
+                createdAt: new Date().toISOString()
+            };
+            
+            saveToStorage();
+            loadChatHistory();
+            loadChat(chatId);
+        }
+
+        function loadChatHistory() {
+            const chatHistory = document.getElementById('chatHistory');
+            chatHistory.innerHTML = '';
+            
+            Object.values(chats).forEach(chat => {
+                const chatItem = document.createElement('div');
+                chatItem.className = `chat-item ${chat.id === currentChatId ? 'active' : ''}`;
+                chatItem.innerHTML = `
+                    <div>${chat.title}</div>
+                    <button onclick="deleteChat('${chat.id}')" style="background:none; border:none; color:var(--gray); cursor:pointer;">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                `;
+                
+                chatItem.addEventListener('click', (e) => {
+                    if (!e.target.closest('button')) {
+                        loadChat(chat.id);
+                    }
+                });
+                
+                chatHistory.appendChild(chatItem);
+            });
+        }
+
+        function loadChat(chatId) {
+            currentChatId = chatId;
+            const chat = chats[chatId];
+            
+            if (!chat) return;
+            
+            const chatContainer = document.getElementById('chatContainer');
+            chatContainer.innerHTML = '';
+            
+            chat.messages.forEach(message => {
+                addMessageToUI(message.content, message.role);
+            });
+            
+            loadChatHistory();
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function deleteChat(chatId) {
+            if (confirm('Delete this chat?')) {
+                delete chats[chatId];
+                if (currentChatId === chatId) {
+                    const remainingChats = Object.keys(chats);
+                    if (remainingChats.length > 0) {
+                        loadChat(remainingChats[0]);
+                    } else {
+                        createNewChat();
+                    }
+                }
+                saveToStorage();
+                loadChatHistory();
+            }
+        }
+
+        // Message handling
+        function setupEventListeners() {
+            const sendButton = document.getElementById('sendButton');
+            const messageInput = document.getElementById('messageInput');
+
+            sendButton.addEventListener('click', sendMessage);
+            
+            messageInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+
+            // Auto-resize textarea
+            messageInput.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = (this.scrollHeight) + 'px';
+            });
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
             const message = input.value.trim();
             
             if (!message) return;
-            
-            const chatMessages = document.getElementById('chatMessages');
-            
+
             // Add user message
-            const userMsg = document.createElement('div');
-            userMsg.className = 'message user';
-            userMsg.innerHTML = `<strong>You:</strong><br>${message}`;
-            chatMessages.appendChild(userMsg);
-            
-            // Clear input
+            addMessageToUI(message, 'user');
             input.value = '';
-            
-            // Simulate AI response after 1 second
-            setTimeout(() => {
-                const aiMsg = document.createElement('div');
-                aiMsg.className = 'message ai';
-                aiMsg.innerHTML = `<strong>AI Assistant:</strong><br>I understand your question about "${message}". As a family AI, I provide safe, educational answers for all ages!`;
-                chatMessages.appendChild(aiMsg);
+            input.style.height = 'auto';
+
+            // Show typing indicator
+            showTypingIndicator();
+
+            try {
+                // Get selected model
+                const selectedModel = document.querySelector('.model-btn.active').dataset.model;
                 
-                // Scroll to bottom
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            }, 1000);
-        }
+                // Prepare API request
+                const response = await fetch(MODEL_ENDPOINTS[selectedModel], {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        model: selectedModel
+                    })
+                });
 
-        function newChat() {
-            if (confirm('Start a new chat? Current chat will be saved.')) {
-                document.getElementById('chatMessages').innerHTML = `
-                    <div class="message ai">
-                        <strong>AI Assistant:</strong><br>
-                        Welcome to your new chat! How can I help your family today?
-                    </div>
-                `;
+                const data = await response.json();
+                
+                // Remove typing indicator
+                removeTypingIndicator();
+                
+                // Add AI response
+                addMessageToUI(data.response || "I'm here to help!", 'ai');
+                
+            } catch (error) {
+                console.error('Error:', error);
+                removeTypingIndicator();
+                addMessageToUI("Sorry, I encountered an error. Please try again.", 'ai');
             }
         }
 
-        // Allow pressing Enter to send messages
-        document.getElementById('chatInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                sendMessage();
+        function addMessageToUI(content, role) {
+            if (!currentChatId) return;
+
+            const message = {
+                content,
+                role,
+                timestamp: new Date().toISOString()
+            };
+
+            chats[currentChatId].messages.push(message);
+            
+            // Update chat title if first user message
+            if (role === 'user' && chats[currentChatId].messages.filter(m => m.role === 'user').length === 1) {
+                chats[currentChatId].title = content.length > 30 ? content.substring(0, 30) + '...' : content;
             }
-        });
+
+            const chatContainer = document.getElementById('chatContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role}-message`;
+            
+            const header = document.createElement('div');
+            header.className = 'message-header';
+            header.innerHTML = role === 'user' ? 
+                '<i class="fas fa-user"></i><span>You</span>' :
+                '<i class="fas fa-robot"></i><span>Family AI</span>';
+            
+            messageDiv.appendChild(header);
+            messageDiv.appendChild(document.createTextNode(content));
+            chatContainer.appendChild(messageDiv);
+            
+            saveToStorage();
+            loadChatHistory();
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function showTypingIndicator() {
+            const chatContainer = document.getElementById('chatContainer');
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'typing-indicator';
+            typingDiv.id = 'typingIndicator';
+            
+            for (let i = 0; i < 3; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'typing-dot';
+                typingDiv.appendChild(dot);
+            }
+            
+            chatContainer.appendChild(typingDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function removeTypingIndicator() {
+            const typingIndicator = document.getElementById('typingIndicator');
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
+        }
+
+        // Monthly billing simulation (in a real app, this would be server-side)
+        function simulateMonthlyBilling() {
+            if (currentPlan) {
+                const plan = PLANS[currentPlan];
+                if (goldenBalance >= plan.price) {
+                    goldenBalance -= plan.price;
+                    updateGoldenBalance();
+                    saveToStorage();
+                    console.log(`Monthly billing: ${plan.price}G deducted for ${currentPlan} plan`);
+                } else {
+                    console.log('Insufficient Golden for monthly billing');
+                    // In a real app, you'd handle subscription expiration
+                }
+            }
+        }
+
+        // Initialize the app when page loads
+        document.addEventListener('DOMContentLoaded', initApp);
+
+        // Expose functions to global scope for HTML onclick
+        window.selectPlan = selectPlan;
+        window.addFamilyMember = addFamilyMember;
+        window.newChat = createNewChat;
+        window.deleteChat = deleteChat;
     </script>
 </body>
 </html>

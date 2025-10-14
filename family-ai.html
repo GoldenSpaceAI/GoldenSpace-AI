@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Family AI - GoldenSpaceAI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .lock-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.98);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .lock-screen.hidden {
+            display: none;
+        }
+
+        .lock-icon {
+            font-size: 4rem;
+            color: #FFD700;
+            margin-bottom: 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, #2c3e50, #4a6491);
+            color: white;
+            padding: 25px;
+            text-align: center;
+            position: relative;
+        }
+
+        .golden-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            color: #333;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: flex;
+            min-height: 600px;
+        }
+
+        .sidebar {
+            width: 300px;
+            background: #f8f9fa;
+            border-right: 1px solid #e9ecef;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: white;
+        }
+
+        .plans-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            padding: 30px;
+            flex-wrap: wrap;
+        }
+
+        .plan-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            width: 300px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            text-align: center;
+            border: 3px solid transparent;
+        }
+
+        .plan-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .plan-card.starter {
+            border-color: #3498db;
+        }
+
+        .plan-card.pro {
+            border-color: #9b59b6;
+        }
+
+        .plan-card.premium {
+            border-color: #e74c3c;
+        }
+
+        .plan-name {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .plan-price {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+
+        .plan-price.starter {
+            color: #3498db;
+        }
+
+        .plan-price.pro {
+            color: #9b59b6;
+        }
+
+        .plan-price.premium {
+            color: #e74c3c;
+        }
+
+        .plan-features {
+            list-style: none;
+            text-align: left;
+            margin: 20px 0;
+        }
+
+        .plan-features li {
+            padding: 8px 0;
+            border-bottom: 1px solid #f1f1f1;
+        }
+
+        .plan-features li:before {
+            content: "✓";
+            color: #2ecc71;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #2980b9, #1f618d);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: linear-gradient(135deg, #27ae60, #219653);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #c0392b, #a93226);
+        }
+
+        .setup-form {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .form-control:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .chat-header {
+            padding: 15px 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: between;
+            align-items: center;
+        }
+
+        .model-selector {
+            padding: 8px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            background: white;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 15px;
+            border-radius: 15px;
+            position: relative;
+        }
+
+        .message.user {
+            align-self: flex-end;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+        }
+
+        .message.ai {
+            align-self: flex-start;
+            background: #f1f3f4;
+            color: #333;
+        }
+
+        .message-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2rem;
+            color: #666;
+            transition: color 0.3s;
+        }
+
+        .action-btn:hover {
+            color: #3498db;
+        }
+
+        .chat-input-container {
+            padding: 20px;
+            border-top: 1px solid #e9ecef;
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 25px;
+            font-size: 1rem;
+            resize: none;
+            height: 60px;
+        }
+
+        .send-btn {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .user-management {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .user-list {
+            list-style: none;
+            margin-top: 15px;
+        }
+
+        .user-item {
+            padding: 12px;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-info {
+            flex: 1;
+        }
+
+        .user-email {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .user-instructions {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .speaking {
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Lock Screen -->
+        <div class="lock-screen" id="lockScreen">
+            <div class="lock-icon">🔒</div>
+            <h2>Family AI - Unlock Premium Features</h2>
+            <p>Choose a plan to access Family AI with custom instructions and parental controls</p>
+            
+            <div class="plans-container">
+                <!-- Starter Plan -->
+                <div class="plan-card starter">
+                    <div class="plan-name">Starter</div>
+                    <div class="plan-price starter">40G</div>
+                    <ul class="plan-features">
+                        <li>Up to 3 Family Members</li>
+                        <li>GPT-4 & GPT-4o-mini Access</li>
+                        <li>Unlimited Usage</li>
+                        <li>Custom Instructions</li>
+                        <li>Parental Dashboard</li>
+                    </ul>
+                    <button class="btn btn-primary" onclick="selectPlan('starter')">Select Starter</button>
+                </div>
+                
+                <!-- Pro Plan -->
+                <div class="plan-card pro">
+                    <div class="plan-name">Pro</div>
+                    <div class="plan-price pro">80G</div>
+                    <ul class="plan-features">
+                        <li>Up to 5 Family Members</li>
+                        <li>GPT-4o (20 questions/day)</li>
+                        <li>GPT-4o-mini (Unlimited)</li>
+                        <li>DeepSeek Chat (Unlimited)</li>
+                        <li>Advanced Parental Controls</li>
+                    </ul>
+                    <button class="btn btn-primary" onclick="selectPlan('pro')">Select Pro</button>
+                </div>
+                
+                <!-- Premium Plan -->
+                <div class="plan-card premium">
+                    <div class="plan-name">Premium</div>
+                    <div class="plan-price premium">170G</div>
+                    <ul class="plan-features">
+                        <li>Unlimited Family Members</li>
+                        <li>GPT-4o (Unlimited)</li>
+                        <li>GPT-4 Family Access</li>
+                        <li>Gemini 2.5 Pro (Unlimited)</li>
+                        <li>DeepSeek Chat (Unlimited)</li>
+                        <li>Advanced Instructions</li>
+                    </ul>
+                    <button class="btn btn-primary" onclick="selectPlan('premium')">Select Premium</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main App (Hidden until unlocked) -->
+        <div id="mainApp" class="hidden">
+            <header>
+                <div class="golden-badge" id="goldenBalance">Loading...</div>
+                <h1>Family AI</h1>
+                <p class="subtitle">Safe AI for your family with parental controls</p>
+            </header>
+
+            <div class="main-content">
+                <!-- Sidebar -->
+                <div class="sidebar">
+                    <div class="user-management" id="adminPanel">
+                        <h3>Family Management</h3>
+                        <div class="form-group">
+                            <label>Add Family Member Email:</label>
+                            <input type="email" class="form-control" id="newMemberEmail" placeholder="child@example.com">
+                        </div>
+                        <div class="form-group">
+                            <label>Custom Instructions:</label>
+                            <textarea class="form-control" id="customInstructions" placeholder="Explain like they're 10 years old, keep answers educational..."></textarea>
+                        </div>
+                        <button class="btn btn-success" onclick="addFamilyMember()">Add Member</button>
+                        
+                        <div class="user-list" id="userList">
+                            <!-- Users will be populated here -->
+                        </div>
+                    </div>
+                    
+                    <div class="chat-history">
+                        <h3>Chat Sessions</h3>
+                        <button class="btn btn-primary" onclick="newChat()">New Chat</button>
+                        <div id="chatList">
+                            <!-- Chat sessions will be listed here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat Area -->
+                <div class="chat-area">
+                    <div class="chat-container">
+                        <div class="chat-header">
+                            <select class="model-selector" id="modelSelector">
+                                <option value="gpt-4o-mini">GPT-4o-mini (Fast)</option>
+                                <option value="gpt-4o">GPT-4o (Smart)</option>
+                                <option value="deepseek-chat">DeepSeek Chat</option>
+                                <option value="gemini-2.5-pro" disabled>Gemini 2.5 Pro (Premium)</option>
+                            </select>
+                            <div>
+                                <span id="currentUser">Admin</span>
+                                <button class="btn btn-danger" onclick="logout()">Logout</button>
+                            </div>
+                        </div>
+
+                        <div class="chat-messages" id="chatMessages">
+                            <div class="message ai">
+                                <p>Welcome to Family AI! I'm here to help your family learn and explore safely. How can I assist you today?</p>
+                                <div class="message-actions">
+                                    <button class="action-btn" onclick="speakText(this)">🔊</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="chat-input-container">
+                            <textarea class="chat-input" id="chatInput" placeholder="Type your message or click the mic to speak..." rows="1"></textarea>
+                            <button class="action-btn" onclick="toggleSpeech()">🎤</button>
+                            <button class="send-btn" onclick="sendMessage()">➤</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentPlan = null;
+        let currentFamilyId = null;
+        let isAdmin = false;
+        let currentChatId = 'default';
+        let speechRecognition = null;
+        let speechSynthesis = null;
+        let isSpeaking = false;
+
+        // Check authentication and load user data
+        async function checkAuth() {
+            try {
+                const response = await fetch('/api/me');
+                const data = await response.json();
+                
+                if (data.loggedIn) {
+                    await loadGoldenBalance();
+                    await loadUserFamilyPlans();
+                } else {
+                    window.location.href = '/login-signup.html';
+                }
+            } catch (error) {
+                console.error('Auth check failed:', error);
+            }
+        }
+
+        // Load Golden balance
+        async function loadGoldenBalance() {
+            try {
+                const response = await fetch('/api/golden-balance');
+                const data = await response.json();
+                document.getElementById('goldenBalance').textContent = `${data.balance}G`;
+            } catch (error) {
+                console.error('Failed to load balance:', error);
+            }
+        }
+
+        // Load user's family plans
+        async function loadUserFamilyPlans() {
+            try {
+                const response = await fetch('/api/family/my-plans');
+                const data = await response.json();
+                
+                if (data.success && data.families.length > 0) {
+                    // User has existing family plans
+                    currentFamilyId = data.families[0].family_id;
+                    currentPlan = data.families[0].plan_type;
+                    isAdmin = true;
+                    unlockApp();
+                    loadFamilyMembers();
+                }
+                // If no family plans, lock screen remains visible
+            } catch (error) {
+                console.error('Failed to load family plans:', error);
+            }
+        }
+
+        // Select plan and show setup form
+        function selectPlan(planType) {
+            currentPlan = planType;
+            document.getElementById('lockScreen').innerHTML = `
+                <div class="lock-icon">🔓</div>
+                <h2>Setup Your ${planType.charAt(0).toUpperCase() + planType.slice(1)} Plan</h2>
+                <p>Add your family members and set up custom instructions</p>
+                
+                <div class="setup-form">
+                    <div class="form-group">
+                        <label>Your Children's Emails (comma separated):</label>
+                        <input type="text" class="form-control" id="childrenEmails" placeholder="child1@email.com, child2@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Default Custom Instructions:</label>
+                        <textarea class="form-control" id="defaultInstructions" placeholder="Explain concepts simply, keep answers age-appropriate...">Explain like they're a curious child, use simple language, and make learning fun!</textarea>
+                    </div>
+                    <button class="btn btn-success" onclick="createFamilyPlan()">Create Family Plan (${getPlanPrice(planType)}G)</button>
+                    <button class="btn btn-danger" onclick="cancelSetup()" style="margin-left: 10px;">Cancel</button>
+                </div>
+            `;
+        }
+
+        // Get plan price
+        function getPlanPrice(planType) {
+            const prices = { starter: 40, pro: 80, premium: 170 };
+            return prices[planType];
+        }
+
+        // Create family plan
+        async function createFamilyPlan() {
+            const childrenEmails = document.getElementById('childrenEmails').value;
+            const instructions = document.getElementById('defaultInstructions').value;
+            
+            if (!childrenEmails) {
+                alert('Please enter at least one child email');
+                return;
+            }
+
+            const emailList = childrenEmails.split(',').map(email => email.trim()).filter(email => email);
+            
+            try {
+                const response = await fetch('/api/family/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        plan_type: currentPlan,
+                        children_emails: emailList
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentFamilyId = data.family_id;
+                    isAdmin = true;
+                    unlockApp();
+                    // Set custom instructions for each child
+                    for (const email of emailList) {
+                        await setCustomInstructions(email, instructions);
+                    }
+                } else {
+                    alert('Failed to create family plan: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Failed to create family plan:', error);
+                alert('Failed to create family plan');
+            }
+        }
+
+        // Cancel setup
+        function cancelSetup() {
+            currentPlan = null;
+            document.getElementById('lockScreen').innerHTML = `
+                <div class="lock-icon">🔒</div>
+                <h2>Family AI - Unlock Premium Features</h2>
+                <p>Choose a plan to access Family AI with custom instructions and parental controls</p>
+                
+                <div class="plans-container">
+                    <!-- Plans will be re-rendered here -->
+                </div>
+            `;
+            // Re-render plans
+            renderPlans();
+        }
+
+        // Render plans (helper function)
+        function renderPlans() {
+            // This would re-render the plan selection UI
+        }
+
+        // Unlock the main application
+        function unlockApp() {
+            document.getElementById('lockScreen').classList.add('hidden');
+            document.getElementById('mainApp').classList.remove('hidden');
+            updateModelSelector();
+            
+            if (!isAdmin) {
+                document.getElementById('adminPanel').classList.add('hidden');
+            }
+        }
+
+        // Update model selector based on plan
+        function updateModelSelector() {
+            const selector = document.getElementById('modelSelector');
+            selector.innerHTML = '';
+            
+            const models = {
+                starter: ['gpt-4o-mini', 'gpt-4o'],
+                pro: ['gpt-4o-mini', 'gpt-4o', 'deepseek-chat'],
+                premium: ['gpt-4o-mini', 'gpt-4o', 'deepseek-chat', 'gemini-2.5-pro']
+            };
+            
+            models[currentPlan].forEach(model => {
+                const option = document.createElement('option');
+                option.value = model;
+                option.textContent = getModelDisplayName(model);
+                if (model === 'gemini-2.5-pro' && currentPlan !== 'premium') {
+                    option.disabled = true;
+                }
+                selector.appendChild(option);
+            });
+        }
+
+        // Get model display name
+        function getModelDisplayName(model) {
+            const names = {
+                'gpt-4o-mini': 'GPT-4o-mini (Fast)',
+                'gpt-4o': 'GPT-4o (Smart)',
+                'deepseek-chat': 'DeepSeek Chat',
+                'gemini-2.5-pro': 'Gemini 2.5 Pro'
+            };
+            return names[model] || model;
+        }
+
+        // Load family members
+        async function loadFamilyMembers() {
+            if (!currentFamilyId) return;
+            
+            try {
+                const response = await fetch(`/api/family/${currentFamilyId}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    renderUserList(data.family.members);
+                }
+            } catch (error) {
+                console.error('Failed to load family members:', error);
+            }
+        }
+
+        // Render user list
+        function renderUserList(members) {
+            const userList = document.getElementById('userList');
+            userList.innerHTML = '';
+            
+            members.forEach(member => {
+                if (member.role === 'child') {
+                    const userItem = document.createElement('div');
+                    userItem.className = 'user-item';
+                    userItem.innerHTML = `
+                        <div class="user-info">
+                            <div class="user-email">${member.email}</div>
+                            <div class="user-instructions">${member.custom_instructions || 'No custom instructions'}</div>
+                        </div>
+                        <button class="btn btn-primary" onclick="editUser('${member.child_id}')">Edit</button>
+                    `;
+                    userList.appendChild(userItem);
+                }
+            });
+        }
+
+        // Add family member
+        async function addFamilyMember() {
+            const email = document.getElementById('newMemberEmail').value;
+            const instructions = document.getElementById('customInstructions').value;
+            
+            if (!email) {
+                alert('Please enter an email');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/family/${currentFamilyId}/add-child`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: email,
+                        custom_instructions: instructions
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('newMemberEmail').value = '';
+                    document.getElementById('customInstructions').value = '';
+                    loadFamilyMembers();
+                } else {
+                    alert('Failed to add member: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Failed to add family member:', error);
+                alert('Failed to add family member');
+            }
+        }
+
+        // Set custom instructions
+        async function setCustomInstructions(email, instructions) {
+            // Implementation for setting custom instructions
+        }
+
+        // Send message to AI
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+
+            // Add user message to chat
+            addMessageToChat('user', message);
+            input.value = '';
+
+            try {
+                // For now, simulate AI response
+                setTimeout(() => {
+                    const aiResponse = `I understand your question about "${message}". As a family AI assistant, I'm here to provide helpful, age-appropriate information in a safe learning environment.`;
+                    addMessageToChat('ai', aiResponse);
+                }, 1000);
+
+                // In real implementation, you would call:
+                // const response = await fetch(`/api/family/${currentFamilyId}/chat`, {
+                //     method: 'POST',
+                //     headers: { 'Content-Type': 'application/json' },
+                //     body: JSON.stringify({
+                //         child_id: 'current_child_id',
+                //         question: message,
+                //         model: document.getElementById('modelSelector').value
+                //     })
+                // });
+
+            } catch (error) {
+                console.error('Failed to send message:', error);
+                addMessageToChat('ai', 'Sorry, I encountered an error. Please try again.');
+            }
+        }
+
+        // Add message to chat
+        function addMessageToChat(sender, text) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            
+            messageDiv.innerHTML = `
+                <p>${text}</p>
+                <div class="message-actions">
+                    <button class="action-btn" onclick="speakText(this)">🔊</button>
+                </div>
+            `;
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            // Save to local storage
+            saveChatToStorage();
+        }
+
+        // Speak text
+        function speakText(button) {
+            const text = button.closest('.message').querySelector('p').textContent;
+            
+            if ('speechSynthesis' in window) {
+                if (isSpeaking) {
+                    speechSynthesis.cancel();
+                    isSpeaking = false;
+                    button.textContent = '🔊';
+                    button.classList.remove('speaking');
+                } else {
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    utterance.rate = 0.8;
+                    utterance.pitch = 1;
+                    utterance.volume = 0.8;
+                    
+                    button.textContent = '⏹️';
+                    button.classList.add('speaking');
+                    isSpeaking = true;
+                    
+                    utterance.onend = function() {
+                        button.textContent = '🔊';
+                        button.classList.remove('speaking');
+                        isSpeaking = false;
+                    };
+                    
+                    speechSynthesis.speak(utterance);
+                }
+            }
+        }
+
+        // Toggle speech recognition
+        function toggleSpeech() {
+            if (!('webkitSpeechRecognition' in window)) {
+                alert('Speech recognition not supported in this browser');
+                return;
+            }
+
+            const micButton = document.querySelector('.action-btn');
+            const chatInput = document.getElementById('chatInput');
+
+            if (!speechRecognition) {
+                speechRecognition = new webkitSpeechRecognition();
+                speechRecognition.continuous = false;
+                speechRecognition.interimResults = false;
+                
+                speechRecognition.onstart = function() {
+                    micButton.textContent = '🔴';
+                    micButton.classList.add('speaking');
+                };
+                
+                speechRecognition.onresult = function(event) {
+                    const transcript = event.results[0][0].transcript;
+                    chatInput.value = transcript;
+                    micButton.textContent = '🎤';
+                    micButton.classList.remove('speaking');
+                };
+                
+                speechRecognition.onerror = function() {
+                    micButton.textContent = '🎤';
+                    micButton.classList.remove('speaking');
+                };
+                
+                speechRecognition.onend = function() {
+                    micButton.textContent = '🎤';
+                    micButton.classList.remove('speaking');
+                };
+            }
+
+            if (micButton.textContent === '🎤') {
+                speechRecognition.start();
+            } else {
+                speechRecognition.stop();
+            }
+        }
+
+        // New chat
+        function newChat() {
+            currentChatId = 'chat_' + Date.now();
+            document.getElementById('chatMessages').innerHTML = `
+                <div class="message ai">
+                    <p>Welcome to your new chat! How can I help you today?</p>
+                    <div class="message-actions">
+                        <button class="action-btn" onclick="speakText(this)">🔊</button>
+                    </div>
+                </div>
+            `;
+            saveChatToStorage();
+        }
+
+        // Save chat to local storage
+        function saveChatToStorage() {
+            const chatMessages = document.getElementById('chatMessages');
+            const messages = Array.from(chatMessages.children).map(msg => ({
+                type: msg.classList.contains('user') ? 'user' : 'ai',
+                text: msg.querySelector('p').textContent
+            }));
+            
+            const chatData = {
+                id: currentChatId,
+                timestamp: new Date().toISOString(),
+                messages: messages
+            };
+            
+            let chats = JSON.parse(localStorage.getItem('familyAiChats') || '[]');
+            const existingIndex = chats.findIndex(chat => chat.id === currentChatId);
+            
+            if (existingIndex >= 0) {
+                chats[existingIndex] = chatData;
+            } else {
+                chats.push(chatData);
+            }
+            
+            localStorage.setItem('familyAiChats', JSON.stringify(chats));
+            updateChatList();
+        }
+
+        // Update chat list in sidebar
+        function updateChatList() {
+            const chats = JSON.parse(localStorage.getItem('familyAiChats') || '[]');
+            const chatList = document.getElementById('chatList');
+            
+            chatList.innerHTML = '';
+            chats.forEach(chat => {
+                const chatItem = document.createElement('div');
+                chatItem.className = 'user-item';
+                chatItem.innerHTML = `
+                    <div>Chat ${new Date(chat.timestamp).toLocaleDateString()}</div>
+                    <button class="btn btn-danger" onclick="deleteChat('${chat.id}')">Delete</button>
+                `;
+                chatList.appendChild(chatItem);
+            });
+        }
+
+        // Delete chat
+        function deleteChat(chatId) {
+            let chats = JSON.parse(localStorage.getItem('familyAiChats') || '[]');
+            chats = chats.filter(chat => chat.id !== chatId);
+            localStorage.setItem('familyAiChats', JSON.stringify(chats));
+            
+            if (currentChatId === chatId) {
+                newChat();
+            }
+            
+            updateChatList();
+        }
+
+        // Logout
+        function logout() {
+            window.location.href = '/';
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuth();
+            updateChatList();
+            
+            // Enter key to send message
+            document.getElementById('chatInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

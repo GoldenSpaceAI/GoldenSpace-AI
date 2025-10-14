@@ -1,0 +1,386 @@
+<!-- ==================== UNIVERSAL 20G LOCK ==================== -->
+<div id="universalGoldenLock" class="golden-lock-overlay">
+  <div class="golden-unlock-container">
+    <div class="lock-header">
+      <div class="lock-icon">🔒</div>
+      <h2 id="universalLockTitle">Premium Feature Locked</h2>
+    </div>
+    
+    <div class="feature-description" id="universalLockDescription">
+      This premium feature requires a monthly subscription
+    </div>
+    
+    <div class="pricing-section">
+      <div class="price-main">20G</div>
+      <div class="price-period">per month</div>
+    </div>
+    
+    <div class="balance-section">
+      <div class="balance-label">Your Golden Balance:</div>
+      <div class="balance-amount" id="universalBalance">0G</div>
+    </div>
+    
+    <div class="features-included">
+      <h3>What you get:</h3>
+      <div class="feature-item">✅ Full access to this feature</div>
+      <div class="feature-item">✅ 30-day unlimited usage</div>
+      <div class="feature-item">✅ Priority support</div>
+      <div class="feature-item">✅ All future updates</div>
+    </div>
+    
+    <button class="subscribe-btn" onclick="unlockUniversalFeature()">
+      UNLOCK FOR 20G/MONTH
+    </button>
+    
+    <div id="universalUnlockStatus" class="status-message"></div>
+    
+    <div class="action-links">
+      <a href="/buy-golden.html" class="buy-link">💰 Buy More Golden</a>
+      <button class="home-link" onclick="closeUniversalLock()">❌ Cancel</button>
+    </div>
+  </div>
+</div>
+
+<style>
+.golden-lock-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.95);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    backdrop-filter: blur(5px);
+}
+
+.golden-unlock-container {
+    background: linear-gradient(135deg, #0c0c0c, #1a1a2e);
+    padding: 30px;
+    border-radius: 20px;
+    border: 3px solid gold;
+    max-width: 450px;
+    width: 95%;
+    text-align: center;
+    color: white;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from { transform: scale(0.9); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+.lock-header {
+    margin-bottom: 20px;
+}
+
+.lock-icon {
+    font-size: 4em;
+    margin-bottom: 15px;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.lock-header h2 {
+    color: gold;
+    margin: 0;
+    font-size: 1.8em;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+.feature-description {
+    color: #ccc;
+    margin-bottom: 25px;
+    font-size: 1.2em;
+    line-height: 1.4;
+}
+
+.pricing-section {
+    margin-bottom: 25px;
+    background: rgba(255, 215, 0, 0.1);
+    padding: 20px;
+    border-radius: 15px;
+    border: 2px solid rgba(255, 215, 0, 0.3);
+}
+
+.price-main {
+    font-size: 3.5em;
+    color: gold;
+    font-weight: bold;
+    text-shadow: 0 0 15px rgba(255, 215, 0, 0.7);
+}
+
+.price-period {
+    color: #ffed4e;
+    font-size: 1.1em;
+    font-weight: bold;
+}
+
+.balance-section {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 25px;
+    border: 1px solid rgba(255, 215, 0, 0.2);
+}
+
+.balance-label {
+    color: #aaa;
+    font-size: 0.95em;
+    margin-bottom: 8px;
+}
+
+.balance-amount {
+    color: gold;
+    font-size: 1.8em;
+    font-weight: bold;
+}
+
+.features-included {
+    text-align: left;
+    margin-bottom: 30px;
+    background: rgba(255, 255, 255, 0.03);
+    padding: 20px;
+    border-radius: 10px;
+}
+
+.features-included h3 {
+    color: gold;
+    margin-bottom: 15px;
+    text-align: center;
+    font-size: 1.3em;
+}
+
+.feature-item {
+    padding: 8px 0;
+    color: #ddd;
+    font-size: 1em;
+}
+
+.subscribe-btn {
+    background: linear-gradient(45deg, #ffd700, #ffed4e);
+    color: black;
+    border: none;
+    padding: 18px 30px;
+    font-size: 1.2em;
+    font-weight: bold;
+    border-radius: 12px;
+    cursor: pointer;
+    width: 100%;
+    margin-bottom: 20px;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.subscribe-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(255, 215, 0, 0.5);
+    background: linear-gradient(45deg, #ffed4e, #ffd700);
+}
+
+.subscribe-btn:disabled {
+    background: #666;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.action-links {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+}
+
+.buy-link, .home-link {
+    color: gold;
+    text-decoration: none;
+    padding: 12px 20px;
+    border: 2px solid gold;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    flex: 1;
+    text-align: center;
+    font-weight: bold;
+    background: rgba(255, 215, 0, 0.1);
+}
+
+.buy-link:hover, .home-link:hover {
+    background: rgba(255, 215, 0, 0.2);
+    transform: translateY(-2px);
+}
+
+.status-message {
+    padding: 15px;
+    border-radius: 8px;
+    margin: 15px 0;
+    text-align: center;
+    font-weight: bold;
+    font-size: 1em;
+}
+
+.status-message.success {
+    background: rgba(0, 255, 0, 0.15);
+    border: 2px solid #00ff00;
+    color: #00ff00;
+}
+
+.status-message.error {
+    background: rgba(255, 0, 0, 0.15);
+    border: 2px solid #ff4444;
+    color: #ff4444;
+}
+
+.status-message.processing {
+    background: rgba(255, 215, 0, 0.15);
+    border: 2px solid gold;
+    color: gold;
+}
+</style>
+
+<script>
+// Global variables for universal lock
+let currentFeatureCallback = null;
+let currentFeatureData = null;
+
+// Function to show the universal lock
+function showUniversalLock(featureData, unlockCallback) {
+    currentFeatureCallback = unlockCallback;
+    currentFeatureData = featureData;
+    
+    // Update the lock UI with feature-specific info
+    document.getElementById('universalLockTitle').textContent = featureData.title + ' Locked';
+    document.getElementById('universalLockDescription').textContent = featureData.description;
+    
+    // Update balance and show overlay
+    updateUniversalBalance();
+    document.getElementById('universalGoldenLock').style.display = 'flex';
+}
+
+// Function to close the lock
+function closeUniversalLock() {
+    document.getElementById('universalGoldenLock').style.display = 'none';
+    resetUniversalLock();
+}
+
+// Function to reset lock state
+function resetUniversalLock() {
+    currentFeatureCallback = null;
+    currentFeatureData = null;
+    document.getElementById('universalUnlockStatus').style.display = 'none';
+    document.getElementById('universalUnlockStatus').className = 'status-message';
+}
+
+// Function to unlock universal feature
+async function unlockUniversalFeature() {
+    const unlockBtn = document.querySelector('#universalGoldenLock .subscribe-btn');
+    const statusDiv = document.getElementById('universalUnlockStatus');
+    
+    try {
+        unlockBtn.disabled = true;
+        unlockBtn.textContent = 'PROCESSING...';
+        statusDiv.innerHTML = '⏳ Processing your request...';
+        statusDiv.className = 'status-message processing';
+        statusDiv.style.display = 'block';
+
+        // Check user's balance
+        const balanceResponse = await fetch('/api/golden-balance');
+        const balanceData = await balanceResponse.json();
+        
+        if (!balanceData.loggedIn) {
+            statusDiv.innerHTML = '❌ Please log in to unlock features';
+            statusDiv.className = 'status-message error';
+            unlockBtn.disabled = false;
+            unlockBtn.textContent = 'UNLOCK FOR 20G/MONTH';
+            return;
+        }
+
+        // Check if user has enough Golden
+        if (balanceData.balance < 20) {
+            statusDiv.innerHTML = '❌ Insufficient Golden balance. You need 20G to unlock this feature.';
+            statusDiv.className = 'status-message error';
+            unlockBtn.disabled = false;
+            unlockBtn.textContent = 'UNLOCK FOR 20G/MONTH';
+            return;
+        }
+
+        // Unlock the universal 20G feature
+        const unlockResponse = await fetch('/api/unlock-feature', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                feature: 'premium_monthly',
+                cost: 20
+            })
+        });
+
+        const unlockData = await unlockResponse.json();
+
+        if (unlockData.success) {
+            statusDiv.innerHTML = '✅ ' + currentFeatureData.successMessage;
+            statusDiv.className = 'status-message success';
+            
+            // Update the displayed balance
+            document.getElementById('universalBalance').textContent = unlockData.newBalance + 'G';
+            
+            // Close the overlay after success and call the feature-specific callback
+            setTimeout(() => {
+                closeUniversalLock();
+                if (currentFeatureCallback) {
+                    currentFeatureCallback();
+                }
+            }, 2000);
+            
+        } else {
+            statusDiv.innerHTML = '❌ ' + (unlockData.error || 'Failed to unlock feature');
+            statusDiv.className = 'status-message error';
+            unlockBtn.disabled = false;
+            unlockBtn.textContent = 'UNLOCK FOR 20G/MONTH';
+        }
+
+    } catch (error) {
+        console.error('Error unlocking feature:', error);
+        statusDiv.innerHTML = '❌ Network error. Please try again.';
+        statusDiv.className = 'status-message error';
+        unlockBtn.disabled = false;
+        unlockBtn.textContent = 'UNLOCK FOR 20G/MONTH';
+    }
+}
+
+// Update balance for universal lock
+function updateUniversalBalance() {
+    fetch('/api/golden-balance')
+        .then(response => response.json())
+        .then(data => {
+            if (data.loggedIn) {
+                document.getElementById('universalBalance').textContent = data.balance + 'G';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching balance:', error);
+        });
+}
+
+// Close lock when clicking outside
+document.getElementById('universalGoldenLock').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeUniversalLock();
+    }
+});
+
+// Initialize balance when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    updateUniversalBalance();
+});
+</script>

@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>GoldenSpaceAI • Client‑Only Pro Chat</title>
+<style>
+  :root{
+    --bg:#0b0c10;--panel:#111217;--panel2:#16171d;--text:#e9eaee;--muted:#a9acb6;--accent1:#f2c94c;--accent2:#f29e4c;--ok:#66ffb2;--err:#ff6b6b;--ring:rgba(242,201,76,.35);--radius:18px;--shadow:0 12px 30px rgba(0,0,0,.45);--max:1320px;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;font:500 15px/1.6 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;background:radial-gradient(1200px 600px at 20% -10%,#1a1b22 0%,#0b0c10 60%), #0b0c10;color:var(--text)}
+  .app{display:grid;grid-template-columns:300px 1fr;gap:16px;height:100%;max-width:var(--max);margin:0 auto;padding:14px}
+  /* Sidebar */
+  .side{background:linear-gradient(180deg,var(--panel),var(--panel2));border-radius:var(--radius);box-shadow:var(--shadow);display:flex;flex-direction:column;overflow:hidden}
+  .brand{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid #1f2030}
+  .logo{width:28px;height:28px;background:conic-gradient(from 0deg,var(--accent1),var(--accent2));border-radius:8px;box-shadow:0 0 0 2px #2a2b3a}
+  .brand h1{font-size:16px;margin:0}
+  .newbtn{margin:12px;background:linear-gradient(90deg,var(--accent1),var(--accent2));border:none;border-radius:12px;padding:10px 12px;color:#111;font-weight:800;cursor:pointer}
+  .row{display:flex;gap:8px;padding:8px 12px}
+  select, input[type="text"], input[type="password"]{width:100%;background:#1b1c24;border:1px solid #232535;border-radius:10px;padding:8px 10px;color:var(--text)}
+  .savekey{margin:0 12px 12px;padding:8px 10px;border-radius:10px;background:#1b1c24;border:1px solid #232535;color:var(--muted)}
+  .chats{overflow:auto;padding:6px 8px}
+  .chatItem{padding:10px 10px;border-radius:10px;color:#cfd2db;cursor:pointer;display:flex;align-items:center;gap:8px;justify-content:space-between}
+  .chatItem:hover{background:#20222f}
+  .chatItem.active{background:#23253a;color:#fff}
+  .del{background:transparent;border:1px solid #333;color:#aaa;border-radius:8px;padding:2px 6px;cursor:pointer}
+
+  /* Main */
+  .main{background:linear-gradient(180deg,var(--panel),var(--panel2));border-radius:var(--radius);box-shadow:var(--shadow);display:grid;grid-template-rows:auto 1fr auto;min-height:0}
+  .top{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #1f2030}
+  .badges{display:flex;gap:8px;flex-wrap:wrap}
+  .badge{font-size:12px;padding:4px 8px;border-radius:8px;background:#1b1c24;border:1px solid #232535;color:var(--muted)}
+  .messages{overflow:auto;padding:18px}
+  .msg{display:grid;grid-template-columns:40px 1fr;gap:12px;margin:0 0 16px}
+  .avatar{width:40px;height:40px;border-radius:12px;background:#1b1c24;display:grid;place-items:center}
+  .avatar .bolt{width:18px;height:18px;background:conic-gradient(from 0deg,var(--accent1),var(--accent2));border-radius:6px}
+  .bubble{background:#15161d;border:1px solid #232635;color:#e8e9ef;border-radius:14px;padding:12px 14px;box-shadow:0 6px 18px rgba(0,0,0,.25)}
+  .bubble.user{background:#101218;border-color:#1f2030}
+  .bubble .meta{font-size:12px;color:var(--muted);margin-bottom:6px}
+  pre,code{font-family:ui-monospace,SFMono-Regular,Consolas,Monaco,monospace}
+  pre{white-space:pre-wrap;background:#0f1117;border:1px solid #232635;border-radius:10px;padding:10px;overflow:auto;position:relative}
+  .codeActions{display:flex;gap:8px;margin-top:8px}
+  .btn{background:#171923;border:1px solid #232535;border-radius:10px;padding:8px 10px;color:#cfd2db;cursor:pointer}
+  .btn.primary{background:linear-gradient(90deg,var(--accent1),var(--accent2));color:#111;border:none;font-weight:800}
+  .composer{padding:16px;border-top:1px solid #1f2030}
+  .compose{display:flex;gap:10px;background:#11131a;border:1px solid #232535;border-radius:14px;padding:8px}
+  .tools{display:flex;align-items:center;gap:6px}
+  .toolbtn{background:#171923;border:1px solid #232535;border-radius:12px;padding:8px;cursor:pointer;color:#cfd2db}
+  .textarea{flex:1;display:flex}
+  textarea{flex:1;background:transparent;border:0;resize:none;max-height:180px;color:var(--text);padding:8px 4px}
+  textarea:focus{outline:none}
+  .stat{display:flex;gap:10px;align-items:center;margin-top:8px;color:var(--muted);font-size:12px}
+
+  /* Lock overlay */
+  .lock{position:fixed;inset:0;background:rgba(0,0,0,.75);display:grid;place-items:center;z-index:9999}
+  .lockCard{background:#10131a;border:1px solid #232535;border-radius:16px;padding:18px;box-shadow:var(--shadow);width:min(92vw,360px)}
+  .warn{color:#ffdf7e;font-size:12px;opacity:.9;margin-top:6px}
+
+  @media (max-width:980px){.app{grid-template-columns:1fr}.side{display:none}}
+</style>
+</head>
+<body>
+<div class="lock" id="lock">
+  <div class="lockCard">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+      <div class="logo"></div>
+      <div>
+        <div style="font-weight:800">GoldenSpaceAI • Unlock</div>
+        <div style="font-size:12px;color:#aaa">Enter passcode to use the app</div>
+      </div>
+    </div>
+    <input id="lockInput" type="password" placeholder="Enter passcode" />
+    <button class="newbtn" id="unlockBtn" style="width:100%;margin-top:10px">Unlock</button>
+    <div class="warn">Security note: never hardcode real API keys in client files. Use this app only for personal offline tests, not for public deployment.</div>
+  </div>
+</div>
+
+<div class="app" id="app" style="visibility:hidden">
+  <aside class="side">
+    <div class="brand"><div class="logo"></div><h1>GoldenSpaceAI • Pro</h1></div>
+    <button class="newbtn" id="newChat">+ New chat</button>
+    <div class="row">
+      <select id="model">
+        <option value="gpt-5">gpt-5</option>
+        <option value="gpt-5-pro" selected>gpt-5-pro</option>
+        <option value="gpt-4">gpt-4</option>
+      </select>
+    </div>
+    <div class="row"><input id="apiKey" type="password" placeholder="Paste OpenAI API key (stored locally)"/></div>
+    <div class="row"><input id="sysPrompt" type="text" placeholder="Custom instructions (saved)"/></div>
+    <div class="savekey" id="saveKeyState">Key: not saved</div>
+
+    <div class="chats" id="chatList"></div>
+  </aside>
+
+  <main class="main">
+    <div class="top">
+      <div class="badges">
+        <span class="badge">Client‑only</span>
+        <span class="badge">Images + Files</span>
+        <span class="badge">Mic + Speak</span>
+        <span class="badge">Preview + Copy</span>
+        <span class="badge">Custom Instructions</span>
+      </div>
+      <div class="badges"><span class="badge" id="usage">0 tokens</span></div>
+    </div>
+
+    <div class="messages" id="messages"></div>
+
+    <div class="composer">
+      <div class="compose">
+        <div class="tools">
+          <button class="toolbtn" id="btnImage" title="Generate image">🖼️</button>
+          <button class="toolbtn" id="btnUpload" title="Attach files">📎</button>
+          <button class="toolbtn" id="btnMic" title="Voice input">🎤</button>
+          <button class="toolbtn" id="btnSpeak" title="Read reply">🔊</button>
+          <input id="fileInput" type="file" hidden multiple/>
+        </div>
+        <div class="textarea"><textarea id="input" rows="1" placeholder="Message GoldenSpaceAI…"></textarea></div>
+        <button class="btn primary" id="send">Send</button>
+      </div>
+      <div class="stat" id="stat">Ready.</div>
+    </div>
+  </main>
+</div>
+
+<script>
+// ================= Security & Disclaimer =================
+// You asked for a client‑only page. Exposing API keys in client code is unsafe.
+// This app NEVER hardcodes a key; it lets YOU paste one at runtime and stores it in localStorage.
+// Use only for personal testing; do not deploy publicly.
+
+// ================== Lock (golden22001122) ==================
+const LOCK_CODE = 'golden22001122';
+const lockEl = document.getElementById('lock');
+const appEl = document.getElementById('app');
+const unlockBtn = document.getElementById('unlockBtn');
+const lockInput = document.getElementById('lockInput');
+unlockBtn.onclick = () => {
+  if (lockInput.value === LOCK_CODE){ lockEl.style.display='none'; appEl.style.visibility='visible'; }
+  else alert('Wrong passcode');
+};
+lockInput.addEventListener('keydown', e=>{ if(e.key==='Enter') unlockBtn.click(); });
+
+// ============== Elements & State ==============
+const qs = s=>document.querySelector(s);
+const inputEl = qs('#input');
+const sendBtn = qs('#send');
+const btnUpload = qs('#btnUpload');
+const fileInput = qs('#fileInput');
+const btnImage = qs('#btnImage');
+const btnMic = qs('#btnMic');
+const btnSpeak = qs('#btnSpeak');
+const messagesEl = qs('#messages');
+const modelSel = qs('#model');
+const apiKeyEl = qs('#apiKey');
+const sysPromptEl = qs('#sysPrompt');
+const saveKeyState = qs('#saveKeyState');
+const chatList = qs('#chatList');
+const newChatBtn = qs('#newChat');
+const usageEl = qs('#usage');
+const statEl = qs('#stat');
+
+let state = {
+  chatId: crypto.randomUUID(),
+  model: localStorage.getItem('gsai_model') || 'gpt-5-pro',
+  history: [], // {role, content}
+  running:false,
+  files: [] // {name, type, dataUrl}
+};
+
+// Restore key & settings
+apiKeyEl.value = localStorage.getItem('gsai_key') || '';
+sysPromptEl.value = localStorage.getItem('gsai_sys') || '';
+modelSel.value = state.model;
+
+apiKeyEl.addEventListener('change', ()=>{
+  localStorage.setItem('gsai_key', apiKeyEl.value);
+  saveKeyState.textContent = apiKeyEl.value ? 'Key: saved to localStorage' : 'Key: not saved';
+});
+sysPromptEl.addEventListener('change', ()=>{
+  localStorage.setItem('gsai_sys', sysPromptEl.value);
+});
+modelSel.addEventListener('change', ()=>{
+  state.model = modelSel.value;
+  localStorage.setItem('gsai_model', state.model);
+});
+
+// ====== Chat storage
+function loadChats(){
+  const all = JSON.parse(localStorage.getItem('gsai_chats')||'{}');
+  chatList.innerHTML = '';
+  Object.entries(all).sort((a,b)=> (b[1].updated||0)-(a[1].updated||0)).forEach(([id, meta])=>{
+    const el = document.createElement('div');
+    el.className = 'chatItem' + (id===state.chatId?' active':'');
+    el.innerHTML = `<span>${meta.title||'Untitled'}</span>`;
+    const del = document.createElement('button');
+    del.className='del'; del.textContent='×'; del.title='Delete chat';
+    del.onclick = (ev)=>{ ev.stopPropagation(); deleteChat(id); };
+    el.appendChild(del);
+    el.onclick = ()=> openChat(id);
+    chatList.appendChild(el);
+  });
+}
+function saveChatMeta(){
+  const all = JSON.parse(localStorage.getItem('gsai_chats')||'{}');
+  const title = (state.history.find(m=>m.role==='user')?.content || 'Chat').slice(0,48);
+  all[state.chatId] = {title, updated: Date.now()};
+  localStorage.setItem('gsai_chats', JSON.stringify(all));
+}
+function openChat(id){
+  state.chatId = id;
+  state.history = JSON.parse(localStorage.getItem('gsai_'+id)||'[]');
+  renderMessages();
+  loadChats();
+}
+function newChat(){
+  state.chatId = crypto.randomUUID();
+  state.history = [];
+  localStorage.setItem('gsai_'+state.chatId, JSON.stringify(state.history));
+  saveChatMeta();
+  renderMessages();
+  loadChats();
+}
+function deleteChat(id){
+  localStorage.removeItem('gsai_'+id);
+  const all = JSON.parse(localStorage.getItem('gsai_chats')||'{}');
+  delete all[id];
+  localStorage.setItem('gsai_chats', JSON.stringify(all));
+  if(id===state.chatId) newChat();
+  else loadChats();
+}
+newChatBtn.onclick = newChat;
+
+function addMessage(role, content){
+  state.history.push({role, content});
+  localStorage.setItem('gsai_'+state.chatId, JSON.stringify(state.history));
+  saveChatMeta();
+}
+
+function mdToHtml(md){
+  // Minimal markdown with codeblock parsing
+  const esc = s=>s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  md = esc(md);
+  // fenced code blocks
+  md = md.replace(/```([\s\S]*?)```/g,(m,code)=>{
+    const id = 'code_'+Math.random().toString(36).slice(2);
+    const html = `<pre id="${id}"><code>${esc(code)}</code></pre>
+      <div class="codeActions">
+        <button class="btn" onclick="copyCode('${id}')">Copy</button>
+        <button class="btn" onclick="previewCode('${id}')">Preview</button>
+      </div>`;
+    return html;
+  });
+  // inline code
+  md = md.replace(/`([^`]+)`/g,'<code>$1</code>');
+  // new lines
+  return md.replace(/\n/g,'<br>');
+}
+window.copyCode = (id)=>{
+  const el = document.getElementById(id);
+  const txt = el ? el.innerText : '';
+  navigator.clipboard.writeText(txt);
+  stat('Copied code to clipboard');
+};
+window.previewCode = (id)=>{
+  const el = document.getElementById(id); if(!el) return;
+  const html = el.innerText;
+  const w = window.open('', '_blank');
+  w.document.write(html);
+  w.document.close();
+};
+
+function renderMessages(){
+  messagesEl.innerHTML='';
+  state.history.forEach(m=>{
+    const wrap = document.createElement('div');
+    wrap.className = 'msg';
+    wrap.innerHTML = `
+      <div class="avatar">${m.role==='assistant'?'<div class="bolt"></div>':'👤'}</div>
+      <div class="bubble ${m.role==='user'?'user':''}">
+        <div class="meta">${m.role}</div>
+        <div class="body">${mdToHtml(m.content)}</div>
+      </div>`;
+    messagesEl.appendChild(wrap);
+  });
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+function stat(t){ statEl.textContent = t; }
+
+// ===== Files: convert to data URLs for vision input
+btnUpload.onclick = ()=> fileInput.click();
+fileInput.onchange = async ()=>{
+  state.files = [];
+  for(const f of fileInput.files){
+    const dataUrl = await toDataURL(f);
+    state.files.push({name:f.name, type:f.type, dataUrl});
+  }
+  stat(`${state.files.length} file(s) attached`);
+};
+function toDataURL(file){
+  return new Promise((resolve,reject)=>{
+    const r = new FileReader();
+    r.onload = ()=> resolve(r.result);
+    r.onerror = reject; r.readAsDataURL(file);
+  });
+}
+
+// ===== Voice: Web Speech API
+let recognizer;
+btnMic.onclick = ()=>{
+  try{
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if(!SR) return alert('Speech recognition not supported');
+    recognizer = new SR(); recognizer.lang='en-US'; recognizer.interimResults=false; recognizer.onresult = e=>{
+      const text = Array.from(e.results).map(r=>r[0].transcript).join(' ');
+      inputEl.value = (inputEl.value? inputEl.value+' ' : '') + text;
+    };
+    recognizer.start();
+  }catch(e){ alert('Mic error'); }
+};
+btnSpeak.onclick = ()=>{
+  const last = [...state.history].reverse().find(m=>m.role==='assistant');
+  if(!last) return;
+  const u = new SpeechSynthesisUtterance(last.content.replace(/```[\s\S]*?```/g,''));
+  speechSynthesis.speak(u);
+};
+
+// ===== Image generation
+btnImage.onclick = async ()=>{
+  const prompt = promptModal('Describe the image to generate:');
+  if(!prompt) return;
+  await generateImage(prompt);
+};
+
+async function generateImage(prompt){
+  const key = apiKeyEl.value.trim();
+  if(!key) return alert('API key required');
+  stat('Generating image…');
+  const r = await fetch('https://api.openai.com/v1/images/generations',{
+    method:'POST',headers:{'Authorization':'Bearer '+key,'Content-Type':'application/json'},
+    body: JSON.stringify({ prompt, size:'1024x1024' })
+  });
+  const j = await r.json();
+  if(!r.ok){ alert('Image error: '+(j.error?.message||r.status)); return; }
+  const url = j.data?.[0]?.url;
+  if(url){
+    addMessage('assistant', `![image](${url})`);
+    renderMessages();
+  }
+  stat('Ready.');
+}
+
+function promptModal(q){
+  return window.prompt(q,'');
+}
+
+// ====== Send chat (non‑streaming for browser safety)
+sendBtn.onclick = send;
+inputEl.addEventListener('keydown', e=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); send(); }});
+
+async function send(){
+  if(state.running) return;
+  const key = apiKeyEl.value.trim();
+  if(!key) return alert('API key required');
+  const model = modelSel.value;
+  const text = inputEl.value.trim();
+  if(!text && state.files.length===0) return;
+
+  const sys = sysPromptEl.value.trim();
+  const inputParts = [];
+  if(sys){ inputParts.push({role:'system', content: sys}); }
+  // include previous messages
+  const history = state.history.map(m=>({role:m.role, content:m.content}));
+
+  // current user message with optional images/files
+  const userParts = [ { type:'input_text', text } ];
+  for(const f of state.files){
+    if(f.type.startsWith('image/')) userParts.push({ type:'input_image', image_url: f.dataUrl });
+    else userParts.push({ type:'input_file', data: f.dataUrl, mime_type: f.type, name: f.name });
+  }
+
+  // Build Responses API input
+  const inputPayload = [];
+  // system as first (if any)
+  if(sys) inputPayload.push({ role:'system', content: sys });
+  // prior messages as simple text (no multimodal retro-construction for brevity)
+  for(const m of history){ inputPayload.push({ role:m.role, content: m.content }); }
+  // current user
+  inputPayload.push({ role:'user', content: userParts });
+
+  addMessage('user', text + (state.files.length? `\n(Attached: ${state.files.map(f=>f.name).join(', ')})` : ''));
+  inputEl.value=''; state.files=[]; fileInput.value='';
+  renderMessages();
+  state.running = true; stat('Thinking…');
+
+  try{
+    const r = await fetch('https://api.openai.com/v1/responses',{
+      method:'POST', headers:{'Authorization':'Bearer '+key,'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model,
+        input: inputPayload,
+        // You can request tool outputs or JSON, but we keep it text-first
+      })
+    });
+    const j = await r.json();
+    if(!r.ok){ throw new Error(j.error?.message || ('HTTP '+r.status)); }
+
+    let out = '';
+    // Extract assistant text (Responses API shape)
+    const c = j.output?.[0]?.content || j.choices?.[0]?.message?.content || [];
+    if(Array.isArray(c)){
+      out = c.map(part=> part.text || part?.content || '').join('');
+    } else if(typeof c === 'string'){ out = c; }
+
+    if(!out) out = JSON.stringify(j, null, 2);
+    addMessage('assistant', out);
+
+    // Token usage (best effort if provided)
+    const usage = j.usage || j.system_fingerprint || {};
+    usageEl.textContent = (usage.total_tokens? usage.total_tokens+' tokens' : '');
+
+    renderMessages(); stat('Ready.');
+  }catch(e){
+    addMessage('assistant', '⚠️ Error: '+e.message);
+    renderMessages(); stat('Error');
+  }finally{ state.running=false; }
+}
+
+// ===== Bootstrap
+function init(){
+  saveKeyState.textContent = apiKeyEl.value ? 'Key: saved to localStorage' : 'Key: not saved';
+  loadChats();
+  renderMessages();
+}
+init();
+</script>
+</body>
+</html>

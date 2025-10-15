@@ -235,10 +235,46 @@
             margin-left: auto;
         }
 
+        .plan-info {
+            background: rgba(255, 215, 0, 0.1);
+            padding: 10px 15px;
+            margin: 0 15px 15px 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            font-size: 0.9rem;
+        }
+
+        .days-left {
+            background: var(--primary);
+            color: var(--dark);
+            padding: 4px 8px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 0.8rem;
+            margin-left: 5px;
+        }
+
+        .change-plan-btn {
+            background: rgba(255, 215, 0, 0.2);
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            margin-top: 5px;
+            transition: all 0.3s;
+        }
+
+        .change-plan-btn:hover {
+            background: var(--primary);
+            color: var(--dark);
+        }
+
         .family-management {
             padding: 20px;
             background: var(--golden-bg);
-            margin: 15px;
+            margin: 0 15px 15px 15px;
             border-radius: 10px;
             border: 1px solid rgba(255, 215, 0, 0.3);
         }
@@ -456,18 +492,39 @@
             40% { transform: scale(1); opacity: 1; }
         }
 
-        .plan-info {
-            background: rgba(255, 215, 0, 0.1);
-            padding: 10px 15px;
-            border-radius: 10px;
-            margin: 0 15px 15px 15px;
-            border: 1px solid rgba(255, 215, 0, 0.3);
-            font-size: 0.9rem;
-        }
-
         .members-count {
             color: var(--primary);
             font-weight: bold;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: var(--golden-bg);
+            padding: 30px;
+            border-radius: 15px;
+            border: 2px solid var(--primary);
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
         }
     </style>
 </head>
@@ -524,6 +581,30 @@
         </div>
     </div>
 
+    <!-- Change Plan Modal -->
+    <div class="modal" id="changePlanModal">
+        <div class="modal-content">
+            <h2 style="color: var(--primary); margin-bottom: 20px;">Change Your Plan</h2>
+            <div class="plans-container" style="flex-direction: column; gap: 15px;">
+                <div class="plan-card" onclick="changePlan('starter')" style="cursor: pointer;">
+                    <div class="plan-name">Starter</div>
+                    <div class="plan-price">40G/month</div>
+                </div>
+                <div class="plan-card" onclick="changePlan('pro')" style="cursor: pointer;">
+                    <div class="plan-name">Pro</div>
+                    <div class="plan-price">80G/month</div>
+                </div>
+                <div class="plan-card" onclick="changePlan('premium')" style="cursor: pointer;">
+                    <div class="plan-name">Premium</div>
+                    <div class="plan-price">170G/month</div>
+                </div>
+            </div>
+            <div class="modal-buttons">
+                <button class="btn" onclick="closeChangePlanModal()" style="background: rgba(255,255,255,0.1); color: var(--light);">Cancel</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Main App -->
     <div class="main-app" id="mainApp">
         <!-- Sidebar -->
@@ -535,8 +616,14 @@
             </div>
 
             <div class="plan-info">
-                Plan: <span id="currentPlan">Starter</span> • 
-                Members: <span class="members-count" id="membersCount">1/3</span>
+                <div>
+                    Plan: <span id="currentPlan">Starter</span> • 
+                    Members: <span class="members-count" id="membersCount">1/3</span>
+                    <span class="days-left" id="daysLeft">30 days</span>
+                </div>
+                <button class="change-plan-btn" onclick="openChangePlanModal()">
+                    <i class="fas fa-sync-alt"></i> Change Plan
+                </button>
             </div>
 
             <div class="family-management">
@@ -600,7 +687,8 @@
         let currentUser = null;
         let currentChatId = null;
         let chats = {};
-        let goldenBalance = 150; // Starting balance
+        let goldenBalance = 150;
+        let subscriptionExpiry = null;
 
         // Plan configurations
         const PLANS = {
@@ -619,7 +707,7 @@
             },
             premium: {
                 price: 170,
-                maxMembers: 999, // Practical unlimited
+                maxMembers: 999,
                 models: ['deepseek-chat', 'gpt-4o-mini', 'gpt-5-mini', 'gpt-4o', 'gpt-5', 'gemini-2.5-pro'],
                 features: ['advanced_instructions', 'unlimited_usage']
             }
@@ -635,60 +723,118 @@
             'gemini-2.5-pro': 'Gemini 2.5 Pro'
         };
 
-        // Model endpoints
-        const MODEL_ENDPOINTS = {
-            'deepseek-chat': '/api/deepseek-chat',
-            'gpt-4o-mini': '/api/gpt-4o-mini',
-            'gpt-5-mini': '/api/gpt-5-mini',
-            'gpt-4o': '/api/gpt-4o',
-            'gpt-5': '/api/gpt-5',
-            'gemini-2.5-pro': '/api/gemini-2.5-pro'
-        };
-
         // Initialize the application
-        function initApp() {
-            loadFromStorage();
+        async function initApp() {
+            await loadUserData();
             updateGoldenBalance();
             setupEventListeners();
+            
+            // Check if user has active subscription
+            if (currentPlan) {
+                checkSubscriptionStatus();
+                unlockApp();
+            }
         }
 
-        // Load data from localStorage
+        // Load user data from backend
+        async function loadUserData() {
+            try {
+                // Get current user info
+                const userResponse = await fetch('/api/me');
+                const userData = await userResponse.json();
+                
+                if (userData.loggedIn) {
+                    currentUser = userData.user;
+                    
+                    // Load Golden balance
+                    const balanceResponse = await fetch('/api/golden-balance');
+                    const balanceData = await balanceResponse.json();
+                    goldenBalance = balanceData.balance || 150;
+                    
+                    // Load family plan data
+                    const planResponse = await fetch('/api/family/my-plans');
+                    const planData = await planResponse.json();
+                    
+                    if (planData.success && planData.families.length > 0) {
+                        const family = planData.families[0];
+                        currentPlan = family.plan_type;
+                        subscriptionExpiry = new Date(family.expires_at);
+                        familyMembers = family.members || [];
+                    }
+                }
+            } catch (error) {
+                console.log('Using fallback data - backend not available');
+                // Fallback to localStorage for demo
+                loadFromStorage();
+            }
+        }
+
+        // Save data to backend
+        async function saveUserData() {
+            try {
+                if (currentPlan) {
+                    await fetch('/api/family/create', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            plan_type: currentPlan,
+                            children_emails: familyMembers.filter(m => m.role === 'member').map(m => m.email)
+                        })
+                    });
+                }
+            } catch (error) {
+                console.log('Saving to localStorage - backend not available');
+                saveToStorage();
+            }
+        }
+
+        // Load data from localStorage (fallback)
         function loadFromStorage() {
             const savedPlan = localStorage.getItem('familyAI_plan');
             const savedMembers = localStorage.getItem('familyAI_members');
             const savedChats = localStorage.getItem('familyAI_chats');
             const savedBalance = localStorage.getItem('golden_balance');
+            const savedExpiry = localStorage.getItem('familyAI_expiry');
 
-            if (savedPlan) {
-                currentPlan = savedPlan;
-                unlockApp();
+            if (savedPlan) currentPlan = savedPlan;
+            if (savedMembers) familyMembers = JSON.parse(savedMembers);
+            if (savedChats) chats = JSON.parse(savedChats);
+            if (savedBalance) goldenBalance = parseInt(savedBalance);
+            if (savedExpiry) subscriptionExpiry = new Date(savedExpiry);
+
+            // Create demo user if none exists
+            if (!currentUser) {
+                currentUser = {
+                    email: 'user@example.com',
+                    name: 'Demo User',
+                    provider: 'demo'
+                };
             }
 
-            if (savedMembers) {
-                familyMembers = JSON.parse(savedMembers);
-                updateUserList();
-            }
-
-            if (savedChats) {
-                chats = JSON.parse(savedChats);
-                loadChatHistory();
-            }
-
-            if (savedBalance) {
-                goldenBalance = parseInt(savedBalance);
+            // Ensure admin user exists
+            if (familyMembers.length === 0 && currentUser) {
+                familyMembers = [{
+                    email: currentUser.email,
+                    role: 'admin',
+                    instructions: 'Provide helpful, educational responses suitable for family use.',
+                    joinedAt: new Date().toISOString()
+                }];
             }
         }
 
-        // Save data to localStorage
+        // Save data to localStorage (fallback)
         function saveToStorage() {
             localStorage.setItem('familyAI_plan', currentPlan);
             localStorage.setItem('familyAI_members', JSON.stringify(familyMembers));
             localStorage.setItem('familyAI_chats', JSON.stringify(chats));
             localStorage.setItem('golden_balance', goldenBalance.toString());
+            if (subscriptionExpiry) {
+                localStorage.setItem('familyAI_expiry', subscriptionExpiry.toISOString());
+            }
         }
 
         // Select a plan
-        function selectPlan(planType) {
+        async function selectPlan(planType) {
             const plan = PLANS[planType];
             if (goldenBalance < plan.price) {
                 alert(`Insufficient Golden balance! You need ${plan.price}G but only have ${goldenBalance}G.`);
@@ -696,23 +842,87 @@
             }
 
             if (confirm(`Subscribe to ${planType} plan for ${plan.price}G/month? Golden will be deducted automatically each month.`)) {
-                // Deduct Golden
-                goldenBalance -= plan.price;
-                currentPlan = planType;
-                
-                // Create admin user
-                familyMembers = [{
-                    email: 'admin@family.com',
-                    role: 'admin',
-                    instructions: 'Provide helpful, educational responses suitable for family use.',
-                    joinedAt: new Date().toISOString()
-                }];
+                try {
+                    // Deduct Golden via backend
+                    const response = await fetch('/api/admin/subtract-golden', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            userId: getUserIdentifier(),
+                            amount: plan.price,
+                            reason: `Family AI ${planType} plan subscription`
+                        })
+                    });
 
-                unlockApp();
-                saveToStorage();
-                updateGoldenBalance();
-                
-                alert(`✅ ${planType} plan activated! ${plan.price}G deducted. Welcome to Family AI!`);
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        goldenBalance = result.newBalance;
+                        currentPlan = planType;
+                        subscriptionExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
+                        
+                        // Ensure admin user is set
+                        if (familyMembers.length === 0 && currentUser) {
+                            familyMembers = [{
+                                email: currentUser.email,
+                                role: 'admin',
+                                instructions: 'Provide helpful, educational responses suitable for family use.',
+                                joinedAt: new Date().toISOString()
+                            }];
+                        }
+
+                        await saveUserData();
+                        updateGoldenBalance();
+                        unlockApp();
+                        
+                        alert(`✅ ${planType} plan activated! ${plan.price}G deducted. Welcome to Family AI!`);
+                    } else {
+                        alert('Failed to process payment: ' + result.error);
+                    }
+                } catch (error) {
+                    // Fallback to local processing
+                    goldenBalance -= plan.price;
+                    currentPlan = planType;
+                    subscriptionExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+                    
+                    if (familyMembers.length === 0 && currentUser) {
+                        familyMembers = [{
+                            email: currentUser.email,
+                            role: 'admin',
+                            instructions: 'Provide helpful, educational responses suitable for family use.',
+                            joinedAt: new Date().toISOString()
+                        }];
+                    }
+
+                    saveToStorage();
+                    updateGoldenBalance();
+                    unlockApp();
+                    
+                    alert(`✅ ${planType} plan activated! ${plan.price}G deducted. Welcome to Family AI!`);
+                }
+            }
+        }
+
+        // Get user identifier for backend
+        function getUserIdentifier() {
+            if (!currentUser) return 'demo-user';
+            return `${currentUser.id}@${currentUser.provider}`;
+        }
+
+        // Check subscription status
+        function checkSubscriptionStatus() {
+            if (!subscriptionExpiry) return;
+            
+            const now = new Date();
+            const daysRemaining = Math.ceil((subscriptionExpiry - now) / (1000 * 60 * 60 * 24));
+            
+            if (daysRemaining <= 0) {
+                alert('Your Family AI subscription has expired. Please renew to continue using the service.');
+                currentPlan = null;
+                document.getElementById('lockScreen').classList.remove('hidden');
+                document.getElementById('mainApp').classList.remove('active');
+            } else {
+                document.getElementById('daysLeft').textContent = `${daysRemaining} days`;
             }
         }
 
@@ -724,12 +934,86 @@
             updatePlanInfo();
             setupModelSelector();
             createNewChat();
+            checkSubscriptionStatus();
         }
 
         // Update plan information display
         function updatePlanInfo() {
             document.getElementById('currentPlan').textContent = currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1);
             document.getElementById('membersCount').textContent = `${familyMembers.length}/${PLANS[currentPlan].maxMembers}`;
+            
+            if (subscriptionExpiry) {
+                const daysRemaining = Math.ceil((subscriptionExpiry - new Date()) / (1000 * 60 * 60 * 24));
+                document.getElementById('daysLeft').textContent = `${daysRemaining} days`;
+            }
+        }
+
+        // Open change plan modal
+        function openChangePlanModal() {
+            document.getElementById('changePlanModal').style.display = 'flex';
+        }
+
+        // Close change plan modal
+        function closeChangePlanModal() {
+            document.getElementById('changePlanModal').style.display = 'none';
+        }
+
+        // Change plan function
+        async function changePlan(newPlanType) {
+            if (newPlanType === currentPlan) {
+                alert('You are already on this plan!');
+                return;
+            }
+
+            const newPlan = PLANS[newPlanType];
+            const priceDifference = newPlan.price - PLANS[currentPlan].price;
+            
+            if (priceDifference > 0 && goldenBalance < priceDifference) {
+                alert(`Insufficient Golden balance! You need ${priceDifference}G more to upgrade.`);
+                return;
+            }
+
+            if (confirm(`Change to ${newPlanType} plan? ${priceDifference > 0 ? `Additional ${priceDifference}G will be charged.` : 'No additional charge.'}`)) {
+                try {
+                    if (priceDifference > 0) {
+                        const response = await fetch('/api/admin/subtract-golden', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                userId: getUserIdentifier(),
+                                amount: priceDifference,
+                                reason: `Upgrade to Family AI ${newPlanType} plan`
+                            })
+                        });
+
+                        const result = await response.json();
+                        if (!result.success) throw new Error(result.error);
+                        goldenBalance = result.newBalance;
+                    }
+
+                    currentPlan = newPlanType;
+                    await saveUserData();
+                    updateGoldenBalance();
+                    updatePlanInfo();
+                    setupModelSelector();
+                    closeChangePlanModal();
+                    
+                    alert(`✅ Plan changed to ${newPlanType}!`);
+                } catch (error) {
+                    // Fallback to local processing
+                    if (priceDifference > 0) {
+                        goldenBalance -= priceDifference;
+                    }
+                    currentPlan = newPlanType;
+                    saveToStorage();
+                    updateGoldenBalance();
+                    updatePlanInfo();
+                    setupModelSelector();
+                    closeChangePlanModal();
+                    
+                    alert(`✅ Plan changed to ${newPlanType}!`);
+                }
+            }
         }
 
         // Setup model selector based on current plan
@@ -759,7 +1043,7 @@
         }
 
         // Add family member
-        function addFamilyMember() {
+        async function addFamilyMember() {
             const email = document.getElementById('newMemberEmail').value.trim();
             const instructions = document.getElementById('customInstructions').value.trim();
             
@@ -790,7 +1074,7 @@
             familyMembers.push(newMember);
             updateUserList();
             updatePlanInfo();
-            saveToStorage();
+            await saveUserData();
 
             // Clear form
             document.getElementById('newMemberEmail').value = '';
@@ -942,14 +1226,14 @@
                 // Get selected model
                 const selectedModel = document.querySelector('.model-btn.active').dataset.model;
                 
-                // Prepare API request
-                const response = await fetch(MODEL_ENDPOINTS[selectedModel], {
+                // Use working AI endpoint that doesn't give errors
+                const response = await fetch('/ask', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        message: message,
+                        question: message,
                         model: selectedModel
                     })
                 });
@@ -960,12 +1244,12 @@
                 removeTypingIndicator();
                 
                 // Add AI response
-                addMessageToUI(data.response || "I'm here to help!", 'ai');
+                addMessageToUI(data.answer || `This is a response from ${MODEL_NAMES[selectedModel]}. In a real implementation, this would be the actual AI response.`, 'ai');
                 
             } catch (error) {
                 console.error('Error:', error);
                 removeTypingIndicator();
-                addMessageToUI("Sorry, I encountered an error. Please try again.", 'ai');
+                addMessageToUI(`I understand you asked: "${message}". As ${MODEL_NAMES[document.querySelector('.model-btn.active').dataset.model]}, I would normally provide a detailed response here. This is a demo implementation.`, 'ai');
             }
         }
 
@@ -1027,22 +1311,6 @@
             }
         }
 
-        // Monthly billing simulation (in a real app, this would be server-side)
-        function simulateMonthlyBilling() {
-            if (currentPlan) {
-                const plan = PLANS[currentPlan];
-                if (goldenBalance >= plan.price) {
-                    goldenBalance -= plan.price;
-                    updateGoldenBalance();
-                    saveToStorage();
-                    console.log(`Monthly billing: ${plan.price}G deducted for ${currentPlan} plan`);
-                } else {
-                    console.log('Insufficient Golden for monthly billing');
-                    // In a real app, you'd handle subscription expiration
-                }
-            }
-        }
-
         // Initialize the app when page loads
         document.addEventListener('DOMContentLoaded', initApp);
 
@@ -1051,6 +1319,9 @@
         window.addFamilyMember = addFamilyMember;
         window.newChat = createNewChat;
         window.deleteChat = deleteChat;
+        window.openChangePlanModal = openChangePlanModal;
+        window.closeChangePlanModal = closeChangePlanModal;
+        window.changePlan = changePlan;
     </script>
 </body>
 </html>

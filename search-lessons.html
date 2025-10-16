@@ -6,12 +6,12 @@
   <title>Search Information • GoldenSpaceAI</title>
   <style>
     :root{
-      --bg: #0b1020;
-      --panel: #121831;
+      --bg:#0b1020;
+      --panel:#121831;
       --panel-2:#0f1530;
-      --accent:#f7c948;        /* gold */
-      --accent-2:#f0b429;      /* deeper gold */
-      --text:#fdf7e7;          /* warm text */
+      --accent:#f7c948;
+      --accent-2:#f0b429;
+      --text:#fdf7e7;
       --subtle:#d9cfae;
       --border:#262f55;
       --chip:#151e3b;
@@ -19,225 +19,119 @@
     }
     *{box-sizing:border-box}
     body{
-      margin:0; min-height:100svh; color:var(--text);
+      margin:0;min-height:100svh;color:var(--text);
       background:
-        radial-gradient(1200px 600px at 80% -10%, rgba(247,201,72,.08), transparent 60%),
-        radial-gradient(1200px 700px at -10% 10%, rgba(166,185,255,.08), transparent 55%),
+        radial-gradient(1200px 600px at 80% -10%,rgba(247,201,72,.08),transparent 60%),
+        radial-gradient(1200px 700px at -10% 10%,rgba(166,185,255,.08),transparent 55%),
         var(--bg);
-      font-family: ui-sans-serif, system-ui, "Segoe UI", Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      font-family:ui-sans-serif,system-ui,"Segoe UI",Roboto,Helvetica,Arial;
     }
     .top{
-      position:sticky; top:0; z-index:10;
-      background: linear-gradient(180deg, rgba(11,16,32,.95), rgba(11,16,32,.72) 60%, transparent);
-      backdrop-filter: blur(8px);
-      padding: clamp(16px, 2.5vh, 24px) 18px 10px;
-      display:flex; align-items:center; gap:12px;
+      position:sticky;top:0;z-index:10;
+      background:linear-gradient(180deg,rgba(11,16,32,.95),rgba(11,16,32,.72)60%,transparent);
+      backdrop-filter:blur(8px);
+      padding:clamp(16px,2.5vh,24px)18px 10px;
+      display:flex;align-items:center;gap:12px;
     }
     .back{
-      display:inline-flex; align-items:center; gap:8px;
-      padding:8px 14px; border-radius:999px; text-decoration:none;
-      background:var(--accent); color:#2c2100; font-weight:800; font-size:14px;
+      display:inline-flex;align-items:center;gap:8px;
+      padding:8px 14px;border-radius:999px;text-decoration:none;
+      background:var(--accent);color:#2c2100;font-weight:800;font-size:14px;
       border:1px solid rgba(0,0,0,.12);
-      box-shadow: 0 6px 22px rgba(247,201,72,.25);
-      transition: transform .2s ease, background .2s ease;
+      box-shadow:0 6px 22px rgba(247,201,72,.25);
+      transition:transform .2s ease,background .2s ease;
     }
-    .back:hover{ background:var(--accent-2); transform:translateY(-1px); }
+    .back:hover{background:var(--accent-2);transform:translateY(-1px);}
     .title{
-      font-size:clamp(22px, 2.7vw, 28px); font-weight:900; letter-spacing:.35px;
-      color:var(--accent); text-shadow:0 0 18px rgba(247,201,72,.25);
+      font-size:clamp(22px,2.7vw,28px);font-weight:900;letter-spacing:.35px;
+      color:var(--accent);text-shadow:0 0 18px rgba(247,201,72,.25);
     }
     .spacer{flex:1}
-    .wrap{ max-width:1000px; margin:0 auto; padding: 8px 16px 120px; }
-
-    /* Golden Unlock Overlay */
-    .golden-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(11, 16, 32, 0.95);
-      backdrop-filter: blur(10px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
+    .wrap{max-width:1000px;margin:0 auto;padding:8px 16px 120px;}
+    /* ---------- GOLDEN LOCK OVERLAY ---------- */
+    .golden-overlay{
+      position:fixed;top:0;left:0;width:100%;height:100%;
+      background:rgba(11,16,32,0.95);
+      backdrop-filter:blur(10px);
+      display:flex;align-items:center;justify-content:center;
+      z-index:1000;
     }
-    .golden-unlock {
-      background: linear-gradient(180deg, var(--panel), var(--panel-2));
-      border: 2px solid rgba(247, 201, 72, 0.3);
-      border-radius: 20px;
-      padding: 30px;
-      text-align: center;
-      max-width: 500px;
-      width: 90%;
-      box-shadow: 0 25px 80px rgba(0,0,0,.8);
+    .golden-unlock{
+      background:linear-gradient(180deg,var(--panel),var(--panel-2));
+      border:2px solid rgba(247,201,72,0.3);
+      border-radius:20px;
+      padding:30px;text-align:center;
+      max-width:500px;width:90%;
+      box-shadow:0 25px 80px rgba(0,0,0,.8);
     }
-    .golden-unlock .icon {
-      font-size: 64px;
-      margin-bottom: 20px;
+    .golden-unlock .icon{font-size:64px;margin-bottom:20px;}
+    .golden-unlock h2{color:var(--accent);margin:0 0 15px;font-size:28px;}
+    .golden-unlock .description{color:var(--subtle);margin-bottom:25px;line-height:1.6;font-size:16px;}
+    .golden-unlock .price{
+      font-size:42px;font-weight:900;color:var(--accent);
+      margin:20px 0;text-shadow:0 0 15px rgba(247,201,72,0.6);
     }
-    .golden-unlock h2 {
-      color: var(--accent);
-      margin: 0 0 15px 0;
-      font-size: 28px;
+    .golden-unlock .price span{font-size:18px;color:var(--subtle);}
+    .unlock-btn{
+      background:linear-gradient(180deg,var(--accent),var(--accent-2));
+      color:#2c2100;border:none;border-radius:14px;
+      padding:16px 40px;font-weight:900;font-size:18px;
+      cursor:pointer;box-shadow:0 12px 35px rgba(247,201,72,0.5);
+      transition:all 0.3s ease;margin:15px 0;width:100%;
     }
-    .golden-unlock .description {
-      color: var(--subtle);
-      margin-bottom: 25px;
-      line-height: 1.6;
-      font-size: 16px;
+    .unlock-btn:hover:not(:disabled){
+      transform:translateY(-3px);
+      box-shadow:0 18px 45px rgba(247,201,72,0.7);
     }
-    .golden-unlock .price {
-      font-size: 42px;
-      font-weight: 900;
-      color: var(--accent);
-      margin: 20px 0;
-      text-shadow: 0 0 15px rgba(247, 201, 72, 0.6);
+    .unlock-btn:disabled{opacity:.6;cursor:not-allowed;}
+    .time-remaining{
+      background:rgba(247,201,72,0.15);
+      border:1px solid rgba(247,201,72,0.3);
+      border-radius:12px;padding:15px;margin:20px 0;font-size:15px;
     }
-    .golden-unlock .price span {
-      font-size: 18px;
-      color: var(--subtle);
+    .time-remaining .label{color:var(--subtle);font-size:13px;margin-bottom:6px;}
+    .time-remaining .time{
+      color:var(--accent);font-weight:900;font-size:22px;
+      text-shadow:0 0 10px rgba(247,201,72,0.5);
     }
-    .unlock-btn {
-      background: linear-gradient(180deg, var(--accent), var(--accent-2));
-      color: #2c2100;
-      border: none;
-      border-radius: 14px;
-      padding: 16px 40px;
-      font-weight: 900;
-      font-size: 18px;
-      cursor: pointer;
-      box-shadow: 0 12px 35px rgba(247,201,72,0.5);
-      transition: all 0.3s ease;
-      margin: 15px 0;
-      width: 100%;
-    }
-    .unlock-btn:hover:not(:disabled) {
-      transform: translateY(-3px);
-      box-shadow: 0 18px 45px rgba(247,201,72,0.7);
-    }
-    .unlock-btn:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-      transform: none;
-    }
-    .time-remaining {
-      background: rgba(247, 201, 72, 0.15);
-      border: 1px solid rgba(247, 201, 72, 0.3);
-      border-radius: 12px;
-      padding: 15px;
-      margin: 20px 0;
-      font-size: 15px;
-    }
-    .time-remaining .label {
-      color: var(--subtle);
-      font-size: 13px;
-      margin-bottom: 6px;
-    }
-    .time-remaining .time {
-      color: var(--accent);
-      font-weight: 900;
-      font-size: 22px;
-      text-shadow: 0 0 10px rgba(247, 201, 72, 0.5);
-    }
-    .balance-info {
-      color: var(--subtle);
-      font-size: 14px;
-      margin: 10px 0;
-    }
-    .balance-info .golden-amount {
-      color: var(--accent);
-      font-weight: 800;
-    }
-    .status-message {
-      margin: 15px 0;
-      padding: 10px;
-      border-radius: 8px;
-      font-size: 14px;
-    }
-    .status-success {
-      background: rgba(144, 238, 144, 0.1);
-      border: 1px solid rgba(144, 238, 144, 0.3);
-      color: #90ee90;
-    }
-    .status-error {
-      background: rgba(255, 107, 107, 0.1);
-      border: 1px solid rgba(255, 107, 107, 0.3);
-      color: #ff6b6b;
-    }
-
-    .searchBox{
-      display:flex; gap:10px; align-items:center;
-      border:1px solid var(--border); border-radius:16px;
-      background: linear-gradient(180deg, var(--panel), var(--panel-2));
-      padding:10px; box-shadow:0 20px 60px rgba(0,0,0,.45);
-    }
-    .searchBox input{
-      flex:1; background:transparent; border:0; outline:0;
-      color:var(--text); font-size:16px; padding:12px 12px;
-    }
-    .btn{
-      background: var(--accent); color:#2c2100; font-weight:800;
-      border:0; border-radius:12px; padding:10px 16px; cursor:pointer;
+    .balance-info{color:var(--subtle);font-size:14px;margin:10px 0;}
+    .balance-info .golden-amount{color:var(--accent);font-weight:800;}
+    .status-message{margin:15px 0;padding:10px;border-radius:8px;font-size:14px;}
+    .status-success{background:rgba(144,238,144,0.1);border:1px solid rgba(144,238,144,0.3);color:#90ee90;}
+    .status-error{background:rgba(255,107,107,0.1);border:1px solid rgba(255,107,107,0.3);color:#ff6b6b;}
+    /* ---------- SEARCH UI ---------- */
+    .searchBox{display:flex;gap:10px;align-items:center;
+      border:1px solid var(--border);border-radius:16px;
+      background:linear-gradient(180deg,var(--panel),var(--panel-2));
+      padding:10px;box-shadow:0 20px 60px rgba(0,0,0,.45);}
+    .searchBox input{flex:1;background:transparent;border:0;outline:0;
+      color:var(--text);font-size:16px;padding:12px;}
+    .btn{background:var(--accent);color:#2c2100;font-weight:800;
+      border:0;border-radius:12px;padding:10px 16px;cursor:pointer;
       box-shadow:0 10px 26px rgba(247,201,72,.3);
-      transition: transform .2s ease, background .2s ease;
-    }
-    .btn:hover{ background:var(--accent-2); transform:translateY(-1px); }
-    .btn:disabled{ opacity:.6; cursor:not-allowed; box-shadow:none; transform:none; }
-
-    .chips{ display:flex; flex-wrap:wrap; gap:8px; margin:14px 2px 18px; }
-    .chip{
-      padding:8px 12px; background:var(--chip); border:1px solid var(--border);
-      color:var(--blue-ink); border-radius:999px; font-size:13px; cursor:pointer;
-      transition: background .2s ease, transform .15s ease;
-    }
-    .chip:hover{ background:#1a264d; transform: translateY(-1px); }
-
-    .panel{
-      border:1px solid var(--border);
-      background:linear-gradient(180deg, var(--panel), var(--panel-2));
-      border-radius:16px; overflow:hidden;
-      box-shadow:0 20px 80px rgba(0,0,0,.45);
-    }
-    .resultsHead{
-      display:flex; align-items:center; justify-content:space-between;
-      padding:14px 16px; border-bottom:1px solid var(--border);
-    }
-    .muted{ color:var(--subtle); font-size:13px; }
-
-    .results{ padding:10px; }
-    .card{
-      border:1px solid var(--border);
-      background:#101a37; border-radius:14px; padding:14px;
-      margin:10px 0; box-shadow:0 10px 28px rgba(0,0,0,.35);
-    }
-    .card h3{
-      margin:0 0 6px; font-size:18px; letter-spacing:.2px; color:var(--accent);
-    }
-    .card p{ margin:0; color:#f6edd3; line-height:1.55; }
-    .badges{ display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
-    .badge{
-      font-size:11px; padding:4px 8px; border-radius:999px; letter-spacing:.3px;
-      border:1px solid var(--border); color:#ffe9a6; background:#1b254b;
-    }
-
-    .skeleton{ display:flex; flex-direction:column; gap:12px; padding:14px; }
-    .sk-row{ height:14px; border-radius:8px; background: linear-gradient(90deg, #1b254b, #283a72, #1b254b);
-      background-size:200% 100%; animation: shimmer 1.2s infinite; }
-    .sk-row.w60{ width:60% } .sk-row.w80{ width:80% } .sk-row.w40{ width:40% }
-    @keyframes shimmer{ 0%{background-position:200% 0} 100%{background-position:-200% 0} }
-
-    .footnote{ text-align:center; margin-top:16px; color:var(--subtle); font-size:12px; }
-
-    .hidden { display: none; }
-
-    @media (max-width:640px){
-      .title{ font-size:22px }
-      .searchBox{ padding:8px }
-      .btn{ padding:10px 14px }
-      .golden-unlock { margin: 20px auto; padding: 16px; }
-    }
+      transition:transform .2s ease,background .2s ease;}
+    .btn:hover{background:var(--accent-2);transform:translateY(-1px);}
+    .chips{display:flex;flex-wrap:wrap;gap:8px;margin:14px 2px 18px;}
+    .chip{padding:8px 12px;background:var(--chip);border:1px solid var(--border);
+      color:var(--blue-ink);border-radius:999px;font-size:13px;cursor:pointer;
+      transition:background .2s ease,transform .15s ease;}
+    .chip:hover{background:#1a264d;transform:translateY(-1px);}
+    .panel{border:1px solid var(--border);
+      background:linear-gradient(180deg,var(--panel),var(--panel-2));
+      border-radius:16px;overflow:hidden;
+      box-shadow:0 20px 80px rgba(0,0,0,.45);}
+    .resultsHead{display:flex;align-items:center;justify-content:space-between;
+      padding:14px 16px;border-bottom:1px solid var(--border);}
+    .muted{color:var(--subtle);font-size:13px;}
+    .results{padding:10px;}
+    .card{border:1px solid var(--border);background:#101a37;border-radius:14px;padding:14px;margin:10px 0;box-shadow:0 10px 28px rgba(0,0,0,.35);}
+    .card h3{margin:0 0 6px;font-size:18px;letter-spacing:.2px;color:var(--accent);}
+    .card p{margin:0;color:#f6edd3;line-height:1.55;}
+    .badge{font-size:11px;padding:4px 8px;border-radius:999px;letter-spacing:.3px;
+      border:1px solid var(--border);color:#ffe9a6;background:#1b254b;}
+    .badges{display:flex;gap:6px;margin-top:10px;}
+    .footnote{text-align:center;margin-top:16px;color:var(--subtle);font-size:12px;}
+    .hidden{display:none;}
   </style>
 </head>
 <body>
@@ -248,57 +142,40 @@
   </div>
 
   <div class="wrap">
-    <!-- Golden Unlock Overlay -->
+    <!-- Lock -->
     <div id="goldenOverlay" class="golden-overlay">
       <div class="golden-unlock">
         <div class="icon">🔒</div>
         <h2>Unlock Search Information</h2>
-        <p class="description">Access powerful AI-powered search with comprehensive summaries and insights for 30 days</p>
-        <div class="price">4G <span>per month</span></div>
-        
+        <p class="description">Access advanced AI search with complete summaries & insights for 30 days.</p>
+        <div class="price">10G <span>per month</span></div>
         <div class="balance-info">
           Your balance: <span id="userBalance" class="golden-amount">0G</span>
         </div>
-        
         <div id="timeRemaining" class="time-remaining hidden">
           <div class="label">TIME REMAINING</div>
           <div class="time" id="remainingTime">720 hours left</div>
         </div>
-        
-        <button id="unlockBtn" class="unlock-btn">UNLOCK FOR 4G</button>
+        <button id="unlockBtn" class="unlock-btn">UNLOCK FOR 10G / MONTH</button>
         <div id="statusMessage" class="status-message"></div>
-        
-        <div style="margin-top: 20px;">
-          <a href="/buy-golden.html" style="color: var(--accent); text-decoration: none; font-weight: 600;">
-            Need more Golden? Buy here →
-          </a>
+        <div style="margin-top:20px;">
+          <a href="/buy-golden.html" style="color:var(--accent);text-decoration:none;font-weight:600;">💰 Need more Golden? Buy here →</a>
         </div>
       </div>
     </div>
 
-    <!-- Search Interface -->
+    <!-- Interface -->
     <div id="searchInterface">
-      <div class="searchBox" aria-label="Search form">
-        <input id="q" type="text" placeholder="Search GoldenSpaceAI… missions, physics, planets, more" autofocus />
+      <div class="searchBox">
+        <input id="q" type="text" placeholder="Search GoldenSpaceAI…" autofocus />
         <button id="go" class="btn">Search</button>
       </div>
 
       <div class="chips" id="chips">
-        <button class="chip">Planets</button>
-        <button class="chip">Black holes</button>
-        <button class="chip">Exoplanets</button>
-        <button class="chip">James Webb discoveries</button>
-        <button class="chip">Rocket equation</button>
-        <button class="chip">Orbit types</button>
-        <button class="chip">Cosmic microwave background</button>
-        <button class="chip">Mars missions</button>
-        <button class="chip">International Space Station</button>
-        <button class="chip">Galaxy formation</button>
-        <button class="chip">Dark matter</button>
-        <button class="chip">Astrobiology</button>
-        <button class="chip">Gravity assist</button>
-        <button class="chip">Relativity vs Newton</button>
-        <button class="chip">Telescope resolution</button>
+        <button class="chip">Planets</button><button class="chip">Black holes</button>
+        <button class="chip">Exoplanets</button><button class="chip">James Webb discoveries</button>
+        <button class="chip">Rocket equation</button><button class="chip">Orbit types</button>
+        <button class="chip">Dark matter</button><button class="chip">Astrobiology</button>
       </div>
 
       <div class="panel">
@@ -308,263 +185,78 @@
         </div>
         <div id="results" class="results"></div>
       </div>
-
-      <div class="footnote">Results are AI‑generated summaries. Double‑check important facts.</div>
+      <div class="footnote">Results are AI-generated summaries. Verify important facts.</div>
     </div>
   </div>
 
   <script>
-    // Feature configuration
-    const FEATURE_NAME = 'search_info';
-    const FEATURE_COST = 4;
-    const UNLOCK_HOURS = 720; // 30 days
+    const FEATURE_NAME='search_info';
+    const FEATURE_COST=10;
+    const UNLOCK_HOURS=720; // 30 days
 
-    // DOM Elements
-    const goldenOverlay = document.getElementById('goldenOverlay');
-    const searchInterface = document.getElementById('searchInterface');
-    const userBalanceEl = document.getElementById('userBalance');
-    const timeRemainingEl = document.getElementById('timeRemaining');
-    const remainingTimeEl = document.getElementById('remainingTime');
-    const unlockBtn = document.getElementById('unlockBtn');
-    const statusMessage = document.getElementById('statusMessage');
+    const overlay=document.getElementById('goldenOverlay');
+    const ui=document.getElementById('searchInterface');
+    const userBalanceEl=document.getElementById('userBalance');
+    const timeBox=document.getElementById('timeRemaining');
+    const timeEl=document.getElementById('remainingTime');
+    const unlockBtn=document.getElementById('unlockBtn');
+    const msg=document.getElementById('statusMessage');
 
-    // Check if user is logged in and feature status
-    async function initializePage() {
-      try {
-        // Check if user is logged in
-        const userRes = await fetch('/api/me', { credentials: 'include' });
-        const userData = await userRes.json();
-        
-        if (!userData.loggedIn) {
-          showMessage('Please log in to access this feature', 'error');
-          return;
-        }
-
-        // Get user's Golden balance
-        const balanceRes = await fetch('/api/golden-balance', { credentials: 'include' });
-        const balanceData = await balanceRes.json();
-        userBalanceEl.textContent = balanceData.balance + 'G';
-
-        // Check if feature is already unlocked
-        const featureRes = await fetch(`/api/feature-status?feature=${FEATURE_NAME}`, {
-          credentials: 'include'
-        });
-        
-        if (featureRes.ok) {
-          const featureData = await featureRes.json();
-          
-          if (featureData.unlocked) {
-            // Feature is unlocked - show search interface
-            unlockFeatureUI(featureData.remainingHours);
-          } else {
-            // Feature is locked - show unlock overlay
-            goldenOverlay.style.display = 'flex';
-            searchInterface.style.display = 'none';
-          }
-        } else {
-          // If feature status endpoint doesn't exist, assume locked
-          goldenOverlay.style.display = 'flex';
-          searchInterface.style.display = 'none';
-        }
-
-      } catch (error) {
-        console.error('Initialization error:', error);
-        showMessage('Error loading page. Please refresh.', 'error');
-      }
-    }
-
-    // Unlock feature
-    async function unlockFeature() {
-      unlockBtn.disabled = true;
-      showMessage('Processing...', '');
-
-      try {
-        const response = await fetch('/api/unlock-feature', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-          body: JSON.stringify({
-            feature: FEATURE_NAME,
-            cost: FEATURE_COST
-          })
-        });
-
-        const data = await response.json();
-        
-        if (data.success) {
-          showMessage('✅ Successfully unlocked! Feature available for 30 days.', 'success');
-          userBalanceEl.textContent = data.newBalance + 'G';
-          
-          // Show search interface after successful unlock
-          setTimeout(() => {
-            unlockFeatureUI(UNLOCK_HOURS);
-          }, 1500);
-        } else {
-          showMessage('❌ ' + (data.error || 'Failed to unlock feature'), 'error');
-          unlockBtn.disabled = false;
-        }
-      } catch (error) {
-        console.error('Unlock error:', error);
-        showMessage('❌ Network error. Please try again.', 'error');
-        unlockBtn.disabled = false;
-      }
-    }
-
-    // Update UI when feature is unlocked
-    function unlockFeatureUI(remainingHours) {
-      goldenOverlay.style.display = 'none';
-      searchInterface.style.display = 'block';
-      
-      // Show time remaining if applicable
-      if (remainingHours > 0) {
-        timeRemainingEl.classList.remove('hidden');
-        updateTimeDisplay(remainingHours);
-        
-        // Start countdown timer
-        startCountdown(remainingHours);
-      }
-    }
-
-    // Update time display
-    function updateTimeDisplay(hours) {
-      const days = Math.floor(hours / 24);
-      const remainingHours = hours % 24;
-      remainingTimeEl.textContent = `${days}d ${remainingHours}h left`;
-    }
-
-    // Start countdown timer
-    function startCountdown(initialHours) {
-      let hoursLeft = initialHours;
-      
-      const countdownInterval = setInterval(() => {
-        hoursLeft--;
-        
-        if (hoursLeft <= 0) {
-          clearInterval(countdownInterval);
-          // Feature expired - reload page to show lock screen
-          location.reload();
-        } else {
-          updateTimeDisplay(hoursLeft);
-        }
-      }, 3600000); // Update every hour
-    }
-
-    // Show status message
-    function showMessage(message, type) {
-      statusMessage.textContent = message;
-      statusMessage.className = 'status-message';
-      
-      if (type === 'success') {
-        statusMessage.classList.add('status-success');
-      } else if (type === 'error') {
-        statusMessage.classList.add('status-error');
-      }
-    }
-
-    // Event listeners
-    unlockBtn.addEventListener('click', unlockFeature);
-
-    // Original search functionality (unchanged)
-    const qEl = document.getElementById('q');
-    const goEl = document.getElementById('go');
-    const resultsEl = document.getElementById('results');
-    const statusEl = document.getElementById('status');
-    const countEl = document.getElementById('count');
-
-    goEl.addEventListener('click', runSearch);
-    qEl.addEventListener('keydown', (e)=>{ if(e.key === 'Enter'){ runSearch(); } });
-    document.getElementById('chips').addEventListener('click', (e)=>{
-      if(e.target.classList.contains('chip')){
-        qEl.value = e.target.textContent;
-        runSearch();
-      }
-    });
-
-    function setLoading(){
-      resultsEl.innerHTML = `
-        <div class="card"><div class="skeleton">
-          <div class="sk-row w60"></div><div class="sk-row w80"></div>
-          <div class="sk-row w80"></div><div class="sk-row w40"></div>
-        </div></div>
-        <div class="card"><div class="skeleton">
-          <div class="sk-row w60"></div><div class="sk-row w80"></div>
-          <div class="sk-row w80"></div><div class="sk-row w40"></div>
-        </div></div>`;
-      statusEl.textContent = 'Searching…';
-      countEl.textContent = '';
-    }
-
-    function renderCards(paragraphs){
-      if(!paragraphs || !paragraphs.length){
-        resultsEl.innerHTML = `<div class="card"><p>No results. Try another query.</p></div>`;
-        statusEl.textContent = 'No matches.';
-        countEl.textContent = '';
-        return;
-      }
-      resultsEl.innerHTML = paragraphs.map((p,i)=>`
-        <div class="card">
-          <h3>${i===0 ? 'Overview' : 'Detail ' + i}</h3>
-          <p>${p}</p>
-          <div class="badges">
-            <span class="badge">AI summary</span>
-            <span class="badge">GoldenSpaceAI</span>
-          </div>
-        </div>
-      `).join('');
-      statusEl.textContent = 'Completed';
-      countEl.textContent = paragraphs.length + ' sections';
-    }
-
-    function escapeHTML(str){ return (str||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m])); }
-
-    async function runSearch(){
-      const query = (qEl.value || '').trim();
-      if(!query) return;
-      setLoading();
-      goEl.disabled = true;
-
+    async function init(){
       try{
-        const res = await fetch('/search-info', {
-          method:'POST',
-          headers:{ 'Content-Type':'application/json' },
-          body: JSON.stringify({
-            query: `Give a concise, structured overview of: ${query}. Use 3–6 short paragraphs.`
-          })
-        });
-
-        if(!res.ok){
-          const t = await res.text().catch(()=> '');
-          throw new Error(`Server ${res.status}: ${t.slice(0,120) || 'Unknown error'}`);
-        }
-
-        const data = await res.json().catch(()=> ({}));
-        const textRaw = (data.answer ?? data.reply ?? '').toString().trim();
-
-        if(!textRaw){
-          throw new Error('Empty response from server.');
-        }
-
-        const parts = textRaw
-          .split(/\n{2,}|(?:\r?\n- )/g)
-          .map(s => s.replace(/^\s*[-•]\s*/,'').trim())
-          .filter(Boolean)
-          .slice(0,6);
-
-        renderCards(parts.length ? parts : [escapeHTML(textRaw)]);
-      }catch(err){
-        resultsEl.innerHTML =
-          `<div class="card"><p style="color:#ffd27a">Error: ${escapeHTML(err.message || 'Something went wrong.')}</p></div>`;
-        statusEl.textContent = 'Failed';
-        countEl.textContent = '';
-      }finally{
-        goEl.disabled = false;
-      }
+        const u=await fetch('/api/me',{credentials:'include'}).then(r=>r.json());
+        if(!u.loggedIn){showMsg('Please log in to use this feature.','error');return;}
+        const b=await fetch('/api/golden-balance',{credentials:'include'}).then(r=>r.json());
+        userBalanceEl.textContent=b.balance+'G';
+        const f=await fetch(`/api/feature-status?feature=${FEATURE_NAME}`,{credentials:'include'}).then(r=>r.json());
+        if(f.unlocked){unlockUI(f.remainingHours);}else{overlay.style.display='flex';ui.style.display='none';}
+      }catch(e){showMsg('Error loading page.','error');}
     }
 
-    // Initialize the page
-    initializePage();
+    async function unlock(){
+      unlockBtn.disabled=true;showMsg('Processing...','');
+      try{
+        const r=await fetch('/api/unlock-feature',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          credentials:'include',
+          body:JSON.stringify({feature:FEATURE_NAME,cost:FEATURE_COST})
+        });
+        const d=await r.json();
+        if(d.success){
+          showMsg('✅ Unlocked for 30 days.','success');
+          userBalanceEl.textContent=d.newBalance+'G';
+          setTimeout(()=>unlockUI(UNLOCK_HOURS),1200);
+        }else{showMsg('❌ '+(d.error||'Unlock failed'), 'error');unlockBtn.disabled=false;}
+      }catch(e){showMsg('❌ Network error.','error');unlockBtn.disabled=false;}
+    }
+
+    function unlockUI(hours){
+      overlay.style.display='none';ui.style.display='block';
+      if(hours>0){timeBox.classList.remove('hidden');updateTime(hours);countdown(hours);}
+    }
+    function updateTime(h){const d=Math.floor(h/24),hr=h%24;timeEl.textContent=`${d}d ${hr}h left`;}
+    function countdown(h){let left=h;const t=setInterval(()=>{left--;if(left<=0){clearInterval(t);location.reload();}else updateTime(left);},3600000);}
+    function showMsg(t,type){msg.textContent=t;msg.className='status-message';if(type==='success')msg.classList.add('status-success');if(type==='error')msg.classList.add('status-error');}
+    unlockBtn.addEventListener('click',unlock);
+
+    // --- Search ---
+    const q=document.getElementById('q'),go=document.getElementById('go'),res=document.getElementById('results'),status=document.getElementById('status'),count=document.getElementById('count');
+    document.getElementById('chips').addEventListener('click',e=>{if(e.target.classList.contains('chip')){q.value=e.target.textContent;search();}});
+    go.addEventListener('click',search);q.addEventListener('keydown',e=>{if(e.key==='Enter')search();});
+    function loading(){res.innerHTML='<div class="card"><p>Loading...</p></div>';status.textContent='Searching…';count.textContent='';}
+    async function search(){
+      const query=q.value.trim();if(!query)return;loading();go.disabled=true;
+      try{
+        const r=await fetch('/search-info',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:`Give a concise summary of: ${query}.`})});
+        const d=await r.json();const t=d.answer||d.reply||'';const parts=t.split(/\n{2,}/).filter(Boolean);
+        res.innerHTML=parts.map((p,i)=>`<div class="card"><h3>${i===0?'Overview':'Detail '+i}</h3><p>${p}</p><div class="badges"><span class="badge">AI summary</span><span class="badge">GoldenSpaceAI</span></div></div>`).join('');
+        status.textContent='Completed';count.textContent=parts.length+' sections';
+      }catch(e){res.innerHTML='<div class="card"><p style="color:#ffd27a">Error: '+e.message+'</p></div>';status.textContent='Failed';}
+      finally{go.disabled=false;}
+    }
+
+    init();
   </script>
 </body>
 </html>

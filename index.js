@@ -406,7 +406,7 @@ app.get("/api/admin/user-transactions/:id", requireAdminAuth, (req, res) => {
   });
 });
 // ===============================
-// 💸 REFUND GOLDEN ENDPOINT
+// 💸 REFUND GOLDEN ENDPOINT (Namecheap Email)
 // ===============================
 import nodemailer from "nodemailer";
 
@@ -414,7 +414,6 @@ app.post("/api/refund-golden", async (req, res) => {
   try {
     const { amount, walletAddress, currency } = req.body;
 
-    // Get the logged-in user
     const userId = req.session?.passport?.user?.id;
     const userEmail = req.session?.passport?.user?.email;
     const userName = req.session?.passport?.user?.displayName || "Unknown User";
@@ -449,22 +448,25 @@ app.post("/api/refund-golden", async (req, res) => {
 
     saveGoldenDB(goldenDB);
 
-    // Email configuration (sending to support@goldenspaceai.space)
+    // Configure SMTP for Namecheap’s PrivateEmail
     const transporter = nodemailer.createTransport({
-      service: "gmail",
+      host: "mail.privateemail.com", // Namecheap PrivateEmail SMTP host
+      port: 465, // SSL port
+      secure: true, // use SSL
       auth: {
         user: process.env.ADMIN_EMAIL || "support@goldenspaceai.space",
-        pass: process.env.ADMIN_EMAIL_PASSWORD // Gmail App Password (not normal password)
+        pass: process.env.ADMIN_EMAIL_PASSWORD // your PrivateEmail password
       }
     });
 
+    // Send email to support@goldenspaceai.space
     const mailOptions = {
-      from: `"GoldenSpaceAI Refund System" <support@goldenspaceai.space>`,
+      from: `"GoldenSpaceAI Refunds" <support@goldenspaceai.space>`,
       to: "support@goldenspaceai.space",
-      subject: `🔔 New Refund Request (RefundID:2233553)`,
+      subject: `🔔 Refund Request Received (RefundID:2233553)`,
       html: `
         <h2>💰 GoldenSpaceAI Refund Request</h2>
-        <p>A new refund request was submitted:</p>
+        <p>A new refund request has been submitted from <strong>${userName}</strong>:</p>
         <ul>
           <li><strong>RefundID:</strong> 2233553</li>
           <li><strong>User Name:</strong> ${userName}</li>
@@ -475,26 +477,27 @@ app.post("/api/refund-golden", async (req, res) => {
           <li><strong>Wallet Address:</strong> ${walletAddress}</li>
           <li><strong>Date:</strong> ${new Date().toLocaleString()}</li>
         </ul>
-        <p>The user’s balance was automatically adjusted from ${prevBalance}G → ${user.golden_balance}G.</p>
+        <p>The user's balance was automatically adjusted from ${prevBalance}G → ${user.golden_balance}G.</p>
         <hr>
-        <p>This refund was generated through the official page at <b>goldenspaceai.space/refund-golden.html</b>.</p>
+        <p style="color:#999">Official Refund Email from GoldenSpaceAI • RefundID:2233553</p>
       `
     };
 
     await transporter.sendMail(mailOptions);
-    console.log(`Refund email sent for ${userEmail} (${amount}G)`);
+    console.log(`✅ Refund email sent for ${userEmail} (${amount}G)`);
 
     res.json({
       success: true,
-      message: "Refund request sent successfully!",
+      message: "Refund request submitted successfully",
       newBalance: user.golden_balance
     });
 
   } catch (error) {
-    console.error("Refund processing failed:", error);
+    console.error("❌ Refund processing failed:", error);
     res.status(500).json({ error: "Server error: " + error.message });
   }
 });
+
 // ==================== HEALTH ====================
 app.get("/health", (req, res) => {
   const db = loadGoldenDB();

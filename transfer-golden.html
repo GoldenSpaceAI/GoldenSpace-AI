@@ -1,659 +1,156 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Transfer Golden - GoldenSpaceAI</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary: #FFD700;
-            --secondary: #D4AF37;
-            --accent: #FFC107;
-            --dark: #0F0F23;
-            --darker: #0A0A1A;
-            --light: #F8F9FA;
-            --gray: #94A3B8;
-            --success: #10B981;
-            --warning: #F59E0B;
-            --error: #EF4444;
-            --golden-bg: #1C1C28;
-            --card-bg: rgba(255, 215, 0, 0.02);
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-        }
-
-        body {
-            background: linear-gradient(135deg, var(--dark) 0%, #1a1a2e 100%);
-            color: var(--light);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem;
-        }
-
-        .container {
-            max-width: 500px;
-            width: 100%;
-            background: var(--card-bg);
-            border: 1px solid rgba(255, 215, 0, 0.1);
-            border-radius: 20px;
-            padding: 2.5rem;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-
-        .logo {
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            border-radius: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            color: var(--dark);
-            font-weight: 700;
-            margin: 0 auto 1rem;
-        }
-
-        .title {
-            font-size: 2rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .subtitle {
-            color: var(--gray);
-            font-size: 1rem;
-        }
-
-        .balance-card {
-            background: rgba(255, 215, 0, 0.05);
-            border: 1px solid rgba(255, 215, 0, 0.2);
-            border-radius: 15px;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-            text-align: center;
-        }
-
-        .balance-label {
-            color: var(--gray);
-            font-size: 0.9rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .balance-amount {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: var(--primary);
-        }
-
-        .transfer-form {
-            margin-bottom: 2rem;
-        }
-
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-
-        .form-label {
-            display: block;
-            color: var(--light);
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            font-size: 0.95rem;
-        }
-
-        .form-input {
-            width: 100%;
-            padding: 1rem 1.25rem;
-            background: rgba(255, 255, 255, 0.05);
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            color: var(--light);
-            font-size: 1rem;
-            transition: all 0.3s;
-        }
-
-        .form-input:focus {
-            outline: none;
-            border-color: var(--primary);
-            background: rgba(255, 215, 0, 0.05);
-        }
-
-        .amount-input-container {
-            position: relative;
-        }
-
-        .golden-symbol {
-            position: absolute;
-            right: 1.25rem;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--primary);
-            font-weight: 600;
-        }
-
-        .fee-calculator {
-            background: rgba(255, 215, 0, 0.05);
-            border: 1px solid rgba(255, 215, 0, 0.1);
-            border-radius: 12px;
-            padding: 1.25rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .fee-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.5rem 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .fee-row:last-child {
-            border-bottom: none;
-        }
-
-        .fee-label {
-            color: var(--gray);
-            font-size: 0.9rem;
-        }
-
-        .fee-value {
-            color: var(--light);
-            font-weight: 600;
-        }
-
-        .fee-amount {
-            color: var(--warning);
-        }
-
-        .recipient-amount {
-            color: var(--success);
-            font-size: 1.1rem;
-        }
-
-        .btn {
-            width: 100%;
-            padding: 1rem 2rem;
-            border: none;
-            border-radius: 12px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: var(--dark);
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(255, 215, 0, 0.3);
-        }
-
-        .btn-primary:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-
-        .limits-info {
-            background: rgba(59, 130, 246, 0.1);
-            border: 1px solid rgba(59, 130, 246, 0.2);
-            border-radius: 12px;
-            padding: 1rem;
-            margin-top: 1.5rem;
-        }
-
-        .limits-title {
-            color: #3B82F6;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            font-size: 0.9rem;
-        }
-
-        .limits-list {
-            list-style: none;
-            font-size: 0.85rem;
-            color: var(--gray);
-        }
-
-        .limits-list li {
-            padding: 0.25rem 0;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .limits-list li:before {
-            content: "•";
-            color: #3B82F6;
-        }
-
-        .transaction-history {
-            margin-top: 2rem;
-        }
-
-        .history-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            color: var(--light);
-        }
-
-        .history-item {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 10px;
-            padding: 1rem;
-            margin-bottom: 0.75rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .history-details {
-            flex: 1;
-        }
-
-        .history-recipient {
-            font-weight: 600;
-            color: var(--light);
-            margin-bottom: 0.25rem;
-        }
-
-        .history-date {
-            font-size: 0.8rem;
-            color: var(--gray);
-        }
-
-        .history-amount {
-            font-weight: 700;
-            font-size: 1.1rem;
-        }
-
-        .history-amount.sent {
-            color: var(--warning);
-        }
-
-        .history-amount.received {
-            color: var(--success);
-        }
-
-        .fee-badge {
-            background: rgba(245, 158, 11, 0.2);
-            color: var(--warning);
-            padding: 0.25rem 0.5rem;
-            border-radius: 8px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            margin-left: 0.5rem;
-        }
-
-        .success-message {
-            background: rgba(16, 185, 129, 0.1);
-            border: 1px solid rgba(16, 185, 129, 0.3);
-            color: var(--success);
-            padding: 1rem;
-            border-radius: 12px;
-            margin-bottom: 1rem;
-            text-align: center;
-            display: none;
-        }
-
-        .error-message {
-            background: rgba(239, 68, 68, 0.1);
-            border: 1px solid rgba(239, 68, 68, 0.3);
-            color: var(--error);
-            padding: 1rem;
-            border-radius: 12px;
-            margin-bottom: 1rem;
-            text-align: center;
-            display: none;
-        }
-
-        .security-notice {
-            background: rgba(255, 215, 0, 0.05);
-            border-left: 4px solid var(--warning);
-            padding: 1rem;
-            border-radius: 0 8px 8px 0;
-            margin-top: 1.5rem;
-        }
-
-        .security-title {
-            color: var(--warning);
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            font-size: 0.9rem;
-        }
-
-        .security-text {
-            color: var(--gray);
-            font-size: 0.85rem;
-            line-height: 1.4;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Transfer Golden • GoldenSpaceAI</title>
+  <link rel="icon" href="/logo.png" type="image/png" />
+  <style>
+    body {
+      font-family: "Inter", sans-serif;
+      background: linear-gradient(180deg,rgba(10,14,21,.9),rgba(10,14,21,.95)),
+        url("https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2000&auto=format&fit=crop") center/cover no-repeat fixed;
+      color: #fff7dc;
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh; margin: 0; padding: 20px;
+    }
+    .card {
+      background: linear-gradient(180deg,#0f1624,#0b1320);
+      border: 1px solid #2a3550;
+      border-radius: 18px;
+      padding: 24px;
+      max-width: 420px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0,0,0,.5);
+    }
+    h1 {
+      color: #f6c64a;
+      font-size: 24px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: 700;
+      color: #f2ecd2;
+      font-size: 14px;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid #2a3550;
+      background: #111a2c;
+      color: #fff;
+      font-size: 15px;
+      margin-top: 4px;
+    }
+    button {
+      background: linear-gradient(180deg,#f6c64a,#eb8b36);
+      color: #1b1300;
+      border: none;
+      border-radius: 999px;
+      padding: 12px 16px;
+      font-weight: 900;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 16px;
+      font-size: 15px;
+      box-shadow: 0 6px 20px rgba(246,198,74,0.4);
+      transition: all .25s ease;
+    }
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(246,198,74,0.6);
+    }
+    .info, .error, .success {
+      margin-top: 12px;
+      padding: 10px;
+      border-radius: 10px;
+      font-size: 14px;
+      text-align: center;
+    }
+    .info { background: rgba(255,255,255,.05); color:#ddd;}
+    .error { background: rgba(255,0,0,.15); color:#ffaaaa;}
+    .success { background: rgba(0,255,0,.15); color:#b6fcb6;}
+    .fee-box {
+      margin-top: 8px;
+      text-align:center;
+      color:#f6c64a;
+      font-size:14px;
+      font-weight:700;
+    }
+    .back {
+      display:block;text-align:center;margin-top:20px;
+      color:#aaa;text-decoration:underline;font-size:14px;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Header -->
-        <div class="header">
-            <div class="logo">G</div>
-            <h1 class="title">Transfer Golden</h1>
-            <p class="subtitle">Send Golden to friends and family instantly</p>
-        </div>
+  <div class="card">
+    <h1>💸 Transfer Golden</h1>
+    <label for="recipient">Recipient Email</label>
+    <input type="email" id="recipient" placeholder="example@email.com" required />
 
-        <!-- Balance Card -->
-        <div class="balance-card">
-            <div class="balance-label">Your Golden Balance</div>
-            <div class="balance-amount" id="balanceAmount">1,250G</div>
-        </div>
+    <label for="amount">Amount (G)</label>
+    <input type="number" id="amount" min="1" placeholder="Enter amount" required />
 
-        <!-- Success/Error Messages -->
-        <div class="success-message" id="successMessage">
-            <i class="fas fa-check-circle"></i> Transfer completed successfully!
-        </div>
+    <div class="fee-box" id="feeBox">Fee: 5 % → 0 G | Total: 0 G</div>
 
-        <div class="error-message" id="errorMessage">
-            <i class="fas fa-exclamation-circle"></i> <span id="errorText"></span>
-        </div>
+    <button onclick="transfer()">Send Golden</button>
 
-        <!-- Transfer Form -->
-        <div class="transfer-form">
-            <div class="form-group">
-                <label class="form-label">Recipient Email</label>
-                <input type="email" class="form-input" id="recipientEmail" placeholder="friend@example.com">
-            </div>
+    <div id="msg" class="info">Enter recipient and amount to start.</div>
+    <a class="back" href="/index.html">← Back to Home</a>
+  </div>
 
-            <div class="form-group">
-                <label class="form-label">Amount to Send</label>
-                <div class="amount-input-container">
-                    <input type="number" class="form-input" id="transferAmount" placeholder="100" min="10" max="1000">
-                    <div class="golden-symbol">G</div>
-                </div>
-            </div>
+  <script>
+    const amountInput = document.getElementById('amount');
+    const feeBox = document.getElementById('feeBox');
+    amountInput.addEventListener('input', () => {
+      const amount = parseFloat(amountInput.value) || 0;
+      const fee = Math.ceil(amount * 0.05);
+      const total = amount + fee;
+      feeBox.textContent = `Fee: 5 % → ${fee} G | Total: ${total} G`;
+    });
 
-            <!-- Fee Calculator -->
-            <div class="fee-calculator" id="feeCalculator">
-                <div class="fee-row">
-                    <span class="fee-label">Transfer Amount</span>
-                    <span class="fee-value" id="transferDisplay">0G</span>
-                </div>
-                <div class="fee-row">
-                    <span class="fee-label">Transaction Fee (5%)</span>
-                    <span class="fee-value fee-amount" id="feeAmount">0G</span>
-                </div>
-                <div class="fee-row">
-                    <span class="fee-label">Recipient Receives</span>
-                    <span class="fee-value recipient-amount" id="recipientReceives">0G</span>
-                </div>
-            </div>
+    async function transfer() {
+      const msg = document.getElementById('msg');
+      msg.className = 'info';
+      msg.textContent = 'Processing transfer...';
+      const recipientEmail = document.getElementById('recipient').value.trim();
+      const amount = parseFloat(document.getElementById('amount').value);
 
-            <button class="btn btn-primary" id="transferBtn" disabled>
-                <i class="fas fa-paper-plane"></i> Send Golden
-            </button>
-        </div>
+      if (!recipientEmail || !amount || amount <= 0) {
+        msg.className = 'error';
+        msg.textContent = 'Please enter valid recipient and amount.';
+        return;
+      }
 
-        <!-- Transfer Limits -->
-        <div class="limits-info">
-            <div class="limits-title">Transfer Limits & Fees</div>
-            <ul class="limits-list">
-                <li>Minimum transfer: 10G</li>
-                <li>Maximum transfer: 1,000G per day</li>
-                <li>Transaction fee: 5% (1G per 20G)</li>
-                <li>Transfers are instant and irreversible</li>
-            </ul>
-        </div>
-
-        <!-- Security Notice -->
-        <div class="security-notice">
-            <div class="security-title">Security Notice</div>
-            <div class="security-text">
-                Always verify the recipient's email address. Transfers cannot be reversed once confirmed. 
-                GoldenSpaceAI charges a 5% transaction fee to maintain network security and development.
-            </div>
-        </div>
-
-        <!-- Transaction History -->
-        <div class="transaction-history">
-            <div class="history-title">Recent Transactions</div>
-            <div id="transactionHistory">
-                <!-- Transactions will be loaded here -->
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // Sample transaction data
-        const sampleTransactions = [
-            { id: 1, recipient: "john@example.com", amount: 100, fee: 5, type: "sent", date: "2024-01-15 14:30" },
-            { id: 2, recipient: "sarah@family.com", amount: 50, fee: 2.5, type: "sent", date: "2024-01-14 09:15" },
-            { id: 3, recipient: "admin@goldenspace.ai", amount: 200, type: "received", date: "2024-01-13 16:45" },
-            { id: 4, recipient: "mike@company.com", amount: 75, fee: 3.75, type: "sent", date: "2024-01-12 11:20" }
-        ];
-
-        // DOM Elements
-        const balanceAmount = document.getElementById('balanceAmount');
-        const recipientEmail = document.getElementById('recipientEmail');
-        const transferAmount = document.getElementById('transferAmount');
-        const transferBtn = document.getElementById('transferBtn');
-        const transferDisplay = document.getElementById('transferDisplay');
-        const feeAmount = document.getElementById('feeAmount');
-        const recipientReceives = document.getElementById('recipientReceives');
-        const successMessage = document.getElementById('successMessage');
-        const errorMessage = document.getElementById('errorMessage');
-        const errorText = document.getElementById('errorText');
-        const transactionHistory = document.getElementById('transactionHistory');
-
-        // Initialize
-        document.addEventListener('DOMContentLoaded', function() {
-            loadTransactionHistory();
-            setupEventListeners();
-            updateFeeCalculator();
+      try {
+        const res = await fetch('/api/transfer-golden', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ recipientEmail, amount })
         });
+        const data = await res.json();
 
-        // Setup event listeners
-        function setupEventListeners() {
-            transferAmount.addEventListener('input', updateFeeCalculator);
-            recipientEmail.addEventListener('input', validateForm);
-            transferAmount.addEventListener('input', validateForm);
-            transferBtn.addEventListener('click', processTransfer);
+        if (res.ok && data.success) {
+          msg.className = 'success';
+          msg.textContent = data.message + ` | New Balance: ${data.newBalance} G`;
+          document.getElementById('amount').value = '';
+          document.getElementById('recipient').value = '';
+          feeBox.textContent = 'Fee: 5 % → 0 G | Total: 0 G';
+        } else {
+          msg.className = 'error';
+          msg.textContent = data.error || 'Transfer failed.';
         }
-
-        // Update fee calculator
-        function updateFeeCalculator() {
-            const amount = parseFloat(transferAmount.value) || 0;
-            const fee = Math.max(1, Math.floor(amount * 0.05)); // 5% fee, minimum 1G
-            const recipientGets = amount - fee;
-
-            transferDisplay.textContent = `${amount}G`;
-            feeAmount.textContent = `-${fee}G`;
-            recipientReceives.textContent = `${recipientGets}G`;
-        }
-
-        // Validate form
-        function validateForm() {
-            const email = recipientEmail.value.trim();
-            const amount = parseFloat(transferAmount.value) || 0;
-            const currentBalance = 1250; // Sample balance
-
-            let isValid = true;
-            let errorMessage = '';
-
-            // Email validation
-            if (!email) {
-                isValid = false;
-            } else if (!isValidEmail(email)) {
-                isValid = false;
-                errorMessage = 'Please enter a valid email address';
-            }
-
-            // Amount validation
-            if (amount < 10) {
-                isValid = false;
-                errorMessage = 'Minimum transfer amount is 10G';
-            } else if (amount > 1000) {
-                isValid = false;
-                errorMessage = 'Maximum transfer amount is 1000G per day';
-            } else if (amount > currentBalance) {
-                isValid = false;
-                errorMessage = 'Insufficient Golden balance';
-            }
-
-            transferBtn.disabled = !isValid;
-            
-            if (errorMessage) {
-                showError(errorMessage);
-            } else {
-                hideError();
-            }
-
-            return isValid;
-        }
-
-        // Email validation
-        function isValidEmail(email) {
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            return emailRegex.test(email);
-        }
-
-        // Process transfer
-        function processTransfer() {
-            if (!validateForm()) return;
-
-            const email = recipientEmail.value.trim();
-            const amount = parseFloat(transferAmount.value);
-            const fee = Math.max(1, Math.floor(amount * 0.05));
-
-            // Simulate API call
-            simulateTransfer(email, amount, fee)
-                .then(result => {
-                    if (result.success) {
-                        showSuccess();
-                        resetForm();
-                        loadTransactionHistory();
-                        updateBalance(amount + fee); // Deduct amount + fee
-                    } else {
-                        showError(result.error || 'Transfer failed. Please try again.');
-                    }
-                })
-                .catch(error => {
-                    showError('Network error. Please check your connection and try again.');
-                });
-        }
-
-        // Simulate transfer (replace with actual API call)
-        function simulateTransfer(email, amount, fee) {
-            return new Promise((resolve) => {
-                // Simulate API delay
-                setTimeout(() => {
-                    // Simulate random success/failure for demo
-                    const success = Math.random() > 0.1; // 90% success rate
-                    
-                    if (success) {
-                        resolve({
-                            success: true,
-                            transactionId: 'TX_' + Date.now(),
-                            amount: amount,
-                            fee: fee,
-                            recipient: email
-                        });
-                    } else {
-                        resolve({
-                            success: false,
-                            error: 'Recipient not found or transfer limit exceeded'
-                        });
-                    }
-                }, 1500);
-            });
-        }
-
-        // Update balance display
-        function updateBalance(amountDeducted) {
-            const currentBalance = parseInt(balanceAmount.textContent);
-            const newBalance = currentBalance - amountDeducted;
-            balanceAmount.textContent = newBalance.toLocaleString() + 'G';
-        }
-
-        // Show success message
-        function showSuccess() {
-            successMessage.style.display = 'block';
-            errorMessage.style.display = 'none';
-            
-            setTimeout(() => {
-                successMessage.style.display = 'none';
-            }, 5000);
-        }
-
-        // Show error message
-        function showError(message) {
-            errorText.textContent = message;
-            errorMessage.style.display = 'block';
-            successMessage.style.display = 'none';
-        }
-
-        // Hide error message
-        function hideError() {
-            errorMessage.style.display = 'none';
-        }
-
-        // Reset form
-        function resetForm() {
-            recipientEmail.value = '';
-            transferAmount.value = '';
-            updateFeeCalculator();
-            validateForm();
-        }
-
-        // Load transaction history
-        function loadTransactionHistory() {
-            transactionHistory.innerHTML = '';
-            
-            sampleTransactions.forEach(transaction => {
-                const historyItem = document.createElement('div');
-                historyItem.className = 'history-item';
-                
-                const amountClass = transaction.type === 'sent' ? 'sent' : 'received';
-                const amountPrefix = transaction.type === 'sent' ? '-' : '+';
-                
-                historyItem.innerHTML = `
-                    <div class="history-details">
-                        <div class="history-recipient">${transaction.recipient}</div>
-                        <div class="history-date">${transaction.date}</div>
-                    </div>
-                    <div class="history-amount ${amountClass}">
-                        ${amountPrefix}${transaction.amount}G
-                        ${transaction.fee ? `<span class="fee-badge">Fee: ${transaction.fee}G</span>` : ''}
-                    </div>
-                `;
-                
-                transactionHistory.appendChild(historyItem);
-            });
-        }
-    </script>
+      } catch (err) {
+        msg.className = 'error';
+        msg.textContent = 'Network or server error.';
+      }
+    }
+  </script>
 </body>
 </html>

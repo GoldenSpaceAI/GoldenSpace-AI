@@ -237,7 +237,19 @@ if (process.env.GOOGLE_CLIENT_ID) {
     passport.authenticate("google", { failureRedirect: "/login-signup.html" }),
     (_req, res) => res.redirect("https://goldenspaceai.space"));
 }
-
+app.get("/api/me", (req, res) => {
+  if (!req.user) {
+    return res.json({ loggedIn: false });
+  }
+  const id = `${req.user.id}@${req.user.provider}`;
+  const db = loadGoldenDB();
+  const userData = db.users[id] || {};
+  res.json({
+    loggedIn: true,
+    user: req.user,
+    balance: userData.golden_balance || 0,
+  });
+});
 // ==================== API ROUTES ====================
 app.get("/api/golden-balance", (req, res) => {
   if (!req.user) return res.json({ loggedIn: false, balance: 0 });

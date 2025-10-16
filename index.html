@@ -64,7 +64,7 @@
 
       /* Shell */
       .wrap{max-width:var(--max);margin:22px auto;padding:0 16px;}
-      .layout{display:grid;gap:18px;grid-template-columns:280px 1fr 230px;}
+      .layout{display:grid;gap:18px;grid-template-columns:280px 1fr 260px;}
       @media(max-width:980px){.layout{grid-template-columns:1fr}}
 
       /* Left tiles */
@@ -98,17 +98,33 @@
         border-radius:var(--radius);padding:12px;box-shadow:var(--shadow);display:grid;gap:10px;}
       .navbtn{display:flex;align-items:center;justify-content:center;padding:10px 12px;
         border-radius:999px;border:1px solid var(--border);color:#d7e2f4;background:rgba(255,255,255,.03);font-weight:900;}
+
       .login-btn{display:flex;align-items:center;justify-content:center;gap:10px;background:var(--gold);color:#1b1300;
         border-radius:999px;padding:10px 12px;font-weight:800;border:1px solid rgba(0,0,0,.12);box-shadow:0 6px 18px rgba(246,198,74,.35);} 
       .skip-login { color: var(--muted); font-size: 14px; text-decoration: underline; margin-top: 8px; display: inline-block; }
 
       /* User Profile Styles */
       .profile-pill{display:flex;align-items:center;gap:10px;justify-content:center;margin-bottom:6px}
-      .profile-pill img{width:40px;height:40px;border-radius:50%;object-fit:cover;border:1px solid var(--border)}
+      .profile-pill img{width:42px;height:42px;border-radius:50%;object-fit:cover;border:1px solid var(--border)}
       .profile-pill .welcome{font-weight:800;color:var(--gold)}
-      .gold-balance{font-size:15px;font-weight:800;color:var(--gold);margin-top:2px;text-align:center}
-      .logout-btn{background:transparent;color:var(--muted);border:1px solid var(--border);padding:6px 12px;border-radius:999px;font-size:12px;cursor:pointer;margin-top:8px}
-      .gold-action-btn{background:linear-gradient(180deg,var(--gold),var(--gold2));color:#1b1300;font-weight:800;border:none;border-radius:999px;padding:8px 12px;cursor:pointer;width:100%;margin-top:8px;box-shadow:0 6px 12px rgba(246,198,74,.25);}
+
+      .balance-box{
+        margin-top:6px;
+        background: radial-gradient(120% 120% at 30% 10%, rgba(246,198,74,.18), rgba(255,255,255,.03));
+        border:1px solid rgba(246,198,74,.35);
+        box-shadow: 0 12px 30px rgba(246,198,74,.18), inset 0 0 16px rgba(246,198,74,.15);
+        border-radius:14px;
+        padding:12px;
+        text-align:center;
+      }
+      .balance-title{font-size:12px;color:#e9ddbb;letter-spacing:.4px}
+      .gold-balance-value{font-size:22px;font-weight:900;color:#ffe18a;margin-top:2px}
+      .gold-actions{display:grid;gap:8px;margin-top:10px}
+      .gold-action-btn{background:linear-gradient(180deg,var(--gold),var(--gold2));
+        color:#1b1300;font-weight:800;border:none;border-radius:12px;
+        padding:10px 12px;cursor:pointer;width:100%;box-shadow:0 6px 12px rgba(246,198,74,.25);}
+      .logout-btn{background:transparent;color:var(--muted);border:1px solid var(--border);
+        padding:6px 12px;border-radius:999px;font-size:12px;cursor:pointer;margin-top:8px}
 
       /* Sections: Your Space Pack + ChatAI Pack */
       .section{margin:24px auto 8px}
@@ -123,8 +139,9 @@
       .card p{margin:0 0 10px;color:#dfe7f1;font-size:14px}
       .card .row{display:flex;gap:10px;flex-wrap:wrap}
       .badge{display:inline-block;padding:6px 10px;border:1px solid var(--border);border-radius:999px;color:#cfc6a5;font-weight:800;font-size:12px}
+      .row .btn{padding:10px 12px;border-radius:10px}
 
-      /* Modal */
+      /* Modal (placeholder) */
       .modal{position:fixed;inset:0;z-index:1000;display:none;align-items:center;justify-content:center;
         background:rgba(0,0,0,.55);backdrop-filter:blur(4px)}
       .modal.on{display:flex}
@@ -193,7 +210,7 @@
 
         <!-- Right navigation + user panel -->
         <aside class="rightCol" aria-label="Navigate">
-          <nav class="sideNav">
+          <nav class="sideNav" aria-label="Quick navigation">
             <a class="navbtn" href="/chat-advancedai.html">Chat with AI</a>
             <a class="navbtn" href="/search-info.html">Learn Info</a>
             <a class="navbtn" href="/learn-physics.html">Learn Physics</a>
@@ -216,8 +233,8 @@
             <p>Learn rocket stages & parts. Ready to build? Start your custom design.</p>
             <div class="row">
               <span class="badge">Physics-based</span>
-              <button class="btn btn-ghost" data-open="rocket">Learn</button>
-              <button class="btn gold" onclick="location.href='/create-rocket.html'">Build</button>
+              <a class="btn ghost" href="/create-rocket.html">Learn</a>
+              <a class="btn gold" href="/create-rocket.html">Build</a>
             </div>
           </div>
           <div class="card mini">
@@ -225,8 +242,8 @@
             <p>Understand payloads, buses & orbits. Then assemble your satellite.</p>
             <div class="row">
               <span class="badge">Orbit chooser</span>
-              <button class="btn btn-ghost" data-open="satellite">Learn</button>
-              <button class="btn gold" onclick="location.href='/create-satellite.html'">Build</button>
+              <a class="btn ghost" href="/create-satellite.html">Learn</a>
+              <a class="btn gold" href="/create-satellite.html">Build</a>
             </div>
           </div>
           <div class="card mini">
@@ -234,8 +251,8 @@
             <p>Advanced planet designer: atmosphere, gravity, rings, moons & biomes.</p>
             <div class="row">
               <span class="badge">Advanced editor</span>
-              <button class="btn btn-ghost" data-open="planet">Learn</button>
-              <button class="btn gold" onclick="location.href='/create-advanced-planet.html'">Build</button>
+              <a class="btn ghost" href="/create-advanced-planet.html">Learn</a>
+              <a class="btn gold" href="/create-advanced-planet.html">Build</a>
             </div>
           </div>
 
@@ -244,8 +261,8 @@
             <p>Build your own space world: up to 3 galaxies, 10 planets, 2 rockets & 2 satellites. Place planets you made into your universe.</p>
             <div class="row">
               <span class="badge">Universe hub</span>
-              <button class="btn btn-ghost" data-open="universe">Learn</button>
-              <button class="btn gold" onclick="location.href='/your-space.html'">Create Your Universe</button>
+              <a class="btn ghost" href="/your-space.html">Learn</a>
+              <a class="btn gold" href="/your-space.html">Create Your Universe</a>
             </div>
           </div>
         </div>
@@ -259,21 +276,21 @@
             <h3>📸 Solve Homework (Images)</h3>
             <p>Upload a page; get step-by-step help. (Daily caps by plan.)</p>
             <div class="row">
-              <button class="btn gold" onclick="location.href='/homework-helper.html'">Open</button>
+              <a class="btn gold" href="/homework-helper.html">Open</a>
             </div>
           </div>
           <div class="card mini">
             <h3>🧠 Chat Advanced AI</h3>
             <p>Deep reasoning, longer context chat powered by Gemini.</p>
             <div class="row">
-              <button class="btn gold" onclick="location.href='/chat-advancedai.html'">Open</button>
+              <a class="btn gold" href="/chat-advancedai.html">Open</a>
             </div>
           </div>
           <div class="card mini">
             <h3>📚 Search Educational Lessons</h3>
             <p>Find and summarize topics fast with clean golden summaries.</p>
             <div class="row">
-              <button class="btn gold" onclick="location.href='/search-lessons.html'">Open</button>
+              <a class="btn gold" href="/search-lessons.html">Open</a>
             </div>
           </div>
         </div>
@@ -297,52 +314,74 @@
       // Year
       document.getElementById('yr').textContent = new Date().getFullYear();
 
-      // User authentication display + Golden balance/actions
+      // Render logged-out state
+      function renderLoggedOut() {
+        const display = document.getElementById('user-display');
+        display.innerHTML = `
+          <a class="login-btn" href="/login-signup.html">🔐 Login / Sign Up</a>
+          <a href="/chat-advancedai.html" class="skip-login">Skip for later</a>
+        `;
+      }
+
+      // Render logged-in panel
+      function renderUserPanel(user, balance) {
+        const firstName = user?.name ? user.name.split(' ')[0] : (user?.email || '').split('@')[0];
+        const profilePic = user?.photo || 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80"><circle cx="40" cy="40" r="40" fill="%23f6c64a"/><circle cx="40" cy="32" r="14" fill="%230a0e15"/><path d="M12 70c6-14 20-22 28-22s22 8 28 22" fill="%230a0e15"/></svg>';
+        const display = document.getElementById('user-display');
+
+        display.innerHTML = `
+          <div class="profile-pill">
+            <img src="${profilePic}" alt="Profile picture">
+            <div class="welcome">Welcome, ${firstName}</div>
+          </div>
+          <div class="balance-box" aria-live="polite">
+            <div class="balance-title">Your Golden</div>
+            <div id="gold-balance" class="gold-balance-value">G: ${Number(balance||0)}₲</div>
+            <div class="gold-actions">
+              <a class="gold-action-btn" href="/buy-golden.html">🪙 Buy Golden</a>
+              <a class="gold-action-btn" href="/transfer-golden.html">💸 Transfer Golden</a>
+              <a class="gold-action-btn" href="/manage-subscriptions.html">⚙️ Manage Subscriptions</a>
+            </div>
+          </div>
+          <button class="logout-btn" onclick="logout()">Logout</button>
+        `;
+      }
+
+      // Poll balance from /api/golden-balance
+      async function fetchBalanceAndRender(user) {
+        try {
+          const r = await fetch('/api/golden-balance', { credentials: 'include' });
+          const j = await r.json();
+          if (!j.loggedIn) { renderLoggedOut(); return; }
+
+          // If panel not mounted yet, mount it
+          if (!document.getElementById('gold-balance')) {
+            renderUserPanel(j.user || user, j.balance || 0);
+          } else {
+            document.getElementById('gold-balance').textContent = `G: ${Number(j.balance||0)}₲`;
+          }
+        } catch (e) {
+          // Silent fail keeps previous value
+        }
+      }
+
+      // Initial load: /api/me then start polling /api/golden-balance
       (async () => {
         try {
           const res = await fetch('/api/me', { credentials: 'include' });
-          const user = await res.json();
-          const display = document.getElementById('user-display');
+          const me = await res.json();
 
-          if (user && user.loggedIn && user.user) {
-            const firstName = user.user.name ? user.user.name.split(' ')[0] : (user.user.email || '').split('@')[0];
-            const profilePic = user.user.photo || 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80"><circle cx="40" cy="40" r="40" fill="%23f6c64a"/><circle cx="40" cy="32" r="14" fill="%230a0e15"/><path d="M12 70c6-14 20-22 28-22s22 8 28 22" fill="%230a0e15"/></svg>';
-            const golden = (typeof user.user.golden === 'number') ? user.user.golden : 0;
-
-            display.innerHTML = `
-              <div class="profile-pill">
-                <img src="${profilePic}" alt="Profile picture">
-                <div class="welcome">Welcome, ${firstName}</div>
-              </div>
-              <div class="gold-balance" aria-live="polite" id="gold-balance">G: ${golden}₲</div>
-              <button class="gold-action-btn" onclick="location.href='/transfer-golden.html'">💸 Transfer Golden</button>
-              <button class="gold-action-btn" onclick="location.href='/subscriptions.html'">⚙️ Manage Subscriptions</button>
-              <button class="logout-btn" onclick="logout()">Logout</button>
-            `;
-
-            // Optional: Live refresh if other tabs change balance (listens for storage events)
-            window.addEventListener('storage', (e) => {
-              if (e.key === 'golden:update' && e.newValue) {
-                const v = Number(e.newValue);
-                if (!Number.isNaN(v)) {
-                  const el = document.getElementById('gold-balance');
-                  if (el) el.textContent = `G: ${v}₲`;
-                }
-              }
-            });
-
+          if (me && me.loggedIn) {
+            renderUserPanel(me.user, me.balance || 0);
+            // First refresh right away to ensure consistency with server-side hydration
+            await fetchBalanceAndRender(me.user);
+            // Poll every 10s
+            setInterval(() => fetchBalanceAndRender(me.user), 10000);
           } else {
-            display.innerHTML = `
-              <a class="login-btn" href="/login-signup.html">🔐 Login / Sign Up</a>
-              <a href="/chat-advancedai.html" class="skip-login">Skip for later</a>
-            `;
+            renderLoggedOut();
           }
         } catch (e) {
-          const display = document.getElementById('user-display');
-          display.innerHTML = `
-            <a class="login-btn" href="/login-signup.html">🔐 Login / Sign Up</a>
-            <a href="/chat-advancedai.html" class="skip-login">Skip for later</a>
-          `;
+          renderLoggedOut();
         }
       })();
 

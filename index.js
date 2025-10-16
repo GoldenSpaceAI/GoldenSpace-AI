@@ -493,7 +493,29 @@ app.post("/chat-advanced-ai", upload.single("image"), async (req, res) => {
     res.status(500).json({ error: e.message });
   }
 });
+// ==================== AI LESSONS ENDPOINT ====================
+app.post("/search-lessons", async (req, res) => {
+  try {
+    const { query } = req.body;
+    if (!query) return res.status(400).json({ error: "Missing query" });
 
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        { role: "system", content: "You are a professional teacher creating clear, educational lessons for students. Structure explanations into sections: Introduction, Explanation, Examples, and Practice." },
+        { role: "user", content: query }
+      ],
+      max_tokens: 1200,
+      temperature: 0.7,
+    });
+
+    const reply = completion.choices[0]?.message?.content || "No reply.";
+    res.json({ success: true, answer: reply });
+  } catch (e) {
+    console.error("Lesson AI error:", e);
+    res.status(500).json({ error: e.message });
+  }
+});
 // Dedicated Homework Helper Vision endpoint (for your homework-helper.html)
 app.post("/homework-helper", upload.single("image"), async (req, res) => {
   try {

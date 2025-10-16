@@ -52,9 +52,9 @@ passport.deserializeUser((obj, done) => done(null, obj));
 app.use(passport.initialize());
 app.use(passport.session());
 
-// ============ DB HELPERS ============
-const GOLDEN_DB_PATH = path.join(__dirname, "golden_database.json");
-const PAYMENT_DB_PATH = path.join(__dirname, "payment_database.json");
+// ============ DB HELPERS (Persistent Storage on Render) ============
+const GOLDEN_DB_PATH = "/data/golden_database.json";   // stored safely on persistent disk
+const PAYMENT_DB_PATH = "/data/payment_database.json"; // stored safely on persistent disk
 
 function loadGoldenDB() {
   try {

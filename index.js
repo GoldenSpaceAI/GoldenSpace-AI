@@ -151,7 +151,13 @@ const FEATURE_PRICES = {
   search_info: 4,
   homework_helper: 20,
   chat_advancedai: 20,
-  premium_monthly: 20, // used by your universal 20G lock
+  create_rocket: 4,
+  create_satellite: 4,
+  create_advanced_planet: 4,
+  your_space: 4,
+  learn_physics: 4,
+  create_planet: 4,
+  search_lessons: 10,
 };
 
 // ============ PAYMENT SYNC ============

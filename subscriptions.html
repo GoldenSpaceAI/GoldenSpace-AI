@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Subscriptions • GoldenSpaceAI</title>
+<style>
+body{
+  margin:0;
+  font-family:"Segoe UI",Roboto,sans-serif;
+  color:#fff;
+  background:url("https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=2400&auto=format&fit=crop") center/cover fixed;
+  min-height:100vh;
+  backdrop-filter:blur(8px);
+}
+.top{
+  position:sticky;top:0;
+  background:rgba(0,0,0,.75);
+  backdrop-filter:blur(8px);
+  padding:16px 20px;display:flex;align-items:center;gap:10px;
+}
+.top h1{margin:0;font-size:22px;font-weight:900;color:#f6c64a}
+.spacer{flex:1}
+a.pill{
+  padding:8px 14px;border-radius:999px;
+  background:rgba(255,255,255,.1);
+  border:1px solid rgba(255,255,255,.2);
+  color:#fff;text-decoration:none;font-weight:700;
+}
+.wrap{max-width:900px;margin:40px auto;padding:0 16px}
+.balance{
+  text-align:right;font-weight:800;color:#ffd86b;margin-bottom:20px;
+}
+.card{
+  background:rgba(0,0,0,.65);
+  border:1px solid rgba(255,255,255,.2);
+  border-radius:18px;padding:22px;margin-bottom:16px;
+  backdrop-filter:blur(8px);
+  transition:.3s;
+}
+.card:hover{transform:translateY(-2px);box-shadow:0 10px 40px rgba(0,0,0,.4);}
+.card h3{margin:0 0 8px;color:#ffd86b;font-weight:800}
+.card p{margin:0 0 6px;color:#ddd}
+.status{font-weight:700;margin-top:6px}
+.active{color:#8affae}
+.expired{color:#ff9b9b}
+button{
+  border:0;border-radius:12px;padding:10px 14px;
+  font-weight:800;cursor:pointer;margin-top:8px;
+}
+.btn-cancel{background:#ff7676;color:#2b0000}
+.btn-renew{
+  background:linear-gradient(180deg,#ffd86b,#f4b83e);
+  color:#2b2100;
+}
+.empty{text-align:center;color:#ccc;font-size:16px;margin-top:60px;}
+</style>
+</head>
+<body>
+<div class="top">
+  <h1>GoldenSpaceAI</h1>
+  <div class="spacer"></div>
+  <a class="pill" href="/">Home</a>
+  <a class="pill" href="/plans.html">Plans</a>
+</div>
+
+<div class="wrap">
+  <div class="balance">Your Balance: <span id="bal">0 G</span></div>
+  <div id="subs"></div>
+</div>
+
+<script>
+async function loadSubs(){
+  try{
+    const r=await fetch("/api/subscriptions",{credentials:"include"}).then(r=>r.json());
+    document.getElementById("bal").textContent=r.balance+" G";
+    const c=document.getElementById("subs");
+
+    if(!r.subscriptions?.length){
+      c.innerHTML="<div class='empty'>You have no active or past subscriptions.</div>";
+      return;
+    }
+
+    c.innerHTML=r.subscriptions.map(s=>{
+      const expiry=new Date(s.expiry);
+      const endDate=expiry.toLocaleDateString();
+      const nextPayment=s.active?`<p>Next Payment Due: <b>${endDate}</b></p>`:`<p>Expired on: <b>${endDate}</b></p>`;
+      const daysLeft=s.active?`Active — ${s.daysLeft} days left`:"Expired";
+
+      return `
+        <div class='card'>
+          <h3>${formatName(s.feature)}</h3>
+          <p>Cost: ${s.cost} G / month</p>
+          ${nextPayment}
+          <p class='status ${s.active?"active":"expired"}'>${daysLeft}</p>
+          ${
+            s.active
+              ? `<button class='btn-cancel' onclick="cancelSub('${s.feature}')">Cancel Auto-Renew</button>`
+              : `<button class='btn-renew' onclick="renewSub('${s.feature}',${s.cost})">Resubscribe</button>`
+          }
+        </div>
+      `;
+    }).join("");
+  }catch(e){
+    console.error(e);
+    document.getElementById("subs").innerHTML="<p class='empty'>Error loading subscriptions.</p>";
+  }
+}
+
+function formatName(k){
+  const map={
+    search_lessons:"Search Lessons",
+    search_info:"Search Info",
+    homework_helper:"Homework Helper",
+    chat_advancedai:"Chat Advanced AI"
+  };
+  return map[k]||k;
+}
+
+async function cancelSub(f){
+  if(!confirm("Cancel auto-renew for this subscription?"))return;
+  const res=await fetch("/api/cancel-subscription",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    credentials:"include",
+    body:JSON.stringify({feature:f})
+  }).then(r=>r.json());
+  if(res.success){
+    alert("✅ Subscription canceled. It will remain active until expiry.");
+    loadSubs();
+  }else{
+    alert("❌ "+(res.error||"Failed to cancel."));
+  }
+}
+
+async function renewSub(f,cost){
+  const res=await fetch("/api/unlock-feature",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    credentials:"include",
+    body:JSON.stringify({feature:f,cost})
+  }).then(r=>r.json());
+  if(res.success){
+    alert("✅ Resubscribed successfully!");
+    loadSubs();
+  }else{
+    alert("❌ "+(res.error||"Failed to resubscribe."));
+  }
+}
+
+loadSubs();
+</script>
+</body>
+</html>

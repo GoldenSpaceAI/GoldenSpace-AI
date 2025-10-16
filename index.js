@@ -13,6 +13,7 @@ import OpenAI from "openai";
 import axios from "axios";
 import multer from "multer";
 import fs from "fs";
+import nodemailer from "nodemailer";
 
 dotenv.config();
 const app = express();
@@ -98,6 +99,9 @@ function ensureUserExists(user) {
       total_golden_earned: 0,
       total_golden_spent: 0,
     };
+    saveGoldenDB(db);
+  } else {
+    db.users[id].last_login = new Date().toISOString();
     saveGoldenDB(db);
   }
 }
@@ -240,9 +244,35 @@ app.get("/api/golden-balance", (req, res) => {
   const b = getUserGoldenBalance(getUserIdentifier(req));
   res.json({ loggedIn: true, balance: b, user: req.user });
 });
+
+app.get("/api/feature-status", (req, res) => {
+  if (!req.user) return res.status(401).json({ error: "Login required" });
+  const { feature } = req.query;
+  if (!feature || !FEATURE_PRICES[feature]) {
+    return res.status(400).json({ error: "Invalid feature" });
+  }
+  const db = loadGoldenDB();
+  const id = getUserIdentifier(req);
+  const u = db.users[id];
+  if (!u?.subscriptions?.[feature]) {
+    return res.json({ feature, unlocked: false, price: FEATURE_PRICES[feature] });
+  }
+  const expiry = new Date(u.subscriptions[feature]);
+  if (expiry <= new Date()) {
+    delete u.subscriptions[feature];
+    saveGoldenDB(db);
+    return res.json({ feature, unlocked: false, price: FEATURE_PRICES[feature] });
+  }
+  const remainingHours = Math.max(0, Math.floor((expiry - new Date()) / (1000 * 60 * 60)));
+  res.json({ feature, unlocked: true, remainingHours, price: FEATURE_PRICES[feature] });
+});
+
 app.post("/api/unlock-feature", (req, res) => {
   if (!req.user) return res.status(401).json({ error: "Login required" });
   const { feature, cost } = req.body;
+  if (!feature || FEATURE_PRICES[feature] !== cost) {
+    return res.status(400).json({ error: "Invalid feature or cost" });
+  }
   const db = loadGoldenDB();
   const id = getUserIdentifier(req);
   const u = db.users[id];
@@ -285,9 +315,13 @@ app.post("/chat-advanced-ai", upload.single("image"), async (req, res) => {
     res.status(500).json({ error: e.message });
   }
 });
+
 // ===============================
 // 🛡️ ADMIN GOLDEN MANAGEMENT API
 // ===============================
+
+// ✅ define ADMIN_SECRET_KEY (needed by requireAdminAuth)
+const ADMIN_SECRET_KEY = process.env.ADMIN_SECRET_KEY || "golden-admin-secret-2024";
 
 const requireAdminAuth = (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -301,11 +335,25 @@ const requireAdminAuth = (req, res, next) => {
   next();
 };
 
-// 📊 Get all users
+// 📊 Get all users (include userId for admin page)
 app.get("/api/admin/all-users", requireAdminAuth, (req, res) => {
   const goldenDB = loadGoldenDB();
-  const users = Object.values(goldenDB.users || {});
-  const totalGolden = users.reduce((sum, u) => sum + (u.golden_balance || 0), 0);
+  const users = [];
+  for (const [userId, u] of Object.entries(goldenDB.users || {})) {
+    users.push({
+      userId,
+      name: u.name,
+      email: u.email,
+      golden_balance: u.golden_balance || 0,
+      total_golden_earned: u.total_golden_earned || 0,
+      total_golden_spent: u.total_golden_spent || 0,
+      created_at: u.created_at,
+      last_login: u.last_login,
+      provider: userId.split("@")[1]
+    });
+  }
+  users.sort((a, b) => b.golden_balance - a.golden_balance);
+  const totalGolden = users.reduce((s, u) => s + (u.golden_balance || 0), 0);
   res.json({
     success: true,
     users,
@@ -314,17 +362,31 @@ app.get("/api/admin/all-users", requireAdminAuth, (req, res) => {
   });
 });
 
-// 🔍 Search users
+// 🔍 Search users (by id/email/name)
 app.get("/api/admin/search-users", requireAdminAuth, (req, res) => {
-  const query = (req.query.query || "").toLowerCase();
+  const q = (req.query.query || "").toLowerCase();
   const goldenDB = loadGoldenDB();
-  const filtered = Object.values(goldenDB.users || {}).filter(
-    u =>
-      u.userId.toLowerCase().includes(query) ||
-      (u.email && u.email.toLowerCase().includes(query)) ||
-      (u.name && u.name.toLowerCase().includes(query))
-  );
-  res.json({ success: true, users: filtered });
+  const out = [];
+  for (const [userId, u] of Object.entries(goldenDB.users || {})) {
+    const hit =
+      userId.toLowerCase().includes(q) ||
+      (u.email && u.email.toLowerCase().includes(q)) ||
+      (u.name && u.name.toLowerCase().includes(q));
+    if (hit) {
+      out.push({
+        userId,
+        name: u.name,
+        email: u.email,
+        golden_balance: u.golden_balance || 0,
+        total_golden_earned: u.total_golden_earned || 0,
+        total_golden_spent: u.total_golden_spent || 0,
+        created_at: u.created_at,
+        last_login: u.last_login,
+        provider: userId.split("@")[1]
+      });
+    }
+  }
+  res.json({ success: true, users: out });
 });
 
 // ➕ Add Golden
@@ -335,7 +397,7 @@ app.post("/api/admin/add-golden", requireAdminAuth, (req, res) => {
 
   const user = goldenDB.users[userId];
   const previous_balance = user.golden_balance || 0;
-  user.golden_balance += Number(amount);
+  user.golden_balance = previous_balance + Number(amount);
   if (!user.transactions) user.transactions = [];
   user.transactions.push({
     type: "add",
@@ -393,9 +455,9 @@ app.post("/api/admin/set-golden", requireAdminAuth, (req, res) => {
   res.json({ success: true });
 });
 
-// 🧾 User transactions
-app.get("/api/admin/user-transactions/:id", requireAdminAuth, (req, res) => {
-  const userId = req.params.id;
+// 🧾 User transactions (🟢 match admin page path param name)
+app.get("/api/admin/user-transactions/:userId", requireAdminAuth, (req, res) => {
+  const { userId } = req.params;
   const goldenDB = loadGoldenDB();
   const user = goldenDB.users[userId];
   if (!user) return res.status(404).json({ error: "User not found" });
@@ -405,11 +467,10 @@ app.get("/api/admin/user-transactions/:id", requireAdminAuth, (req, res) => {
     transactions: user.transactions || []
   });
 });
+
 // ===============================
 // 💸 REFUND GOLDEN ENDPOINT (Namecheap Email)
 // ===============================
-import nodemailer from "nodemailer";
-
 app.post("/api/refund-golden", async (req, res) => {
   try {
     const { amount, walletAddress, currency } = req.body;
@@ -450,12 +511,12 @@ app.post("/api/refund-golden", async (req, res) => {
 
     // Configure SMTP for Namecheap’s PrivateEmail
     const transporter = nodemailer.createTransport({
-      host: "mail.privateemail.com", // Namecheap PrivateEmail SMTP host
-      port: 465, // SSL port
-      secure: true, // use SSL
+      host: "mail.privateemail.com",
+      port: 465,
+      secure: true,
       auth: {
         user: process.env.ADMIN_EMAIL || "support@goldenspaceai.space",
-        pass: process.env.ADMIN_EMAIL_PASSWORD // your PrivateEmail password
+        pass: process.env.ADMIN_EMAIL_PASSWORD
       }
     });
 
@@ -496,6 +557,81 @@ app.post("/api/refund-golden", async (req, res) => {
     console.error("❌ Refund processing failed:", error);
     res.status(500).json({ error: "Server error: " + error.message });
   }
+});
+
+// ===============================
+// 🤝 TRANSFER GOLDEN (5% fee to vault)
+// ===============================
+app.post("/api/transfer-golden", (req, res) => {
+  if (!req.user) return res.status(401).json({ error: "Login required" });
+  const { recipientEmail, amount } = req.body;
+  if (!recipientEmail || !amount || amount <= 0) {
+    return res.status(400).json({ error: "recipientEmail and positive amount required" });
+  }
+
+  const db = loadGoldenDB();
+  const senderId = getUserIdentifier(req);
+  const sender = db.users[senderId];
+  if (!sender) return res.status(404).json({ error: "Sender not found" });
+
+  const recipientId = Object.keys(db.users).find(id => db.users[id]?.email?.toLowerCase() === recipientEmail.toLowerCase());
+  if (!recipientId) return res.status(404).json({ error: "Recipient not found" });
+
+  const fee = Math.ceil(Number(amount) * 0.05);
+  const totalCost = Number(amount) + fee;
+  if ((sender.golden_balance || 0) < totalCost) {
+    return res.status(400).json({ error: "Insufficient balance for amount + fee" });
+  }
+
+  // Vault
+  const vaultId = "goldenvault@system";
+  if (!db.users[vaultId]) {
+    db.users[vaultId] = {
+      email: "vault@goldenspaceai.space",
+      name: "GoldenVault",
+      golden_balance: 0,
+      created_at: new Date().toISOString(),
+      last_login: new Date().toISOString(),
+      subscriptions: {}
+    };
+  }
+
+  // Apply balances
+  sender.golden_balance -= totalCost;
+  db.users[recipientId].golden_balance = (db.users[recipientId].golden_balance || 0) + Number(amount);
+  db.users[vaultId].golden_balance = (db.users[vaultId].golden_balance || 0) + fee;
+
+  const now = new Date().toISOString();
+  sender.transactions = sender.transactions || [];
+  db.users[recipientId].transactions = db.users[recipientId].transactions || [];
+  db.users[vaultId].transactions = db.users[vaultId].transactions || [];
+
+  sender.transactions.push({
+    type: "transfer-out",
+    amount: -totalCost,
+    fee,
+    to: recipientEmail,
+    timestamp: now
+  });
+  db.users[recipientId].transactions.push({
+    type: "transfer-in",
+    amount: Number(amount),
+    from: sender.email,
+    timestamp: now
+  });
+  db.users[vaultId].transactions.push({
+    type: "transfer-fee",
+    amount: fee,
+    from: sender.email,
+    timestamp: now
+  });
+
+  saveGoldenDB(db);
+  res.json({
+    success: true,
+    message: `Transferred ${amount}G to ${recipientEmail} (fee: ${fee}G)`,
+    newBalance: sender.golden_balance
+  });
 });
 
 // ==================== HEALTH ====================

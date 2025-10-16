@@ -1,17 +1,16 @@
 {
   "name": "goldenspaceai-backend",
   "version": "1.0.0",
-  "description": "Backend for GoldenSpaceAI",
+  "description": "GoldenSpaceAI Backend — AI + Payments + Auth + Golden System",
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "dev": "nodemon index.js"
   },
-  "author": "GoldenSpaceAI",
+  "author": "GoldenSpaceAI Team",
   "license": "MIT",
   "dependencies": {
-    "@google/generative-ai": "^0.21.0",
-    "@supabase/supabase-js": "^2.42.0",
     "axios": "^1.7.8",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
@@ -24,6 +23,9 @@
     "passport": "^0.7.0",
     "passport-github2": "^0.1.12",
     "passport-google-oauth20": "^2.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.7"
   },
   "engines": {
     "node": "22.x"

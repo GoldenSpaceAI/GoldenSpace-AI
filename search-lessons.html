@@ -1,262 +1,295 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Search Information • GoldenSpaceAI</title>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Search Lessons • GoldenSpaceAI</title>
   <style>
     :root{
       --bg:#0b1020;
-      --panel:#121831;
-      --panel-2:#0f1530;
-      --accent:#f7c948;
-      --accent-2:#f0b429;
+      --panel:#141a34;
+      --panel2:#0f1530;
+      --gold1:#f6c64a;
+      --gold2:#e7a93e;
       --text:#fdf7e7;
-      --subtle:#d9cfae;
-      --border:#262f55;
-      --chip:#151e3b;
-      --blue-ink:#a6b9ff;
+      --muted:#d2c9a8;
+      --border:#2a3155;
+      --card:#101735;
+      --green:#80ffb0;
+      --red:#ff7777;
     }
     *{box-sizing:border-box}
     body{
-      margin:0;min-height:100svh;color:var(--text);
+      margin:0;
+      font-family:"Segoe UI",Roboto,system-ui;
       background:
-        radial-gradient(1200px 600px at 80% -10%,rgba(247,201,72,.08),transparent 60%),
-        radial-gradient(1200px 700px at -10% 10%,rgba(166,185,255,.08),transparent 55%),
+        radial-gradient(1000px 600px at 80% -10%,rgba(247,201,72,.08),transparent 60%),
+        radial-gradient(1000px 600px at -10% 20%,rgba(166,185,255,.08),transparent 55%),
         var(--bg);
-      font-family:ui-sans-serif,system-ui,"Segoe UI",Roboto,Helvetica,Arial;
+      color:var(--text);
+      min-height:100vh;
     }
+
+    /* Top Bar */
     .top{
       position:sticky;top:0;z-index:10;
-      background:linear-gradient(180deg,rgba(11,16,32,.95),rgba(11,16,32,.72)60%,transparent);
+      background:linear-gradient(180deg,rgba(11,16,32,.95),rgba(11,16,32,.7) 70%,transparent);
       backdrop-filter:blur(8px);
-      padding:clamp(16px,2.5vh,24px)18px 10px;
+      padding:16px 20px;
       display:flex;align-items:center;gap:12px;
     }
     .back{
-      display:inline-flex;align-items:center;gap:8px;
-      padding:8px 14px;border-radius:999px;text-decoration:none;
-      background:var(--accent);color:#2c2100;font-weight:800;font-size:14px;
-      border:1px solid rgba(0,0,0,.12);
-      box-shadow:0 6px 22px rgba(247,201,72,.25);
-      transition:transform .2s ease,background .2s ease;
+      background:var(--gold1);color:#2c2100;
+      border-radius:999px;border:1px solid rgba(0,0,0,.15);
+      padding:8px 14px;font-weight:700;text-decoration:none;
+      box-shadow:0 6px 20px rgba(247,201,72,.25);
+      transition:.2s;
     }
-    .back:hover{background:var(--accent-2);transform:translateY(-1px);}
-    .title{
-      font-size:clamp(22px,2.7vw,28px);font-weight:900;letter-spacing:.35px;
-      color:var(--accent);text-shadow:0 0 18px rgba(247,201,72,.25);
-    }
+    .back:hover{background:var(--gold2);transform:translateY(-1px)}
+    .title{font-size:24px;font-weight:900;color:var(--gold1);text-shadow:0 0 10px rgba(247,201,72,.4)}
     .spacer{flex:1}
-    .wrap{max-width:1000px;margin:0 auto;padding:8px 16px 120px;}
-    /* ---------- GOLDEN LOCK OVERLAY ---------- */
-    .golden-overlay{
-      position:fixed;top:0;left:0;width:100%;height:100%;
-      background:rgba(11,16,32,0.95);
-      backdrop-filter:blur(10px);
+
+    .wrap{max-width:980px;margin:0 auto;padding:20px 16px 100px}
+
+    /* ========== 10G LOCK ========== */
+    .lock-overlay{
+      position:fixed;inset:0;z-index:1000;
+      background:rgba(11,16,32,0.97);
       display:flex;align-items:center;justify-content:center;
-      z-index:1000;
+      backdrop-filter:blur(10px);
     }
-    .golden-unlock{
-      background:linear-gradient(180deg,var(--panel),var(--panel-2));
+    .lock-box{
+      background:linear-gradient(180deg,var(--panel),var(--panel2));
       border:2px solid rgba(247,201,72,0.3);
       border-radius:20px;
-      padding:30px;text-align:center;
-      max-width:500px;width:90%;
-      box-shadow:0 25px 80px rgba(0,0,0,.8);
+      padding:34px;
+      max-width:500px;width:90%;text-align:center;
+      box-shadow:0 30px 100px rgba(0,0,0,.8);
     }
-    .golden-unlock .icon{font-size:64px;margin-bottom:20px;}
-    .golden-unlock h2{color:var(--accent);margin:0 0 15px;font-size:28px;}
-    .golden-unlock .description{color:var(--subtle);margin-bottom:25px;line-height:1.6;font-size:16px;}
-    .golden-unlock .price{
-      font-size:42px;font-weight:900;color:var(--accent);
-      margin:20px 0;text-shadow:0 0 15px rgba(247,201,72,0.6);
-    }
-    .golden-unlock .price span{font-size:18px;color:var(--subtle);}
+    .lock-box .icon{font-size:60px;margin-bottom:16px}
+    .lock-box h2{color:var(--gold1);margin:0 0 10px;font-size:28px}
+    .lock-box p{color:var(--muted);line-height:1.6;margin-bottom:20px}
+    .lock-box .price{font-size:38px;font-weight:900;color:var(--gold1);text-shadow:0 0 12px rgba(247,201,72,.6)}
+    .lock-box .price span{font-size:16px;color:var(--muted)}
     .unlock-btn{
-      background:linear-gradient(180deg,var(--accent),var(--accent-2));
-      color:#2c2100;border:none;border-radius:14px;
-      padding:16px 40px;font-weight:900;font-size:18px;
-      cursor:pointer;box-shadow:0 12px 35px rgba(247,201,72,0.5);
-      transition:all 0.3s ease;margin:15px 0;width:100%;
+      background:linear-gradient(180deg,var(--gold1),var(--gold2));
+      border:none;border-radius:14px;
+      color:#2c2100;font-weight:900;font-size:18px;
+      padding:16px 32px;margin:20px 0;width:100%;
+      cursor:pointer;transition:.25s;
+      box-shadow:0 12px 35px rgba(247,201,72,.5);
     }
-    .unlock-btn:hover:not(:disabled){
-      transform:translateY(-3px);
-      box-shadow:0 18px 45px rgba(247,201,72,0.7);
+    .unlock-btn:hover{transform:translateY(-3px);box-shadow:0 18px 45px rgba(247,201,72,.7)}
+    .status-message{margin-top:10px;font-size:14px}
+    .status-success{color:var(--green)}
+    .status-error{color:var(--red)}
+    .balance{color:var(--muted);margin:10px 0;font-size:15px}
+    .balance span{color:var(--gold1);font-weight:700}
+    .buy-more{color:var(--gold1);font-weight:700;text-decoration:none}
+
+    /* Search */
+    .searchBox{
+      display:flex;gap:8px;
+      background:linear-gradient(180deg,var(--panel),var(--panel2));
+      border:1px solid var(--border);
+      border-radius:16px;padding:10px;
+      box-shadow:0 15px 50px rgba(0,0,0,.45);
     }
-    .unlock-btn:disabled{opacity:.6;cursor:not-allowed;}
-    .time-remaining{
-      background:rgba(247,201,72,0.15);
-      border:1px solid rgba(247,201,72,0.3);
-      border-radius:12px;padding:15px;margin:20px 0;font-size:15px;
+    input[type=text]{
+      flex:1;background:transparent;border:0;outline:0;
+      color:var(--text);font-size:16px;padding:10px;
     }
-    .time-remaining .label{color:var(--subtle);font-size:13px;margin-bottom:6px;}
-    .time-remaining .time{
-      color:var(--accent);font-weight:900;font-size:22px;
-      text-shadow:0 0 10px rgba(247,201,72,0.5);
+    .btn{
+      background:var(--gold1);color:#2c2100;font-weight:800;border:0;border-radius:12px;
+      padding:10px 16px;cursor:pointer;
+      box-shadow:0 10px 25px rgba(247,201,72,.3);
+      transition:.2s;
     }
-    .balance-info{color:var(--subtle);font-size:14px;margin:10px 0;}
-    .balance-info .golden-amount{color:var(--accent);font-weight:800;}
-    .status-message{margin:15px 0;padding:10px;border-radius:8px;font-size:14px;}
-    .status-success{background:rgba(144,238,144,0.1);border:1px solid rgba(144,238,144,0.3);color:#90ee90;}
-    .status-error{background:rgba(255,107,107,0.1);border:1px solid rgba(255,107,107,0.3);color:#ff6b6b;}
-    /* ---------- SEARCH UI ---------- */
-    .searchBox{display:flex;gap:10px;align-items:center;
-      border:1px solid var(--border);border-radius:16px;
-      background:linear-gradient(180deg,var(--panel),var(--panel-2));
-      padding:10px;box-shadow:0 20px 60px rgba(0,0,0,.45);}
-    .searchBox input{flex:1;background:transparent;border:0;outline:0;
-      color:var(--text);font-size:16px;padding:12px;}
-    .btn{background:var(--accent);color:#2c2100;font-weight:800;
-      border:0;border-radius:12px;padding:10px 16px;cursor:pointer;
-      box-shadow:0 10px 26px rgba(247,201,72,.3);
-      transition:transform .2s ease,background .2s ease;}
-    .btn:hover{background:var(--accent-2);transform:translateY(-1px);}
-    .chips{display:flex;flex-wrap:wrap;gap:8px;margin:14px 2px 18px;}
-    .chip{padding:8px 12px;background:var(--chip);border:1px solid var(--border);
-      color:var(--blue-ink);border-radius:999px;font-size:13px;cursor:pointer;
-      transition:background .2s ease,transform .15s ease;}
-    .chip:hover{background:#1a264d;transform:translateY(-1px);}
-    .panel{border:1px solid var(--border);
-      background:linear-gradient(180deg,var(--panel),var(--panel-2));
-      border-radius:16px;overflow:hidden;
-      box-shadow:0 20px 80px rgba(0,0,0,.45);}
-    .resultsHead{display:flex;align-items:center;justify-content:space-between;
-      padding:14px 16px;border-bottom:1px solid var(--border);}
-    .muted{color:var(--subtle);font-size:13px;}
-    .results{padding:10px;}
-    .card{border:1px solid var(--border);background:#101a37;border-radius:14px;padding:14px;margin:10px 0;box-shadow:0 10px 28px rgba(0,0,0,.35);}
-    .card h3{margin:0 0 6px;font-size:18px;letter-spacing:.2px;color:var(--accent);}
-    .card p{margin:0;color:#f6edd3;line-height:1.55;}
-    .badge{font-size:11px;padding:4px 8px;border-radius:999px;letter-spacing:.3px;
-      border:1px solid var(--border);color:#ffe9a6;background:#1b254b;}
-    .badges{display:flex;gap:6px;margin-top:10px;}
-    .footnote{text-align:center;margin-top:16px;color:var(--subtle);font-size:12px;}
-    .hidden{display:none;}
+    .btn:hover{background:var(--gold2);transform:translateY(-1px)}
+    .chips{display:flex;flex-wrap:wrap;gap:8px;margin:14px 2px 18px}
+    .chip{
+      background:#161f42;border:1px solid var(--border);color:#a6b9ff;
+      border-radius:999px;padding:8px 12px;font-size:13px;cursor:pointer;
+      transition:.2s;
+    }
+    .chip:hover{background:#1e2953;transform:translateY(-1px)}
+
+    /* Lesson Cards */
+    .results{margin-top:10px}
+    .lesson-card{
+      background:linear-gradient(180deg,var(--card),#0d1533);
+      border:1px solid var(--border);
+      border-radius:16px;padding:18px;margin:10px 0;
+      box-shadow:0 10px 30px rgba(0,0,0,.4);
+    }
+    .lesson-card h3{
+      margin:0 0 8px;color:var(--gold1);font-size:20px;
+    }
+    .lesson-card p{margin:0 0 6px;line-height:1.6;color:#f6edd3}
+    .badge{display:inline-block;margin-top:6px;font-size:11px;padding:4px 8px;
+      border-radius:999px;border:1px solid var(--border);
+      color:#ffe9a6;background:#1b254b;}
+
+    .muted{color:var(--muted);font-size:13px}
+    .status{margin:6px 0;font-size:14px;color:var(--muted)}
+
+    @media(max-width:640px){
+      .lock-box{padding:20px}
+      .title{font-size:20px}
+    }
   </style>
 </head>
 <body>
   <div class="top">
-    <a class="back" href="/"><span>←</span> Home</a>
-    <div class="title">Search Information</div>
+    <a class="back" href="/">← Home</a>
+    <div class="title">Search Lessons</div>
     <div class="spacer"></div>
   </div>
 
   <div class="wrap">
-    <!-- Lock -->
-    <div id="goldenOverlay" class="golden-overlay">
-      <div class="golden-unlock">
+
+    <!-- ======= 10G LOCK OVERLAY ======= -->
+    <div id="lockOverlay" class="lock-overlay">
+      <div class="lock-box">
         <div class="icon">🔒</div>
-        <h2>Unlock Search Information</h2>
-        <p class="description">Access advanced AI search with complete summaries & insights for 30 days.</p>
-        <div class="price">10G <span>per month</span></div>
-        <div class="balance-info">
-          Your balance: <span id="userBalance" class="golden-amount">0G</span>
-        </div>
-        <div id="timeRemaining" class="time-remaining hidden">
-          <div class="label">TIME REMAINING</div>
-          <div class="time" id="remainingTime">720 hours left</div>
-        </div>
-        <button id="unlockBtn" class="unlock-btn">UNLOCK FOR 10G / MONTH</button>
-        <div id="statusMessage" class="status-message"></div>
-        <div style="margin-top:20px;">
-          <a href="/buy-golden.html" style="color:var(--accent);text-decoration:none;font-weight:600;">💰 Need more Golden? Buy here →</a>
-        </div>
+        <h2>Unlock Educational Lessons</h2>
+        <p>Gain unlimited access to GoldenSpaceAI’s advanced AI lesson generator — delivering complete study explanations, examples, and practice insights for 30 days.</p>
+        <div class="price">10G <span>/ month</span></div>
+        <div class="balance">Your Golden Balance: <span id="balance">0G</span></div>
+        <button id="unlockBtn" class="unlock-btn">UNLOCK FOR 10G/MONTH</button>
+        <div id="statusMsg" class="status-message"></div>
+        <a href="/buy-golden.html" class="buy-more">💰 Buy More Golden</a>
       </div>
     </div>
 
-    <!-- Interface -->
-    <div id="searchInterface">
+    <!-- ======= SEARCH INTERFACE ======= -->
+    <div id="lessonInterface" style="display:none">
       <div class="searchBox">
-        <input id="q" type="text" placeholder="Search GoldenSpaceAI…" autofocus />
-        <button id="go" class="btn">Search</button>
+        <input id="query" type="text" placeholder="Search lessons — e.g. Newton’s Laws, Photosynthesis, Fractions..." autofocus/>
+        <button id="searchBtn" class="btn">Search</button>
       </div>
 
       <div class="chips" id="chips">
-        <button class="chip">Planets</button><button class="chip">Black holes</button>
-        <button class="chip">Exoplanets</button><button class="chip">James Webb discoveries</button>
-        <button class="chip">Rocket equation</button><button class="chip">Orbit types</button>
-        <button class="chip">Dark matter</button><button class="chip">Astrobiology</button>
+        <div class="chip">Fractions</div>
+        <div class="chip">Photosynthesis</div>
+        <div class="chip">Newton’s Laws</div>
+        <div class="chip">Grammar Rules</div>
+        <div class="chip">Electric Circuits</div>
+        <div class="chip">Water Cycle</div>
+        <div class="chip">Human Cells</div>
+        <div class="chip">The Roman Empire</div>
+        <div class="chip">Periodic Table</div>
+        <div class="chip">Algebra Basics</div>
       </div>
 
-      <div class="panel">
-        <div class="resultsHead">
-          <div class="muted" id="status">Type a query or pick a topic.</div>
-          <div class="muted" id="count"></div>
-        </div>
-        <div id="results" class="results"></div>
-      </div>
-      <div class="footnote">Results are AI-generated summaries. Verify important facts.</div>
+      <div id="status" class="status">Type a topic or choose one.</div>
+      <div id="results" class="results"></div>
     </div>
   </div>
 
   <script>
-    const FEATURE_NAME='search_info';
-    const FEATURE_COST=10;
-    const UNLOCK_HOURS=720; // 30 days
+    const FEATURE="search_lessons";
+    const COST=10;
 
-    const overlay=document.getElementById('goldenOverlay');
-    const ui=document.getElementById('searchInterface');
-    const userBalanceEl=document.getElementById('userBalance');
-    const timeBox=document.getElementById('timeRemaining');
-    const timeEl=document.getElementById('remainingTime');
+    const lockOverlay=document.getElementById('lockOverlay');
+    const lessonInterface=document.getElementById('lessonInterface');
     const unlockBtn=document.getElementById('unlockBtn');
-    const msg=document.getElementById('statusMessage');
+    const balanceEl=document.getElementById('balance');
+    const statusMsg=document.getElementById('statusMsg');
+    const q=document.getElementById('query');
+    const go=document.getElementById('searchBtn');
+    const results=document.getElementById('results');
+    const statusEl=document.getElementById('status');
 
     async function init(){
       try{
-        const u=await fetch('/api/me',{credentials:'include'}).then(r=>r.json());
-        if(!u.loggedIn){showMsg('Please log in to use this feature.','error');return;}
-        const b=await fetch('/api/golden-balance',{credentials:'include'}).then(r=>r.json());
-        userBalanceEl.textContent=b.balance+'G';
-        const f=await fetch(`/api/feature-status?feature=${FEATURE_NAME}`,{credentials:'include'}).then(r=>r.json());
-        if(f.unlocked){unlockUI(f.remainingHours);}else{overlay.style.display='flex';ui.style.display='none';}
-      }catch(e){showMsg('Error loading page.','error');}
+        const me=await fetch('/api/me',{credentials:'include'}).then(r=>r.json());
+        if(!me.loggedIn){statusMsg.textContent="Please log in.";statusMsg.classList.add('status-error');return;}
+        const bal=await fetch('/api/golden-balance',{credentials:'include'}).then(r=>r.json());
+        balanceEl.textContent=bal.balance+'G';
+        const feat=await fetch(`/api/feature-status?feature=${FEATURE}`,{credentials:'include'}).then(r=>r.json());
+        if(feat.unlocked){unlockUI();}else{lockOverlay.style.display='flex';}
+      }catch(e){console.error(e);}
     }
 
     async function unlock(){
-      unlockBtn.disabled=true;showMsg('Processing...','');
+      unlockBtn.disabled=true;
+      statusMsg.textContent='⏳ Processing...';
       try{
-        const r=await fetch('/api/unlock-feature',{
+        const res=await fetch('/api/unlock-feature',{
           method:'POST',
           headers:{'Content-Type':'application/json'},
           credentials:'include',
-          body:JSON.stringify({feature:FEATURE_NAME,cost:FEATURE_COST})
+          body:JSON.stringify({feature:FEATURE,cost:COST})
         });
-        const d=await r.json();
-        if(d.success){
-          showMsg('✅ Unlocked for 30 days.','success');
-          userBalanceEl.textContent=d.newBalance+'G';
-          setTimeout(()=>unlockUI(UNLOCK_HOURS),1200);
-        }else{showMsg('❌ '+(d.error||'Unlock failed'), 'error');unlockBtn.disabled=false;}
-      }catch(e){showMsg('❌ Network error.','error');unlockBtn.disabled=false;}
+        const data=await res.json();
+        if(data.success){
+          statusMsg.textContent='✅ Lessons unlocked!';
+          statusMsg.className='status-message status-success';
+          setTimeout(()=>unlockUI(),1000);
+        }else{
+          statusMsg.textContent='❌ '+(data.error||'Failed');
+          statusMsg.className='status-message status-error';
+          unlockBtn.disabled=false;
+        }
+      }catch(err){
+        statusMsg.textContent='❌ Network error';
+        statusMsg.className='status-message status-error';
+        unlockBtn.disabled=false;
+      }
     }
 
-    function unlockUI(hours){
-      overlay.style.display='none';ui.style.display='block';
-      if(hours>0){timeBox.classList.remove('hidden');updateTime(hours);countdown(hours);}
+    function unlockUI(){
+      lockOverlay.style.display='none';
+      lessonInterface.style.display='block';
     }
-    function updateTime(h){const d=Math.floor(h/24),hr=h%24;timeEl.textContent=`${d}d ${hr}h left`;}
-    function countdown(h){let left=h;const t=setInterval(()=>{left--;if(left<=0){clearInterval(t);location.reload();}else updateTime(left);},3600000);}
-    function showMsg(t,type){msg.textContent=t;msg.className='status-message';if(type==='success')msg.classList.add('status-success');if(type==='error')msg.classList.add('status-error');}
-    unlockBtn.addEventListener('click',unlock);
 
-    // --- Search ---
-    const q=document.getElementById('q'),go=document.getElementById('go'),res=document.getElementById('results'),status=document.getElementById('status'),count=document.getElementById('count');
-    document.getElementById('chips').addEventListener('click',e=>{if(e.target.classList.contains('chip')){q.value=e.target.textContent;search();}});
-    go.addEventListener('click',search);q.addEventListener('keydown',e=>{if(e.key==='Enter')search();});
-    function loading(){res.innerHTML='<div class="card"><p>Loading...</p></div>';status.textContent='Searching…';count.textContent='';}
+    unlockBtn.onclick=unlock;
+
+    // ========== SEARCH FUNCTION ==========
     async function search(){
-      const query=q.value.trim();if(!query)return;loading();go.disabled=true;
+      const topic=(q.value||'').trim();
+      if(!topic)return;
+      go.disabled=true;
+      statusEl.textContent='Searching...';
+      results.innerHTML='';
       try{
-        const r=await fetch('/search-info',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:`Give a concise summary of: ${query}.`})});
-        const d=await r.json();const t=d.answer||d.reply||'';const parts=t.split(/\n{2,}/).filter(Boolean);
-        res.innerHTML=parts.map((p,i)=>`<div class="card"><h3>${i===0?'Overview':'Detail '+i}</h3><p>${p}</p><div class="badges"><span class="badge">AI summary</span><span class="badge">GoldenSpaceAI</span></div></div>`).join('');
-        status.textContent='Completed';count.textContent=parts.length+' sections';
-      }catch(e){res.innerHTML='<div class="card"><p style="color:#ffd27a">Error: '+e.message+'</p></div>';status.textContent='Failed';}
-      finally{go.disabled=false;}
+        const res=await fetch('/search-lessons',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({query:`Create a full educational lesson about ${topic}, including introduction, explanation, examples, and practice section.`})
+        });
+        const data=await res.json();
+        const txt=(data.answer||data.reply||'').trim();
+        if(!txt){throw new Error('Empty response');}
+        renderLesson(txt);
+        statusEl.textContent='Completed';
+      }catch(err){
+        results.innerHTML=`<div class="lesson-card"><p style="color:#ffbdbd">Error: ${err.message}</p></div>`;
+        statusEl.textContent='Failed';
+      }finally{go.disabled=false;}
     }
 
-    init();
+    function renderLesson(text){
+      const parts=text.split(/\n{2,}/).map(p=>p.trim()).filter(Boolean);
+      results.innerHTML=parts.map((p,i)=>`
+        <div class="lesson-card">
+          <h3>${i===0?'Introduction':'Section '+i}</h3>
+          <p>${p}</p>
+          <span class="badge">Lesson Generated</span>
+        </div>`).join('');
+    }
+
+    go.onclick=search;
+    q.addEventListener('keydown',e=>{if(e.key==='Enter')search();});
+    document.getElementById('chips').onclick=e=>{
+      if(e.target.classList.contains('chip')){
+        q.value=e.target.textContent;
+        search();
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded',init);
   </script>
 </body>
 </html>

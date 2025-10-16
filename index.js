@@ -872,7 +872,51 @@ app.post("/api/transfer-golden", (req, res) => {
     newBalance: sender.golden_balance,
   });
 });
+// ===============================
+// 📅 SUBSCRIPTION STATUS ROUTE
+// ===============================
+app.get("/api/subscriptions", (req, res) => {
+  if (!req.user) return res.status(401).json({ error: "Login required" });
 
+  const db = loadGoldenDB();
+  const id = `${req.user.id}@${req.user.provider}`;
+  const user = db.users[id];
+  if (!user) return res.status(404).json({ error: "User not found" });
+
+  const now = new Date();
+  const subs = Object.entries(user.subscriptions || {}).map(([key, expiry]) => {
+    const exp = new Date(expiry);
+    const active = exp > now;
+    const daysLeft = Math.max(0, Math.ceil((exp - now) / (1000 * 60 * 60 * 24)));
+    return {
+      feature: key,
+      cost: FEATURE_PRICES[key] || 0,
+      expiry: expiry,
+      active,
+      daysLeft
+    };
+  });
+
+  res.json({ subscriptions: subs, balance: user.golden_balance || 0 });
+});
+// ===============================
+// ❌ CANCEL SUBSCRIPTION
+// ===============================
+app.post("/api/cancel-subscription", (req, res) => {
+  if (!req.user) return res.status(401).json({ error: "Login required" });
+
+  const { feature } = req.body;
+  if (!feature) return res.status(400).json({ error: "Feature required" });
+
+  const db = loadGoldenDB();
+  const id = `${req.user.id}@${req.user.provider}`;
+  const user = db.users[id];
+  if (!user || !user.subscriptions) return res.status(404).json({ error: "User or subscription not found" });
+
+  delete user.subscriptions[feature];
+  saveGoldenDB(db);
+  res.json({ success: true });
+});
 // ============ HEALTH ============
 app.get("/health", (_req, res) => {
   const db = loadGoldenDB();

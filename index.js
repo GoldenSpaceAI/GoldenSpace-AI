@@ -285,7 +285,126 @@ app.post("/chat-advanced-ai", upload.single("image"), async (req, res) => {
     res.status(500).json({ error: e.message });
   }
 });
+// ===============================
+// 🛡️ ADMIN GOLDEN MANAGEMENT API
+// ===============================
 
+const requireAdminAuth = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ error: "Admin authentication required" });
+  }
+  const token = authHeader.substring(7);
+  if (token !== ADMIN_SECRET_KEY) {
+    return res.status(403).json({ error: "Invalid admin token" });
+  }
+  next();
+};
+
+// 📊 Get all users
+app.get("/api/admin/all-users", requireAdminAuth, (req, res) => {
+  const goldenDB = loadGoldenDB();
+  const users = Object.values(goldenDB.users || {});
+  const totalGolden = users.reduce((sum, u) => sum + (u.golden_balance || 0), 0);
+  res.json({
+    success: true,
+    users,
+    totalUsers: users.length,
+    totalGolden
+  });
+});
+
+// 🔍 Search users
+app.get("/api/admin/search-users", requireAdminAuth, (req, res) => {
+  const query = (req.query.query || "").toLowerCase();
+  const goldenDB = loadGoldenDB();
+  const filtered = Object.values(goldenDB.users || {}).filter(
+    u =>
+      u.userId.toLowerCase().includes(query) ||
+      (u.email && u.email.toLowerCase().includes(query)) ||
+      (u.name && u.name.toLowerCase().includes(query))
+  );
+  res.json({ success: true, users: filtered });
+});
+
+// ➕ Add Golden
+app.post("/api/admin/add-golden", requireAdminAuth, (req, res) => {
+  const { userId, amount, reason } = req.body;
+  const goldenDB = loadGoldenDB();
+  if (!goldenDB.users[userId]) return res.status(404).json({ error: "User not found" });
+
+  const user = goldenDB.users[userId];
+  const previous_balance = user.golden_balance || 0;
+  user.golden_balance += Number(amount);
+  if (!user.transactions) user.transactions = [];
+  user.transactions.push({
+    type: "add",
+    amount: Number(amount),
+    previous_balance,
+    new_balance: user.golden_balance,
+    reason,
+    timestamp: new Date().toISOString()
+  });
+  saveGoldenDB(goldenDB);
+  res.json({ success: true });
+});
+
+// ➖ Subtract Golden
+app.post("/api/admin/subtract-golden", requireAdminAuth, (req, res) => {
+  const { userId, amount, reason } = req.body;
+  const goldenDB = loadGoldenDB();
+  if (!goldenDB.users[userId]) return res.status(404).json({ error: "User not found" });
+
+  const user = goldenDB.users[userId];
+  const previous_balance = user.golden_balance || 0;
+  user.golden_balance = Math.max(0, previous_balance - Number(amount));
+  if (!user.transactions) user.transactions = [];
+  user.transactions.push({
+    type: "subtract",
+    amount: -Number(amount),
+    previous_balance,
+    new_balance: user.golden_balance,
+    reason,
+    timestamp: new Date().toISOString()
+  });
+  saveGoldenDB(goldenDB);
+  res.json({ success: true });
+});
+
+// ⚙️ Set Golden
+app.post("/api/admin/set-golden", requireAdminAuth, (req, res) => {
+  const { userId, balance, reason } = req.body;
+  const goldenDB = loadGoldenDB();
+  if (!goldenDB.users[userId]) return res.status(404).json({ error: "User not found" });
+
+  const user = goldenDB.users[userId];
+  const previous_balance = user.golden_balance || 0;
+  user.golden_balance = Number(balance);
+  if (!user.transactions) user.transactions = [];
+  user.transactions.push({
+    type: "set",
+    amount: Number(balance) - previous_balance,
+    previous_balance,
+    new_balance: user.golden_balance,
+    reason,
+    timestamp: new Date().toISOString()
+  });
+  saveGoldenDB(goldenDB);
+  res.json({ success: true });
+});
+
+// 🧾 User transactions
+app.get("/api/admin/user-transactions/:id", requireAdminAuth, (req, res) => {
+  const userId = req.params.id;
+  const goldenDB = loadGoldenDB();
+  const user = goldenDB.users[userId];
+  if (!user) return res.status(404).json({ error: "User not found" });
+
+  res.json({
+    success: true,
+    transactions: user.transactions || []
+  });
+});
 // ==================== HEALTH ====================
 app.get("/health", (req, res) => {
   const db = loadGoldenDB();

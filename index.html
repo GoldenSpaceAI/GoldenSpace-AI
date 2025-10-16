@@ -10,24 +10,19 @@
     <meta name="description" content="GoldenSpaceAI is your smart AI assistant for learning, chatting, and creating. Explore a new universe of knowledge in a golden suit.">
     <meta name="keywords" content="GoldenSpaceAI, AI assistant, GPT alternative, chat AI, Golden AI, learning AI">
 
-    <!-- Favicon & Logo -->
+    <!-- Favicon -->
     <link rel="icon" href="/logo.png" type="image/png" />
 
-    <!-- Open Graph -->
+    <!-- Social Preview -->
     <meta property="og:title" content="GoldenSpaceAI · Advanced AI Assistant">
     <meta property="og:description" content="Explore GoldenSpaceAI – powerful, affordable, and easy-to-use AI assistant.">
     <meta property="og:url" content="https://www.goldenspaceai.space/">
     <meta property="og:image" content="https://www.goldenspaceai.space/logo.png">
     <meta property="og:type" content="website">
-
-    <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="GoldenSpaceAI · Advanced AI Assistant">
-    <meta name="twitter:description" content="Your golden gateway to AI chat, learning, and creativity.">
-    <meta name="twitter:image" content="https://www.goldenspaceai.space/logo.png">
 
     <style>
-      :root{
+      :root {
         --bg:#0a0e15; --panel:#0f1624; --panel2:#0b1320; --border:#1f2a40;
         --text:#e7f4e9; --muted:#cfc6a5; --gold:#f6c64a; --gold2:#eb8b36;
         --shadow:0 22px 70px rgba(0,0,0,.5); --radius:18px; --max:1200px;
@@ -35,159 +30,138 @@
       *{box-sizing:border-box} html,body{height:100%}
       body{
         margin:0;color:var(--text);
-        font:16px/1.6 Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+        font:16px/1.6 "Segoe UI", Roboto, system-ui, -apple-system, sans-serif;
         background:
           linear-gradient(180deg,rgba(10,14,21,.55),rgba(10,14,21,.55)),
           radial-gradient(1400px 800px at 50% -20%,rgba(246,198,74,.30),transparent 70%),
-          /* Universe wallpaper */
           url("https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2000&auto=format&fit=crop")
           center/cover no-repeat fixed;
-        -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
+        -webkit-font-smoothing:antialiased;
       }
       a{color:inherit;text-decoration:none}
-
-      /* Top bar */
-      .top{position:sticky;top:0;z-index:30;backdrop-filter:blur(10px);
+      .top{
+        position:sticky;top:0;z-index:30;backdrop-filter:blur(10px);
         background:linear-gradient(180deg,rgba(10,14,21,.85),rgba(10,14,21,.5) 60%,transparent);
-        border-bottom:1px solid var(--border);padding:max(12px, env(safe-area-inset-top)) 16px 10px;
-        display:flex;align-items:center;gap:12px;}
+        border-bottom:1px solid var(--border);
+        padding:max(12px, env(safe-area-inset-top)) 16px 10px;
+        display:flex;align-items:center;gap:12px;
+      }
       .brand{display:flex;align-items:center;gap:10px;font-weight:900;color:var(--gold);
-        font-size:clamp(20px,2.2vw,26px);text-shadow:0 0 16px rgba(246,198,74,.25);} 
+        font-size:clamp(20px,2.2vw,26px);text-shadow:0 0 16px rgba(246,198,74,.25);}
       .dot{width:10px;height:10px;border-radius:50%;
         background:radial-gradient(circle at 30% 30%,#ffd86a,#f6c64a 50%,#eb8b36 90%);
-        box-shadow:0 0 18px rgba(246,198,74,.5);} 
+        box-shadow:0 0 18px rgba(246,198,74,.5);}
       .spacer{flex:1}
       .toplinks{display:flex;gap:8px;flex-wrap:wrap}
       .toplinks a{padding:8px 12px;border-radius:999px;border:1px solid var(--border);
         color:var(--muted);font-weight:800;font-size:14px;}
       @media(max-width:880px){.toplinks{display:none}}
-
-      /* Shell */
       .wrap{max-width:var(--max);margin:22px auto;padding:0 16px;}
       .layout{display:grid;gap:18px;grid-template-columns:280px 1fr 230px;}
       @media(max-width:980px){.layout{grid-template-columns:1fr}}
-
-      /* Left tiles */
       .leftCol{display:grid;gap:14px;align-content:start;}
       .tile{background:linear-gradient(180deg,var(--panel),var(--panel2));
         border:1px solid var(--border);border-radius:var(--radius);
-        padding:14px 16px;box-shadow:var(--shadow);} 
-      .tile h3{margin:0 0 4px;font-size:16px;color:var(--gold);display:flex;gap:8px;align-items:center;}
+        padding:14px 16px;box-shadow:var(--shadow);}
+      .tile h3{margin:0 0 4px;font-size:16px;color:var(--gold);}
       .tile p{margin:0;color:#dfe7f1;font-size:14px}
-
-      /* Hero */
       .hero{background:linear-gradient(180deg,rgba(14,21,34,.9),rgba(11,17,28,.9));
         border:1px solid var(--border);border-radius:calc(var(--radius)+2px);
         padding:clamp(18px,4vw,26px);box-shadow:var(--shadow);text-align:center;}
-      .hero h1{margin:6px 0 10px;font-size:clamp(26px,5.2vw,54px);line-height:1.08;color:#fff7dc;}
-      .hero p{margin:0 0 16px;color:#f2ecd2;font-size:clamp(14px,2.2vw,18px);} 
+      .hero h1{margin:6px 0 10px;font-size:clamp(26px,5.2vw,54px);color:#fff7dc;}
+      .hero p{margin:0 0 16px;color:#f2ecd2;}
       .cta{display:flex;flex-wrap:wrap;gap:12px;justify-content:center}
-      .btn{display:inline-block;padding:12px 16px;border-radius:12px;font-weight:900;cursor:pointer;
-        border:1px solid rgba(0,0,0,.2);} 
-      .btn.gold{background:linear-gradient(180deg,var(--gold),var(--gold2));
-        color:#1b1300;box-shadow:0 10px 26px rgba(246,198,74,.28);} 
-      .btn.ghost{background:transparent;color:var(--muted);border:1px solid var(--border);} 
-      .quickRow{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:10px;}
-      .chip{display:inline-block;padding:8px 12px;border-radius:999px;
-        background:rgba(255,255,255,.06);border:1px solid var(--border);
-        color:#c9d1e6;font-weight:800;font-size:14px;}
-
-      /* Right nav + Google */
+      .btn{display:inline-block;padding:12px 16px;border-radius:12px;font-weight:900;cursor:pointer;border:1px solid rgba(0,0,0,.2);}
+      .btn.gold{background:linear-gradient(180deg,var(--gold),var(--gold2));color:#1b1300;box-shadow:0 10px 26px rgba(246,198,74,.28);}
+      .btn.ghost{background:transparent;color:var(--muted);border:1px solid var(--border);}
       .rightCol{position:sticky;top:86px;align-self:start;display:grid;gap:12px;height:fit-content}
       .sideNav{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--border);
         border-radius:var(--radius);padding:12px;box-shadow:var(--shadow);display:grid;gap:10px;}
       .navbtn{display:flex;align-items:center;justify-content:center;padding:10px 12px;
         border-radius:999px;border:1px solid var(--border);color:#d7e2f4;background:rgba(255,255,255,.03);font-weight:900;}
-      .login-btn{display:flex;align-items:center;justify-content:center;gap:10px;background:var(--gold);color:#1b1300;
-        border-radius:999px;padding:10px 12px;font-weight:800;border:1px solid rgba(0,0,0,.12);box-shadow:0 6px 18px rgba(246,198,74,.35);} 
-      .skip-login { color: var(--muted); font-size: 14px; text-decoration: underline; margin-top: 8px; display: inline-block; }
-
-      /* User Profile Styles */
-      .profile-pill{display:flex;align-items:center;gap:10px;justify-content:center;margin-bottom:10px}
-      .profile-pill img{width:32px;height:32px;border-radius:50%;object-fit:cover;border:1px solid var(--border)}
-      .profile-pill .welcome{font-weight:800;color:var(--gold)}
-      .logout-btn{background:transparent;color:var(--muted);border:1px solid var(--border);padding:6px 12px;border-radius:999px;font-size:12px;cursor:pointer}
-
-      /* Golden Balance Display */
-      .golden-balance {
-        background: linear-gradient(180deg, rgba(246, 198, 74, 0.15), rgba(246, 198, 74, 0.05));
-        border: 1px solid rgba(246, 198, 74, 0.3);
-        border-radius: var(--radius);
-        padding: 12px;
-        text-align: center;
-        margin-bottom: 10px;
-        box-shadow: 0 0 20px rgba(246, 198, 74, 0.1);
-      }
-      .golden-balance .label {
-        font-size: 12px;
-        color: var(--muted);
-        margin-bottom: 4px;
-      }
-      .golden-balance .amount {
-        font-size: 24px;
-        font-weight: 900;
-        color: var(--gold);
-        text-shadow: 0 0 10px rgba(246, 198, 74, 0.5);
-      }
-      .golden-balance .currency {
-        font-size: 14px;
-        color: var(--gold);
-        margin-left: 2px;
-      }
-      .buy-golden-btn {
-        background: linear-gradient(180deg, var(--gold), var(--gold2));
-        color: #1b1300;
-        border: none;
-        border-radius: 999px;
-        padding: 12px 16px;
-        font-weight: 900;
-        cursor: pointer;
-        width: 100%;
-        margin-top: 8px;
-        box-shadow: 0 6px 20px rgba(246, 198, 74, 0.4);
-        transition: all 0.3s ease;
-      }
-      .buy-golden-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(246, 198, 74, 0.6);
-      }
-
-      /* Sections: Your Space Pack + ChatAI Pack */
-      .section{margin:24px auto 8px}
-      .section h2{margin:0 0 10px;font-size:20px;color:#fff7dc}
-      .grid{display:grid;gap:14px;grid-template-columns:repeat(12,1fr)}
-      .card{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--border);
-        border-radius:16px;padding:14px;box-shadow:var(--shadow)}
-      .mini{grid-column:span 4}
-      .large{grid-column:span 12}
-      @media(max-width:900px){.mini{grid-column:span 12}.large{grid-column:span 12}}
-      .card h3{margin:0 0 6px;font-size:16px;color:var(--gold)}
-      .card p{margin:0 0 10px;color:#dfe7f1;font-size:14px}
-      .card .row{display:flex;gap:10px;flex-wrap:wrap}
-      .badge{display:inline-block;padding:6px 10px;border:1px solid var(--border);border-radius:999px;color:#cfc6a5;font-weight:800;font-size:12px}
-
-      /* Modal */
-      .modal{position:fixed;inset:0;z-index:1000;display:none;align-items:center;justify-content:center;
-        background:rgba(0,0,0,.55);backdrop-filter:blur(4px)}
-      .modal.on{display:flex}
-      .modal-card{width:min(720px,92vw);background:linear-gradient(180deg,#0e1728,#0a1120);
-        border:1px solid #213052;border-radius:18px;padding:18px;box-shadow:0 22px 70px rgba(0,0,0,.6);color:#e7f4e9}
-      .modal-h{margin:4px 0 8px;font-size:20px;color:var(--gold)}
-      .modal-b{font-size:15px;color:#dfe7f1;min-height:120px}
-      .modal-actions{display:flex;justify-content:space-between;gap:10px;margin-top:12px}
-      .btn-sm{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px;border-radius:12px;font-weight:800;cursor:pointer;border:1px solid var(--border);color:#e7f4e9;background:rgba(255,255,255,.04)}
-      .btn-gold{background:linear-gradient(180deg,var(--gold),var(--gold2));color:#1a1200;border-color:rgba(0,0,0,.25)}
-      .btn-ghost{background:transparent;color:#cfc6a5;border:1px solid var(--border)}
-      .upsell{display:none;background:linear-gradient(180deg,rgba(246,198,74,.08),rgba(246,198,74,.02));
-        border:1px solid rgba(246,198,74,.28);padding:12px;border-radius:14px;margin-top:12px}
-      .note{font-size:12px;color:#bfc9de;opacity:.9;margin-top:6px}
-
       footer{max-width:var(--max);margin:24px auto 36px;padding:0 16px;
         color:#aeb7c5;font-size:12px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;
         border-top:1px solid var(--border);padding-top:14px;}
       footer a{color:#e7f4e9;text-decoration:none}
+
+      /* ✅ USER DASHBOARD */
+      .user-header {
+        background: radial-gradient(circle at 70% 20%, rgba(247,201,72,.25), rgba(20,24,48,0.95));
+        padding: 30px 20px;
+        border-radius: 20px;
+        text-align: center;
+        color: #fff;
+        box-shadow: 0 15px 45px rgba(0,0,0,.45);
+        margin: 25px auto;
+        max-width: 600px;
+      }
+      .profile-pill {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        margin-bottom: 10px;
+      }
+      .profile-pill img {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        border: 3px solid rgba(247,201,72,.6);
+        box-shadow: 0 0 25px rgba(247,201,72,.25);
+      }
+      .welcome {
+        font-size: 22px;
+        font-weight: 800;
+        color: #f6c64a;
+      }
+      .gold-balance {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: linear-gradient(180deg, #f6c64a, #e0a93a);
+        color: #201600;
+        padding: 8px 16px;
+        border-radius: 12px;
+        font-weight: 800;
+        font-size: 15px;
+        box-shadow: 0 5px 25px rgba(247,201,72,.4);
+        margin-top: 6px;
+        cursor: pointer;
+      }
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: center;
+        margin-top: 24px;
+      }
+      button, .navbtn {
+        font-family: "Segoe UI", Roboto, sans-serif;
+        border: none;
+        border-radius: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        padding: 10px 18px;
+        font-size: 15px;
+        transition: 0.25s;
+      }
+      .buy-golden-btn {
+        background: linear-gradient(180deg, #ffd86b, #f4b83e);
+        color: #2b2100;
+        box-shadow: 0 10px 25px rgba(247,201,72,.3);
+      }
+      .manage-btn {
+        background: linear-gradient(180deg, #6aa8ff, #3c7de6);
+        color: #ffffff;
+        box-shadow: 0 10px 25px rgba(0,100,255,.3);
+      }
+      .logout-btn {
+        background: #ff6b6b;
+        color: #fff;
+      }
     </style>
   </head>
+
   <body>
     <div class="top">
       <div class="brand"><span class="dot"></span> GoldenSpaceAI</div>
@@ -200,197 +174,101 @@
         <a href="/plans.html">Plans</a>
         <a href="/privacy.html">Privacy</a>
         <a href="/terms.html">Terms</a>
-        <a href="/refund.html">Refund</a>
       </div>
     </div>
 
     <main class="wrap">
-      <section class="layout" aria-label="Homepage">
-        <aside class="leftCol" aria-label="Highlights">
+      <section class="layout">
+        <aside class="leftCol">
           <div class="tile"><h3>🧠 Chat with AI</h3><p>Company-grade chat with Gemini.</p></div>
-          <div class="tile"><h3>🔎 Learn Info</h3><p>Golden summaries and topic insights — powered by Gemini.</p></div>
-          <div class="tile"><h3>📘 Learn Physics</h3><p>Curated lessons and Gemini tutoring support.</p></div>
-          <div class="tile"><h3>🪐 Create Your Planet</h3><p>Design oceans, rings, moons — export your own world.</p></div>
+          <div class="tile"><h3>🔎 Learn Info</h3><p>Golden summaries powered by Gemini.</p></div>
+          <div class="tile"><h3>📘 Learn Physics</h3><p>Interactive lessons and AI tutors.</p></div>
+          <div class="tile"><h3>🪐 Create Planet</h3><p>Design planets, oceans, and moons.</p></div>
         </aside>
 
-        <section class="hero" aria-label="Welcome">
+        <section class="hero">
           <h1>Welcome to <span style="color:var(--gold)">GoldenSpaceAI</span></h1>
-          <p>Ask AI, explore knowledge, learn physics, and design worlds — all in a golden suit.</p>
+          <p>Explore, chat, learn, and build your world — powered by golden intelligence.</p>
           <div class="cta">
-            <a class="btn gold" href="/advanced-ai.html">Launch Chat with AI ✨</a>
+            <a class="btn gold" href="/chat-advancedai.html">Launch AI ✨</a>
             <a class="btn ghost" href="/plans.html">View Plans</a>
-            <a class="btn ghost" href="/search-info.html">Quick Search</a>
-            <a class="btn ghost" href="/privacy.html">View Legal Pages</a>
-          </div>
-          <div class="quickRow">
-            <span class="chip">Private by design</span>
-            <span class="chip">Server-secured Gemini</span>
-            <span class="chip">Mobile ready</span>
           </div>
         </section>
 
-        <aside class="rightCol" aria-label="Navigate">
+        <aside class="rightCol">
           <nav class="sideNav">
-            <a class="navbtn" href="/advanced-ai.html">Chat with AI</a>
             <a class="navbtn" href="/search-info.html">Learn Info</a>
             <a class="navbtn" href="/learn-physics.html">Learn Physics</a>
-            <a class="navbtn" href="/create-planet.html">Create Planet</a>
-            <a class="navbtn" href="/plans.html">See Plans</a>
-            <a class="navbtn" href="/privacy.html">Legal Pages</a>
+            <a class="navbtn" href="/search-lessons.html">Lessons</a>
+            <a class="navbtn" href="/plans.html">Plans</a>
           </nav>
-          <div id="user-display" style="text-align: center;">
-            <!-- This will be populated by JavaScript -->
-          </div>
+
+          <div id="user-display" style="margin-top:20px;text-align:center;"></div>
         </aside>
-      </section>
-
-      <section class="section" aria-label="Your Space Pack">
-        <h2>🌌 Your Space Pack</h2>
-        <div class="grid">
-          <div class="card mini">
-            <h3>🚀 Create Your Rocket</h3>
-            <p>Learn rocket stages & parts. Ready to build? Start your custom design.</p>
-            <div class="row">
-              <span class="badge">Physics-based</span>
-              <button class="btn btn-ghost" data-open="rocket">Learn</button>
-              <button class="btn gold" onclick="location.href='/create-rocket.html'">Build</button>
-            </div>
-          </div>
-          <div class="card mini">
-            <h3>🛰️ Create Your Satellite</h3>
-            <p>Understand payloads, buses & orbits. Then assemble your satellite.</p>
-            <div class="row">
-              <span class="badge">Orbit chooser</span>
-              <button class="btn btn-ghost" data-open="satellite">Learn</button>
-              <button class="btn gold" onclick="location.href='/create-satellite.html'">Build</button>
-            </div>
-          </div>
-          <div class="card mini">
-            <h3>🌍 Create Advanced Planet</h3>
-            <p>Advanced planet designer: atmosphere, gravity, rings, moons & biomes.</p>
-            <div class="row">
-              <span class="badge">Advanced editor</span>
-              <button class="btn btn-ghost" data-open="planet">Learn</button>
-              <button class="btn gold" onclick="location.href='/create-advanced-planet.html'">Build</button>
-            </div>
-          </div>
-
-          <div class="card large">
-            <h3>🪐 Create Your Universe (Hub)</h3>
-            <p>Build your own space world: up to 3 galaxies, 10 planets, 2 rockets & 2 satellites. Place planets you made into your universe.</p>
-            <div class="row">
-              <span class="badge">Universe hub</span>
-              <button class="btn btn-ghost" data-open="universe">Learn</button>
-              <button class="btn gold" onclick="location.href='/your-space.html'">Create Your Universe</button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="section" aria-label="ChatAI Pack">
-        <h2>🤖 ChatAI Pack</h2>
-        <div class="grid">
-          <div class="card mini">
-            <h3>📸 Solve Homework (Images)</h3>
-            <p>Upload a page; get step-by-step help. (Daily caps by plan.)</p>
-            <div class="row">
-              <button class="btn gold" onclick="location.href='/homework-helper.html'">Open</button>
-            </div>
-          </div>
-          <div class="card mini">
-            <h3>🧠 Chat Advanced AI</h3>
-            <p>Deep reasoning, longer context chat powered by Gemini.</p>
-            <div class="row">
-              <button class="btn gold" onclick="location.href='/chat-advancedai.html'">Open</button>
-            </div>
-          </div>
-          <div class="card mini">
-            <h3>📚 Search Educational Lessons</h3>
-            <p>Find and summarize topics fast with clean golden summaries.</p>
-            <div class="row">
-              <button class="btn gold" onclick="location.href='/search-lessons.html'">Open</button>
-            </div>
-          </div>
-        </div>
       </section>
     </main>
 
-    <div id="infoModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="infoTitle"></div>
-
-    <footer role="contentinfo">
-      <div>©️ <span id="yr"></span> GoldenSpaceAI</div>
+    <footer>
+      <div>© <span id="yr"></span> GoldenSpaceAI</div>
       <div>
         <a href="/privacy.html">Privacy</a> · 
         <a href="/terms.html">Terms</a> · 
-        <a href="/refund.html">Refund</a> ·       
-        <a href="/about-us.html">About Us</a> ·
-        <a href="/contact.html">Contact Us</a>
+        <a href="/refund.html">Refund</a> · 
+        <a href="/about-us.html">About</a>
       </div>
     </footer>
 
     <script>
       document.getElementById('yr').textContent = new Date().getFullYear();
-      
-     <!-- 🌕 USER DASHBOARD -->
-<div id="user-display"></div>
 
+      async function loadUser() {
+        try {
+          const res = await fetch('/api/me', { credentials: 'include' });
+          const user = await res.json();
+          const display = document.getElementById('user-display');
 
+          if (user.loggedIn && user.user) {
+            const balanceRes = await fetch('/api/golden-balance', { credentials: 'include' });
+            const balanceData = await balanceRes.json();
+            const goldenBalance = balanceData.balance || 0;
 
-<script>
-(async () => {
-  try {
-    const res = await fetch('/api/me', { credentials: 'include' });
-    const user = await res.json();
-    const display = document.getElementById('user-display');
+            const firstName = user.user.name
+              ? user.user.name.split(' ')[0]
+              : user.user.email.split('@')[0];
 
-    if (user.loggedIn && user.user) {
-      // Get Golden balance
-      const balanceRes = await fetch('/api/golden-balance', { credentials: 'include' });
-      const balanceData = await balanceRes.json();
-      const goldenBalance = balanceData.balance || 0;
+            const profilePic =
+              user.user.photo ||
+              'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80"><circle cx="40" cy="40" r="40" fill="%23f6c64a"/><circle cx="40" cy="32" r="14" fill="%230a0e15"/><path d="M12 70c6-14 20-22 28-22s22 8 28 22" fill="%230a0e15"/></svg>';
 
-      const firstName = user.user.name
-        ? user.user.name.split(' ')[0]
-        : user.user.email.split('@')[0];
+            display.innerHTML = `
+              <div class="user-header">
+                <div class="profile-pill">
+                  <img src="${profilePic}" alt="Profile">
+                  <div>
+                    <div class="welcome">Welcome, ${firstName}</div>
+                    <div class="gold-balance" onclick="location.href='/buy-golden.html'">🌕 ${goldenBalance} G</div>
+                  </div>
+                </div>
+                <div class="actions">
+                  <button class="buy-golden-btn" onclick="location.href='/buy-golden.html'">💰 Buy Golden(G)</button>
+                  <a class="navbtn" href="/transfer-golden.html">💸 Transfer(G)</a>
+                  <button class="manage-btn" onclick="location.href='/subscriptions.html'">📅 Manage Subscriptions</button>
+                  <button class="logout-btn" onclick="logout()">Logout</button>
+                </div>
+              </div>`;
+          } else {
+            display.innerHTML = `<p style="color:#ccc;">Please log in to access your dashboard.</p>`;
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      }
 
-      const profilePic =
-        user.user.photo ||
-        'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80"><circle cx="40" cy="40" r="40" fill="%23f6c64a"/><circle cx="40" cy="32" r="14" fill="%230a0e15"/><path d="M12 70c6-14 20-22 28-22s22 8 28 22" fill="%230a0e15"/></svg>';
+      function logout() {
+        fetch('/logout', { method: 'POST', credentials: 'include' }).then(() => location.reload());
+      }
 
-      display.innerHTML = `
-        <div class="user-header">
-          <div class="profile-pill">
-            <img src="${profilePic}" alt="Profile picture">
-            <div>
-              <div class="welcome">Welcome, ${firstName}</div>
-              <div class="gold-balance" onclick="location.href='/buy-golden.html'">
-                🌕 ${goldenBalance} G
-              </div>
-            </div>
-          </div>
-
-          <div class="actions">
-            <button class="buy-golden-btn" onclick="location.href='/buy-golden.html'">
-              💰 Buy More Golden(G)
-            </button>
-            <a class="navbtn" href="/transfer-golden.html">💸 Transfer(G)</a>
-            <button class="manage-btn" onclick="location.href='/subscriptions.html'">
-              📅 Manage Subscriptions
-            </button>
-            <button class="logout-btn" onclick="logout()">Logout</button>
-          </div>
-        </div>
-      `;
-    } else {
-      display.innerHTML = `<p style="text-align:center;color:#ccc;">Please log in to access your dashboard.</p>`;
-    }
-  } catch (err) {
-    console.error(err);
-    document.getElementById('user-display').innerHTML =
-      '<p style="text-align:center;color:#f88;">Error loading user info.</p>';
-  }
-})();
-</script>
-
+      loadUser();
+    </script>
   </body>
 </html>

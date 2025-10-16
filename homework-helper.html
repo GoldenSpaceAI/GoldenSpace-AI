@@ -380,268 +380,256 @@
     </main>
 
     <script>
-      // ==================== UNIVERSAL 20G LOCK FUNCTIONS ====================
+/* ===========================================================
+   UNIVERSAL 20G LOCK SYSTEM + HOMEWORK SOLVER (v3.0)
+   Powered by GoldenSpaceAI • Vision + Text Integration
+   =========================================================== */
 
-      // Global variables to track which feature is being unlocked
-      let current20GFeature = '';
-      let current20GCallback = null;
+let current20GFeature = '';
+let current20GCallback = null;
+let hasPremiumAccess = false; // tracks if user unlocked the 20G feature
 
-      // Function to show the universal 20G lock
-      function show20GLock(featureName, featureTitle, featureDescription, unlockCallback) {
-          current20GFeature = featureName;
-          current20GCallback = unlockCallback;
-          
-          // Update the lock UI with feature-specific info
-          document.getElementById('lockFeatureTitle').textContent = featureTitle;
-          document.getElementById('lockFeatureDescription').textContent = featureDescription;
-          
-          // Update balance and show overlay
-          update20GBalance();
-          document.getElementById('goldenLockOverlay20G').style.display = 'flex';
-      }
+// ======== UNIVERSAL 20G LOCK HANDLING ========
 
-      // Function to close the lock
-      function closeUniversalLock() {
-          document.getElementById('goldenLockOverlay20G').style.display = 'none';
-          resetUniversalLock();
-      }
+// Show the lock
+function show20GLock(featureName, featureTitle, featureDescription, unlockCallback) {
+  current20GFeature = featureName;
+  current20GCallback = unlockCallback;
 
-      // Function to reset lock state
-      function resetUniversalLock() {
-          current20GFeature = '';
-          current20GCallback = null;
-          const statusDiv = document.getElementById('unlockStatus20G');
-          statusDiv.style.display = 'none';
-          statusDiv.className = 'status-message';
-      }
+  document.getElementById('lockFeatureTitle').textContent = featureTitle;
+  document.getElementById('lockFeatureDescription').textContent = featureDescription;
 
-      // Function to unlock universal 20G feature
-      async function unlockUniversal20G() {
-          const unlockBtn = document.querySelector('#goldenLockOverlay20G .subscribe-btn');
-          const statusDiv = document.getElementById('unlockStatus20G');
-          
-          try {
-              unlockBtn.disabled = true;
-              unlockBtn.textContent = 'PROCESSING...';
-              statusDiv.innerHTML = '⏳ Processing your request...';
-              statusDiv.className = 'status-message processing';
-              statusDiv.style.display = 'block';
+  update20GBalance();
+  document.getElementById('goldenLockOverlay20G').style.display = 'flex';
+}
 
-              // Check user's balance
-              const balanceResponse = await fetch('/api/golden-balance');
-              const balanceData = await balanceResponse.json();
-              
-              if (!balanceData.loggedIn) {
-                  statusDiv.innerHTML = '❌ Please log in to unlock features';
-                  statusDiv.className = 'status-message error';
-                  unlockBtn.disabled = false;
-                  unlockBtn.textContent = 'UNLOCK FOR 20G/MONTH';
-                  return;
-              }
+// Close lock
+function closeUniversalLock() {
+  document.getElementById('goldenLockOverlay20G').style.display = 'none';
+  resetUniversalLock();
+}
 
-              // Check if user has enough Golden
-              if (balanceData.balance < 20) {
-                  statusDiv.innerHTML = '❌ Insufficient Golden balance. You need 20G to unlock this feature.';
-                  statusDiv.className = 'status-message error';
-                  unlockBtn.disabled = false;
-                  unlockBtn.textContent = 'UNLOCK FOR 20G/MONTH';
-                  return;
-              }
+// Reset
+function resetUniversalLock() {
+  current20GFeature = '';
+  current20GCallback = null;
+  const statusDiv = document.getElementById('unlockStatus20G');
+  statusDiv.style.display = 'none';
+  statusDiv.className = 'status-message';
+}
 
-              // Unlock the universal 20G feature
-              const unlockResponse = await fetch('/api/unlock-feature', {
-                  method: 'POST',
-                  headers: {
-                      'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify({
-                      feature: 'premium_monthly',
-                      cost: 20
-                  })
-              });
+// Unlock the feature
+async function unlockUniversal20G() {
+  const unlockBtn = document.querySelector('#goldenLockOverlay20G .subscribe-btn');
+  const statusDiv = document.getElementById('unlockStatus20G');
+  try {
+    unlockBtn.disabled = true;
+    unlockBtn.textContent = 'PROCESSING...';
+    statusDiv.innerHTML = '⏳ Processing your request...';
+    statusDiv.className = 'status-message processing';
+    statusDiv.style.display = 'block';
 
-              const unlockData = await unlockResponse.json();
+    const balanceResponse = await fetch('/api/golden-balance');
+    const balanceData = await balanceResponse.json();
 
-              if (unlockData.success) {
-                  statusDiv.innerHTML = '✅ Homework Helper unlocked successfully! You now have 30 days of access.';
-                  statusDiv.className = 'status-message success';
-                  
-                  // Update the displayed balance
-                  document.getElementById('currentUserBalance20G').textContent = unlockData.newBalance + 'G';
-                  
-                  // Close the overlay after success and call the feature-specific callback
-                  setTimeout(() => {
-                      closeUniversalLock();
-                      if (current20GCallback) {
-                          current20GCallback();
-                      }
-                  }, 2000);
-                  
-              } else {
-                  statusDiv.innerHTML = '❌ ' + (unlockData.error || 'Failed to unlock feature');
-                  statusDiv.className = 'status-message error';
-                  unlockBtn.disabled = false;
-                  unlockBtn.textContent = 'UNLOCK FOR 20G/MONTH';
-              }
+    if (!balanceData.loggedIn) {
+      statusDiv.innerHTML = '❌ Please log in to unlock features';
+      statusDiv.className = 'status-message error';
+      unlockBtn.disabled = false;
+      unlockBtn.textContent = 'UNLOCK FOR 20G/MONTH';
+      return;
+    }
 
-          } catch (error) {
-              console.error('Error unlocking feature:', error);
-              statusDiv.innerHTML = '❌ Network error. Please try again.';
-              statusDiv.className = 'status-message error';
-              unlockBtn.disabled = false;
-              unlockBtn.textContent = 'UNLOCK FOR 20G/MONTH';
-          }
-      }
+    if (balanceData.balance < 20) {
+      statusDiv.innerHTML = '❌ Insufficient Golden balance (need 20G).';
+      statusDiv.className = 'status-message error';
+      unlockBtn.disabled = false;
+      unlockBtn.textContent = 'UNLOCK FOR 20G/MONTH';
+      return;
+    }
 
-      // Update balance for 20G overlay
-      function update20GBalance() {
-          fetch('/api/golden-balance')
-              .then(response => response.json())
-              .then(data => {
-                  if (data.loggedIn) {
-                      document.getElementById('currentUserBalance20G').textContent = data.balance + 'G';
-                  }
-              })
-              .catch(error => {
-                  console.error('Error fetching balance:', error);
-              });
-      }
+    const unlockResponse = await fetch('/api/unlock-feature', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ feature: 'premium_monthly', cost: 20 })
+    });
 
-      // Close lock when clicking outside
-      document.getElementById('goldenLockOverlay20G').addEventListener('click', function(e) {
-          if (e.target === this) {
-              closeUniversalLock();
-          }
-      });
+    const unlockData = await unlockResponse.json();
 
-      // ==================== HOMEWORK HELPER FEATURE INTEGRATION ====================
+    if (unlockData.success) {
+      statusDiv.innerHTML = '✅ Homework Helper unlocked successfully!';
+      statusDiv.className = 'status-message success';
+      document.getElementById('currentUserBalance20G').textContent = unlockData.newBalance + 'G';
 
-      // Show the universal lock when page loads
-      document.addEventListener('DOMContentLoaded', function() {
-          // Check if user has access to this premium feature
-          checkHomeworkHelperAccess();
-      });
+      setTimeout(() => {
+        closeUniversalLock();
+        hasPremiumAccess = true;
+        if (current20GCallback) current20GCallback();
+      }, 2000);
+    } else {
+      statusDiv.innerHTML = '❌ ' + (unlockData.error || 'Failed to unlock feature');
+      statusDiv.className = 'status-message error';
+      unlockBtn.disabled = false;
+      unlockBtn.textContent = 'UNLOCK FOR 20G/MONTH';
+    }
+  } catch (error) {
+    console.error('Error unlocking feature:', error);
+    statusDiv.innerHTML = '❌ Network error. Please try again.';
+    statusDiv.className = 'status-message error';
+    unlockBtn.disabled = false;
+    unlockBtn.textContent = 'UNLOCK FOR 20G/MONTH';
+  }
+}
 
-      // Check if Homework Helper feature is unlocked
-      async function checkHomeworkHelperAccess() {
-          try {
-              const response = await fetch('/api/feature-status?feature=premium_monthly', {
-                  credentials: 'include'
-              });
-              const data = await response.json();
-              
-              if (data.unlocked) {
-                  // Feature is unlocked - enable the homework helper
-                  enableHomeworkHelper();
-              } else {
-                  // Feature is locked - show the universal lock
-                  showUniversalLockForHomework();
-              }
-          } catch (error) {
-              console.error('Feature check error:', error);
-              showUniversalLockForHomework();
-          }
-      }
+// Update displayed balance
+function update20GBalance() {
+  fetch('/api/golden-balance')
+    .then(r => r.json())
+    .then(data => {
+      if (data.loggedIn)
+        document.getElementById('currentUserBalance20G').textContent = data.balance + 'G';
+    })
+    .catch(err => console.error('Error fetching balance:', err));
+}
 
-      // Show universal lock for Homework Helper
-      function showUniversalLockForHomework() {
-          show20GLock(
-              'premium_monthly',
-              'Homework Helper Locked',
-              'Access our AI homework solver with image recognition and step-by-step explanations',
-              enableHomeworkHelper
-          );
-      }
+// Close lock if clicked outside
+document.getElementById('goldenLockOverlay20G').addEventListener('click', function (e) {
+  if (e.target === this) closeUniversalLock();
+});
 
-      // Enable the Homework Helper feature after unlocking
-      function enableHomeworkHelper() {
-          console.log('Homework Helper enabled!');
-          // The homework helper interface will work normally now
-      }
+// ======== ACCESS CONTROL ========
 
-      // ==================== HOMEWORK SOLVER SYSTEM ====================
-      const fileInput = document.getElementById('file');
-      const preview = document.getElementById('preview');
-      const removeBtn = document.getElementById('removeImg');
-      const msg = document.getElementById('msg');
-      const statusEl = document.getElementById('status');
-      const resultEl = document.getElementById('result');
+async function checkHomeworkHelperAccess() {
+  try {
+    const res = await fetch('/api/feature-status?feature=premium_monthly', { credentials: 'include' });
+    const data = await res.json();
+    hasPremiumAccess = data.unlocked;
+    if (!data.unlocked) showUniversalLockForHomework();
+    return data.unlocked;
+  } catch (e) {
+    console.error('Access check failed:', e);
+    showUniversalLockForHomework();
+    return false;
+  }
+}
 
-      let currentFile = null;
+function showUniversalLockForHomework() {
+  show20GLock(
+    'premium_monthly',
+    'Homework Helper Locked',
+    'Access our AI homework solver with image recognition and explanations',
+    enableHomeworkHelper
+  );
+}
 
-      function renderPreview(){
-          preview.innerHTML = '';
-          if(!currentFile){
-              const d = document.createElement('div');
-              d.className = 'status';
-              d.textContent = 'No image yet';
-              preview.appendChild(d);
-              removeBtn.style.display = 'none';
-              return;
-          }
-          const img = document.createElement('img');
-          img.alt = 'preview';
-          img.src = URL.createObjectURL(currentFile);
-          preview.appendChild(img);
-          removeBtn.style.display = 'inline-flex';
-      }
+function enableHomeworkHelper() {
+  console.log('Homework Helper enabled');
+}
 
-      document.getElementById('openCam').addEventListener('click', ()=> fileInput.click());
-      document.getElementById('choose').addEventListener('click', ()=> fileInput.click());
-      removeBtn.addEventListener('click', ()=>{ currentFile = null; renderPreview(); });
+// ======== IMAGE & MESSAGE HANDLING ========
 
-      fileInput.addEventListener('change', ()=>{
-          const f = fileInput.files?.[0];
-          if (f && f.type.startsWith('image/')) currentFile = f;
-          renderPreview();
-      });
+const fileInput = document.getElementById('file');
+const preview = document.getElementById('preview');
+const removeBtn = document.getElementById('removeImg');
+const msg = document.getElementById('msg');
+const statusEl = document.getElementById('status');
+const resultEl = document.getElementById('result');
+let currentFile = null;
 
-      document.getElementById('send').addEventListener('click', async ()=>{
-          // Check if feature is unlocked first
-          const hasAccess = await checkHomeworkHelperAccess();
-          if (!hasAccess) return;
+function renderPreview() {
+  preview.innerHTML = '';
+  if (!currentFile) {
+    const d = document.createElement('div');
+    d.className = 'status';
+    d.textContent = 'No image yet';
+    preview.appendChild(d);
+    removeBtn.style.display = 'none';
+    return;
+  }
+  const img = document.createElement('img');
+  img.alt = 'preview';
+  img.src = URL.createObjectURL(currentFile);
+  preview.appendChild(img);
+  removeBtn.style.display = 'inline-flex';
+}
 
-          const text = (msg.value||'').trim();
-          if(!currentFile){
-              statusEl.textContent = 'Please add an image';
-              return;
-          }
-          statusEl.innerHTML = '<span class="spinner"></span> Analyzing image with GPT-4o...';
-          resultEl.style.display = 'none';
-          resultEl.textContent = '';
+document.getElementById('openCam').addEventListener('click', () => fileInput.click());
+document.getElementById('choose').addEventListener('click', () => fileInput.click());
+removeBtn.addEventListener('click', () => { currentFile = null; renderPreview(); });
+fileInput.addEventListener('change', () => {
+  const f = fileInput.files?.[0];
+  if (f && f.type.startsWith('image/')) currentFile = f;
+  renderPreview();
+});
 
-          const fd = new FormData();
-          fd.append('image', currentFile);
-          fd.append('q', text || 'Solve this homework step by step and explain your reasoning.');
-          fd.append('model', 'gpt-4o'); // FORCE GPT-4o FOR IMAGE VISION
+// ======== TYPEWRITER EFFECT ========
+function typeWriterEffect(el, text, speed = 25) {
+  el.textContent = '';
+  let i = 0;
+  (function type() {
+    if (i < text.length) {
+      el.textContent += text.charAt(i);
+      i++;
+      setTimeout(type, speed);
+    }
+  })();
+}
 
-          try{
-              const res = await fetch('/chat-advanced-ai', { 
-                  method:'POST', 
-                  body: fd, 
-                  credentials: 'include' 
-              });
-              
-              const data = await res.json().catch(()=> ({}));
+// ======== THINKING INDICATOR ========
+function startThinking() {
+  let dots = 0;
+  statusEl.textContent = 'Thinking';
+  const interval = setInterval(() => {
+    dots = (dots + 1) % 4;
+    statusEl.textContent = 'Thinking' + '.'.repeat(dots);
+  }, 400);
+  return interval;
+}
 
-              if(!res.ok){
-                  statusEl.textContent = data?.error ? ('Error: ' + data.error) : ('Server error ('+res.status+')');
-                  return;
-              }
-              
-              statusEl.textContent = 'Solved with GPT-4o Vision ✅';
-              resultEl.textContent = data.reply || data.answer || 'No reply received';
-              resultEl.style.display = 'block';
-          }catch(e){
-              console.error(e);
-              statusEl.textContent = 'Request failed: ' + (e?.message || e);
-          }
-      });
+// ======== SOLVE HANDLER ========
+document.getElementById('send').addEventListener('click', async () => {
+  const text = (msg.value || '').trim();
+  if (!currentFile) {
+    statusEl.textContent = 'Please add an image';
+    return;
+  }
 
-      // Initialize
-      document.addEventListener('DOMContentLoaded', function() {
-          renderPreview();
-      });
-    </script>
+  const hasAccess = await checkHomeworkHelperAccess();
+  const model = hasAccess ? 'gpt-4o' : 'gpt-4o-mini';
+
+  const fd = new FormData();
+  fd.append('image', currentFile);
+  fd.append('q', text || 'Solve this homework step by step and explain.');
+  fd.append('model', model);
+
+  resultEl.style.display = 'none';
+  resultEl.textContent = '';
+  const thinking = startThinking();
+
+  try {
+    const res = await fetch('/chat-advanced-ai', { method: 'POST', body: fd, credentials: 'include' });
+    clearInterval(thinking);
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      statusEl.textContent = data?.error ? 'Error: ' + data.error : 'Server error (' + res.status + ')';
+      return;
+    }
+
+    statusEl.textContent = `✅ Solved with ${model.toUpperCase()} Vision`;
+    resultEl.style.display = 'block';
+    typeWriterEffect(resultEl, data.reply || data.answer || 'No reply received', 25);
+  } catch (e) {
+    clearInterval(thinking);
+    console.error(e);
+    statusEl.textContent = 'Request failed: ' + (e?.message || e);
+  }
+});
+
+// ======== INIT ========
+document.addEventListener('DOMContentLoaded', () => {
+  renderPreview();
+  checkHomeworkHelperAccess();
+});
+</script>
   </body>
 </html>

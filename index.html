@@ -5,160 +5,111 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
     <meta name="theme-color" content="#0a0e15" />
 
-    <!-- SEO -->
     <title>GoldenSpaceAI · Advanced AI Assistant</title>
     <meta name="description" content="GoldenSpaceAI is your smart AI assistant for learning, chatting, and creating. Explore a new universe of knowledge in a golden suit.">
-    <meta name="keywords" content="GoldenSpaceAI, AI assistant, GPT alternative, chat AI, Golden AI, learning AI">
+    <meta name="keywords" content="GoldenSpaceAI, AI assistant, GPT, Gemini, Golden AI">
 
-    <!-- Favicon -->
     <link rel="icon" href="/logo.png" type="image/png" />
-
-    <!-- Social Preview -->
-    <meta property="og:title" content="GoldenSpaceAI · Advanced AI Assistant">
-    <meta property="og:description" content="Explore GoldenSpaceAI – powerful, affordable, and easy-to-use AI assistant.">
-    <meta property="og:url" content="https://www.goldenspaceai.space/">
-    <meta property="og:image" content="https://www.goldenspaceai.space/logo.png">
-    <meta property="og:type" content="website">
-    <meta name="twitter:card" content="summary_large_image">
 
     <style>
       :root {
         --bg:#0a0e15; --panel:#0f1624; --panel2:#0b1320; --border:#1f2a40;
         --text:#e7f4e9; --muted:#cfc6a5; --gold:#f6c64a; --gold2:#eb8b36;
-        --shadow:0 22px 70px rgba(0,0,0,.5); --radius:18px; --max:1200px;
+        --radius:18px; --shadow:0 22px 70px rgba(0,0,0,.5);
       }
-      *{box-sizing:border-box} html,body{height:100%}
-      body{
-        margin:0;color:var(--text);
-        font:16px/1.6 "Segoe UI", Roboto, system-ui, -apple-system, sans-serif;
+      *{box-sizing:border-box}
+      body {
+        margin:0; color:var(--text);
+        font:16px/1.6 "Segoe UI", Roboto, system-ui;
         background:
           linear-gradient(180deg,rgba(10,14,21,.55),rgba(10,14,21,.55)),
-          radial-gradient(1400px 800px at 50% -20%,rgba(246,198,74,.30),transparent 70%),
+          radial-gradient(1400px 800px at 50% -20%,rgba(246,198,74,.25),transparent 70%),
           url("https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2000&auto=format&fit=crop")
           center/cover no-repeat fixed;
-        -webkit-font-smoothing:antialiased;
       }
       a{color:inherit;text-decoration:none}
-      .top{
-        position:sticky;top:0;z-index:30;backdrop-filter:blur(10px);
-        background:linear-gradient(180deg,rgba(10,14,21,.85),rgba(10,14,21,.5) 60%,transparent);
+      .top {
+        position:sticky;top:0;z-index:20;
+        backdrop-filter:blur(10px);
+        background:linear-gradient(180deg,rgba(10,14,21,.85),rgba(10,14,21,.4) 70%,transparent);
         border-bottom:1px solid var(--border);
-        padding:max(12px, env(safe-area-inset-top)) 16px 10px;
         display:flex;align-items:center;gap:12px;
+        padding:12px 16px;
       }
-      .brand{display:flex;align-items:center;gap:10px;font-weight:900;color:var(--gold);
-        font-size:clamp(20px,2.2vw,26px);text-shadow:0 0 16px rgba(246,198,74,.25);}
+      .brand{display:flex;align-items:center;gap:10px;color:var(--gold);
+        font-weight:900;font-size:22px;text-shadow:0 0 15px rgba(246,198,74,.25);}
       .dot{width:10px;height:10px;border-radius:50%;
-        background:radial-gradient(circle at 30% 30%,#ffd86a,#f6c64a 50%,#eb8b36 90%);
-        box-shadow:0 0 18px rgba(246,198,74,.5);}
+        background:radial-gradient(circle at 30% 30%,#ffd86a,#f6c64a 50%,#eb8b36 90%);}
       .spacer{flex:1}
-      .toplinks{display:flex;gap:8px;flex-wrap:wrap}
+      .toplinks{display:flex;gap:8px;flex-wrap:wrap;}
       .toplinks a{padding:8px 12px;border-radius:999px;border:1px solid var(--border);
         color:var(--muted);font-weight:800;font-size:14px;}
       @media(max-width:880px){.toplinks{display:none}}
-      .wrap{max-width:var(--max);margin:22px auto;padding:0 16px;}
+
+      /* ===== Layout ===== */
+      .wrap{max-width:1200px;margin:22px auto;padding:0 16px;}
       .layout{display:grid;gap:18px;grid-template-columns:280px 1fr 230px;}
       @media(max-width:980px){.layout{grid-template-columns:1fr}}
-      .leftCol{display:grid;gap:14px;align-content:start;}
+
       .tile{background:linear-gradient(180deg,var(--panel),var(--panel2));
         border:1px solid var(--border);border-radius:var(--radius);
         padding:14px 16px;box-shadow:var(--shadow);}
-      .tile h3{margin:0 0 4px;font-size:16px;color:var(--gold);}
-      .tile p{margin:0;color:#dfe7f1;font-size:14px}
+      .tile h3{margin:0 0 4px;color:var(--gold);}
+      .tile p{margin:0;color:#dfe7f1;font-size:14px;}
       .hero{background:linear-gradient(180deg,rgba(14,21,34,.9),rgba(11,17,28,.9));
-        border:1px solid var(--border);border-radius:calc(var(--radius)+2px);
-        padding:clamp(18px,4vw,26px);box-shadow:var(--shadow);text-align:center;}
-      .hero h1{margin:6px 0 10px;font-size:clamp(26px,5.2vw,54px);color:#fff7dc;}
-      .hero p{margin:0 0 16px;color:#f2ecd2;}
+        border:1px solid var(--border);border-radius:20px;
+        padding:28px;text-align:center;box-shadow:var(--shadow);}
+      .hero h1{margin:0 0 10px;font-size:clamp(26px,5vw,50px);color:#fff7dc;}
+      .hero p{color:#f2ecd2;margin:0 0 18px;}
       .cta{display:flex;flex-wrap:wrap;gap:12px;justify-content:center}
-      .btn{display:inline-block;padding:12px 16px;border-radius:12px;font-weight:900;cursor:pointer;border:1px solid rgba(0,0,0,.2);}
-      .btn.gold{background:linear-gradient(180deg,var(--gold),var(--gold2));color:#1b1300;box-shadow:0 10px 26px rgba(246,198,74,.28);}
+      .btn{display:inline-block;padding:12px 16px;border-radius:12px;font-weight:900;
+        cursor:pointer;border:1px solid rgba(0,0,0,.2);}
+      .btn.gold{background:linear-gradient(180deg,var(--gold),var(--gold2));
+        color:#1b1300;box-shadow:0 10px 26px rgba(246,198,74,.28);}
       .btn.ghost{background:transparent;color:var(--muted);border:1px solid var(--border);}
-      .rightCol{position:sticky;top:86px;align-self:start;display:grid;gap:12px;height:fit-content}
-      .sideNav{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--border);
-        border-radius:var(--radius);padding:12px;box-shadow:var(--shadow);display:grid;gap:10px;}
-      .navbtn{display:flex;align-items:center;justify-content:center;padding:10px 12px;
-        border-radius:999px;border:1px solid var(--border);color:#d7e2f4;background:rgba(255,255,255,.03);font-weight:900;}
-      footer{max-width:var(--max);margin:24px auto 36px;padding:0 16px;
-        color:#aeb7c5;font-size:12px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;
+
+      .sideNav{background:linear-gradient(180deg,var(--panel),var(--panel2));
+        border:1px solid var(--border);border-radius:var(--radius);
+        padding:12px;display:grid;gap:10px;box-shadow:var(--shadow);}
+      .navbtn{padding:10px;border-radius:999px;text-align:center;
+        background:rgba(255,255,255,.05);color:#fff;font-weight:800;}
+
+      footer{max-width:1200px;margin:24px auto 36px;padding:0 16px;
+        color:#aeb7c5;font-size:12px;display:flex;justify-content:space-between;
         border-top:1px solid var(--border);padding-top:14px;}
       footer a{color:#e7f4e9;text-decoration:none}
 
-      /* ✅ USER DASHBOARD */
+      /* ===== USER DASHBOARD ===== */
       .user-header {
         background: radial-gradient(circle at 70% 20%, rgba(247,201,72,.25), rgba(20,24,48,0.95));
-        padding: 30px 20px;
-        border-radius: 20px;
+        padding: 26px 20px;
+        border-radius: 18px;
         text-align: center;
         color: #fff;
         box-shadow: 0 15px 45px rgba(0,0,0,.45);
         margin: 25px auto;
         max-width: 600px;
       }
-      .profile-pill {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 14px;
-        margin-bottom: 10px;
-      }
+      .profile-pill {display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:10px;}
       .profile-pill img {
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        border: 3px solid rgba(247,201,72,.6);
-        box-shadow: 0 0 25px rgba(247,201,72,.25);
+        width:60px;height:60px;border-radius:50%;
+        border:3px solid rgba(247,201,72,.6);
       }
-      .welcome {
-        font-size: 22px;
-        font-weight: 800;
-        color: #f6c64a;
-      }
+      .welcome{font-size:20px;font-weight:800;color:var(--gold);}
       .gold-balance {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        background: linear-gradient(180deg, #f6c64a, #e0a93a);
-        color: #201600;
-        padding: 8px 16px;
-        border-radius: 12px;
-        font-weight: 800;
-        font-size: 15px;
-        box-shadow: 0 5px 25px rgba(247,201,72,.4);
-        margin-top: 6px;
-        cursor: pointer;
+        display:inline-flex;align-items:center;gap:6px;
+        background:linear-gradient(180deg,#f6c64a,#e0a93a);
+        color:#201600;padding:8px 16px;border-radius:12px;
+        font-weight:800;font-size:15px;margin-top:6px;
       }
-      .actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        justify-content: center;
-        margin-top: 24px;
-      }
-      button, .navbtn {
-        font-family: "Segoe UI", Roboto, sans-serif;
-        border: none;
-        border-radius: 12px;
-        font-weight: 700;
-        cursor: pointer;
-        padding: 10px 18px;
-        font-size: 15px;
-        transition: 0.25s;
-      }
-      .buy-golden-btn {
-        background: linear-gradient(180deg, #ffd86b, #f4b83e);
-        color: #2b2100;
-        box-shadow: 0 10px 25px rgba(247,201,72,.3);
-      }
-      .manage-btn {
-        background: linear-gradient(180deg, #6aa8ff, #3c7de6);
-        color: #ffffff;
-        box-shadow: 0 10px 25px rgba(0,100,255,.3);
-      }
-      .logout-btn {
-        background: #ff6b6b;
-        color: #fff;
-      }
+      .actions{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:24px;}
+      button, .navbtn{font-family:"Segoe UI",Roboto,sans-serif;
+        border:none;border-radius:12px;font-weight:700;cursor:pointer;
+        padding:10px 18px;font-size:15px;transition:0.25s;}
+      .buy-golden-btn{background:linear-gradient(180deg,#ffd86b,#f4b83e);color:#2b2100;}
+      .manage-btn{background:linear-gradient(180deg,#6aa8ff,#3c7de6);color:#fff;}
+      .logout-btn{background:#ff6b6b;color:#fff;}
+      .login-btn{background:linear-gradient(180deg,#ffd86b,#f4b83e);color:#201600;font-weight:800;}
     </style>
   </head>
 
@@ -172,8 +123,6 @@
         <a href="/learn-physics.html">Learn Physics</a>
         <a href="/create-planet.html">Create Planet</a>
         <a href="/plans.html">Plans</a>
-        <a href="/privacy.html">Privacy</a>
-        <a href="/terms.html">Terms</a>
       </div>
     </div>
 
@@ -188,7 +137,7 @@
 
         <section class="hero">
           <h1>Welcome to <span style="color:var(--gold)">GoldenSpaceAI</span></h1>
-          <p>Explore, chat, learn, and build your world — powered by golden intelligence.</p>
+          <p>Explore, chat, learn, and build your own universe — powered by golden intelligence.</p>
           <div class="cta">
             <a class="btn gold" href="/chat-advancedai.html">Launch AI ✨</a>
             <a class="btn ghost" href="/plans.html">View Plans</a>
@@ -198,8 +147,8 @@
         <aside class="rightCol">
           <nav class="sideNav">
             <a class="navbtn" href="/search-info.html">Learn Info</a>
-            <a class="navbtn" href="/learn-physics.html">Learn Physics</a>
             <a class="navbtn" href="/search-lessons.html">Lessons</a>
+            <a class="navbtn" href="/learn-physics.html">Learn Physics</a>
             <a class="navbtn" href="/plans.html">Plans</a>
           </nav>
 
@@ -243,7 +192,7 @@
             display.innerHTML = `
               <div class="user-header">
                 <div class="profile-pill">
-                  <img src="${profilePic}" alt="Profile">
+                  <img src="${profilePic}" alt="Profile picture">
                   <div>
                     <div class="welcome">Welcome, ${firstName}</div>
                     <div class="gold-balance" onclick="location.href='/buy-golden.html'">🌕 ${goldenBalance} G</div>
@@ -257,7 +206,15 @@
                 </div>
               </div>`;
           } else {
-            display.innerHTML = `<p style="color:#ccc;">Please log in to access your dashboard.</p>`;
+            display.innerHTML = `
+              <div class="user-header">
+                <div class="welcome">Welcome, Guest!</div>
+                <p style="color:#ccc;font-size:15px;">Log in to access your golden balance and subscriptions.</p>
+                <div class="actions">
+                  <button class="login-btn" onclick="location.href='/auth/login'">🔐 Log In</button>
+                  <button class="manage-btn" onclick="location.href='/auth/signup'">✨ Sign Up</button>
+                </div>
+              </div>`;
           }
         } catch (e) {
           console.error(e);

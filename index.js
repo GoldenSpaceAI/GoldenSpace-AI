@@ -14,6 +14,7 @@ import axios from "axios";
 import multer from "multer";
 import fs from "fs";
 import nodemailer from "nodemailer";
+import goldenchataiRouter from "./routes/goldenchatai.js";
 
 // ============ ENV & APP ============
 dotenv.config();
@@ -916,6 +917,21 @@ app.post("/api/cancel-subscription", (req, res) => {
   delete user.subscriptions[feature];
   saveGoldenDB(db);
   res.json({ success: true });
+});
+// ===============================
+// 🧠 GoldenChatAI Integration
+// ===============================
+app.use("/api/goldenchatai", (req, res, next) => {
+  // Inject helpers so the router uses your real DB + session
+  req.loadGoldenDB = loadGoldenDB;
+  req.saveGoldenDB = saveGoldenDB;
+  req.getUserIdentifier = getUserIdentifier;
+  next();
+}, goldenchataiRouter);
+
+// Serve the Arabic UI page
+app.get("/goldenchatai", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "goldenchatai.html"));
 });
 // ============ HEALTH ============
 app.get("/health", (_req, res) => {

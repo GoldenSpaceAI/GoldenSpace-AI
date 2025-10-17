@@ -918,21 +918,7 @@ app.post("/api/cancel-subscription", (req, res) => {
   saveGoldenDB(db);
   res.json({ success: true });
 });
-// ===============================
-// 🧠 GoldenChatAI Integration
-// ===============================
-app.use("/api/goldenchatai", (req, res, next) => {
-  // Inject helpers so the router uses your real DB + session
-  req.loadGoldenDB = loadGoldenDB;
-  req.saveGoldenDB = saveGoldenDB;
-  req.getUserIdentifier = getUserIdentifier;
-  next();
-}, goldenchataiRouter);
 
-// Serve the Arabic UI page
-app.get("/goldenchatai", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "goldenchatai.html"));
-});
 // ===============================
 // 🌐 PUBLIC BALANCE API (For GoldenChatAI)
 // ===============================

@@ -933,6 +933,25 @@ app.use("/api/goldenchatai", (req, res, next) => {
 app.get("/goldenchatai", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "goldenchatai.html"));
 });
+// ===============================
+// 🌐 PUBLIC BALANCE API (For GoldenChatAI)
+// ===============================
+app.get("/api/user-balance", (req, res) => {
+  const email = req.query.email;
+  if (!email) return res.status(400).json({ error: "Missing email" });
+
+  const db = loadGoldenDB();
+  // find user by email (case-insensitive)
+  const user = Object.values(db.users || {}).find(
+    u => u.email && u.email.toLowerCase() === email.toLowerCase()
+  );
+
+  if (!user) {
+    return res.json({ balance: 0 });
+  }
+
+  res.json({ balance: user.golden_balance || 0 });
+});
 // ============ HEALTH ============
 app.get("/health", (_req, res) => {
   const db = loadGoldenDB();

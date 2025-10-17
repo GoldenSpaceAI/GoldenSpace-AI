@@ -14,8 +14,6 @@ import axios from "axios";
 import multer from "multer";
 import fs from "fs";
 import nodemailer from "nodemailer";
-import goldenchataiRouter from "./routes/goldenchatai.js";
-
 // ============ ENV & APP ============
 dotenv.config();
 const app = express();

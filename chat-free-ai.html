@@ -234,7 +234,8 @@
                 if (!response.ok) throw new Error('Network response failed.');
                 
                 const data = await response.json();
-                aiMessagePlaceholder.querySelector('.message-content p').textContent = data.answer;
+                aiMessagePlaceholder.querySelector('.message-content p').textContent = data.reply || data.answer || "No reply received.";
+
 
             } catch (error) {
                 aiMessagePlaceholder.querySelector('.message-content p').textContent = 'Sorry, an error occurred.';

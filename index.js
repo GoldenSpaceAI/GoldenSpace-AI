@@ -477,16 +477,39 @@ app.post("/chat-ai", async (req, res) => {
     res.status(500).json({ error: e.message });
   }
 });
-// Advanced Chat (text only OR with optional image if front-end posts one)
+// Advanced Chat (text, file, or image generation)
 app.post("/chat-advanced-ai", upload.single("image"), async (req, res) => {
   try {
     const model = req.body.model || "gpt-4o";
     const prompt = req.body.q || "Answer helpfully.";
     const filePath = req.file?.path;
 
+    // ============ 1️⃣ IMAGE GENERATION ==============
+    if (model === "gpt-image-1") {
+      try {
+        const image = await openai.images.generate({
+          model: "gpt-image-1",
+          prompt,
+          size: "1024x1024",
+        });
+        const base64Image = image.data?.[0]?.b64_json;
+        if (!base64Image) throw new Error("No image data returned.");
+        return res.json({
+          reply: `data:image/png;base64,${base64Image}`,
+          model,
+        });
+      } catch (imgErr) {
+        console.error("Image generation error:", imgErr);
+        return res.status(500).json({
+          error: imgErr.message || "Image generation failed.",
+        });
+      }
+    }
+
+    // ============ 2️⃣ CHAT / VISION MODELS ==========
     let messages;
     if (filePath) {
-      // Convert local file to base64 data URL for vision input
+      // Convert uploaded file to base64 (for vision models)
       const b64 = fs.readFileSync(filePath).toString("base64");
       const mime = req.file.mimetype || "image/png";
       messages = [
@@ -510,13 +533,15 @@ app.post("/chat-advanced-ai", upload.single("image"), async (req, res) => {
     });
 
     const reply = completion.choices?.[0]?.message?.content || "No reply.";
-    if (filePath) fs.unlink(filePath, () => {});
+    if (filePath) fs.unlink(filePath, () => {}); // cleanup temp file
     res.json({ reply, model });
+
   } catch (e) {
     console.error("AI error:", e);
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ error: e.message || "Internal server error." });
   }
 });
+
 // ==================== AI LESSONS ENDPOINT ====================
 app.post("/search-lessons", async (req, res) => {
   try {

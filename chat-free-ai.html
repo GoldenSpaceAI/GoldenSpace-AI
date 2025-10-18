@@ -225,7 +225,7 @@
             chatLog.scrollTop = chatLog.scrollHeight;
 
             try {
-                const response = await fetch('/ask', {
+               const response = await fetch('/chat-free-ai', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ question })

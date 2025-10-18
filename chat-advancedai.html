@@ -5,94 +5,103 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>GoldenSpaceAI · Advanced Assistant</title>
 <style>
+/* ---------- COLOR SYSTEM ---------- */
 :root{
-  --gold1:#ffd700;--gold2:#e6c200;--gold3:#b89700;
-  --text:#faf7e8;--muted:#c8b88a;
-  --bg:#05060a;--glass:rgba(255,255,255,.08);--ring:rgba(255,215,0,.35);
+  --gold1:#ffd700;--gold2:#ffb347;--purple1:#7a00ff;--blue1:#001b4e;
+  --text:#f8f8f8;--muted:#c0c0c0;
+  --glass:rgba(255,255,255,.06);
 }
+/* ---------- BACKGROUND ---------- */
 body{
-  margin:0;font-family:system-ui,Segoe UI,Roboto;
-  color:var(--text);
-  background:
-    radial-gradient(1000px 800px at 75% -20%,rgba(255,215,0,.15),transparent 40%),
-    radial-gradient(800px 600px at 10% 120%,rgba(255,215,0,.05),transparent 45%),
-    url('https://images.unsplash.com/photo-1444703686981-a3abbc4d4fe3?q=80&w=1600&auto=format&fit=crop') center/cover no-repeat;
-  background-attachment:fixed;overflow:hidden;
+  margin:0;font-family:"Inter",system-ui,sans-serif;color:var(--text);
+  background:linear-gradient(135deg,var(--gold1),var(--purple1),var(--blue1));
+  background-size:300% 300%;animation:bgmove 15s ease infinite;
+  overflow:hidden;
 }
-.stars{position:fixed;inset:0;z-index:-1;
-  background:url('https://raw.githubusercontent.com/itsfarisdev/goldenspaceai-assets/main/stars.png') repeat;
-  opacity:.25;}
+@keyframes bgmove{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+.stars{position:fixed;inset:0;pointer-events:none;z-index:-1;
+  background-image:radial-gradient(2px 2px at 20% 30%,rgba(255,255,255,.5),transparent 60%),
+                   radial-gradient(1px 1px at 80% 70%,rgba(255,255,255,.3),transparent 60%),
+                   radial-gradient(1.5px 1.5px at 50% 90%,rgba(255,255,255,.4),transparent 60%);
+  animation:twinkle 10s linear infinite;}
+@keyframes twinkle{0%,100%{opacity:.25}50%{opacity:.45}}
+/* ---------- HEADER ---------- */
 header{
-  display:flex;align-items:center;gap:.7rem;padding:14px 18px;
-  background:rgba(0,0,0,.4);backdrop-filter:blur(8px);
+  display:flex;align-items:center;gap:.6rem;padding:14px 20px;
+  background:rgba(0,0,0,.35);backdrop-filter:blur(12px);
   border-bottom:1px solid rgba(255,255,255,.1);
 }
-.logo{width:30px;height:30px;border-radius:50%;
-  background:conic-gradient(from 210deg,var(--gold1),var(--gold2),var(--gold3),var(--gold1));
-  box-shadow:0 0 12px rgba(255,215,0,.25);}
-header span.title{font-weight:700;font-size:1.1em}
-main{height:calc(100vh - 160px);overflow:auto;padding:16px;scroll-behavior:smooth}
-.msg{max-width:min(780px,92%);padding:14px 16px;border-radius:14px;margin:10px 0;
-  border:1px solid rgba(255,255,255,.08);backdrop-filter:blur(6px);}
-.msg.user{margin-left:auto;background:linear-gradient(180deg,rgba(255,215,0,.12),rgba(255,215,0,.06));}
-.msg.ai{background:rgba(12,12,16,.55);}
-.msg small{opacity:.7;font-size:.75rem;margin-bottom:4px;display:block}
+.logo{width:32px;height:32px;border-radius:50%;
+  background:conic-gradient(from 210deg,var(--gold1),var(--gold2));
+  box-shadow:0 0 20px rgba(255,215,0,.4);}
+.title{font-weight:700;font-size:1.1em;letter-spacing:.5px}
+/* ---------- CHAT AREA ---------- */
+main{height:calc(100vh - 170px);overflow:auto;padding:18px;scroll-behavior:smooth;}
+.msg{max-width:min(780px,92%);padding:14px 16px;margin:10px 0;border-radius:16px;
+  backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.1);}
+.msg.user{margin-left:auto;background:rgba(255,255,255,.08);}
+.msg.ai{background:rgba(0,0,0,.35);}
+.msg small{display:block;opacity:.7;font-size:.75rem;margin-bottom:6px}
+/* ---------- COMPOSER ---------- */
 .composer-wrap{position:fixed;bottom:18px;left:0;right:0;display:flex;justify-content:center}
-.composer{width:min(980px,94%);display:flex;align-items:center;gap:8px;
-  padding:10px;background:var(--glass);backdrop-filter:blur(10px);
-  border:1px solid rgba(255,255,255,.08);border-radius:18px;}
+.composer{width:min(980px,95%);display:flex;align-items:center;gap:8px;
+  background:var(--glass);padding:10px;border-radius:18px;
+  border:1px solid rgba(255,255,255,.1);backdrop-filter:blur(10px);}
 textarea{flex:1;resize:none;min-height:56px;max-height:140px;padding:12px 14px;
-  border-radius:12px;background:rgba(255,255,255,.06);color:var(--text);
-  border:1px solid rgba(255,255,255,.15);outline:none;font-size:15px;}
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.15);
+  border-radius:12px;color:var(--text);font-size:15px;outline:none;}
 .btn{height:52px;width:52px;border:none;border-radius:999px;cursor:pointer;
-  background:rgba(255,255,255,.08);display:grid;place-items:center;transition:.2s;}
-.btn:hover{background:rgba(255,255,255,.15);}
-.btn.gold{background:linear-gradient(45deg,var(--gold1),var(--gold2));color:#141209;font-weight:800;
+  background:rgba(255,255,255,.1);display:grid;place-items:center;
+  transition:.2s;background-size:200% auto;}
+.btn:hover{background:rgba(255,255,255,.2);}
+.btn.gold{background:linear-gradient(45deg,var(--gold1),var(--gold2));color:#000;font-weight:700;
   box-shadow:0 0 12px rgba(255,215,0,.3);}
-.btn.gold.glow{animation:glow 2s infinite alternate;}
+.btn.glow{animation:glow 2s infinite alternate;}
 @keyframes glow{from{box-shadow:0 0 10px rgba(255,215,0,.4);}to{box-shadow:0 0 22px rgba(255,215,0,.8);}}
 .spinner{width:20px;height:20px;border-radius:50%;border:2px solid rgba(255,255,255,.2);
   border-top-color:var(--gold1);animation:spin 1s linear infinite;}
-@keyframes spin{to{transform:rotate(360deg);}}
-
-/* lock overlay */
-.lock{position:fixed;inset:0;background:rgba(0,0,0,.8);
-display:none;justify-content:center;align-items:center;z-index:1000;backdrop-filter:blur(12px);}
-.lock .card{background:rgba(10,10,14,.9);padding:32px;border:2px solid gold;border-radius:18px;
-color:white;text-align:center;max-width:400px;}
-.lock h2{color:gold;margin:0 0 10px;}
-.lock button{margin-top:14px;padding:12px 20px;border:none;border-radius:8px;font-weight:700;cursor:pointer;}
-.unlock{background:linear-gradient(45deg,#ffd700,#ffed4e);color:#000;}
-.cancel{background:#333;color:#fff;}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* ---------- LOCK MODAL ---------- */
+.lock{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;
+  justify-content:center;align-items:center;z-index:1000;backdrop-filter:blur(16px);}
+.lock .card{background:rgba(10,10,14,.9);padding:38px;border:2px solid var(--gold1);
+  border-radius:20px;color:white;text-align:center;max-width:440px;width:92%;
+  box-shadow:0 0 25px rgba(255,215,0,.25);}
+.lock h2{color:var(--gold1);margin:0 0 10px;}
+.lock p{color:#ddd;font-size:1.05em;}
+.lock button{margin-top:14px;padding:14px 22px;border:none;border-radius:10px;
+  font-weight:700;cursor:pointer;font-size:1em;}
+.unlock{background:linear-gradient(45deg,var(--gold1),var(--gold2));color:#000;}
+.cancel{background:#222;color:#fff;}
 </style>
 </head>
 <body>
 <div class="stars"></div>
 <header><div class="logo"></div><span class="title">GoldenSpaceAI · Advanced</span></header>
 
-<main id="chat"><div class="msg ai"><small>GoldenSpaceAI</small>
-Welcome ✨ Unlock Advanced Chat (20 G/month) to access Deep Think (GPT-5-mini), image generation, and file uploads.
-</div></main>
+<main id="chat">
+  <div class="msg ai"><small>GoldenSpaceAI</small>
+  Welcome! Unlock Advanced Chat (20 G / month) to access Deep Think (GPT-5-mini), image generation, and file uploads.</div>
+</main>
 
 <div class="composer-wrap">
   <div class="composer">
-    <button id="plusBtn" class="btn">＋</button>
     <textarea id="prompt" placeholder="Type your message..."></textarea>
-    <button id="uploadBtn" class="btn" title="Upload file">📎</button>
-    <button id="imageBtn" class="btn" title="Generate image">🖼️</button>
-    <button id="deepThinkBtn" class="btn gold glow" title="Deep Think (GPT-5-mini)">🧠</button>
+    <button id="uploadBtn" class="btn" title="Upload File">📎</button>
+    <button id="imageBtn" class="btn" title="Generate Image">🖼️</button>
+    <button id="deepThinkBtn" class="btn gold glow" title="Deep Think (GPT-5-mini)">Deep Think</button>
     <button id="micBtn" class="btn" title="Voice">🎤</button>
-    <button id="sendBtn" class="btn gold" title="Send">➤</button>
+    <button id="sendBtn" class="btn gold" title="Send">Send</button>
   </div>
 </div>
 
-<!-- LOCK OVERLAY -->
+<!-- LOCK -->
 <div id="lock" class="lock">
   <div class="card">
     <h2>Advanced Chat Locked</h2>
-    <p>Unlock for <b>20 G / month</b> to use GPT-5-mini, image generation & vision.</p>
-    <div id="lockStatus" style="margin:10px 0;color:gold;font-weight:600"></div>
-    <button id="unlockBtn" class="unlock">Unlock for 20 G</button>
+    <p>Unlock for <b>20 G / month</b> to use GPT-5-mini, image generation, and vision.</p>
+    <div id="lockStatus" style="margin:12px 0;color:var(--gold1);font-weight:600"></div>
+    <button id="unlockBtn" class="unlock">Unlock 20 G</button>
     <button id="cancelBtn" class="cancel">Cancel</button>
   </div>
 </div>
@@ -101,62 +110,132 @@ Welcome ✨ Unlock Advanced Chat (20 G/month) to access Deep Think (GPT-5-mini),
 const chat=document.getElementById("chat");
 const promptEl=document.getElementById("prompt");
 const sendBtn=document.getElementById("sendBtn");
+const micBtn=document.getElementById("micBtn");
+const imageBtn=document.getElementById("imageBtn");
+const uploadBtn=document.getElementById("uploadBtn");
 const deepThinkBtn=document.getElementById("deepThinkBtn");
 const lock=document.getElementById("lock");
 const unlockBtn=document.getElementById("unlockBtn");
 const cancelBtn=document.getElementById("cancelBtn");
 let currentModel="gpt-4o";
 let unlocked=false;
+let uploadedFile=null;
 
-function addMsg(role,text){
+/* ---------- CHAT HELPERS ---------- */
+function addMsg(role,text,isHTML=false){
   const m=document.createElement("div");m.className="msg "+role;
-  const small=document.createElement("small");small.textContent=role==="user"?"You":"GoldenSpaceAI";
-  m.append(small);
-  const div=document.createElement("div");div.innerHTML=text.replace(/\n/g,"<br>");
-  m.append(div);chat.append(m);chat.scrollTop=chat.scrollHeight;
+  const s=document.createElement("small");s.textContent=role==="user"?"You":"GoldenSpaceAI";
+  m.append(s);
+  const d=document.createElement("div");
+  d.innerHTML=isHTML?text:text.replace(/\n/g,"<br>");
+  m.append(d);
+  chat.append(m);chat.scrollTop=chat.scrollHeight;
 }
-function spinner(){const s=document.createElement("div");s.className="msg ai";
-s.innerHTML='<small>GoldenSpaceAI</small><div class="spinner"></div>';chat.append(s);chat.scrollTop=chat.scrollHeight;return s;}
+function spinner(){
+  const s=document.createElement("div");s.className="msg ai";
+  s.innerHTML='<small>GoldenSpaceAI</small><div class="spinner"></div>';
+  chat.append(s);chat.scrollTop=chat.scrollHeight;return s;
+}
 
+/* ---------- ACCESS CHECK ---------- */
 async function checkAccess(){
- const res=await fetch("/api/feature-status?feature=chat_advancedai");
- const d=await res.json();
- if(d.unlocked){unlocked=true;}else{lock.style.display="flex";}
+ const r=await fetch("/api/feature-status?feature=chat_advancedai");
+ const j=await r.json();
+ if(j.unlocked)unlocked=true;else lock.style.display="flex";
 }
 checkAccess();
 
-/* unlock */
+/* ---------- UNLOCK ---------- */
 unlockBtn.onclick=async()=>{
  unlockBtn.disabled=true;unlockBtn.textContent="Processing...";
  const r=await fetch("/api/unlock-feature",{method:"POST",headers:{"Content-Type":"application/json"},
  body:JSON.stringify({feature:"chat_advancedai",cost:20})});
  const j=await r.json();
- if(j.success){document.getElementById("lockStatus").textContent="✅ Unlocked!";setTimeout(()=>{lock.style.display="none";unlocked=true;},1500);}
- else{document.getElementById("lockStatus").textContent="❌ "+(j.error||"Failed");unlockBtn.disabled=false;unlockBtn.textContent="Unlock for 20 G";}
-};
+ if(j.success){
+   document.getElementById("lockStatus").textContent="✅ Unlocked!";
+   setTimeout(()=>{lock.style.display="none";unlocked=true;},1500);
+ }else{
+   document.getElementById("lockStatus").textContent="❌ "+(j.error||"Failed");
+   unlockBtn.disabled=false;unlockBtn.textContent="Unlock 20 G";
+ }};
 cancelBtn.onclick=()=>{lock.style.display="none";};
 
-/* deep think */
+/* ---------- DEEP THINK ---------- */
 deepThinkBtn.onclick=()=>{
-  if(!unlocked)return lock.style.display="flex";
-  currentModel="gpt-5-mini";
-  addMsg("ai","🧠 Deep Think mode activated (GPT-5-mini)");
+ if(!unlocked)return lock.style.display="flex";
+ currentModel="gpt-5-mini";
+ addMsg("ai","Deep Think mode activated — using GPT-5-mini.");
 };
 
-/* send */
+/* ---------- SEND MESSAGE ---------- */
 sendBtn.onclick=()=>sendMsg();
 promptEl.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendMsg();}});
 async function sendMsg(){
  if(!unlocked)return lock.style.display="flex";
- const text=promptEl.value.trim();if(!text)return;
- addMsg("user",text);promptEl.value="";
- const s=spinner();
- const res=await fetch("/chat-advanced-ai",{method:"POST",headers:{"Content-Type":"application/json"},
- body:JSON.stringify({q:text,model:currentModel})});
- const j=await res.json();
- chat.removeChild(s);
- addMsg("ai",j.reply||j.answer||"[No reply]");
+ const text=promptEl.value.trim();if(!text&&!uploadedFile)return;
+ addMsg("user",text||"[file attached]");
+ promptEl.value="";
+ const spin=spinner();
+ const fd=new FormData();
+ if(uploadedFile){fd.append("image",uploadedFile);}
+ fd.append("q",text||"");
+ fd.append("model",currentModel);
+ const r=await fetch("/chat-advanced-ai",{method:"POST",body:fd});
+ const j=await r.json();
+ chat.removeChild(spin);
+ if(j.reply&&j.reply.startsWith("data:image"))
+      addMsg("ai",`<img src="${j.reply}" style="max-width:100%;border-radius:12px"/>`,true);
+ else addMsg("ai",j.reply||j.answer||"[No reply]");
+ uploadedFile=null;
 }
+
+/* ---------- IMAGE GENERATION ---------- */
+imageBtn.onclick=async()=>{
+ if(!unlocked)return lock.style.display="flex";
+ const prompt=promptEl.value.trim()||prompt("Enter image description:");
+ if(!prompt)return;
+ addMsg("user","[Generate Image] "+prompt);
+ const spin=spinner();
+ const r=await fetch("/chat-advanced-ai",{method:"POST",headers:{"Content-Type":"application/json"},
+ body:JSON.stringify({q:prompt,model:"gpt-image-1"})});
+ const j=await r.json();
+ chat.removeChild(spin);
+ if(j.reply&&j.reply.startsWith("data:image"))
+      addMsg("ai",`<img src="${j.reply}" style="max-width:100%;border-radius:12px"/>`,true);
+ else addMsg("ai",j.reply||"[Image generation failed]");
+};
+
+/* ---------- FILE UPLOAD ---------- */
+uploadBtn.onchange=()=>{};
+uploadBtn.onclick=()=>{
+ if(!unlocked)return lock.style.display="flex";
+ const input=document.createElement("input");
+ input.type="file";input.accept="image/*,.pdf,.txt";
+ input.onchange=e=>{
+   uploadedFile=e.target.files[0];
+   addMsg("ai","File attached: "+uploadedFile.name);
+ };
+ input.click();
+};
+
+/* ---------- VOICE ---------- */
+let mediaRecorder,audioChunks=[];
+micBtn.onclick=async()=>{
+ if(!unlocked)return lock.style.display="flex";
+ if(!mediaRecorder||mediaRecorder.state==="inactive"){
+   const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+   mediaRecorder=new MediaRecorder(stream,{mimeType:"audio/webm"});
+   audioChunks=[];mediaRecorder.ondataavailable=e=>{if(e.data.size)audioChunks.push(e.data);};
+   mediaRecorder.onstop=async()=>{
+     const blob=new Blob(audioChunks,{type:"audio/webm"});
+     const fd=new FormData();fd.append("audio",blob,"speech.webm");
+     const r=await fetch("/api/transcribe",{method:"POST",body:fd});
+     const j=await r.json();
+     if(j.text){promptEl.value=j.text;sendMsg();}
+   };
+   mediaRecorder.start();micBtn.textContent="Stop 🎙️";
+ }else{mediaRecorder.stop();micBtn.textContent="🎤";}
+};
 </script>
 </body>
 </html>

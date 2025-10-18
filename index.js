@@ -457,27 +457,32 @@ app.post("/api/unlock-feature", (req, res) => {
 // ============ AI ENDPOINTS ============
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const upload = multer({ dest: "uploads/" });
-// ==================== BASIC CHAT AI (Free Version) ====================
-app.post("/advanced-ai.html", async (req, res) => {
+// ==========chat-free-ai.html===============
+app.post("/chat-free-ai.html", async (req, res) => {
   try {
     const prompt = req.body.q || "Hello!";
-    const model = req.body.model || "gpt-4o-mini"; // lighter, faster model for free chat
+    const model = req.body.model || "gpt-4o-mini"; // default model
 
-   const completion = await openai.chat.completions.create({
-  model,
-  messages,
- max_output_tokens: 1200,
-  temperature: 0.7
-});
+    const messages = [
+      { role: "system", content: "You are GoldenSpaceAI's helpful chat assistant." },
+      { role: "user", content: prompt }
+    ];
 
+    const completion = await openai.chat.completions.create({
+      model,
+      messages,
+      max_tokens: 1200,
+      temperature: 0.7
+    });
 
     const reply = completion.choices?.[0]?.message?.content || "No reply.";
     res.json({ reply, model });
   } catch (e) {
-    console.error("Basic Chat AI error:", e);
+    console.error("Advanced AI error:", e);
     res.status(500).json({ error: e.message });
   }
 });
+
 // Advanced Chat (text, file, or image generation)
 app.post("/chat-advanced-ai", upload.single("image"), async (req, res) => {
   try {

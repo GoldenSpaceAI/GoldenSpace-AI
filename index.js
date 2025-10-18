@@ -457,7 +457,26 @@ app.post("/api/unlock-feature", (req, res) => {
 // ============ AI ENDPOINTS ============
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const upload = multer({ dest: "uploads/" });
+// ==================== BASIC CHAT AI (Free Version) ====================
+app.post("/chat-ai", async (req, res) => {
+  try {
+    const prompt = req.body.q || "Hello!";
+    const model = req.body.model || "gpt-4o-mini"; // lighter, faster model for free chat
 
+    const completion = await openai.chat.completions.create({
+      model,
+      messages: [{ role: "user", content: prompt }],
+      max_tokens: 800,
+      temperature: 0.7,
+    });
+
+    const reply = completion.choices?.[0]?.message?.content || "No reply.";
+    res.json({ reply, model });
+  } catch (e) {
+    console.error("Basic Chat AI error:", e);
+    res.status(500).json({ error: e.message });
+  }
+});
 // Advanced Chat (text only OR with optional image if front-end posts one)
 app.post("/chat-advanced-ai", upload.single("image"), async (req, res) => {
   try {

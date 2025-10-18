@@ -8,9 +8,7 @@
 :root{
   --gold1:#ffd700;--gold2:#e6c200;--gold3:#b89700;
   --text:#faf7e8;--muted:#c8b88a;
-  --bg:#05060a;
-  --glass:rgba(255,255,255,.08);
-  --ring:rgba(255,215,0,.35);
+  --bg:#05060a;--glass:rgba(255,255,255,.08);--ring:rgba(255,215,0,.35);
 }
 body{
   margin:0;font-family:system-ui,Segoe UI,Roboto;
@@ -18,16 +16,12 @@ body{
   background:
     radial-gradient(1000px 800px at 75% -20%,rgba(255,215,0,.15),transparent 40%),
     radial-gradient(800px 600px at 10% 120%,rgba(255,215,0,.05),transparent 45%),
-    #05060a;
+    url('https://images.unsplash.com/photo-1444703686981-a3abbc4d4fe3?q=80&w=1600&auto=format&fit=crop') center/cover no-repeat;
   background-attachment:fixed;overflow:hidden;
 }
-.theme-dark body{
-  background:
-    radial-gradient(900px 700px at 80% -10%,rgba(255,215,0,.15),transparent 40%),
-    radial-gradient(900px 700px at 10% 130%,rgba(255,215,0,.05),transparent 50%),
-    #03040a;
-}
-.stars{position:fixed;inset:0;z-index:-1;background:url('https://i.ibb.co/XpS7X0f/stars-bg.png') repeat;opacity:.25;}
+.stars{position:fixed;inset:0;z-index:-1;
+  background:url('https://raw.githubusercontent.com/itsfarisdev/goldenspaceai-assets/main/stars.png') repeat;
+  opacity:.25;}
 header{
   display:flex;align-items:center;gap:.7rem;padding:14px 18px;
   background:rgba(0,0,0,.4);backdrop-filter:blur(8px);
@@ -35,8 +29,7 @@ header{
 }
 .logo{width:30px;height:30px;border-radius:50%;
   background:conic-gradient(from 210deg,var(--gold1),var(--gold2),var(--gold3),var(--gold1));
-  box-shadow:0 0 12px rgba(255,215,0,.25);
-}
+  box-shadow:0 0 12px rgba(255,215,0,.25);}
 header span.title{font-weight:700;font-size:1.1em}
 main{height:calc(100vh - 160px);overflow:auto;padding:16px;scroll-behavior:smooth}
 .msg{max-width:min(780px,92%);padding:14px 16px;border-radius:14px;margin:10px 0;
@@ -61,6 +54,7 @@ textarea{flex:1;resize:none;min-height:56px;max-height:140px;padding:12px 14px;
 .spinner{width:20px;height:20px;border-radius:50%;border:2px solid rgba(255,255,255,.2);
   border-top-color:var(--gold1);animation:spin 1s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
+
 /* lock overlay */
 .lock{position:fixed;inset:0;background:rgba(0,0,0,.8);
 display:none;justify-content:center;align-items:center;z-index:1000;backdrop-filter:blur(12px);}
@@ -77,7 +71,7 @@ color:white;text-align:center;max-width:400px;}
 <header><div class="logo"></div><span class="title">GoldenSpaceAI · Advanced</span></header>
 
 <main id="chat"><div class="msg ai"><small>GoldenSpaceAI</small>
-Welcome back ✨  Press <b>🧠 Deep Think</b> to enter advanced GPT-5 mode, or start chatting below.
+Welcome ✨ Unlock Advanced Chat (20 G/month) to access Deep Think (GPT-5-mini), image generation, and file uploads.
 </div></main>
 
 <div class="composer-wrap">
@@ -95,10 +89,10 @@ Welcome back ✨  Press <b>🧠 Deep Think</b> to enter advanced GPT-5 mode, or 
 <!-- LOCK OVERLAY -->
 <div id="lock" class="lock">
   <div class="card">
-    <h2>Advanced AI Chat Locked</h2>
-    <p>Unlock this feature for <b>10 G / month</b> to access GPT-5, image generation & file vision.</p>
+    <h2>Advanced Chat Locked</h2>
+    <p>Unlock for <b>20 G / month</b> to use GPT-5-mini, image generation & vision.</p>
     <div id="lockStatus" style="margin:10px 0;color:gold;font-weight:600"></div>
-    <button id="unlockBtn" class="unlock">Unlock for 10 G</button>
+    <button id="unlockBtn" class="unlock">Unlock for 20 G</button>
     <button id="cancelBtn" class="cancel">Cancel</button>
   </div>
 </div>
@@ -108,15 +102,12 @@ const chat=document.getElementById("chat");
 const promptEl=document.getElementById("prompt");
 const sendBtn=document.getElementById("sendBtn");
 const deepThinkBtn=document.getElementById("deepThinkBtn");
-const imageBtn=document.getElementById("imageBtn");
-const uploadBtn=document.getElementById("uploadBtn");
 const lock=document.getElementById("lock");
 const unlockBtn=document.getElementById("unlockBtn");
 const cancelBtn=document.getElementById("cancelBtn");
 let currentModel="gpt-4o";
 let unlocked=false;
 
-/* helpers */
 function addMsg(role,text){
   const m=document.createElement("div");m.className="msg "+role;
   const small=document.createElement("small");small.textContent=role==="user"?"You":"GoldenSpaceAI";
@@ -124,26 +115,24 @@ function addMsg(role,text){
   const div=document.createElement("div");div.innerHTML=text.replace(/\n/g,"<br>");
   m.append(div);chat.append(m);chat.scrollTop=chat.scrollHeight;
 }
-
-/* spinner */
 function spinner(){const s=document.createElement("div");s.className="msg ai";
 s.innerHTML='<small>GoldenSpaceAI</small><div class="spinner"></div>';chat.append(s);chat.scrollTop=chat.scrollHeight;return s;}
 
 async function checkAccess(){
- const res=await fetch("/api/feature-status?feature=premium_monthly");
+ const res=await fetch("/api/feature-status?feature=chat_advancedai");
  const d=await res.json();
  if(d.unlocked){unlocked=true;}else{lock.style.display="flex";}
 }
 checkAccess();
 
-/* unlock flow */
+/* unlock */
 unlockBtn.onclick=async()=>{
  unlockBtn.disabled=true;unlockBtn.textContent="Processing...";
  const r=await fetch("/api/unlock-feature",{method:"POST",headers:{"Content-Type":"application/json"},
- body:JSON.stringify({feature:"premium_monthly",cost:10})});
+ body:JSON.stringify({feature:"chat_advancedai",cost:20})});
  const j=await r.json();
  if(j.success){document.getElementById("lockStatus").textContent="✅ Unlocked!";setTimeout(()=>{lock.style.display="none";unlocked=true;},1500);}
- else{document.getElementById("lockStatus").textContent="❌ "+(j.error||"Failed");unlockBtn.disabled=false;unlockBtn.textContent="Unlock for 10 G";}
+ else{document.getElementById("lockStatus").textContent="❌ "+(j.error||"Failed");unlockBtn.disabled=false;unlockBtn.textContent="Unlock for 20 G";}
 };
 cancelBtn.onclick=()=>{lock.style.display="none";};
 

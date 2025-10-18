@@ -463,12 +463,13 @@ app.post("/chat-ai", async (req, res) => {
     const prompt = req.body.q || "Hello!";
     const model = req.body.model || "gpt-4o-mini"; // lighter, faster model for free chat
 
-    const completion = await openai.chat.completions.create({
-      model,
-      messages: [{ role: "user", content: prompt }],
-      max_tokens: 800,
-      temperature: 0.7,
-    });
+   const completion = await openai.chat.completions.create({
+  model,
+  messages,
+  max_completion_tokens: 1200,
+  temperature: 0.7,
+});
+
 
     const reply = completion.choices?.[0]?.message?.content || "No reply.";
     res.json({ reply, model });

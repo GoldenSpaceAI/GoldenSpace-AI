@@ -152,7 +152,7 @@ const FEATURE_PRICES = {
   chat_advancedai: 20,
   create_rocket: 4,
   create_satellite: 4,
-  create_advanced_planet: 4,
+  advanced_planet: 4,
   your_space: 4,
   learn_physics: 4,
   create_planet: 4,

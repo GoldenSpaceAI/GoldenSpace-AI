@@ -458,7 +458,7 @@ app.post("/api/unlock-feature", (req, res) => {
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const upload = multer({ dest: "uploads/" });
 // ==================== BASIC CHAT AI (Free Version) ====================
-app.post("/chat-ai", async (req, res) => {
+app.post("/advanced-ai.html", async (req, res) => {
   try {
     const prompt = req.body.q || "Hello!";
     const model = req.body.model || "gpt-4o-mini"; // lighter, faster model for free chat

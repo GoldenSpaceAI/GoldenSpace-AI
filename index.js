@@ -454,11 +454,11 @@ app.post("/api/unlock-feature", (req, res) => {
   res.json({ success: true, newBalance: u.golden_balance });
 });
 
-// ============ AI ENDPOINTS ============
+// ======================== AI ENDPOINTS =====================
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const upload = multer({ dest: "uploads/" });
 // ==========chat-free-ai.html===============
-app.post("/chat-free-ai.html", async (req, res) => {
+app.post("/chat-free-ai", async (req, res) => {
   try {
     const prompt = req.body.q || "Hello!";
     const model = req.body.model || "gpt-4o-mini"; // default model

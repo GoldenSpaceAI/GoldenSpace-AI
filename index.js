@@ -466,8 +466,8 @@ app.post("/chat-ai", async (req, res) => {
    const completion = await openai.chat.completions.create({
   model,
   messages,
-  max_completion_tokens: 1200,
-  temperature: 0.7,
+ max_output_tokens: 1200,
+  temperature: 0.7
 });
 
 

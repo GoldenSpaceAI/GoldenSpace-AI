@@ -1040,6 +1040,98 @@ Respond with detailed, educational explanations. If "Steps" or "Practice" mode, 
     res.status(500).json({ error: err.message });
   }
 });
+// =================== 💳 NOWPayments Integration ===================
+const NOWPAYMENTS_API = "https://api.nowpayments.io/v1";
+const NOWPAYMENTS_API_KEY = process.env.NOWPAYMENTS_API_KEY;
+const RECEIVE_CURRENCY = process.env.NOWPAYMENTS_RECEIVE_CURRENCY || "USDTTRC20";
+const BASE_CURRENCY = process.env.NOWPAYMENTS_BASE_CURRENCY || "USD";
+
+// Create invoice for a Golden package
+app.post("/api/nowpay/create", async (req, res) => {
+  try {
+    if (!req.user) return res.status(401).json({ error: "Login required" });
+    const { amountUSD } = req.body; // e.g. $5, $10, etc.
+    if (!amountUSD || amountUSD <= 0) return res.status(400).json({ error: "Invalid amount" });
+
+    const callbackUrl = "https://goldenspaceai.space/api/nowpay/webhook";
+    const payload = {
+      price_amount: amountUSD,
+      price_currency: BASE_CURRENCY,
+      pay_currency: RECEIVE_CURRENCY,
+      order_id: `${req.user.id}-${Date.now()}`,
+      order_description: `GoldenSpaceAI Purchase - ${amountUSD} USD`,
+      ipn_callback_url: callbackUrl,
+    };
+
+    const { data } = await axios.post(`${NOWPAYMENTS_API}/payment`, payload, {
+      headers: { "x-api-key": NOWPAYMENTS_API_KEY },
+    });
+
+    // store in payment DB
+    const db = loadPaymentDB();
+    db.transactions[data.payment_id] = {
+      user: getUserIdentifier(req),
+      usd: amountUSD,
+      coin: RECEIVE_CURRENCY,
+      status: "pending",
+      createdAt: new Date().toISOString(),
+    };
+    savePaymentDB(db);
+
+    res.json({ success: true, payment_url: data.invoice_url });
+  } catch (e) {
+    console.error("NOWPayments create error:", e.response?.data || e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Handle webhook (payment confirmed)
+app.post("/api/nowpay/webhook", async (req, res) => {
+  try {
+    const secret = req.headers["x-nowpayments-sig"];
+    if (secret !== process.env.NOWPAYMENTS_CALLBACK_SECRET)
+      return res.status(403).json({ error: "Invalid callback secret" });
+
+    const event = req.body;
+    const payId = event.payment_id;
+    if (!payId) return res.status(400).json({ error: "Missing payment_id" });
+
+    const payDB = loadPaymentDB();
+    const goldDB = loadGoldenDB();
+
+    const tx = payDB.transactions[payId];
+    if (tx && event.payment_status === "finished") {
+      tx.status = "completed";
+      tx.confirmedAt = new Date().toISOString();
+
+      const uid = tx.user;
+      const usd = tx.usd;
+      const g = Math.floor(usd * 4); // since 1 G = $0.25
+
+      if (goldDB.users[uid]) {
+        const u = goldDB.users[uid];
+        u.golden_balance = (u.golden_balance || 0) + g;
+        u.total_golden_earned = (u.total_golden_earned || 0) + g;
+        u.transactions = u.transactions || [];
+        u.transactions.push({
+          type: "purchase",
+          amount: g,
+          coin: RECEIVE_CURRENCY,
+          usd,
+          timestamp: new Date().toISOString(),
+        });
+      }
+
+      savePaymentDB(payDB);
+      saveGoldenDB(goldDB);
+    }
+
+    res.json({ ok: true });
+  } catch (e) {
+    console.error("NOWPayments webhook error:", e);
+    res.status(500).json({ error: e.message });
+  }
+});
 // ============ HEALTH ============
 app.get("/health", (_req, res) => {
   const db = loadGoldenDB();

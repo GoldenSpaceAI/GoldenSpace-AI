@@ -986,6 +986,60 @@ app.get("/api/user-balance", (req, res) => {
 
   res.json({ balance: user.golden_balance || 0 });
 });
+// ==================== PHYSICS AI ENDPOINTS ====================
+
+// Simple "Quick Explain" endpoint for physics concepts
+app.post("/api/physics-explain", async (req, res) => {
+  try {
+    const { question } = req.body;
+    if (!question) return res.status(400).json({ error: "Missing question" });
+
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "system", content: "You are a physics tutor who explains concepts clearly and simply." },
+        { role: "user", content: question }
+      ],
+      max_tokens: 800,
+      temperature: 0.7
+    });
+
+    const reply = completion.choices[0]?.message?.content || "No reply.";
+    res.json({ reply });
+  } catch (err) {
+    console.error("Physics explain error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Full interactive Physics Tutor (Socratic / Steps / Practice / Check)
+app.post("/api/physics-tutor", async (req, res) => {
+  try {
+    const { question, topic, mode } = req.body;
+    if (!question) return res.status(400).json({ error: "Missing question" });
+
+    const systemPrompt = `You are a physics tutor. 
+Mode: ${mode || "Socratic"}.
+Topic: ${topic || "General Physics"}.
+Respond with detailed, educational explanations. If "Steps" or "Practice" mode, show step-by-step reasoning.`;
+
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: question }
+      ],
+      max_tokens: 1200,
+      temperature: 0.7
+    });
+
+    const reply = completion.choices[0]?.message?.content || "No reply.";
+    res.json({ reply });
+  } catch (err) {
+    console.error("Physics tutor error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
 // ============ HEALTH ============
 app.get("/health", (_req, res) => {
   const db = loadGoldenDB();

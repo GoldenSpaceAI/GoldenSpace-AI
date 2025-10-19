@@ -32,7 +32,7 @@
             flex-direction: column;
         }
         
-        /* --- Chat Log (Floating Messages) --- */
+        /* --- Chat Log --- */
         .chat-log {
             flex: 1;
             padding: 2rem;
@@ -90,8 +90,8 @@
             box-shadow: 0 0 20px var(--gold-glow);
         }
         .message-content p { margin: 0; line-height: 1.7; white-space: pre-wrap; }
-        
-        /* --- Unique "Golden Arc" Input Area --- */
+
+        /* --- Input Area --- */
         .chat-input-area {
             padding: 1.5rem;
             width: 100%;
@@ -107,7 +107,6 @@
             border-bottom: 2px solid var(--gold-accent);
             transition: all 0.2s ease;
         }
-        /* The half-circles on the ends */
         .fancy-input-wrapper::before,
         .fancy-input-wrapper::after {
             content: '';
@@ -138,7 +137,7 @@
             padding: 0.5rem 2rem;
             font-size: 1.2rem;
             resize: none;
-            overflow-y: hidden; /* Hide scrollbar, size is managed by JS */
+            overflow-y: hidden;
             line-height: 1.5;
         }
         #send-btn {
@@ -149,12 +148,32 @@
             padding: 0.5rem 2rem;
             transition: transform 0.2s;
         }
-        #send-btn:hover {
-            transform: scale(1.1);
+        #send-btn:hover { transform: scale(1.1); }
+        #send-btn:disabled { color: var(--text-secondary); cursor: not-allowed; }
+
+        /* --- Floating Buttons --- */
+        .floating-buttons {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 1000;
         }
-        #send-btn:disabled {
-            color: var(--text-secondary);
-            cursor: not-allowed;
+        .floating-buttons a {
+            text-decoration: none;
+            color: var(--bg-dark);
+            background-color: var(--gold-accent);
+            border-radius: 12px;
+            padding: 10px 20px;
+            font-weight: 600;
+            box-shadow: 0 0 10px var(--gold-glow);
+            transition: all 0.2s ease;
+        }
+        .floating-buttons a:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px var(--gold-glow);
         }
 
         @media (max-width: 900px) {
@@ -165,12 +184,17 @@
 </head>
 <body>
 
+    <!-- Floating Navigation Buttons -->
+    <div class="floating-buttons">
+        <a href="index.html">🏠 Home</a>
+        <a href="buy-golden.html">💰 Pricing</a>
+    </div>
+
     <main class="chat-log" id="chat-log">
         <div class="welcome-header" id="welcome-header">
             <h1>GoldenSpaceAI Assistant</h1>
             <p>I am powered by Gemini. Ask me anything about the cosmos.</p>
         </div>
-        <!-- Chat messages will be appended here -->
     </main>
     
     <footer class="chat-input-area">
@@ -178,7 +202,10 @@
             <div class="fancy-input-wrapper">
                 <textarea id="chat-input" placeholder="Ask a question..." rows="1" required></textarea>
                 <button id="send-btn" type="submit" title="Send Message">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
                 </button>
             </div>
         </form>
@@ -192,30 +219,23 @@
         const welcomeHeader = document.getElementById('welcome-header');
 
         function appendMessage(sender, text) {
-            // Hide the welcome message on the first message
             if (welcomeHeader) welcomeHeader.style.display = 'none';
-
             const messageDiv = document.createElement('div');
             messageDiv.className = `chat-message ${sender}-message`;
             const avatar = sender === 'user' ? '🧑‍🚀' : '✨';
-            
-            // Create a paragraph element and set its text content to prevent HTML injection
             const p = document.createElement('p');
             p.textContent = text;
-
             messageDiv.innerHTML = `<div class="avatar">${avatar}</div><div class="message-content"></div>`;
             messageDiv.querySelector('.message-content').appendChild(p);
-            
             chatLog.appendChild(messageDiv);
-            chatLog.scrollTop = chatLog.scrollHeight; // Auto-scroll to the bottom
+            chatLog.scrollTop = chatLog.scrollHeight;
         }
 
         async function submitQuery(question) {
             if (!question) return;
-
             appendMessage('user', question);
             chatInput.value = '';
-            chatInput.style.height = 'auto'; // Reset height for dynamic sizing
+            chatInput.style.height = 'auto';
             sendBtn.disabled = true;
             
             const aiMessagePlaceholder = document.createElement('div');
@@ -225,18 +245,15 @@
             chatLog.scrollTop = chatLog.scrollHeight;
 
             try {
-               const response = await fetch('/chat-free-ai', {
+                const response = await fetch('/chat-free-ai', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ question })
                 });
-
                 if (!response.ok) throw new Error('Network response failed.');
-                
                 const data = await response.json();
-                aiMessagePlaceholder.querySelector('.message-content p').textContent = data.reply || data.answer || "No reply received.";
-
-
+                aiMessagePlaceholder.querySelector('.message-content p').textContent =
+                    data.reply || data.answer || "No reply received.";
             } catch (error) {
                 aiMessagePlaceholder.querySelector('.message-content p').textContent = 'Sorry, an error occurred.';
                 console.error('Error:', error);
@@ -249,14 +266,12 @@
             e.preventDefault();
             submitQuery(chatInput.value.trim());
         });
-        
-        // Auto-resize textarea as user types
+
         chatInput.addEventListener('input', () => {
-            chatInput.style.height = 'auto'; // Temporarily shrink to get the correct scrollHeight
+            chatInput.style.height = 'auto';
             chatInput.style.height = (chatInput.scrollHeight) + 'px';
         });
 
-        // Submit on Enter, new line on Shift+Enter
         chatInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
@@ -266,4 +281,3 @@
     </script>
 </body>
 </html>
-

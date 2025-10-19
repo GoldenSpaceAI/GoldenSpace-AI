@@ -1,582 +1,362 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>GoldenSpaceAI • Learn Physics</title>
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>GoldenSpaceAI • Learn Physics</title>
 
-    <style>
-      :root {
-        --bg: #0b0f14;
-        --panel: #131a25;
-        --panel2: #0f1520;
-        --border: #1f2a40;
-        --gold: #f6c64a;
-        --gold2: #eb8b36;
-        --text: #e7f4e9;
-        --muted: #cfc6a5;
-        --shadow: 0 18px 60px rgba(0, 0, 0, 0.45);
-      }
-      * { box-sizing: border-box; }
-      html, body { height: 100%; }
-      body {
-        margin: 0; color: var(--text);
-        font: 15px/1.5 ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;
-        background:
-          radial-gradient(1100px 520px at 85% -10%, rgba(246, 198, 74, 0.12), transparent 60%),
-          radial-gradient(900px 480px at -10% 0%, rgba(246, 198, 74, 0.08), transparent 60%),
-          #0a0e15;
-        min-height: 100svh;
-      }
-      a { color: inherit; text-decoration: none; }
+  <style>
+    :root{
+      --bg:#0a0e15; --panel:#121827; --panel2:#0c1220;
+      --border:#1f2a40; --gold:#f6c64a; --gold2:#eb8b36;
+      --text:#e6f0ff; --muted:#99a3b5; --ok:#9cff9c; --err:#ff9a9a;
+      --shadow:0 18px 60px rgba(0,0,0,.45);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;color:var(--text);
+      font:15px/1.55 ui-sans-serif,system-ui,-apple-system,Segoe UI,Inter,Roboto,Arial,sans-serif;
+      background:
+        radial-gradient(1200px 520px at 85% -10%, rgba(246,198,74,.12), transparent 60%),
+        radial-gradient(900px 480px at -10% 0%, rgba(246,198,74,.08), transparent 60%),
+        var(--bg);
+      min-height:100svh;
+    }
+    a{color:inherit;text-decoration:none}
 
-      /* Top */
-      .top { position: sticky; top: 0; z-index: 10; padding: clamp(14px, 2.2vh, 22px) 18px 10px;
-        background: linear-gradient(180deg, rgba(10, 14, 21, 0.92), rgba(10, 14, 21, 0.65) 60%, transparent);
-        border-bottom: 1px solid var(--border); backdrop-filter: blur(8px);
-        display: flex; align-items: center; gap: 12px; }
-      .back { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px; font-weight: 900; font-size: 14px;
-        background: linear-gradient(180deg, var(--gold), var(--gold2)); color: #1b1300; border: 1px solid rgba(0, 0, 0, 0.18); box-shadow: 0 10px 26px rgba(246, 198, 74, 0.25);
-        transition: transform 0.2s ease, filter 0.2s ease; }
-      .back:hover { transform: translateY(-1px); filter: saturate(1.05); }
-      .title { font-weight: 900; letter-spacing: 0.4px; color: var(--gold); font-size: clamp(22px, 2.6vw, 28px); text-shadow: 0 0 18px rgba(246, 198, 74, 0.25); }
-      .spacer { flex: 1; }
+    /* Topbar */
+    .top{position:sticky;top:0;z-index:20;padding:14px 18px 10px;
+      background:linear-gradient(180deg,rgba(10,14,21,.92),rgba(10,14,21,.65) 60%,transparent);
+      border-bottom:1px solid var(--border);backdrop-filter:blur(8px);
+      display:flex;align-items:center;gap:12px}
+    .back{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;font-weight:900;font-size:14px;
+      background:linear-gradient(180deg,var(--gold),var(--gold2));color:#1b1300;border:1px solid rgba(0,0,0,.18);
+      box-shadow:0 10px 26px rgba(246,198,74,.25);transition:.2s}
+    .back:hover{transform:translateY(-1px);filter:saturate(1.05)}
+    .title{font-weight:900;letter-spacing:.3px;color:var(--gold);font-size:clamp(22px,2.6vw,28px);text-shadow:0 0 18px rgba(246,198,74,.25)}
+    .spacer{flex:1}
+    .balance{font-weight:800;color:var(--muted);border:1px solid var(--border);padding:6px 10px;border-radius:10px;background:#0d1420}
 
-      /* Layout */
-      .wrap { max-width: 1200px; margin: 26px auto; padding: 0 18px; display: grid; gap: 18px; grid-template-columns: 1.4fr 0.9fr; }
-      @media (max-width: 1100px) { .wrap { grid-template-columns: 1fr; } }
+    /* Layout */
+    .wrap{max-width:1200px;margin:26px auto;padding:0 18px;display:grid;gap:18px;grid-template-columns:1.4fr .9fr}
+    @media (max-width:1100px){.wrap{grid-template-columns:1fr}}
+    .panel{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--border);border-radius:16px;padding:18px;box-shadow:var(--shadow)}
+    .panel h2{margin:0 0 10px;font-size:18px;color:var(--gold);font-weight:900}
+    .sub{margin:6px 0 14px;color:var(--muted);font-size:14px}
 
-      .panel { background: linear-gradient(180deg, var(--panel), var(--panel2)); border: 1px solid var(--border); border-radius: 16px; padding: 18px; box-shadow: var(--shadow); }
-      .panel h2 { margin: 0 0 10px; font-size: 18px; color: var(--gold); font-weight: 900; }
-      .sub { margin: 6px 0 14px; color: var(--muted); font-size: 14px; }
+    /* Topics */
+    .topics{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+    .card{background:#0d1420;border:1px solid var(--border);border-radius:14px;padding:14px;cursor:pointer;transition:.12s}
+    .card:hover{transform:translateY(-2px);box-shadow:0 14px 30px rgba(0,0,0,.25)}
+    .card h3{margin:0 0 6px;font-size:16px;display:flex;align-items:center;gap:8px}
+    .pill{display:inline-block;padding:3px 8px;border-radius:999px;font-size:12px;font-weight:800;color:#1b1300;background:linear-gradient(180deg,#f8d772,#e7b72f)}
+    .tiny{font-size:12px;color:var(--muted)}
+    .formula{font-family:ui-monospace,Menlo,Consolas,monospace;color:#ffe08a}
 
-      /* Cards grid: 20 topics */
-      .topics { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
-      .card { background: #0d1420; border: 1px solid var(--border); border-radius: 14px; padding: 14px; transition: transform 0.12s ease, box-shadow 0.12s ease; cursor: pointer; }
-      .card:hover { transform: translateY(-2px); box-shadow: 0 14px 30px rgba(0, 0, 0, 0.25); }
-      .card h3 { margin: 0 0 6px; font-size: 16px; display: flex; align-items: center; gap: 8px; }
-      .pill { display: inline-block; padding: 3px 8px; border-radius: 999px; font-size: 12px; font-weight: 800; color: #1b1300; background: linear-gradient(180deg, #f8d772, #e7b72f); }
-      .tiny { font-size: 12px; color: var(--muted); }
-      .formula { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: #ffe08a; }
+    details{margin-top:8px;border:1px solid var(--border);border-radius:12px;overflow:hidden}
+    summary{cursor:pointer;padding:10px 12px;background:#0f1725;list-style:none;font-weight:800}
+    summary::-webkit-details-marker{display:none}
+    details .content{padding:12px;background:#0b111c}
 
-      details { margin-top: 8px; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
-      summary { cursor: pointer; padding: 10px 12px; background: #0f1725; list-style: none; font-weight: 800; }
-      summary::-webkit-details-marker { display: none; }
-      details .content { padding: 12px; background: #0b111c; }
+    /* Tutor */
+    .chat{height:320px;overflow:auto;display:flex;flex-direction:column;gap:10px;padding:10px;background:#0b1219;border:1px solid var(--border);border-radius:12px}
+    .bubble{padding:10px 12px;border-radius:12px;border:1px solid #22304a;background:#0e1622}
+    .me{align-self:flex-end;background:#121b29;border-color:#3a2a00}
+    .assistant{align-self:flex-start}
+    .controls{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:start;margin-top:10px}
+    textarea,input{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:#0b1219;color:var(--text)}
+    .btn{border-radius:12px;padding:10px 14px;font-weight:900;cursor:pointer;background:linear-gradient(180deg,var(--gold),var(--gold2));color:#1b1300;border:1px solid rgba(0,0,0,.18);box-shadow:0 10px 26px rgba(246,198,74,.28);transition:.2s}
+    .btn:hover{transform:translateY(-1px);filter:saturate(1.05)}
+    .modes{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 6px}
+    .tag{font-size:11px;border:1px solid var(--border);padding:4px 8px;border-radius:999px;color:var(--muted);cursor:pointer}
+    .tag.active{color:#000;background:linear-gradient(180deg,#f8d772,#e7b72f);border-color:#3b2a00}
+    .status{margin-top:6px;font-size:12px;color:var(--muted)}
 
-      /* Right: Tools + Tutor */
-      .box { background: #0d1420; border: 1px solid var(--border); border-radius: 12px; padding: 12px; }
-      label { display: block; font-size: 12px; color: var(--muted); margin-top: 6px; }
-      input[type="number"], input[type="text"], textarea { width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border); background: #0b1219; color: var(--text); margin-top: 6px; }
-      .btn { margin-top: 10px; border-radius: 12px; padding: 10px 14px; font-weight: 900; cursor: pointer; background: linear-gradient(180deg, var(--gold), var(--gold2)); color: #1b1300; border: 1px solid rgba(0, 0, 0, 0.18); box-shadow: 0 10px 26px rgba(246, 198, 74, 0.28); transition: transform 0.2s ease, filter 0.2s ease; }
-      .btn:hover { transform: translateY(-1px); filter: saturate(1.05); }
-      .out { margin-top: 8px; font-weight: 900; color: var(--gold); }
+    /* 4G Lock Overlay */
+    .golden-overlay{position:fixed;inset:0;background:rgba(11,16,32,.96);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;z-index:10000}
+    .golden-unlock{background:linear-gradient(135deg,#0f1624,#0b1320);border:2px solid var(--gold);border-radius:20px;padding:26px;text-align:center;max-width:420px;width:92%}
+    .golden-unlock h2{color:var(--gold);margin:0 0 8px}
+    .golden-unlock .desc{color:var(--muted);margin:0 0 10px}
+    .price{font-size:36px;font-weight:900;color:var(--gold);margin:10px 0}
+    .price span{font-size:14px;color:var(--muted)}
+    .balance-info{color:var(--muted);margin:8px 0}
+    .unlock-btn{width:100%;margin-top:10px;border-radius:12px;padding:12px 16px;font-weight:900;cursor:pointer;background:linear-gradient(180deg,var(--gold),var(--gold2));color:#1a1300;border:none}
+    .links{margin-top:14px}
+    .links a{color:var(--gold);margin:0 10px}
+    #statusMessage{margin-top:8px;min-height:20px}
+  </style>
+</head>
+<body>
+  <!-- ==================== TOP ==================== -->
+  <div class="top">
+    <a class="back" href="/">Home</a>
+    <div class="title">Learn Physics</div>
+    <div class="spacer"></div>
+    <div class="balance">Balance: <span id="uiBalance">0</span> G</div>
+  </div>
 
-      .ai-wrap { margin-top: 14px; }
-      .ai { display: flex; gap: 10px; }
-      .ai input { flex: 1; }
-
-      /* Tutor chat */
-      .tutor { margin-top: 14px; }
-      .chat { height: 280px; overflow: auto; display: flex; flex-direction: column; gap: 10px; padding: 10px; background: #0b1219; border: 1px solid var(--border); border-radius: 12px; }
-      .bubble { padding: 10px 12px; border-radius: 12px; border: 1px solid #22304a; background: #0e1622; }
-      .me { align-self: flex-end; background: #121b29; border-color: #3a2a00; }
-      .assistant { align-self: flex-start; }
-      .controls { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: start; margin-top: 10px; }
-      .row { display: flex; gap: 8px; margin-top: 6px; }
-      .tag { font-size: 11px; border: 1px solid var(--border); padding: 4px 8px; border-radius: 999px; color: var(--muted); cursor: pointer; }
-      .tag:hover { color: var(--gold); border-color: #3b2a00; }
-    </style>
-  </head>
-  <body>
-    <!-- ==================== GOLDEN UNLOCK OVERLAY ==================== -->
-<div id="goldenOverlay" class="golden-overlay">
-  <div class="golden-unlock">
-    <div class="lock-icon">🔒</div>
-    <h2>Unlock This Feature</h2>
-    <p class="description">Access this premium feature for 30 days</p>
-    <div class="price">4G <span>per month</span></div>
-    <div class="balance-info">Your balance: <span id="userBalance">0</span>G</div>
-    <button class="unlock-btn" onclick="unlockFeature()">UNLOCK FOR 4G</button>
-    <div id="statusMessage"></div>
-    <div class="links">
-      <a href="/buy-golden.html">Need Golden? Buy here</a>
-      <a href="/">Back to Home</a>
+  <!-- ==================== 4G LOCK OVERLAY ==================== -->
+  <div id="goldenOverlay" class="golden-overlay" hidden>
+    <div class="golden-unlock">
+      <div style="font-size:54px;margin-bottom:8px">🔒</div>
+      <h2>Unlock This Feature</h2>
+      <p class="desc">Access <strong>Learn Physics</strong> for 30 days</p>
+      <div class="price">4G <span>per month</span></div>
+      <div class="balance-info">Your balance: <span id="userBalance">0</span> G</div>
+      <button class="unlock-btn" id="unlockBtn">UNLOCK FOR 4G</button>
+      <div id="statusMessage"></div>
+      <div class="links">
+        <a href="/buy-golden.html">Need Golden? Buy here</a>
+        <a href="/">Back to Home</a>
+      </div>
     </div>
   </div>
-</div>
 
-<style>
-.golden-overlay {
-  position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-  background: rgba(11, 16, 32, 0.95); backdrop-filter: blur(10px);
-  display: flex; align-items: center; justify-content: center; z-index: 10000;
-}
-.golden-unlock {
-  background: linear-gradient(135deg, #0f1624, #0b1320); border: 2px solid #f6c64a;
-  border-radius: 20px; padding: 30px; text-align: center; max-width: 400px; width: 90%;
-}
-.lock-icon { font-size: 60px; margin-bottom: 15px; }
-.golden-unlock h2 { color: #f6c64a; margin-bottom: 10px; }
-.description { color: #cfc6a5; margin-bottom: 20px; }
-.price { font-size: 36px; font-weight: bold; color: #f6c64a; margin: 15px 0; }
-.price span { font-size: 16px; color: #cfc6a5; }
-.balance-info { color: #cfc6a5; margin: 10px 0; }
-.unlock-btn {
-  background: linear-gradient(135deg, #f6c64a, #eb8b36); color: #1a1300;
-  border: none; border-radius: 10px; padding: 12px 30px; font-size: 16px;
-  font-weight: bold; cursor: pointer; margin: 10px 0; width: 100%;
-}
-.links { margin-top: 15px; }
-.links a { color: #f6c64a; margin: 0 10px; }
-#statusMessage { margin: 10px 0; min-height: 20px; }
-</style>
+  <!-- ==================== MAIN ==================== -->
+  <main class="wrap" id="pageContent" style="visibility:hidden">
+    <!-- LEFT: topics -->
+    <section class="panel">
+      <h2>Core Topics</h2>
+      <p class="sub">Tap a topic to focus; expand formulas to revise quickly.</p>
 
-<script>
-// Get current page feature name
-function getFeatureName() {
-  const path = window.location.pathname;
-  if (path.includes('search-info')) return 'search_info';
-  if (path.includes('learn-physics')) return 'learn_physics';
-  if (path.includes('create-planet')) return 'create_planet';
-  if (path.includes('create-advanced-planet')) return 'advanced_planet';
-  if (path.includes('create-rocket')) return 'create_rocket';
-  if (path.includes('create-satellite')) return 'create_satellite';
-  if (path.includes('your-space')) return 'your_space';
-  return 'unknown';
-}
-
-async function checkAccess() {
-  try {
-    const userRes = await fetch('/api/me', { credentials: 'include' });
-    const userData = await userRes.json();
-    
-    if (!userData.loggedIn) {
-      window.location.href = '/login-signup.html';
-      return;
-    }
-
-    const feature = getFeatureName();
-    const featureRes = await fetch(`/api/feature-status?feature=${feature}`, {
-      credentials: 'include'
-    });
-    
-    if (featureRes.ok) {
-      const featureData = await featureRes.json();
-      if (featureData.unlocked) {
-        document.getElementById('goldenOverlay').style.display = 'none';
-      }
-    }
-
-    // Load balance
-    const balanceRes = await fetch('/api/golden-balance', { credentials: 'include' });
-    const balanceData = await balanceRes.json();
-    document.getElementById('userBalance').textContent = balanceData.balance;
-    
-  } catch (error) {
-    console.error('Access check failed:', error);
-  }
-}
-
-async function unlockFeature() {
-  const btn = document.querySelector('.unlock-btn');
-  const status = document.getElementById('statusMessage');
-  
-  btn.disabled = true;
-  btn.textContent = 'Processing...';
-  status.textContent = '';
-  
-  try {
-    const feature = getFeatureName();
-    const response = await fetch('/api/unlock-feature', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ feature: feature, cost: 4 })
-    });
-    
-    const data = await response.json();
-    
-    if (data.success) {
-      status.textContent = '✅ Unlocked! Loading...';
-      status.style.color = '#90ee90';
-      setTimeout(() => {
-        document.getElementById('goldenOverlay').style.display = 'none';
-      }, 1000);
-    } else {
-      status.textContent = '❌ ' + data.error;
-      status.style.color = '#ff6b6b';
-      btn.disabled = false;
-      btn.textContent = 'UNLOCK FOR 4G';
-    }
-  } catch (error) {
-    status.textContent = '❌ Network error';
-    status.style.color = '#ff6b6b';
-    btn.disabled = false;
-    btn.textContent = 'UNLOCK FOR 4G';
-  }
-}
-
-// Check access when page loads
-document.addEventListener('DOMContentLoaded', checkAccess);
-</script>    <div class="top">
-      <a class="back" href="/">Home</a>
-      <div class="title">Learn Physics</div>
-      <div class="spacer"></div>
-    </div>
-
-    <main class="wrap">
-      <!-- LEFT: the 20 topic cards -->
-      <section class="panel">
-        <h2>Core Topics</h2>
-        <p class="sub">Premium notes with worked examples. Tap to expand.</p>
-
-        <div id="topics" class="topics">
-          <!-- 1 Mechanics -->
-          <div class="card" data-topic="Mechanics">
-            <h3>Mechanics <span class="pill">Kinematics & Dynamics</span></h3>
-            <div class="tiny">Motion with constant/variable acceleration; forces.</div>
-            <details><summary>Key formulas</summary>
-              <div class="content">
-                <p><span class="formula">v = u + at</span> &nbsp; <span class="formula">s = ut + ½at²</span> &nbsp; <span class="formula">v² = u² + 2as</span></p>
-                <p><span class="formula">F = ma</span>, work <span class="formula">W = Fs</span>, power <span class="formula">P = W/t</span></p>
-              </div>
-            </details>
-          </div>
-
-          <!-- 2 Rotational Dynamics -->
-          <div class="card" data-topic="Rotational Dynamics">
-            <h3>Rotational Dynamics <span class="pill">Torque</span></h3>
-            <div class="tiny">Angular motion, moment of inertia, rolling.</div>
-            <details><summary>Key formulas</summary>
-              <div class="content">
-                <p><span class="formula">τ = Iα</span> &nbsp; <span class="formula">L = Iω</span> &nbsp; <span class="formula">K<sub>rot</sub> = ½Iω²</span></p>
-                <p>Rolling: <span class="formula">v = ωr</span>, energy = translational + rotational.</p>
-              </div>
-            </details>
-          </div>
-
-          <!-- 3 SHM -->
-          <div class="card" data-topic="SHM & Oscillations">
-            <h3>SHM & Oscillations <span class="pill">Periodic</span></h3>
-            <div class="tiny">Mass–spring, pendulum, resonance.</div>
-            <details><summary>Key formulas</summary>
-              <div class="content">
-                <p><span class="formula">x = A cos(ωt+φ)</span> &nbsp; <span class="formula">ω = √(k/m)</span> &nbsp; <span class="formula">T = 2π/ω</span></p>
-                <p>Pendulum small-angle: <span class="formula">T = 2π√(L/g)</span></p>
-              </div>
-            </details>
-          </div>
-
-          <!-- 4 Gravitation -->
-          <div class="card" data-topic="Gravitation & Orbits">
-            <h3>Gravitation & Orbits <span class="pill">Kepler</span></h3>
-            <div class="tiny">Inverse-square law; circular & elliptical orbits.</div>
-            <details><summary>Key formulas</summary>
-              <div class="content">
-                <p><span class="formula">F = GmM/r²</span> &nbsp; <span class="formula">U = -GmM/r</span> &nbsp; <span class="formula">v<sub>orb</sub> = √(GM/r)</span></p>
-                <p>Escape: <span class="formula">v<sub>esc</sub> = √(2GM/r)</span></p>
-              </div>
-            </details>
-          </div>
-
-          <!-- 5 Energy & Momentum -->
-          <div class="card" data-topic="Energy & Momentum">
-            <h3>Energy & Momentum <span class="pill">Conservation</span></h3>
-            <div class="tiny">Work–energy theorem; elastic/inelastic collisions.</div>
-            <details><summary>Key formulas</summary>
-              <div class="content">
-                <p><span class="formula">K = ½mv²</span> &nbsp; <span class="formula">W = ΔK</span> &nbsp; <span class="formula">p = mv</span></p>
-                <p>Elastic collision conserves both <span class="formula">p</span> & <span class="formula">K</span>.</p>
-              </div>
-            </details>
-          </div>
-
-          <!-- 6 Fluids -->
-          <div class="card" data-topic="Fluid Mechanics">
-            <h3>Fluid Mechanics <span class="pill">Pressure</span></h3>
-            <div class="tiny">Buoyancy, continuity, Bernoulli.</div>
-            <details><summary>Key formulas</summary>
-              <div class="content">
-                <p>Hydrostatic: <span class="formula">P = P₀ + ρgh</span>; Buoyant: <span class="formula">F<sub>b</sub>=ρgV</span></p>
-                <p>Continuity: <span class="formula">A₁v₁ = A₂v₂</span>; Bernoulli: <span class="formula">P + ½ρv² + ρgh = const</span></p>
-              </div>
-            </details>
-          </div>
-
-          <!-- 7 Waves & Optics -->
-          <div class="card" data-topic="Waves & Optics">
-            <h3>Waves & Optics <span class="pill">Interference</span></h3>
-            <div class="tiny">Wave equation, diffraction, lenses.</div>
-            <details><summary>Key formulas</summary>
-              <div class="content">
-                <p><span class="formula">v = fλ</span> &nbsp; <span class="formula">I ∝ A²</span> &nbsp; <span class="formula">Δy = λL/d</span></p>
-                <p>Thin lens: <span class="formula">1/f = 1/u + 1/v</span></p>
-              </div>
-            </details>
-          </div>
-
-          <!-- 8 Thermodynamics -->
-          <div class="card" data-topic="Thermodynamics">
-            <h3>Thermodynamics <span class="pill">Laws</span></h3>
-            <div class="tiny">First/second law; PV diagrams; engines.</div>
-            <details><summary>Key formulas</summary>
-              <div class="content">
-                <p><span class="formula">ΔU = Q - W</span> &nbsp; <span class="formula">PV = nRT</span> &nbsp; Carnot: <span class="formula">η = 1 - T<sub>c</sub>/T<sub>h</sub></span></p>
-              </div>
-            </details>
-          </div>
-
-          <!-- 9 Heat Transfer -->
-          <div class="card" data-topic="Thermal Physics">
-            <h3>Thermal Physics <span class="pill">Heat Transfer</span></h3>
-            <div class="tiny">Conduction, convection, radiation.</div>
-            <details><summary>Key formulas</summary>
-              <div class="content">
-                <p>Conduction: <span class="formula">Q/t = kAΔT/L</span>; Radiation: <span class="formula">P = σεAT⁴</span></p>
-              </div>
-            </details>
-          </div>
-
-          <!-- 10 Electricity -->
-          <div class="card" data-topic="Electricity">
-            <h3>Electricity <span class="pill">DC Circuits</span></h3>
-            <div class="tiny">Ohm’s law; series/parallel; power.</div>
-            <details><summary>Key formulas</summary>
-              <div class="content">
-                <p><span class="formula">V = IR</span> &nbsp; <span class="formula">P = VI = I²R = V²/R</span></p>
-                <p>Series: <span class="formula">R<sub>eq</sub>=ΣR</span>; Parallel: <span class="formula">1/R<sub>eq</sub>=Σ1/R</span></p>
-              </div>
-            </details>
-          </div>
-
-          <!-- 11 Magnetism -->
-          <div class="card" data-topic="Magnetism">
-            <h3>Magnetism <span class="pill">Fields & Induction</span></h3>
-            <div class="tiny">Lorentz force; Faraday’s law.</div>
-            <details><summary>Key formulas</summary>
-              <div class="content">
-                <p>Force: <span class="formula">F = qvB sinθ</span>, wire: <span class="formula">F = BIL sinθ</span></p>
-                <p>Induction: <span class="formula">ε = -dΦ/dt</span></p>
-              </div>
-            </details>
-          </div>
-
-          <!-- 12 Electromagnetism -->
-          <div class="card" data-topic="Electromagnetism">
-            <h3>Electromagnetism <span class="pill">Maxwell</span></h3>
-            <div class="tiny">Unified E & B; waves in vacuum.</div>
-            <details><summary>Key formulas</summary>
-              <div class="content">
-                <p>Maxwell: <span class="formula">∇·E=ρ/ε₀</span>, <span class="formula">∇·B=0</span>, <span class="formula">∇×E=-∂B/∂t</span>, <span class="formula">∇×B=μ₀J+μ₀ε₀∂E/∂t</span></p>
-                <p>Light speed: <span class="formula">c = 1/√(μ₀ε₀)</span></p>
-              </div>
-            </details>
-          </div>
-
-          <!-- 13 Modern Physics -->
-          <div class="card" data-topic="Modern Physics">
-            <h3>Modern Physics <span class="pill">Photoelectric</span></h3>
-            <div class="tiny">Photons, Bohr model, Compton.</div>
-            <details><summary>Key formulas</summary>
-              <div class="content">
-                <p>Photon: <span class="formula">E = hf = hc/λ</span>; PE effect: <span class="formula">K<sub>max</sub> = hf - Φ</span></p>
-              </div>
-            </details>
-          </div>
-
-          <!-- 14 Relativity -->
-          <div class="card" data-topic="Relativity">
-            <h3>Relativity <span class="pill">SR/GR</span></h3>
-            <div class="tiny">Time dilation, length contraction; gravity as curvature.</div>
-            <details><summary>Key formulas</summary>
-              <div class="content">
-                <p><span class="formula">γ = 1/√(1 - v²/c²)</span> &nbsp; <span class="formula">Δt' = γΔt</span> &nbsp; <span class="formula">L' = L/γ</span></p>
-                <p>Energy: <span class="formula">E = γmc²</span></p>
-              </div>
-            </details>
-          </div>
-
-          <!-- 15 Quantum -->
-          <div class="card" data-topic="Quantum Mechanics">
-            <h3>Quantum Mechanics <span class="pill">Basics</span></h3>
-            <div class="tiny">Wavefunctions, uncertainty, wells.</div>
-            <details><summary>Key formulas</summary>
-              <div class="content">
-                <p>de Broglie: <span class="formula">λ = h/p</span>; Heisenberg: <span class="formula">ΔxΔp ≥ ħ/2</span></p>
-              </div>
-            </details>
-          </div>
-
-          <!-- 16 Nuclear -->
-          <div class="card" data-topic="Nuclear Physics">
-            <h3>Nuclear Physics <span class="pill">Decay</span></h3>
-            <div class="tiny">Radioactivity; binding energy.</div>
-            <details><summary>Key formulas</summary>
-              <div class="content">
-                <p>Decay: <span class="formula">N = N₀ e^{-λt}</span> &nbsp; <span class="formula">T½ = ln2/λ</span></p>
-                <p>Mass–energy: <span class="formula">E = Δmc²</span></p>
-              </div>
-            </details>
-          </div>
-
-          <!-- 17 Materials -->
-          <div class="card" data-topic="Materials & Solid State">
-            <h3>Materials & Solid State <span class="pill">Stress–Strain</span></h3>
-            <div class="tiny">Elasticity; band theory; semiconductors.</div>
-            <details><summary>Key formulas</summary>
-              <div class="content">
-                <p><span class="formula">σ = F/A</span>, <span class="formula">ε = ΔL/L</span>, Young’s: <span class="formula">E = σ/ε</span></p>
-              </div>
-            </details>
-          </div>
-
-          <!-- 18 Error Analysis -->
-          <div class="card" data-topic="Units & Error Analysis">
-            <h3>Units & Error Analysis <span class="pill">Significant</span></h3>
-            <div class="tiny">Uncertainty, propagation, SI.</div>
-            <details><summary>Key formulas</summary>
-              <div class="content">
-                <p>Add/Sub: <span class="formula">Δz = √(Δx²+Δy²)</span>; Mult/Div: relative errors add.</p>
-              </div>
-            </details>
-          </div>
-
-          <!-- 19 Astrophysics -->
-          <div class="card" data-topic="Astronomy & Astrophysics">
-            <h3>Astronomy & Astrophysics <span class="pill">Cosmic</span></h3>
-            <div class="tiny">Stars, H–R diagram, cosmology basics.</div>
-            <details><summary>Key formulas</summary>
-              <div class="content">
-                <p>Luminosity: <span class="formula">L = 4πR²σT⁴</span>; Hubble: <span class="formula">v = H₀ d</span></p>
-              </div>
-            </details>
-          </div>
-
-          <!-- 20 Rocketry -->
-          <div class="card" data-topic="Rocketry & Spaceflight">
-            <h3>Rocketry & Spaceflight <span class="pill">Tsiolkovsky</span></h3>
-            <div class="tiny">Delta-v, staging, orbits.</div>
-            <details><summary>Key formulas</summary>
-              <div class="content">
-                <p>Rocket eq.: <span class="formula">Δv = v<sub>e</sub> ln(m₀/m<sub>f</sub>)</span> &nbsp; Isp relation: <span class="formula">v<sub>e</sub>=g₀ I<sub>sp</sub></span></p>
-              </div>
-            </details>
-          </div>
-        </div>
-      </section>
-
-      <!-- RIGHT: Tools + GPT‑4 Tutor (server key) -->
-      <aside class="panel">
-        <h2>Tools</h2>
-
-        <div class="box">
-          <h3 style="margin: 0 0 6px">Kinematics (quick)</h3>
-          <label>u (m/s)</label><input id="u" type="number" step="any" />
-          <label>a (m/s²)</label><input id="a" type="number" step="any" />
-          <label>t (s)</label><input id="t" type="number" step="any" />
-          <button class="btn" id="kinBtn">Compute</button>
-          <div id="calcOut" class="out"></div>
+      <div id="topics" class="topics">
+        <!-- (Kept compact but polished) -->
+        <div class="card" data-topic="Mechanics">
+          <h3>Mechanics <span class="pill">Kinematics & Dynamics</span></h3>
+          <div class="tiny">Forces, motion, energy, momentum.</div>
+          <details><summary>Key formulas</summary>
+            <div class="content">
+              <p><span class="formula">v = u + at</span> • <span class="formula">s = ut + ½at²</span> • <span class="formula">v² = u² + 2as</span></p>
+              <p><span class="formula">F = ma</span> • <span class="formula">W = Fs</span> • <span class="formula">P = W/t</span></p>
+            </div>
+          </details>
         </div>
 
-        <!-- GPT‑4 Physics Helper (server-side key on Render) -->
-        <div class="panel ai-wrap">
-          <h2>Quick Explain (GPT‑4)</h2>
-          <p class="tiny">Ask a concept or calculation. Uses your server API key on Render (no keys in the browser).</p>
-          <div class="ai">
-            <input id="aiQ" type="text" placeholder="e.g., Why doesn’t escape velocity depend on mass?" />
-            <button id="aiBtn" class="btn">Ask</button>
-          </div>
-          <div id="aiOut" class="out"></div>
+        <div class="card" data-topic="Rotational Dynamics">
+          <h3>Rotational Dynamics <span class="pill">Torque</span></h3>
+          <div class="tiny">Angular motion, inertia, rolling.</div>
+          <details><summary>Key formulas</summary>
+            <div class="content">
+              <p><span class="formula">τ = Iα</span> • <span class="formula">L = Iω</span> • <span class="formula">K₍rot₎ = ½Iω²</span></p>
+            </div>
+          </details>
         </div>
 
-        <!-- Full Tutor -->
-        <div class="panel tutor">
-          <h2>Physics Tutor (GPT‑4)</h2>
-          <div class="tiny">Pick a topic from the left, then ask. Modes: Socratic • Steps • Practice • Check</div>
-          <div id="chat" class="chat"></div>
-          <div class="controls">
-            <textarea id="ask" rows="2" placeholder="Ask a physics question…"></textarea>
-            <button id="send" class="btn">Ask Tutor →</button>
-          </div>
-          <div class="row">
-            <div class="tag" data-mode="Socratic">💡 Socratic</div>
-            <div class="tag" data-mode="Steps">🪜 Steps</div>
-            <div class="tag" data-mode="Practice">🧪 Practice</div>
-            <div class="tag" data-mode="Check">✅ Check</div>
-          </div>
+        <div class="card" data-topic="Thermodynamics">
+          <h3>Thermodynamics <span class="pill">Laws</span></h3>
+          <div class="tiny">First/second law; PV diagrams; engines.</div>
+          <details><summary>Key formulas</summary>
+            <div class="content">
+              <p><span class="formula">ΔU = Q - W</span> • <span class="formula">PV = nRT</span> • <span class="formula">η = 1 - T<sub>c</sub>/T<sub>h</sub></span></p>
+            </div>
+          </details>
         </div>
-      </aside>
-    </main>
 
-    <script>
-      // ----------------- Topic Cards (20, static) -----------------
-      let CURRENT_TOPIC = 'Mechanics';
-      document.querySelectorAll('#topics .card[data-topic]').forEach(card=>{
-        card.addEventListener('click', ()=>{ CURRENT_TOPIC = card.getAttribute('data-topic'); toast(`Topic set: ${CURRENT_TOPIC}`); });
+        <div class="card" data-topic="Electricity">
+          <h3>Electricity <span class="pill">DC Circuits</span></h3>
+          <div class="tiny">Ohm’s law; series/parallel; power.</div>
+          <details><summary>Key formulas</summary>
+            <div class="content">
+              <p><span class="formula">V = IR</span> • <span class="formula">P = VI = I²R = V²/R</span></p>
+            </div>
+          </details>
+        </div>
+
+        <div class="card" data-topic="Waves & Optics">
+          <h3>Waves & Optics <span class="pill">Interference</span></h3>
+          <div class="tiny">Wave equation, diffraction, lenses.</div>
+          <details><summary>Key formulas</summary>
+            <div class="content">
+              <p><span class="formula">v = fλ</span> • <span class="formula">Δy = λL/d</span> • <span class="formula">1/f = 1/u + 1/v</span></p>
+            </div>
+          </details>
+        </div>
+
+        <div class="card" data-topic="Modern Physics">
+          <h3>Modern Physics <span class="pill">Photoelectric</span></h3>
+          <div class="tiny">Photons, Bohr model, Compton.</div>
+          <details><summary>Key formulas</summary>
+            <div class="content">
+              <p><span class="formula">E = hf = hc/λ</span> • <span class="formula">K<sub>max</sub> = hf - Φ</span></p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT: AI Tutor -->
+    <aside class="panel">
+      <h2>Physics Tutor (GPT-4)</h2>
+      <div class="sub">Choose a mode, then ask. Answers adapt to the topic you select.</div>
+
+      <div class="modes">
+        <div class="tag active" data-mode="Socratic">💡 Explain</div>
+        <div class="tag" data-mode="Steps">🪜 Step-by-Step</div>
+        <div class="tag" data-mode="Practice">🧪 Quiz Me</div>
+        <div class="tag" data-mode="Check">✅ Check My Work</div>
+      </div>
+
+      <div class="chat" id="chat"></div>
+
+      <div class="controls">
+        <textarea id="ask" rows="2" placeholder="Ask a physics question…"></textarea>
+        <button id="send" class="btn">Ask Tutor →</button>
+      </div>
+      <div class="status" id="aiStatus"></div>
+    </aside>
+  </main>
+
+  <script>
+    // -------- Feature constants --------
+    const FEATURE = 'learn_physics'; // backend key
+    const OVERLAY = document.getElementById('goldenOverlay');
+    const UI_BAL = document.getElementById('uiBalance');
+    const USER_BAL = document.getElementById('userBalance');
+    const STATUS = document.getElementById('statusMessage');
+    const UNLOCK_BTN = document.getElementById('unlockBtn');
+    const PAGE = document.getElementById('pageContent');
+
+    // -------- Helper: toast --------
+    function toast(msg){
+      const el = document.createElement('div');
+      el.textContent = msg;
+      Object.assign(el.style,{
+        position:'fixed',bottom:'18px',left:'50%',transform:'translateX(-50%)',
+        padding:'8px 12px',border:'1px solid var(--border)',background:'#0d1420',
+        color:'var(--gold)',borderRadius:'999px',boxShadow:'var(--shadow)',zIndex:9999
       });
+      document.body.appendChild(el); setTimeout(()=>el.remove(),1400);
+    }
 
-      // ----------------- Small tools -----------------
-      document.getElementById('kinBtn').onclick = ()=>{
-        const u=+document.getElementById('u').value||0;
-        const a=+document.getElementById('a').value||0;
-        const t=+document.getElementById('t').value||0;
-        const v=u+a*t; const s=u*t+0.5*a*t*t;
-        document.getElementById('calcOut').innerText = `v=${v.toFixed(2)} m/s, s=${s.toFixed(2)} m`;
-      };
+    // -------- Auth + gating --------
+    async function loadMe(){
+      const me = await fetch('/api/me',{credentials:'include'}).then(r=>r.json()).catch(()=>({loggedIn:false}));
+      if(!me.loggedIn){ window.location.href='/login-signup.html'; return null; }
+      UI_BAL.textContent = me.balance ?? 0;
+      USER_BAL.textContent = me.balance ?? 0;
+      return me;
+    }
 
-      // ----------------- Quick Explain (server) -----------------
-      const aiInput = document.getElementById('aiQ');
-      const aiBtn   = document.getElementById('aiBtn');
-      const aiOut   = document.getElementById('aiOut');
-      async function askExplain(){
-        const question = (aiInput.value||'').trim(); if(!question) return;
-        aiBtn.disabled = true; aiOut.textContent = 'Thinking… ✨';
-        try{
-          const res = await fetch('/api/physics-explain', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ question }) });
-          const data = await res.json();
-          aiOut.innerHTML = (data.reply||'No reply.').replace(/
-/g,'<br>');
-        }catch(e){ aiOut.textContent = 'Error: '+(e.message||'Something went wrong.'); }
-        finally{ aiBtn.disabled = false; }
+    async function checkAccess(){
+      try{
+        const r = await fetch(`/api/feature-status?feature=${FEATURE}`,{credentials:'include'});
+        if(!r.ok){ throw new Error('Feature status fetch failed'); }
+        const data = await r.json();
+        if(data.unlocked){
+          OVERLAY.hidden = true;
+          PAGE.style.visibility = 'visible';
+        }else{
+          OVERLAY.hidden = false;
+          PAGE.style.visibility = 'hidden';
+        }
+      }catch(e){
+        console.error(e);
+        OVERLAY.hidden = false;
+        STATUS.textContent = 'Network error. Please retry.'; STATUS.style.color = 'var(--err)';
       }
-      aiBtn.addEventListener('click', askExplain);
-      aiInput.addEventListener('keydown', e=>{ if(e.key==='Enter') askExplain(); });
+    }
 
-      // ----------------- Tutor Chat (server, GPT‑4) -----------------
-      const chat = document.getElementById('chat');
-      const ask  = document.getElementById('ask');
-      const send = document.getElementById('send');
-      const modeTags = Array.from(document.querySelectorAll('.tag'));
-      let MODE = 'Socratic';
-      modeTags.forEach(t=>t.addEventListener('click', ()=>{ MODE = t.dataset.mode; toast(`Mode: ${MODE}`);}));
-
-      function bubble(role, html){
-        const b = document.createElement('div');
-        b.className = `bubble ${role==='user'?'me':'assistant'}`; b.innerHTML = html; chat.appendChild(b); chat.scrollTop = chat.scrollHeight; return b;
+    UNLOCK_BTN?.addEventListener('click', async ()=>{
+      UNLOCK_BTN.disabled = true; UNLOCK_BTN.textContent = 'Processing…';
+      STATUS.textContent = '';
+      try{
+        const res = await fetch('/api/unlock-feature',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          credentials:'include',
+          body:JSON.stringify({ feature: FEATURE, cost: 4 })
+        });
+        const data = await res.json();
+        if(data.success){
+          STATUS.textContent = '✅ Unlocked! Loading…'; STATUS.style.color = 'var(--ok)';
+          const bal = Number(USER_BAL.textContent||0) - 4; USER_BAL.textContent = Math.max(0,bal);
+          setTimeout(()=>{ OVERLAY.hidden = true; PAGE.style.visibility='visible'; }, 700);
+        }else{
+          STATUS.textContent = '❌ ' + (data.error || 'Could not unlock'); STATUS.style.color = 'var(--err)';
+          UNLOCK_BTN.disabled = false; UNLOCK_BTN.textContent = 'UNLOCK FOR 4G';
+        }
+      }catch(e){
+        STATUS.textContent = '❌ Network error'; STATUS.style.color = 'var(--err)';
+        UNLOCK_BTN.disabled = false; UNLOCK_BTN.textContent = 'UNLOCK FOR 4G';
       }
+    });
 
-      async function sendTutor(text){
-        const thinking = bubble('assistant', 'Thinking…');
-        try{
-          const res = await fetch('/api/physics-tutor', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ question: text, topic: CURRENT_TOPIC, mode: MODE }) });
-          const data = await res.json();
-          thinking.innerHTML = (data.reply||'No reply.').replace(/
-/g,'<br>');
-        }catch(e){ thinking.innerHTML = `<span style='color:#ff9a9a'>${(e.message||'Error')}</span>`; }
+    // -------- Topics selection (sets CURRENT_TOPIC) --------
+    let CURRENT_TOPIC = 'Mechanics';
+    document.querySelectorAll('#topics .card[data-topic]').forEach(card=>{
+      card.addEventListener('click', ()=>{
+        CURRENT_TOPIC = card.getAttribute('data-topic');
+        toast(`Topic set: ${CURRENT_TOPIC}`);
+      });
+    });
+
+    // -------- Modes selection --------
+    let MODE = 'Socratic';
+    const modeTags = Array.from(document.querySelectorAll('.tag'));
+    modeTags.forEach(t=>{
+      t.addEventListener('click', ()=>{
+        modeTags.forEach(x=>x.classList.remove('active'));
+        t.classList.add('active');
+        MODE = t.dataset.mode || 'Socratic';
+        toast(`Mode: ${MODE}`);
+      });
+    });
+
+    // -------- Tutor Chat --------
+    const chat = document.getElementById('chat');
+    const ask  = document.getElementById('ask');
+    const send = document.getElementById('send');
+    const aiStatus = document.getElementById('aiStatus');
+
+    function bubble(role, html){
+      const b = document.createElement('div');
+      b.className = `bubble ${role==='user'?'me':'assistant'}`;
+      b.innerHTML = html;
+      chat.appendChild(b);
+      chat.scrollTop = chat.scrollHeight;
+      return b;
+    }
+
+    async function sendTutor(){
+      const text = (ask.value||'').trim();
+      if(!text) return;
+      bubble('user', text.replace(/\n/g,'<br>'));
+      ask.value = '';
+
+      const thinking = bubble('assistant','<span class="tiny">Thinking…</span>');
+      aiStatus.textContent = 'Contacting tutor…';
+
+      try{
+        const res = await fetch('/api/physics-tutor',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ question: text, topic: CURRENT_TOPIC, mode: MODE })
+        });
+        const data = await res.json();
+        if(res.ok && data.reply){
+          thinking.innerHTML = data.reply.replace(/\n/g,'<br>');
+          aiStatus.textContent = '';
+        }else{
+          thinking.innerHTML = `<span style="color:var(--err)">No reply.</span>`;
+          aiStatus.textContent = 'Tutor returned no content.';
+        }
+      }catch(e){
+        thinking.innerHTML = `<span style="color:var(--err)">Error connecting to AI.</span>`;
+        aiStatus.textContent = 'Network error.';
       }
+    }
 
-      send.addEventListener('click', ()=>{ const v=(ask.value||'').trim(); if(!v) return; bubble('user', v.replace(/
-/g,'<br>')); ask.value=''; sendTutor(v); });
-      ask.addEventListener('keydown', e=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); send.click(); } });
+    send.addEventListener('click', sendTutor);
+    ask.addEventListener('keydown', e=>{
+      if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendTutor(); }
+    });
 
-      // ----------------- Tiny Toast -----------------
-      function toast(msg){
-        const el = document.createElement('div');
-        el.textContent = msg; el.style.position='fixed'; el.style.bottom='18px'; el.style.left='50%'; el.style.transform='translateX(-50%)';
-        el.style.padding='8px 12px'; el.style.border='1px solid var(--border)'; el.style.background='#0d1420'; el.style.borderRadius='999px'; el.style.boxShadow='var(--shadow)'; el.style.zIndex='50';
-        document.body.appendChild(el); setTimeout(()=>{ el.remove(); }, 1400);
-      }
-    </script>
-  </body>
+    // -------- Boot --------
+    (async ()=>{
+      const me = await loadMe(); if(!me) return;
+      await checkAccess();
+    })();
+  </script>
+</body>
 </html>

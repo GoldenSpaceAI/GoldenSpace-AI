@@ -18,7 +18,6 @@
         --text: #e7f4e9;
         --muted: #cfc6a5;
         --gold: #f6c64a;
-        --gold2: #eb8b36;
         --shadow: 0 22px 70px rgba(0,0,0,.5);
         --radius: 18px;
         --max: 900px;
@@ -62,8 +61,7 @@
       }
       h1 { margin: 6px 0 12px; font-size: clamp(24px, 4vw, 36px); color: #fff7dc; }
       h2 { margin: 22px 0 8px; font-size: 18px; color: var(--gold); }
-      p { margin: 8px 0; color: #dfe7f1; }
-      ul { margin: 8px 0 12px 18px; color: #dfe7f1; }
+      p, ul { color: #dfe7f1; }
       a { color: var(--gold); text-decoration: none; }
       .muted { color: var(--muted); font-size: 14px; }
       .footer {
@@ -97,71 +95,92 @@
         <h1>Privacy Policy</h1>
         <p class="muted">Last updated: <span id="lastUpdated"></span></p>
 
-        <!-- SECURITY BADGE -->
         <div class="security-badge">
-          <h2 style="color: var(--gold); margin-top: 0;">🔒 Secure Encryption & Protection</h2>
-          <p><strong>Your privacy and security are our #1 priority.</strong></p>
-          <p>All communication with GoldenSpaceAI is protected using SSL/TLS encryption (HTTPS). Data is hosted securely on Render and Supabase servers following industry-standard security practices. We maintain regular encrypted backups and actively monitor for breaches or vulnerabilities.</p>
+          <h2>🔒 Secure & Transparent Data Practices</h2>
+          <p><strong>Your privacy is our highest priority.</strong></p>
+          <p>All connections to GoldenSpaceAI use <strong>SSL/TLS encryption (HTTPS)</strong> to protect your data. 
+          Our systems are hosted on <strong>Render</strong> and <strong>Supabase</strong>, using modern security standards and encrypted storage.</p>
         </div>
 
-        <h2>Information We Collect</h2>
-        <p><strong>We collect only essential data</strong> such as your username, profile, and login details to manage your Golden balance, AI preferences, and subscriptions. Payment and wallet details are handled securely through our third-party processors — we do not store your card or private crypto keys.</p>
-
-        <h2>AI Data Usage</h2>
-        <p>When you interact with our AI systems, your messages are processed to generate responses. These inputs are <strong>not used to train AI models</strong> and are <strong>not reviewed by humans</strong>. Temporary logs may be stored for debugging and are deleted automatically within 30 days.</p>
-
-        <h2>Cookies & Tracking</h2>
-        <p>GoldenSpaceAI uses minimal cookies to:</p>
+        <h2>1. Information We Collect</h2>
+        <p>We collect only the minimum information necessary to operate and improve GoldenSpaceAI:</p>
         <ul>
-          <li>Keep you logged into your account securely</li>
-          <li>Save your language and session preferences</li>
-          <li>Improve performance and analytics (if you accept cookies)</li>
+          <li>Account information (username, email, and login credentials)</li>
+          <li>Profile preferences and Golden token balance</li>
+          <li>Technical data such as browser type, device ID, and approximate region</li>
         </ul>
-        <p>You may disable non-essential cookies through your browser settings at any time.</p>
+        <p>We <strong>do not collect</strong> or store your payment card details or crypto wallet keys — payments are securely processed by third-party partners like <strong>NowPayments</strong>.</p>
 
-        <h2>Our Security Commitment</h2>
-        <p>We implement advanced measures such as firewalls, encryption-at-rest, and strict access controls. Our infrastructure providers comply with major security frameworks (SOC-2, GDPR). Only authorized staff can access limited data when necessary to maintain services.</p>
-
-        <h2>We Do Not Sell Your Information</h2>
-        <p>Your data belongs to you. We never sell, rent, or share personal information with advertisers or unauthorized parties.</p>
-
-        <h2>Your Rights (GDPR & CCPA)</h2>
-        <p>If you live in the EU, California, or similar regions, you have rights to:</p>
+        <h2>2. How We Use Your Information</h2>
+        <p>Your data helps us:</p>
         <ul>
-          <li>Access the data we store about you</li>
-          <li>Request correction or deletion of your data</li>
-          <li>Withdraw consent for data processing</li>
-          <li>Request a copy or export of your personal data</li>
+          <li>Provide personalized AI experiences and subscriptions</li>
+          <li>Securely process payments and manage Golden balances</li>
+          <li>Improve platform stability and performance</li>
+          <li>Respond to customer support and refund requests</li>
         </ul>
-        <p>To exercise these rights, email <a href="mailto:support@goldenspaceai.space">support@goldenspaceai.space</a>. We will respond within 30 days.</p>
 
-        <h2>Data Retention</h2>
-        <p>We retain user data only as long as necessary to provide services. Inactive or deleted accounts are purged within 90 days unless legally required otherwise.</p>
+        <h2>3. AI Conversations & Logs</h2>
+        <p>AI chats are processed in real time to generate responses. We <strong>do not use your content to train AI models</strong>. 
+        Temporary logs may be stored for debugging and deleted within 30 days. No human staff review private chat data.</p>
 
-        <h2>Contact Us</h2>
-        <p>For questions or privacy concerns, please contact:</p>
-        <p><strong>Email:</strong> <a href="mailto:support@goldenspaceai.space">support@goldenspaceai.space</a></p>
+        <h2>4. Cookies</h2>
+        <p>GoldenSpaceAI uses limited cookies to:</p>
+        <ul>
+          <li>Keep your session active</li>
+          <li>Remember preferences like theme or language</li>
+          <li>Collect anonymous analytics if you accept tracking</li>
+        </ul>
+        <p>You can disable or clear cookies in your browser settings anytime.</p>
 
-        <h2>Policy Updates</h2>
-        <p>We may revise this policy periodically. Updated versions will be posted here with a new date above. Major updates will be communicated via your account or email.</p>
+        <h2>5. Data Security</h2>
+        <p>We use encryption-at-rest, firewalls, and strict access controls. Only authorized team members can access limited user data for troubleshooting or verification. 
+        Our infrastructure follows recognized compliance frameworks like <strong>GDPR</strong> and <strong>SOC-2</strong>.</p>
+
+        <h2>6. Data Sharing</h2>
+        <p>We never sell, rent, or share your personal data for marketing. Information is shared only with trusted service providers that help us operate GoldenSpaceAI (for example, email or payment systems), and only under strict confidentiality agreements.</p>
+
+        <h2>7. Your Rights</h2>
+        <p>Depending on your location, you may have the right to:</p>
+        <ul>
+          <li>Access, correct, or delete your personal data</li>
+          <li>Request a copy (data portability)</li>
+          <li>Withdraw consent for processing</li>
+        </ul>
+        <p>To exercise any of these rights, contact us at 
+        <a href="mailto:support@goldenspaceai.space">support@goldenspaceai.space</a>. We will respond within 30 days.</p>
+
+        <h2>8. Data Retention</h2>
+        <p>We retain your information only as long as necessary to provide our services. When you delete your account, your data is removed from our active systems within 90 days unless legally required to retain it longer.</p>
+
+        <h2>9. Children’s Privacy</h2>
+        <p>GoldenSpaceAI is intended for users aged 13 and older. If we learn that we have collected data from a child under 13 without consent, we will promptly delete it.</p>
+
+        <h2>10. Policy Updates</h2>
+        <p>We may update this policy from time to time to reflect new services, technologies, or legal requirements. The latest version will always appear on this page.</p>
+
+        <h2>11. Contact Us</h2>
+        <p>If you have questions, requests, or concerns about this Privacy Policy, please contact:</p>
+        <p style="text-align:center; font-size:1.1rem; margin-top:10px;">
+          📧 <a href="mailto:support@goldenspaceai.space">support@goldenspaceai.space</a><br/>
+          ☎️ +1 (213) 770-7589
+        </p>
 
         <div class="footer">
-          <div>©️ <span id="yr"></span> GoldenSpaceAI</div>
+          <div>© <span id="yr"></span> GoldenSpaceAI</div>
           <div class="links">
-            <a href="/privacy.html">Privacy Policy</a> ·
-            <a href="/terms.html">Terms of Service</a> ·
-            <a href="/refund.html">Refund Policy</a>
+            <a href="/privacy.html">Privacy</a> ·
+            <a href="/terms.html">Terms</a> ·
+            <a href="/refund.html">Refunds</a>
           </div>
         </div>
       </div>
     </main>
 
     <script>
-      document.getElementById('yr').textContent = new Date().getFullYear();
-      const d = new Date();
-      const mm = String(d.getMonth()+1).padStart(2,'0');
-      const dd = String(d.getDate()).padStart(2,'0');
-      document.getElementById('lastUpdated').textContent = `${d.getFullYear()}-${mm}-${dd}`;
+      const now = new Date();
+      document.getElementById('yr').textContent = now.getFullYear();
+      document.getElementById('lastUpdated').textContent = now.toISOString().split('T')[0];
     </script>
   </body>
 </html>

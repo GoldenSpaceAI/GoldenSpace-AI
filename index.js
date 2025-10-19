@@ -460,7 +460,7 @@ const upload = multer({ dest: "uploads/" });
 // ==========chat-free-ai.html===============
 app.post("/chat-free-ai", async (req, res) => {
   try {
-    const prompt = req.body.q || "Hello!";
+    const prompt = req.body.q || req.body.question || "Hello!";
     const model = req.body.model || "gpt-4o-mini"; // default model
 
     const messages = [

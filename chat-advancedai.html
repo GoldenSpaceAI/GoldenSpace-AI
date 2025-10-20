@@ -96,8 +96,15 @@ main {
 }
 body.light .msg.ai { background: #fff; }
 body.light .msg.user { background: #fff9cc; }
-.tools { margin-top: 6px; }
-.speak-btn {
+.uploaded-image {
+  max-width: 300px;
+  max-height: 300px;
+  border-radius: 8px;
+  margin: 8px 0;
+  border: 1px solid var(--border);
+}
+.tools { margin-top: 6px; display: flex; gap: 8px; flex-wrap: wrap; }
+.speak-btn, .copy-btn {
   background: linear-gradient(180deg,var(--gold1),var(--gold2));
   border: none;
   border-radius: 8px;
@@ -105,6 +112,7 @@ body.light .msg.user { background: #fff9cc; }
   font-weight: 800;
   color: #141209;
   cursor: pointer;
+  font-size: 12px;
 }
 
 /* ===== Composer ===== */
@@ -138,12 +146,13 @@ body.light .composer-wrap { background: rgba(255,255,255,.7); }
 .actions {
   display: flex;
   justify-content: center;
-  gap: 12px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 .act-btn {
-  flex: 1 1 150px;
-  padding: 12px 0;
+  flex: 1;
+  min-width: 120px;
+  padding: 12px 8px;
   text-align: center;
   border-radius: 14px;
   border: 1px solid rgba(255,215,0,.3);
@@ -152,6 +161,7 @@ body.light .composer-wrap { background: rgba(255,255,255,.7); }
   font-weight: 800;
   cursor: pointer;
   transition: .25s;
+  font-size: 14px;
 }
 .act-btn:hover {
   background: rgba(255,215,0,.18);
@@ -160,6 +170,96 @@ body.light .composer-wrap { background: rgba(255,255,255,.7); }
   background: linear-gradient(45deg,var(--gold1),var(--gold2));
   color: #141209;
   box-shadow: 0 0 20px rgba(255,215,0,.45);
+}
+
+/* ===== Chat Management ===== */
+.chat-sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 280px;
+  background: rgba(0,0,0,.8);
+  backdrop-filter: blur(10px);
+  border-right: 1px solid var(--border);
+  padding: 80px 15px 20px;
+  overflow-y: auto;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+  z-index: 100;
+}
+.chat-sidebar.open {
+  transform: translateX(0);
+}
+.chat-item {
+  padding: 12px;
+  margin: 8px 0;
+  background: rgba(255,255,255,.05);
+  border-radius: 8px;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+.chat-item:hover {
+  background: rgba(255,255,255,.1);
+}
+.chat-item.active {
+  border-color: var(--gold1);
+  background: rgba(255,215,0,.1);
+}
+.new-chat-btn {
+  background: linear-gradient(45deg,var(--gold1),var(--gold2));
+  color: #141209;
+  border: none;
+  padding: 12px;
+  border-radius: 8px;
+  font-weight: 800;
+  cursor: pointer;
+  margin-bottom: 15px;
+  width: 100%;
+}
+
+/* ===== Custom Instructions Modal ===== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.8);
+  backdrop-filter: blur(18px);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+.modal-content {
+  background: linear-gradient(145deg,rgba(18,18,22,.95),rgba(10,10,15,.92));
+  border: 2px solid rgba(255,215,0,.45);
+  border-radius: 22px;
+  padding: 30px;
+  max-width: 500px;
+  width: 90%;
+  color: #fff;
+}
+.modal-title {
+  font-size: 1.5rem;
+  font-weight: 900;
+  margin-bottom: 15px;
+  color: gold;
+  text-align: center;
+}
+#customInstructions {
+  width: 100%;
+  height: 120px;
+  background: rgba(255,255,255,.08);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: inherit;
+  padding: 12px;
+  margin-bottom: 15px;
+  resize: vertical;
+}
+.modal-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
 }
 
 /* ===== Lock Overlay ===== */
@@ -205,31 +305,66 @@ body.light .composer-wrap { background: rgba(255,255,255,.7); }
 }
 .unlock-btn:hover { transform: translateY(-2px); box-shadow: 0 0 40px rgba(255,215,0,.5); }
 .lock-msg { margin-top: 10px; color: #ccc; font-size: .9rem; }
+
+/* ===== Menu Button ===== */
+.menu-btn {
+  position: fixed;
+  top: 14px;
+  left: 20px;
+  background: rgba(255,255,255,.1);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: inherit;
+  cursor: pointer;
+  z-index: 101;
+  backdrop-filter: blur(10px);
+}
 </style>
 </head>
 <body>
 <header>
+  <button class="menu-btn" id="menuBtn">☰ Chats</button>
   <div class="brand">
     <div class="logo"></div><span>GoldenSpaceAI</span>
   </div>
   <button id="themeToggle" class="theme-toggle">🌙 Dark Mode</button>
 </header>
 
-<!-- Lock -->
+<!-- Chat Sidebar -->
+<div class="chat-sidebar" id="chatSidebar">
+  <button class="new-chat-btn" id="newChatBtn">+ New Chat</button>
+  <button class="act-btn" id="instructionsBtn" style="margin-bottom: 15px;">⚙️ Custom Instructions</button>
+  <div id="chatList"></div>
+</div>
+
+<!-- Custom Instructions Modal -->
+<div class="modal-overlay" id="instructionsModal">
+  <div class="modal-content">
+    <div class="modal-title">Custom Instructions</div>
+    <textarea id="customInstructions" placeholder="Tell the AI how to behave, respond, or any specific preferences..."></textarea>
+    <div class="modal-buttons">
+      <button class="act-btn" onclick="saveCustomInstructions()">Save</button>
+      <button class="act-btn" onclick="closeInstructionsModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Lock Overlay -->
 <div id="lockOverlay">
   <div class="lock-box">
     <div class="lock-icon">🔒</div>
-    <div class="lock-title">Advanced AI Chat Locked</div>
-    <div class="lock-desc">Unlock this premium feature for <b>20G/month</b> to access file uploads and voice chat.</div>
-    <button id="unlockBtn" class="unlock-btn">Unlock for 20G</button>
-    <div id="lockMsg" class="lock-msg"></div>
+    <div class="lock-title">Pro Feature Locked</div>
+    <div class="lock-desc">This advanced chat requires a <b>Pro subscription</b> to access GPT-5, image generation, and chat memory features.</div>
+    <button class="unlock-btn" onclick="window.location.href='/plans.html'">Upgrade to Pro</button>
+    <div id="lockMsg" class="lock-msg">Starting at $25/month</div>
   </div>
 </div>
 
 <main id="chat">
   <div class="msg ai">
     <small>GoldenSpaceAI</small>
-    Welcome to your advanced assistant. Type your message, upload a file, or use your voice.
+    Welcome to your advanced Pro assistant! I have access to GPT-5, image generation, and will remember our conversation. How can I help you today?
   </div>
 </main>
 
@@ -237,111 +372,418 @@ body.light .composer-wrap { background: rgba(255,255,255,.7); }
   <div class="composer">
     <textarea id="prompt" placeholder="Type your message… (Shift + Enter = newline)"></textarea>
     <div class="actions">
-      <button class="act-btn" id="uploadBtn">Upload File</button>
-      <button class="act-btn" id="micBtn">Voice</button>
-      <button class="act-btn" id="sendBtn">Send</button>
+      <button class="act-btn" id="uploadBtn">📁 Upload Image</button>
+      <button class="act-btn" id="micBtn">🎤 Voice</button>
+      <button class="act-btn" id="generateImageBtn">🖼️ Generate Image</button>
+      <button class="act-btn" id="deepThinkBtn">🤔 Deep Think</button>
+      <button class="act-btn" id="instantBtn">⚡ Instant</button>
     </div>
   </div>
 </div>
 
 <script>
-const chat=document.getElementById("chat");
-const promptEl=document.getElementById("prompt");
-const uploadBtn=document.getElementById("uploadBtn");
-const micBtn=document.getElementById("micBtn");
-const sendBtn=document.getElementById("sendBtn");
-const BACKEND="/chat-advanced-ai";
-let fileData=null,recorder,chunks=[],recording=false;
+// Global variables
+const chat = document.getElementById("chat");
+const promptEl = document.getElementById("prompt");
+const uploadBtn = document.getElementById("uploadBtn");
+const micBtn = document.getElementById("micBtn");
+const generateImageBtn = document.getElementById("generateImageBtn");
+const deepThinkBtn = document.getElementById("deepThinkBtn");
+const instantBtn = document.getElementById("instantBtn");
+const BACKEND = "/chat-advanced-ai";
+
+let fileData = null;
+let recorder, chunks = [], recording = false;
+let currentChatId = 'default';
+let currentMode = 'normal'; // normal, image, deep, instant
+let customInstructions = localStorage.getItem('goldenspace_custom_instructions') || '';
+
+// Chat memory management
+const MAX_MESSAGES = 50;
+const MESSAGE_HISTORY = 6;
+
+// Initialize
+loadChats();
+checkProAccess();
 
 /* THEME */
-document.getElementById("themeToggle").onclick=()=>{
+document.getElementById("themeToggle").onclick = () => {
   document.body.classList.toggle("light");
-  document.getElementById("themeToggle").textContent=document.body.classList.contains("light")?"🌞 Light Mode":"🌙 Dark Mode";
+  document.getElementById("themeToggle").textContent = document.body.classList.contains("light") ? "🌞 Light Mode" : "🌙 Dark Mode";
 };
 
-/* LOCK */
-async function checkAccess(){
-  try{
-    const r=await fetch("/api/feature-status?feature=chat_advancedai",{credentials:"include"});
-    const j=await r.json();
-    document.getElementById("lockOverlay").style.display=j.unlocked?"none":"flex";
-  }catch{document.getElementById("lockOverlay").style.display="flex";}
-}
-document.getElementById("unlockBtn").onclick=async()=>{
-  const m=document.getElementById("lockMsg");
-  m.textContent="Processing...";
-  const r=await fetch("/api/unlock-feature",{method:"POST",headers:{"Content-Type":"application/json"},
-    credentials:"include",body:JSON.stringify({feature:"chat_advancedai",cost:20})});
-  const j=await r.json();
-  if(j.success){m.textContent="✅ Unlocked!";setTimeout(()=>location.reload(),1000);}
-  else m.textContent="❌ "+(j.error||"Failed. Check balance or login.");
+/* CHAT MANAGEMENT */
+document.getElementById("menuBtn").onclick = () => {
+  document.getElementById("chatSidebar").classList.toggle("open");
 };
-checkAccess();
 
-/* Chat helpers */
-function addMsg(role,text){
-  const m=document.createElement("div");
-  m.className="msg "+role;
-  m.innerHTML=`<small>${role==="user"?"You":"GoldenSpaceAI"}</small><div>${text}</div>`;
-  if(role==="ai"){
-    const t=document.createElement("div");t.className="tools";
-    const b=document.createElement("button");b.className="speak-btn";b.textContent="🔊 Speak";
-    b.onclick=()=>{speechSynthesis.cancel();speechSynthesis.speak(new SpeechSynthesisUtterance(text));};
-    t.appendChild(b);m.appendChild(t);
+document.getElementById("newChatBtn").onclick = () => {
+  const chatName = prompt("Enter chat name:", "New Chat " + (getChats().length + 1));
+  if (chatName) {
+    createNewChat(chatName);
   }
-  chat.appendChild(m);chat.scrollTop=chat.scrollHeight;
-}
-function spinner(){
-  const s=document.createElement("div");s.className="msg ai";s.innerHTML='<div class="spinner"></div>';
-  chat.appendChild(s);chat.scrollTop=chat.scrollHeight;return s;
-}
-function resetButtons(){uploadBtn.classList.remove("active");micBtn.classList.remove("active");fileData=null;}
+};
 
-/* Upload */
-uploadBtn.onclick=()=>{
-  const input=document.createElement("input");input.type="file";
-  input.onchange=e=>{fileData=e.target.files[0];uploadBtn.classList.add("active");};
+document.getElementById("instructionsBtn").onclick = () => {
+  document.getElementById("customInstructions").value = customInstructions;
+  document.getElementById("instructionsModal").style.display = 'flex';
+};
+
+function closeInstructionsModal() {
+  document.getElementById("instructionsModal").style.display = 'none';
+}
+
+function saveCustomInstructions() {
+  customInstructions = document.getElementById("customInstructions").value;
+  localStorage.setItem('goldenspace_custom_instructions', customInstructions);
+  closeInstructionsModal();
+}
+
+function getChats() {
+  return JSON.parse(localStorage.getItem('goldenspace_chats') || '[]');
+}
+
+function saveChats(chats) {
+  localStorage.setItem('goldenspace_chats', JSON.stringify(chats));
+}
+
+function loadChats() {
+  const chats = getChats();
+  const chatList = document.getElementById("chatList");
+  chatList.innerHTML = '';
+  
+  chats.forEach(chat => {
+    const chatItem = document.createElement("div");
+    chatItem.className = `chat-item ${chat.id === currentChatId ? 'active' : ''}`;
+    chatItem.innerHTML = `
+      <div style="font-weight: bold;">${chat.name}</div>
+      <div style="font-size: 12px; opacity: 0.7;">${chat.messages.length} messages</div>
+      <button onclick="deleteChat('${chat.id}')" style="background: transparent; border: none; color: #ff6b6b; float: right;">🗑️</button>
+    `;
+    chatItem.onclick = () => loadChat(chat.id);
+    chatList.appendChild(chatItem);
+  });
+}
+
+function createNewChat(name) {
+  const chats = getChats();
+  const newChat = {
+    id: 'chat_' + Date.now(),
+    name: name,
+    messages: [],
+    createdAt: new Date().toISOString()
+  };
+  chats.unshift(newChat);
+  saveChats(chats);
+  loadChats();
+  loadChat(newChat.id);
+}
+
+function loadChat(chatId) {
+  const chats = getChats();
+  const chat = chats.find(c => c.id === chatId);
+  if (chat) {
+    currentChatId = chatId;
+    chat.innerHTML = '';
+    
+    // Add welcome message if empty
+    if (chat.messages.length === 0) {
+      addMsg('ai', 'Welcome to your new chat! How can I help you today?');
+    } else {
+      chat.messages.forEach(msg => {
+        addMsg(msg.role, msg.content, msg.image);
+      });
+    }
+    
+    loadChats();
+    document.getElementById("chatSidebar").classList.remove("open");
+  }
+}
+
+function deleteChat(chatId) {
+  if (confirm('Are you sure you want to delete this chat?')) {
+    const chats = getChats().filter(c => c.id !== chatId);
+    saveChats(chats);
+    if (currentChatId === chatId) {
+      currentChatId = 'default';
+      chat.innerHTML = '';
+      addMsg('ai', 'Welcome! Start a new conversation.');
+    }
+    loadChats();
+  }
+}
+
+function saveMessage(role, content, image = null) {
+  const chats = getChats();
+  let currentChat = chats.find(c => c.id === currentChatId);
+  
+  if (!currentChat && currentChatId !== 'default') {
+    currentChat = {
+      id: currentChatId,
+      name: 'Chat ' + new Date().toLocaleDateString(),
+      messages: [],
+      createdAt: new Date().toISOString()
+    };
+    chats.unshift(currentChat);
+  }
+  
+  if (currentChat) {
+    const message = { role, content, timestamp: new Date().toISOString() };
+    if (image) message.image = image;
+    
+    currentChat.messages.push(message);
+    
+    // Keep only last MAX_MESSAGES
+    if (currentChat.messages.length > MAX_MESSAGES) {
+      currentChat.messages = currentChat.messages.slice(-MAX_MESSAGES);
+    }
+    
+    saveChats(chats);
+    loadChats();
+  }
+}
+
+/* PRO ACCESS CHECK */
+async function checkProAccess() {
+  try {
+    const r = await fetch("/api/me", { credentials: "include" });
+    const j = await r.json();
+    
+    if (j.loggedIn && j.plan === 'pro') {
+      document.getElementById("lockOverlay").style.display = "none";
+    } else {
+      document.getElementById("lockOverlay").style.display = "flex";
+    }
+  } catch {
+    document.getElementById("lockOverlay").style.display = "flex";
+  }
+}
+
+/* CHAT HELPERS */
+function addMsg(role, text, image = null) {
+  const m = document.createElement("div");
+  m.className = "msg " + role;
+  
+  let content = `<small>${role === "user" ? "You" : "GoldenSpaceAI"}</small><div>${text.replace(/\n/g, "<br>")}</div>`;
+  
+  if (image) {
+    content += `<img src="${image}" class="uploaded-image" alt="Uploaded image">`;
+  }
+  
+  m.innerHTML = content;
+  
+  if (role === "ai") {
+    const tools = document.createElement("div");
+    tools.className = "tools";
+    
+    const speakBtn = document.createElement("button");
+    speakBtn.className = "speak-btn";
+    speakBtn.textContent = "🔊 Speak";
+    speakBtn.onclick = () => {
+      speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      speechSynthesis.speak(utterance);
+    };
+    
+    const copyBtn = document.createElement("button");
+    copyBtn.className = "copy-btn";
+    copyBtn.textContent = "📋 Copy";
+    copyBtn.onclick = () => {
+      navigator.clipboard.writeText(text);
+      copyBtn.textContent = "✓ Copied!";
+      setTimeout(() => copyBtn.textContent = "📋 Copy", 2000);
+    };
+    
+    tools.appendChild(speakBtn);
+    tools.appendChild(copyBtn);
+    m.appendChild(tools);
+  }
+  
+  chat.appendChild(m);
+  scrollToMessage(m);
+}
+
+function scrollToMessage(messageElement) {
+  messageElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function spinner() {
+  const s = document.createElement("div");
+  s.className = "msg ai";
+  s.innerHTML = '<div>Thinking...</div>';
+  chat.appendChild(s);
+  scrollToMessage(s);
+  return s;
+}
+
+function resetButtons() {
+  uploadBtn.classList.remove("active");
+  micBtn.classList.remove("active");
+  generateImageBtn.classList.remove("active");
+  deepThinkBtn.classList.remove("active");
+  instantBtn.classList.remove("active");
+  fileData = null;
+  currentMode = 'normal';
+}
+
+/* UPLOAD */
+uploadBtn.onclick = () => {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = "image/*";
+  input.onchange = e => {
+    fileData = e.target.files[0];
+    uploadBtn.classList.add("active");
+    
+    // Show preview
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      addMsg("user", "Uploaded image:", e.target.result);
+      saveMessage("user", "Uploaded image", e.target.result);
+    };
+    reader.readAsDataURL(fileData);
+  };
   input.click();
 };
 
-/* Mic */
-micBtn.onclick=async()=>{
-  if(!recording){
-    try{
-      const stream=await navigator.mediaDevices.getUserMedia({audio:true});
-      recorder=new MediaRecorder(stream);chunks=[];
-      recorder.ondataavailable=e=>chunks.push(e.data);
-      recorder.onstop=async()=>{
-        const blob=new Blob(chunks,{type:"audio/webm"});
-        const fd=new FormData();fd.append("audio",blob,"speech.webm");
-        const r=await fetch("/api/transcribe",{method:"POST",body:fd,credentials:"include"});
-        const j=await r.json();promptEl.value=(j.text||"").trim();
-        resetButtons();
+/* VOICE RECORDING */
+micBtn.onclick = async () => {
+  if (!recording) {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      recorder = new MediaRecorder(stream);
+      chunks = [];
+      recorder.ondataavailable = e => chunks.push(e.data);
+      recorder.onstop = async () => {
+        const blob = new Blob(chunks, { type: "audio/webm" });
+        
+        // Convert speech to text using Web Speech API
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.lang = 'en-US';
+        recognition.continuous = false;
+        
+        recognition.onresult = (event) => {
+          const text = event.results[0][0].transcript;
+          promptEl.value = text;
+          resetButtons();
+        };
+        
+        recognition.onerror = (event) => {
+          alert("Speech recognition error: " + event.error);
+          resetButtons();
+        };
+        
+        recognition.start();
       };
-      recorder.start();recording=true;micBtn.classList.add("active");
-    }catch(e){alert("Mic error: "+e.message);}
-  }else{recorder.stop();recording=false;}
+      recorder.start();
+      recording = true;
+      micBtn.classList.add("active");
+      micBtn.textContent = "⏹️ Stop";
+    } catch (e) {
+      alert("Microphone error: " + e.message);
+    }
+  } else {
+    recorder.stop();
+    recording = false;
+    micBtn.textContent = "🎤 Voice";
+  }
 };
 
-/* Send */
-sendBtn.onclick=async()=>{
-  const text=(promptEl.value||"").trim();if(!text)return;
-  addMsg("user",text);
-  const s=spinner();
-  try{
-    const fd=new FormData();if(fileData)fd.append("image",fileData);
-    fd.append("q",text);
-    const r=await fetch(BACKEND,{method:"POST",body:fd,credentials:"include"});
-    const j=await r.json();chat.removeChild(s);
-    addMsg("ai",(j.reply||j.answer||j.error||"[No reply]").replace(/\n/g,"<br>"));
-  }catch(e){chat.removeChild(s);addMsg("ai","⚠️ "+e.message);}
-  finally{promptEl.value="";resetButtons();}
+/* ACTION BUTTONS */
+generateImageBtn.onclick = () => {
+  currentMode = 'image';
+  generateImageBtn.classList.add("active");
+  deepThinkBtn.classList.remove("active");
+  instantBtn.classList.remove("active");
 };
 
-/* Scroll automatically to bottom */
-const observer=new MutationObserver(()=>chat.scrollTop=chat.scrollHeight);
-observer.observe(chat,{childList:true});
-promptEl.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendBtn.click();}});
+deepThinkBtn.onclick = () => {
+  currentMode = 'deep';
+  deepThinkBtn.classList.add("active");
+  generateImageBtn.classList.remove("active");
+  instantBtn.classList.remove("active");
+};
+
+instantBtn.onclick = () => {
+  currentMode = 'instant';
+  instantBtn.classList.add("active");
+  generateImageBtn.classList.remove("active");
+  deepThinkBtn.classList.remove("active");
+};
+
+/* SEND MESSAGE */
+async function sendMessage() {
+  const text = (promptEl.value || "").trim();
+  if (!text && !fileData) return;
+
+  addMsg("user", text, fileData ? URL.createObjectURL(fileData) : null);
+  saveMessage("user", text, fileData ? URL.createObjectURL(fileData) : null);
+
+  const s = spinner();
+  
+  try {
+    const fd = new FormData();
+    if (fileData) fd.append("image", fileData);
+    fd.append("q", text);
+    
+    // Add mode-specific parameters
+    if (currentMode === 'image') {
+      fd.append("model", "gpt-image-1");
+    } else if (currentMode === 'instant') {
+      fd.append("model", "instant"); // Will be converted to gpt-5-nano in backend
+    } else if (currentMode === 'deep') {
+      fd.append("model", "gpt-5"); // Deep thinking with GPT-5
+    } else {
+      fd.append("model", "gpt-4o");
+    }
+
+    const r = await fetch(BACKEND, { method: "POST", body: fd, credentials: "include" });
+    const j = await r.json();
+    chat.removeChild(s);
+    
+    if (j.reply && j.reply.startsWith('data:image/')) {
+      // Handle image generation response
+      addMsg("ai", "", j.reply);
+      saveMessage("ai", "[Image generated]", j.reply);
+    } else {
+      addMsg("ai", j.reply || j.answer || j.error || "[No reply]");
+      saveMessage("ai", j.reply || j.answer || j.error || "[No reply]");
+    }
+  } catch (e) {
+    chat.removeChild(s);
+    addMsg("ai", "⚠️ Error: " + e.message);
+    saveMessage("ai", "⚠️ Error: " + e.message);
+  } finally {
+    promptEl.value = "";
+    resetButtons();
+  }
+}
+
+// Add event listeners for action buttons
+[generateImageBtn, deepThinkBtn, instantBtn].forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (promptEl.value.trim()) {
+      sendMessage();
+    }
+  });
+});
+
+// Enter key to send
+promptEl.addEventListener("keydown", e => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+});
+
+// Auto-scroll when new messages are added
+const observer = new MutationObserver(() => {
+  const lastMessage = chat.lastElementChild;
+  if (lastMessage) {
+    lastMessage.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+});
+observer.observe(chat, { childList: true });
 </script>
 </body>
 </html>

@@ -719,8 +719,35 @@ app.post("/api/admin/update-plan", requireAdminAuth, (req, res) => {
   saveUserDB(db);
   res.json({ success: true });
 });
+// In your index.js - this creates a tracked payment
+app.post("/api/create-subscription", async (req, res) => {
+  const { plan, period } = req.body; // 'plus' or 'pro', 'monthly' or 'yearly'
+  const amountUSD = PLANS[plan].price[period];
+  
+  const orderId = `sub-${req.user.id}-${plan}-${Date.now()}`;
+  
+  const payload = {
+    price_amount: amountUSD,
+    price_currency: "USD",
+    pay_currency: "usdt", // Users pay with any crypto
+    order_id: orderId,
+    order_description: `GoldenSpaceAI ${plan} Plan`,
+    ipn_callback_url: "https://goldenspaceai.space/api/nowpay/webhook", // ← WEBHOOK URL
+  };
 
-// ============ HEALTH ============
+  // Create payment with NOWPayments
+  const response = await axios.post(`${NOWPAYMENTS_API}/invoice`, payload, {
+    headers: { "x-api-key": NOWPAYMENTS_API_KEY },
+  });
+
+  // Store order in your database
+  savePaymentToDB(orderId, req.user.id, plan, period, response.data.id);
+  
+  res.json({ 
+    success: true, 
+    paymentUrl: response.data.invoice_url // User goes here to pay
+  });
+});// ============ HEALTH ============
 app.get("/health", (_req, res) => {
   const db = loadUserDB();
   res.json({

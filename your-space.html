@@ -76,49 +76,7 @@
 </style>
 </head>
 <body>
-  <!-- ==================== GOLDEN UNLOCK OVERLAY ==================== -->
-<div id="goldenOverlay" class="golden-overlay">
-  <div class="golden-unlock">
-    <div class="lock-icon">🔒</div>
-    <h2>Unlock This Feature</h2>
-    <p class="description">Access this premium feature for 30 days</p>
-    <div class="price">4G <span>per month</span></div>
-    <div class="balance-info">Your balance: <span id="userBalance">0</span>G</div>
-    <button class="unlock-btn" onclick="unlockFeature()">UNLOCK FOR 4G</button>
-    <div id="statusMessage"></div>
-    <div class="links">
-      <a href="/buy-golden.html">Need Golden? Buy here</a>
-      <a href="/">Back to Home</a>
-    </div>
-  </div>
-</div>
-
-<style>
-.golden-overlay {
-  position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-  background: rgba(11, 16, 32, 0.95); backdrop-filter: blur(10px);
-  display: flex; align-items: center; justify-content: center; z-index: 10000;
-}
-.golden-unlock {
-  background: linear-gradient(135deg, #0f1624, #0b1320); border: 2px solid #f6c64a;
-  border-radius: 20px; padding: 30px; text-align: center; max-width: 400px; width: 90%;
-}
-.lock-icon { font-size: 60px; margin-bottom: 15px; }
-.golden-unlock h2 { color: #f6c64a; margin-bottom: 10px; }
-.description { color: #cfc6a5; margin-bottom: 20px; }
-.price { font-size: 36px; font-weight: bold; color: #f6c64a; margin: 15px 0; }
-.price span { font-size: 16px; color: #cfc6a5; }
-.balance-info { color: #cfc6a5; margin: 10px 0; }
-.unlock-btn {
-  background: linear-gradient(135deg, #f6c64a, #eb8b36); color: #1a1300;
-  border: none; border-radius: 10px; padding: 12px 30px; font-size: 16px;
-  font-weight: bold; cursor: pointer; margin: 10px 0; width: 100%;
-}
-.links { margin-top: 15px; }
-.links a { color: #f6c64a; margin: 0 10px; }
-#statusMessage { margin: 10px 0; min-height: 20px; }
-</style>
-
+  
 <script>
 // Get current page feature name
 function getFeatureName() {

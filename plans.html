@@ -42,26 +42,32 @@
     .wrap{max-width:var(--max);margin:22px auto;padding:0 16px}
 
     .gridTop{display:grid;grid-template-columns:1fr;gap:16px;margin-bottom:18px}
-    @media(min-width:900px){.gridTop{grid-template-columns:1fr 1fr}}
+    @media(min-width:900px){.gridTop{grid-template-columns:1fr 1fr 1fr}}
 
     .card{background:linear-gradient(180deg,var(--card),var(--card2)); border:1px solid var(--border);
-      border-radius:var(--radius); box-shadow:var(--shadow); padding:18px;}
+      border-radius:var(--radius); box-shadow:var(--shadow); padding:18px; height:fit-content;}
+    .card.pro { border: 2px solid rgba(246,198,74,.5); box-shadow: 0 0 30px rgba(246,198,74,.2); }
     .card h2{margin:0 0 8px;font-size:22px;color:#fff6d8}
-    .price{font-weight:900}
+    .price{font-weight:900; color: var(--gold); font-size: 24px; margin: 10px 0; }
+    .period{font-size: 14px; color: var(--muted); }
     .pill{display:inline-flex;gap:8px;align-items:center;border:1px solid var(--border);border-radius:999px;padding:6px 10px;color:var(--muted);font-size:12px}
     ul.feats{margin:10px 0 14px; padding-left:18px}
-    ul.feats li{margin:6px 0}
+    ul.feats li{margin:6px 0; font-size: 14px; }
     .ok{color:var(--ok);font-weight:800}
     .no{color:var(--x);font-weight:800}
 
     .btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;
-      padding:12px 14px;border-radius:12px;border:1px solid rgba(0,0,0,.25);font-weight:900;cursor:pointer}
+      padding:12px 14px;border-radius:12px;border:1px solid rgba(0,0,0,.25);font-weight:900;cursor:pointer;
+      transition: all 0.3s ease;}
     .btn.gold{background:linear-gradient(180deg,var(--gold),var(--gold2));color:#1c1500;box-shadow:0 10px 26px rgba(246,198,74,.25)}
+    .btn.gold:hover{transform: translateY(-2px); box-shadow: 0 15px 35px rgba(246,198,74,.4); }
     .btn.ghost{background:transparent;color:var(--muted);border:1px solid var(--border)}
     .btn.wide{width:100%}
 
-    .gridSmall{display:grid;gap:14px;grid-template-columns:1fr; margin-top:6px}
-    @media(min-width:900px){.gridSmall{grid-template-columns:repeat(3,1fr)}}
+    .loading{opacity:0.7; pointer-events:none;}
+    .loading::after{content:"..."; animation: loading 1.5s infinite;}
+
+    @keyframes loading{0%,100%{content:"."}50%{content:".."}}
 
     footer{max-width:var(--max);margin:26px auto 34px;padding:0 16px;color:#aeb7c5;font-size:12px;
       display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;border-top:1px solid var(--border);padding-top:12px}
@@ -76,68 +82,66 @@
   </div>
 
   <main class="wrap" aria-label="Plans">
-    <h1 style="margin:6px 0 12px;font-size:clamp(22px,4vw,34px)">Choose your plan</h1>
+    <h1 style="margin:6px 0 12px;font-size:clamp(22px,4vw,34px); text-align: center;">Choose Your Plan</h1>
+    <p style="text-align: center; color: var(--muted); margin-bottom: 30px;">Upgrade to unlock powerful AI features</p>
 
-    <!-- Pro & Ultra -->
+    <!-- Free, Plus, Pro -->
     <section class="gridTop">
-      <article class="card">
-        <h2>🚀 Pro <span class="price">— 8$/month</span></h2>
-        <div class="pill">Everything in Plus, for builders</div>
-        <ul class="feats">
-          <li><span class="ok">✓</span> Includes all Plus features</li>
-          <li><span class="ok">✓</span> Create Rockets</li>
-          <li><span class="ok">✓</span> Create Satellites</li>
-          <li><span class="ok">✓</span> Create your Universe</li>
-          <li><span class="ok">✓</span> Advanced Planet builder</li>
-        </ul>
-        <button class="btn gold wide" data-plan="pro">Choose Pro</button>
-      </article>
-
-      <article class="card">
-        <h2>💫 Ultra <span class="price">— 12$/month</span></h2>
-        <div class="pill">Best value • power users</div>
-        <ul class="feats">
-          <li><span class="ok">✓</span> Includes all Pro features</li>
-          <li><span class="ok">✓</span> Better homework solving</li>
-          <li><span class="ok">✓</span> Advanced AI (higher quality)</li>
-          <li><span class="ok">✓</span> Search lessons</li>
-        </ul>
-        <button class="btn gold wide" data-plan="ultra">Go Ultra</button>
-      </article>
-    </section>
-
-    <!-- Free, Starter, Plus -->
-    <section class="gridSmall">
+      <!-- Free Plan -->
       <article class="card">
         <h2>🌙 Free</h2>
-        <div class="pill">Try it out</div>
+        <div class="price">$0<span class="period">/month</span></div>
+        <div class="pill">Perfect for trying out</div>
         <ul class="feats">
-          <li><span class="ok">✓</span> Chat AI</li>
-          <li><span class="no">✗</span> Learn info</li>
+          <li><span class="ok">✓</span> GPT-4o-mini Chat</li>
+          <li><span class="ok">✓</span> Basic Learning Info</li>
+          <li><span class="no">✗</span> Advanced AI Models</li>
+          <li><span class="no">✗</span> Image Generation</li>
+          <li><span class="no">✗</span> File Upload</li>
+          <li><span class="no">✗</span> Chat Memory</li>
         </ul>
-        <button class="btn ghost wide" data-plan="free">Select Free</button>
+        <button class="btn ghost wide" onclick="selectFree()">Continue Free</button>
       </article>
 
+      <!-- Plus Plan -->
       <article class="card">
-        <h2>🟢 Starter <span class="price">— 2$/month</span></h2>
-        <div class="pill">Essentials</div>
+        <h2>⭐ Plus</h2>
+        <div class="price">$15<span class="period">/month</span></div>
+        <div class="pill">Great for regular users</div>
         <ul class="feats">
-          <li><span class="ok">✓</span> Chat AI</li>
-          <li><span class="ok">✓</span> Learn info</li>
+          <li><span class="ok">✓</span> GPT-4o Full Access</li>
+          <li><span class="ok">✓</span> Advanced Learning</li>
+          <li><span class="ok">✓</span> Physics Tools</li>
+          <li><span class="ok">✓</span> Create Planets</li>
+          <li><span class="ok">✓</span> Space Tools</li>
+          <li><span class="no">✗</span> GPT-5 Access</li>
+          <li><span class="no">✗</span> Image Generation</li>
         </ul>
-        <button class="btn gold wide" data-plan="starter">Choose Starter</button>
+        <button class="btn gold wide" onclick="subscribe('plus', 'monthly')" id="plusBtn">Get Plus</button>
       </article>
 
-      <article class="card">
-        <h2>⭐ Plus <span class="price">— 4$/month</span></h2>
-        <div class="pill">Great for students</div>
+      <!-- Pro Plan -->
+      <article class="card pro">
+        <h2>🚀 Pro</h2>
+        <div class="price">$25<span class="period">/month</span></div>
+        <div class="pill">Most Popular • Best Value</div>
         <ul class="feats">
-          <li><span class="ok">✓</span> Chat AI</li>
-          <li><span class="ok">✓</span> Learn Physics</li>
+          <li><span class="ok">✓</span> Everything in Plus</li>
+          <li><span class="ok">✓</span> GPT-5 & GPT-5-nano</li>
+          <li><span class="ok">✓</span> DALL-E 3 Image Generation</li>
+          <li><span class="ok">✓</span> File Upload & Analysis</li>
+          <li><span class="ok">✓</span> Advanced Chat Memory</li>
+          <li><span class="ok">✓</span> Homework Solver</li>
+          <li><span class="ok">✓</span> Lesson Search</li>
+          <li><span class="ok">✓</span> Custom Instructions</li>
         </ul>
-        <button class="btn gold wide" data-plan="plus">Choose Plus</button>
+        <button class="btn gold wide" onclick="subscribe('pro', 'monthly')" id="proBtn">Get Pro</button>
       </article>
     </section>
+
+    <div style="text-align: center; margin: 30px 0; color: var(--muted); font-size: 14px;">
+      💫 All paid plans include automatic upgrades via NOWPayments • Support for 300+ cryptocurrencies
+    </div>
 
     <footer>
       <div>©️ <span id="yr"></span> GoldenSpaceAI</div>
@@ -151,18 +155,66 @@
 
   <script>
     document.getElementById('yr').textContent = new Date().getFullYear();
-    document.querySelectorAll('[data-plan]').forEach(btn=>{
-      btn.addEventListener('click', ()=>{
-        const plan = btn.dataset.plan;
-        if(plan === "free"){
-          alert("✅ Free plan selected!");
-          location.href = "/";
-        } else {
-          // redirect to payment page
-          location.href = "/pay.html?plan=" + plan;
+
+    async function subscribe(plan, period) {
+      const button = document.getElementById(plan + 'Btn');
+      const originalText = button.textContent;
+      
+      try {
+        // Show loading state
+        button.classList.add('loading');
+        button.textContent = 'Creating Payment';
+        
+        // Check if user is logged in
+        const meResponse = await fetch('/api/me', { credentials: 'include' });
+        const meData = await meResponse.json();
+        
+        if (!meData.loggedIn) {
+          if (confirm('You need to log in to subscribe. Go to login page?')) {
+            window.location.href = '/login-signup.html';
+          }
+          return;
         }
-      });
-    });
+
+        // Create subscription
+        const response = await fetch('/api/nowpayments/create-plan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ plan, period }),
+          credentials: 'include'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          // Redirect to NOWPayments checkout
+          window.location.href = data.invoiceUrl;
+        } else {
+          alert('Error: ' + (data.error || 'Failed to create subscription'));
+        }
+      } catch (error) {
+        console.error('Subscription error:', error);
+        alert('Network error: ' + error.message);
+      } finally {
+        // Reset button
+        button.classList.remove('loading');
+        button.textContent = originalText;
+      }
+    }
+
+    function selectFree() {
+      alert('✅ Free plan selected! You can continue using all free features.');
+      window.location.href = '/index.html';
+    }
+
+    // Add yearly plan option if needed
+    function subscribeYearly(plan) {
+      if (confirm(`Get 2 months free with yearly billing? ${plan.toUpperCase()} yearly plan would be $${plan === 'plus' ? '150' : '250'}/year`)) {
+        subscribe(plan, 'yearly');
+      } else {
+        subscribe(plan, 'monthly');
+      }
+    }
   </script>
 </body>
 </html>

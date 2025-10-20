@@ -747,6 +747,87 @@ app.post("/api/create-subscription", async (req, res) => {
     success: true, 
     paymentUrl: response.data.invoice_url // User goes here to pay
   });
+// ============ PLAN-BASED ACCESS CONTROL ============
+const FEATURE_PLANS = {
+  // Free features (accessible to all)
+  'chat-free-ai': 'free',
+  'index.html': 'free',
+  'login-signup.html': 'free',
+  'plans.html': 'free',
+  
+  // Plus features ($15/month)
+  'search-info.html': 'plus',
+  'learn-physics.html': 'plus', 
+  'create-planet.html': 'plus',
+  'physics-tools': 'plus',
+  
+  // Pro features ($25/month)
+  'chat-advancedai.html': 'pro',
+  'create-advanced-planet.html': 'pro',
+  'create-rocket.html': 'pro',
+  'create-satellite.html': 'pro', 
+  'your-space.html': 'pro',
+  'homework-helper': 'pro',
+  'lesson-search': 'pro',
+  'image-creation': 'pro',
+  'file-upload': 'pro'
+};
+
+// Middleware to check plan access for pages
+app.use((req, res, next) => {
+  const path = req.path;
+  
+  // Only check .html pages and API endpoints
+  if (path.endsWith('.html') || path.includes('/api/')) {
+    const pageName = path.split('/').pop() || 'index.html';
+    const requiredPlan = FEATURE_PLANS[pageName] || FEATURE_PLANS[path] || 'free';
+    
+    // Skip auth for free pages and login page
+    if (requiredPlan === 'free' || path.includes('login-signup')) {
+      return next();
+    }
+    
+    // Check if user is logged in
+    if (!req.user) {
+      return res.redirect('/login-signup.html');
+    }
+    
+    // Check if user has required plan
+    const userPlan = req.user.plan || 'free';
+    const planHierarchy = { 'free': 0, 'plus': 1, 'pro': 2 };
+    
+    if (planHierarchy[userPlan] < planHierarchy[requiredPlan]) {
+      // User doesn't have required plan - redirect to upgrade page
+      return res.redirect('/plans.html?upgrade_required=true');
+    }
+  }
+  
+  next();
+});  
+});
+// Protect API endpoints based on features
+app.use('/api/:feature', (req, res, next) => {
+  const feature = req.params.feature;
+  const requiredPlan = FEATURE_PLANS[feature] || 'free';
+  
+  if (requiredPlan === 'free') return next();
+  
+  if (!req.user) {
+    return res.status(401).json({ error: 'Login required' });
+  }
+  
+  const userPlan = req.user.plan || 'free';
+  const planHierarchy = { 'free': 0, 'plus': 1, 'pro': 2 };
+  
+  if (planHierarchy[userPlan] < planHierarchy[requiredPlan]) {
+    return res.status(403).json({ 
+      error: 'Upgrade required',
+      message: `This feature requires ${requiredPlan} plan`,
+      requiredPlan
+    });
+  }
+  
+  next();
 });// ============ HEALTH ============
 app.get("/health", (_req, res) => {
   const db = loadUserDB();

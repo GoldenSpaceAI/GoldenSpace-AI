@@ -639,30 +639,295 @@ app.post("/chat-advanced-ai", requireFeature("chat_advancedai"), upload.single("
   }
 });
 
-// ============ OTHER AI ENDPOINTS ============
-app.post("/search-lessons", requireFeature("search_lessons"), async (req, res) => {
+// ============ SEARCH INFO ENDPOINT ============
+app.post("/search-info", async (req, res) => {
   try {
     const { query } = req.body;
     if (!query) return res.status(400).json({ error: "Missing query" });
 
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-4o-mini",
       messages: [
-        { role: "system", content: "You are a professional teacher creating clear, educational lessons." },
+        { 
+          role: "system", 
+          content: "You are a helpful research assistant. Provide clear, concise, and informative answers. Structure your response with key points and summaries." 
+        },
         { role: "user", content: query }
       ],
       max_tokens: 1200,
-      temperature: 0.7,
+      temperature: 0.7
     });
 
     const reply = completion.choices[0]?.message?.content || "No reply.";
     res.json({ success: true, answer: reply });
   } catch (e) {
-    console.error("Lesson AI error:", e);
+    console.error("Search info error:", e);
     res.status(500).json({ error: e.message });
   }
 });
 
+// ============ SUBSCRIPTION MANAGEMENT ============
+app.get("/subscriptions.html", (req, res) => {
+  res.sendFile(path.join(__dirname, "subscriptions.html"));
+});
+
+app.get("/api/user-subscriptions", (req, res) => {
+  if (!req.user) return res.status(401).json({ error: "Login required" });
+
+  const db = loadGoldenDB();
+  const id = getUserIdentifier(req);
+  const user = db.users[id];
+  
+  if (!user) return res.status(404).json({ error: "User not found" });
+
+  const now = new Date();
+  const subscriptions = Object.entries(user.subscriptions || {}).map(([feature, expiry]) => {
+    const exp = new Date(expiry);
+    const active = exp > now;
+    const daysLeft = Math.max(0, Math.ceil((exp - now) / (1000 * 60 * 60 * 24)));
+    
+    return {
+      feature,
+      cost: FEATURE_PRICES[feature] || 0,
+      expiry: expiry,
+      active,
+      daysLeft,
+      expired: !active
+    };
+  });
+
+  res.json({ 
+    success: true, 
+    subscriptions, 
+    balance: user.golden_balance || 0 
+  });
+});
+
+app.post("/api/cancel-subscription", (req, res) => {
+  if (!req.user) return res.status(401).json({ error: "Login required" });
+
+  const { feature } = req.body;
+  if (!feature) return res.status(400).json({ error: "Feature required" });
+
+  const db = loadGoldenDB();
+  const id = getUserIdentifier(req);
+  const user = db.users[id];
+  
+  if (!user || !user.subscriptions) {
+    return res.status(404).json({ error: "User or subscription not found" });
+  }
+
+  delete user.subscriptions[feature];
+  saveGoldenDB(db);
+  
+  res.json({ 
+    success: true, 
+    message: `Subscription for ${feature} cancelled` 
+  });
+});
+
+// ============ ADMIN PAGE ============
+app.get("/admin-page-golden.html", (req, res) => {
+  res.sendFile(path.join(__dirname, "admin-page-golden.html"));
+});
+
+// Admin: all users (for admin page)
+app.get("/api/admin/all-users", requireAdminAuth, (_req, res) => {
+  const db = loadGoldenDB();
+  const users = [];
+  
+  for (const [userId, u] of Object.entries(db.users || {})) {
+    users.push({
+      userId,
+      name: u.name,
+      email: u.email,
+      golden_balance: u.golden_balance || 0,
+      total_golden_earned: u.total_golden_earned || 0,
+      total_golden_spent: u.total_golden_spent || 0,
+      created_at: u.created_at,
+      last_login: u.last_login,
+      provider: userId.split("@")[1],
+    });
+  }
+  
+  users.sort((a, b) => b.golden_balance - a.golden_balance);
+  const totalGolden = users.reduce((s, u) => s + (u.golden_balance || 0), 0);
+  
+  res.json({ 
+    success: true, 
+    users, 
+    totalUsers: users.length, 
+    totalGolden 
+  });
+});
+
+// Admin: search users
+app.get("/api/admin/search-users", requireAdminAuth, (req, res) => {
+  const q = (req.query.query || "").toLowerCase();
+  const db = loadGoldenDB();
+  const results = [];
+  
+  for (const [userId, u] of Object.entries(db.users || {})) {
+    const hit =
+      userId.toLowerCase().includes(q) ||
+      (u.email && u.email.toLowerCase().includes(q)) ||
+      (u.name && u.name.toLowerCase().includes(q));
+    
+    if (hit) {
+      results.push({
+        userId,
+        name: u.name,
+        email: u.email,
+        golden_balance: u.golden_balance || 0,
+        total_golden_earned: u.total_golden_earned || 0,
+        total_golden_spent: u.total_golden_spent || 0,
+        created_at: u.created_at,
+        last_login: u.last_login,
+        provider: userId.split("@")[1],
+      });
+    }
+  }
+  
+  res.json({ success: true, users: results });
+});
+
+// Admin: add golden to user
+app.post("/api/admin/add-golden", requireAdminAuth, (req, res) => {
+  const { userId, amount, reason } = req.body;
+  if (!userId || !amount) {
+    return res.status(400).json({ error: "User ID and amount required" });
+  }
+
+  const db = loadGoldenDB();
+  const u = db.users[userId];
+  if (!u) return res.status(404).json({ error: "User not found" });
+
+  const prev = u.golden_balance || 0;
+  u.golden_balance = prev + Number(amount);
+  u.total_golden_earned = (u.total_golden_earned || 0) + Number(amount);
+  u.transactions = u.transactions || [];
+  u.transactions.push({
+    type: "admin_add",
+    amount: Number(amount),
+    previous_balance: prev,
+    new_balance: u.golden_balance,
+    reason: reason || "Admin adjustment",
+    timestamp: new Date().toISOString(),
+  });
+  
+  saveGoldenDB(db);
+  res.json({ 
+    success: true, 
+    message: `Added ${amount}G to ${u.email}`,
+    newBalance: u.golden_balance 
+  });
+});
+
+// Admin: subtract golden from user
+app.post("/api/admin/subtract-golden", requireAdminAuth, (req, res) => {
+  const { userId, amount, reason } = req.body;
+  if (!userId || !amount) {
+    return res.status(400).json({ error: "User ID and amount required" });
+  }
+
+  const db = loadGoldenDB();
+  const u = db.users[userId];
+  if (!u) return res.status(404).json({ error: "User not found" });
+
+  const prev = u.golden_balance || 0;
+  const amt = Number(amount);
+  
+  if (prev < amt) {
+    return res.status(400).json({ error: "Insufficient balance" });
+  }
+
+  u.golden_balance = prev - amt;
+  u.total_golden_spent = (u.total_golden_spent || 0) + amt;
+  u.transactions = u.transactions || [];
+  u.transactions.push({
+    type: "admin_subtract",
+    amount: -amt,
+    previous_balance: prev,
+    new_balance: u.golden_balance,
+    reason: reason || "Admin adjustment",
+    timestamp: new Date().toISOString(),
+  });
+  
+  saveGoldenDB(db);
+  res.json({ 
+    success: true, 
+    message: `Subtracted ${amount}G from ${u.email}`,
+    newBalance: u.golden_balance 
+  });
+});
+
+// Admin: set golden balance
+app.post("/api/admin/set-golden", requireAdminAuth, (req, res) => {
+  const { userId, balance, reason } = req.body;
+  if (!userId || balance === undefined) {
+    return res.status(400).json({ error: "User ID and balance required" });
+  }
+
+  const db = loadGoldenDB();
+  const u = db.users[userId];
+  if (!u) return res.status(404).json({ error: "User not found" });
+
+  const prev = u.golden_balance || 0;
+  const newBal = Number(balance);
+  u.golden_balance = newBal;
+  u.transactions = u.transactions || [];
+  u.transactions.push({
+    type: "admin_set",
+    amount: newBal - prev,
+    previous_balance: prev,
+    new_balance: newBal,
+    reason: reason || "Admin set balance",
+    timestamp: new Date().toISOString(),
+  });
+  
+  saveGoldenDB(db);
+  res.json({ 
+    success: true, 
+    message: `Set balance to ${newBal}G for ${u.email}` 
+  });
+});
+
+// Admin: get user transactions
+app.get("/api/admin/user-transactions/:userId", requireAdminAuth, (req, res) => {
+  const { userId } = req.params;
+  const db = loadGoldenDB();
+  const u = db.users[userId];
+  
+  if (!u) return res.status(404).json({ error: "User not found" });
+  res.json({ success: true, transactions: u.transactions || [] });
+});
+
+// ============ ADDITIONAL AI ENDPOINTS ============
+app.post("/learn-physics", async (req, res) => {
+  try {
+    const { question } = req.body;
+    if (!question) return res.status(400).json({ error: "Missing question" });
+
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        { 
+          role: "system", 
+          content: "You are a physics tutor who explains concepts clearly and simply. Break down complex topics into understandable parts." 
+        },
+        { role: "user", content: question }
+      ],
+      max_tokens: 1200,
+      temperature: 0.7
+    });
+
+    const reply = completion.choices[0]?.message?.content || "No reply.";
+    res.json({ success: true, answer: reply });
+  } catch (err) {
+    console.error("Physics AI error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
 app.post("/homework-helper", requireFeature("homework_helper"), upload.single("image"), async (req, res) => {
   try {
     const model = req.body.model || "gpt-4o";

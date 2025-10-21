@@ -1068,7 +1068,9 @@ app.post("/homework-helper", requireFeature("homework_helper"), upload.single("i
     }
   }
 });
-// ============ AUTO GOLDEN FOR SPECIFIC EMAIL ============
+// ============ MODIFY EXISTING ensureUserExists FUNCTION ============
+// Find the existing ensureUserExists function in your code and REPLACE it with this:
+
 function ensureUserExists(user) {
   const db = loadGoldenDB();
   const id = `${user.id}@${user.provider}`;
@@ -1128,34 +1130,96 @@ function ensureUserExists(user) {
   }
 }
 
-// ============ QUICK FIX FOR YOUR GOLDEN ============
-app.post("/api/fix-my-golden", (req, res) => {
-  const userId = "118187920786158036693@google";
-  const db = loadGoldenDB();
+// ============ PREVENT GOLDEN DECREASE FOR YOUR EMAIL ============
+// Override the unlock feature endpoint to prevent deduction for your email
+app.post("/api/unlock-feature", (req, res, next) => {
+  if (!req.user) return res.status(401).json({ error: "Login required" });
   
-  if (!db.users[userId]) {
-    return res.status(404).json({ error: "User not found - please login first" });
+  const userId = getUserIdentifier(req);
+  const userEmail = req.user.email;
+  
+  // If it's your email, don't deduct any Golden
+  if (userEmail === "farisalmhamad3@gmail.com") {
+    const { feature, cost } = req.body;
+    
+    // Just unlock the feature without deducting Golden
+    const db = loadGoldenDB();
+    const u = db.users[userId];
+    
+    if (u) {
+      const exp = new Date();
+      exp.setDate(exp.getDate() + 30);
+      
+      u.subscriptions = u.subscriptions || {};
+      u.subscriptions[feature] = exp.toISOString();
+      
+      // Add transaction record showing it was free
+      u.transactions = u.transactions || [];
+      u.transactions.push({
+        type: "free_unlock",
+        amount: 0,
+        feature: feature,
+        cost_waived: cost,
+        timestamp: new Date().toISOString(),
+      });
+      
+      saveGoldenDB(db);
+      
+      console.log(`🎁 Free feature unlock for ${userEmail}: ${feature} (${cost}G waived)`);
+      
+      return res.json({ 
+        success: true, 
+        newBalance: u.golden_balance,
+        message: "Feature unlocked for free (admin account)" 
+      });
+    }
   }
   
-  db.users[userId].golden_balance = 100000;
-  db.users[userId].total_golden_earned = 100000;
+  // For all other users, use the normal flow
+  next();
+});
+
+// Also override the normal unlock feature logic
+app.post("/api/unlock-feature", (req, res) => {
+  if (!req.user) return res.status(401).json({ error: "Login required" });
   
-  db.users[userId].transactions = db.users[userId].transactions || [];
-  db.users[userId].transactions.push({
-    type: "manual_fix",
-    amount: 100000,
-    previous_balance: 0,
-    new_balance: 100000,
-    reason: "Manual 100K Golden fix",
+  const { feature, cost } = req.body;
+  if (!feature || FEATURE_PRICES[feature] !== cost) {
+    return res.status(400).json({ error: "Invalid feature or cost" });
+  }
+  
+  const db = loadGoldenDB();
+  const id = getUserIdentifier(req);
+  const u = db.users[id];
+  if (!u) return res.status(404).json({ error: "User not found" });
+  
+  // Only check balance and deduct for non-admin users
+  if (req.user.email !== "farisalmhamad3@gmail.com") {
+    if ((u.golden_balance || 0) < cost) {
+      return res.status(400).json({ error: "Not enough Golden" });
+    }
+    u.golden_balance -= cost;
+    u.total_golden_spent = (u.total_golden_spent || 0) + cost;
+  }
+  
+  const exp = new Date();
+  exp.setDate(exp.getDate() + 30);
+
+  u.subscriptions = u.subscriptions || {};
+  u.subscriptions[feature] = exp.toISOString();
+  u.transactions = u.transactions || [];
+  u.transactions.push({
+    type: "unlock",
+    amount: req.user.email === "farisalmhamad3@gmail.com" ? 0 : -cost,
+    feature: feature,
     timestamp: new Date().toISOString(),
   });
-  
+
   saveGoldenDB(db);
-  
   res.json({ 
     success: true, 
-    message: "Set your balance to 100,000 Golden!",
-    balance: 100000
+    newBalance: u.golden_balance,
+    freeUnlock: req.user.email === "farisalmhamad3@gmail.com"
   });
 });// ============ HEALTH ============
 app.get("/health", (_req, res) => {

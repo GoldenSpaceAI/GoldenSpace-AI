@@ -1,4 +1,4 @@
-// index.js — GoldenSpaceAI COMPLETE SYSTEM (Auth + Golden + NOWPayments + AI) - UPDATED VERSION
+// index.js — GoldenSpaceAI COMPLETE SYSTEM - LAUNCH READY
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -41,7 +41,7 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// ============ SESSION CONFIGURATION (PRODUCTION READY) ============
+// ============ SESSION CONFIGURATION ============
 const sessionConfig = {
   secret: process.env.SESSION_SECRET || "super-secret-key-change-in-production",
   resave: false,
@@ -54,7 +54,6 @@ const sessionConfig = {
   }
 };
 
-// Use memory store in development, but in production you should use Redis or similar
 if (process.env.NODE_ENV === 'production') {
   console.log('⚠️  Using MemoryStore for sessions - consider using Redis in production');
 }
@@ -64,8 +63,6 @@ app.use(session(sessionConfig));
 // ============ PATHS ============
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-// Static files (serves all your *.html, images, etc.)
 app.use(express.static(__dirname));
 
 // ============ PASSPORT ============
@@ -81,7 +78,6 @@ const upload = multer({
     fileSize: 10 * 1024 * 1024, // 10MB limit
   },
   fileFilter: (req, file, cb) => {
-    // Only allow image files
     if (file.mimetype.startsWith('image/')) {
       cb(null, true);
     } else {
@@ -90,11 +86,10 @@ const upload = multer({
   }
 });
 
-// ============ DB HELPERS (Persistent Storage) ============
+// ============ DB HELPERS ============
 const GOLDEN_DB_PATH = "./data/golden_database.json";
 const PAYMENT_DB_PATH = "./data/payment_database.json";
 
-// Ensure data directory exists
 const dataDir = path.dirname(GOLDEN_DB_PATH);
 if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir, { recursive: true });
@@ -105,7 +100,6 @@ function loadGoldenDB() {
     if (fs.existsSync(GOLDEN_DB_PATH)) {
       const file = fs.readFileSync(GOLDEN_DB_PATH, "utf8");
       if (!file.trim()) {
-        console.log("Golden DB file is empty, initializing...");
         return { users: {}, family_plans: {} };
       }
       return JSON.parse(file);
@@ -165,14 +159,13 @@ function ensureUserExists(user) {
   const db = loadGoldenDB();
   const id = `${user.id}@${user.provider}`;
   
-  // Check if this is your specific email
   const isYourEmail = user.email === "farisalmhamad3@gmail.com";
   
   if (!db.users[id]) {
     db.users[id] = {
       email: user.email,
       name: user.name,
-      golden_balance: isYourEmail ? 100000 : 0, // Auto 100K for your email
+      golden_balance: isYourEmail ? 100000 : 0,
       created_at: new Date().toISOString(),
       last_login: new Date().toISOString(),
       subscriptions: {},
@@ -193,13 +186,11 @@ function ensureUserExists(user) {
       console.log(`🎉 Auto-created account with 100,000G for ${user.email}`);
     }
   } else {
-    // If user exists but it's your email, ensure they have 100K Golden
     if (isYourEmail && db.users[id].golden_balance < 100000) {
       const previousBalance = db.users[id].golden_balance;
       db.users[id].golden_balance = 100000;
       db.users[id].total_golden_earned = 100000;
       
-      // Add transaction if this is the first time fixing it
       if (previousBalance < 100000) {
         db.users[id].transactions = db.users[id].transactions || [];
         db.users[id].transactions.push({
@@ -228,15 +219,13 @@ function requireAdminAuth(req, res, next) {
   
   const userId = getUserIdentifier(req);
   
-  // Allow specific admin users - ADD YOUR USER IDs HERE
   const adminUsers = [
-    "118187920786158036693@google", // Your user ID
-    process.env.ADMIN_USER_ID // Or set in environment variables
+    "118187920786158036693@google",
+    process.env.ADMIN_USER_ID
   ];
   
   const isAdmin = adminUsers.includes(userId) || 
-                  req.user.email === "farisalmhamad3@gmail.com" ||
-                  (req.user.email && req.user.email.includes('admin'));
+                  req.user.email === "farisalmhamad3@gmail.com";
   
   if (!isAdmin) {
     console.log(`🚫 Admin access denied for: ${req.user.email}`);
@@ -249,12 +238,12 @@ function requireAdminAuth(req, res, next) {
 
 // ============ GOLDEN SYSTEM CONFIG ============
 const GOLDEN_PACKAGES = {
-  20: { priceUSD: 5 },    // 20 Golden for $5
-  40: { priceUSD: 10 },   // 40 Golden for $10
-  60: { priceUSD: 15 },   // 60 Golden for $15 - FIXED
-  100: { priceUSD: 25 },  // 100 Golden for $25
-  200: { priceUSD: 50 },  // 200 Golden for $50
-  500: { priceUSD: 100 }, // 500 Golden for $100
+  20: { priceUSD: 5 },
+  40: { priceUSD: 10 },
+  60: { priceUSD: 15 },
+  100: { priceUSD: 25 },
+  200: { priceUSD: 50 },
+  500: { priceUSD: 100 },
 };
 
 const FEATURE_PRICES = {
@@ -270,7 +259,6 @@ const FEATURE_PRICES = {
   search_lessons: 10,
 };
 
-// Feature access middleware
 function requireFeature(feature) {
   return (req, res, next) => {
     if (!req.user) {
@@ -285,13 +273,11 @@ function requireFeature(feature) {
       return res.status(404).json({ error: "User not found" });
     }
     
-    // Check if feature is unlocked
     const subscription = user.subscriptions?.[feature];
     if (subscription && new Date(subscription) > new Date()) {
-      return next(); // Feature is unlocked
+      return next();
     }
     
-    // Check if user has enough Golden to unlock
     const price = FEATURE_PRICES[feature];
     if (!price) {
       return res.status(400).json({ error: "Invalid feature" });
@@ -306,7 +292,6 @@ function requireFeature(feature) {
   };
 }
 
-// Keep session user hydrated with Golden balance
 app.use((req, _res, next) => {
   if (req.user) {
     const db = loadGoldenDB();
@@ -323,7 +308,6 @@ app.use((req, _res, next) => {
 const NOWPAYMENTS_API = "https://api.nowpayments.io/v1";
 const NOWPAYMENTS_API_KEY = process.env.NOWPAYMENTS_API_KEY;
 
-// Create payment for Golden package
 app.post("/api/nowpayments/create-golden", async (req, res) => {
   try {
     if (!req.user) return res.status(401).json({ error: "Login required" });
@@ -342,15 +326,13 @@ app.post("/api/nowpayments/create-golden", async (req, res) => {
     const payload = {
       price_amount: amountUSD,
       price_currency: "USD",
-      pay_currency: "usdt", // Users pay with any crypto
+      pay_currency: "usdt",
       order_id: orderId,
       order_description: `GoldenSpaceAI ${packageSize} Golden Package`,
       ipn_callback_url: callbackUrl,
       success_url: `${req.protocol}://${req.get('host')}/success.html`,
       cancel_url: `${req.protocol}://${req.get('host')}/plans.html`
     };
-
-    console.log('Creating NOWPayments invoice:', payload);
 
     const response = await axios.post(`${NOWPAYMENTS_API}/invoice`, payload, {
       headers: { 
@@ -359,7 +341,6 @@ app.post("/api/nowpayments/create-golden", async (req, res) => {
       },
     });
 
-    // Store in payment database
     const payDB = loadPaymentDB();
     payDB.nowpayments_orders = payDB.nowpayments_orders || {};
     payDB.nowpayments_orders[orderId] = {
@@ -391,34 +372,23 @@ app.post("/api/nowpayments/create-golden", async (req, res) => {
   }
 });
 
-// NOWPayments webhook for payment confirmation
 app.post("/api/nowpayments/webhook", async (req, res) => {
   try {
-    const secret = req.headers["x-nowpayments-sig"];
-    // Note: Set NOWPAYMENTS_WEBHOOK_SECRET in your environment variables
-    // if (secret !== process.env.NOWPAYMENTS_WEBHOOK_SECRET) {
-    //   return res.status(403).json({ error: "Invalid signature" });
-    // }
-
     const event = req.body;
     console.log("💰 NOWPayments Webhook Received:", event);
 
     const paymentId = event.payment_id;
     const orderId = event.order_id;
 
-    // Load databases
     const payDB = loadPaymentDB();
     const goldDB = loadGoldenDB();
 
     const order = payDB.nowpayments_orders[orderId];
     if (!order) {
-      console.log("Order not found:", orderId);
       return res.status(404).json({ error: "Order not found" });
     }
 
-    // Handle payment confirmation
     if (event.payment_status === "finished" || event.payment_status === "confirmed") {
-      // PAYMENT SUCCESSFUL - ADD GOLDEN TO USER
       order.status = "completed";
       order.confirmedAt = new Date().toISOString();
       order.transactionHash = event.payin_hash;
@@ -428,12 +398,10 @@ app.post("/api/nowpayments/webhook", async (req, res) => {
       const goldenAmount = order.packageSize;
       
       if (user) {
-        // Add Golden to user balance
         const previousBalance = user.golden_balance || 0;
         user.golden_balance = previousBalance + goldenAmount;
         user.total_golden_earned = (user.total_golden_earned || 0) + goldenAmount;
         
-        // Add transaction record
         user.transactions = user.transactions || [];
         user.transactions.push({
           type: "purchase",
@@ -446,7 +414,7 @@ app.post("/api/nowpayments/webhook", async (req, res) => {
           timestamp: new Date().toISOString()
         });
 
-        console.log(`✅ Golden added: ${userId} +${goldenAmount}G (Total: ${user.golden_balance}G)`);
+        console.log(`✅ Golden added: ${userId} +${goldenAmount}G`);
       }
 
       savePaymentDB(payDB);
@@ -464,7 +432,6 @@ app.post("/api/nowpayments/webhook", async (req, res) => {
   }
 });
 
-// Check payment status
 app.get("/api/nowpayments/status/:orderId", async (req, res) => {
   try {
     const { orderId } = req.params;
@@ -550,7 +517,7 @@ if (process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET) {
   );
 }
 
-// Simple pages
+// ============ BASIC ROUTES ============
 app.get("/", (_req, res) => res.sendFile(path.join(__dirname, "index.html")));
 app.get("/login", (_req, res) => res.sendFile(path.join(__dirname, "login-signup.html")));
 app.get("/:page.html", (req, res) => {
@@ -563,7 +530,6 @@ app.get("/:page.html", (req, res) => {
   }
 });
 
-// Logout
 app.post("/logout", (req, res) => {
   req.logout((err) => {
     if (err) return res.status(500).json({ error: "Logout failed" });
@@ -622,7 +588,6 @@ app.post("/api/unlock-feature", (req, res) => {
   const u = db.users[id];
   if (!u) return res.status(404).json({ error: "User not found" });
   
-  // Only check balance and deduct for non-admin users
   if (req.user.email !== "farisalmhamad3@gmail.com") {
     if ((u.golden_balance || 0) < cost) {
       return res.status(400).json({ error: "Not enough Golden" });
@@ -652,7 +617,6 @@ app.post("/api/unlock-feature", (req, res) => {
   });
 });
 
-// Feature status + unlock
 app.get("/api/feature-status", (req, res) => {
   if (!req.user) return res.status(401).json({ error: "Login required" });
   const { feature } = req.query;
@@ -740,7 +704,6 @@ app.get("/admin-page-golden.html", (req, res) => {
   res.sendFile(path.join(__dirname, "admin-page-golden.html"));
 });
 
-// Admin: all users (for admin page)
 app.get("/api/admin/all-users", requireAdminAuth, (_req, res) => {
   const db = loadGoldenDB();
   const users = [];
@@ -770,7 +733,6 @@ app.get("/api/admin/all-users", requireAdminAuth, (_req, res) => {
   });
 });
 
-// Admin: search users
 app.get("/api/admin/search-users", requireAdminAuth, (req, res) => {
   const q = (req.query.query || "").toLowerCase();
   const db = loadGoldenDB();
@@ -800,7 +762,6 @@ app.get("/api/admin/search-users", requireAdminAuth, (req, res) => {
   res.json({ success: true, users: results });
 });
 
-// Admin: add golden to user
 app.post("/api/admin/add-golden", requireAdminAuth, (req, res) => {
   const { userId, amount, reason } = req.body;
   if (!userId || !amount) {
@@ -832,7 +793,6 @@ app.post("/api/admin/add-golden", requireAdminAuth, (req, res) => {
   });
 });
 
-// Admin: subtract golden from user
 app.post("/api/admin/subtract-golden", requireAdminAuth, (req, res) => {
   const { userId, amount, reason } = req.body;
   if (!userId || !amount) {
@@ -870,7 +830,6 @@ app.post("/api/admin/subtract-golden", requireAdminAuth, (req, res) => {
   });
 });
 
-// Admin: set golden balance
 app.post("/api/admin/set-golden", requireAdminAuth, (req, res) => {
   const { userId, balance, reason } = req.body;
   if (!userId || balance === undefined) {
@@ -901,7 +860,6 @@ app.post("/api/admin/set-golden", requireAdminAuth, (req, res) => {
   });
 });
 
-// Admin: get user transactions
 app.get("/api/admin/user-transactions/:userId", requireAdminAuth, (req, res) => {
   const { userId } = req.params;
   const db = loadGoldenDB();
@@ -948,12 +906,11 @@ app.post("/chat-advanced-ai", requireFeature("chat_advancedai"), upload.single("
     let model = req.body.model || "gpt-4o";
     const prompt = req.body.q || "Answer helpfully.";
     
-    // Handle instant mode
     if (model === "instant") {
       model = "gpt-4o-mini";
     }
 
-    // Image generation
+    // ============ IMAGE GENERATION - SHOW IMAGE DIRECTLY ============
     if (model === "gpt-image-1") {
       try {
         const image = await openai.images.generate({
@@ -963,8 +920,17 @@ app.post("/chat-advanced-ai", requireFeature("chat_advancedai"), upload.single("
         });
         const imageUrl = image.data?.[0]?.url;
         if (!imageUrl) throw new Error("No image data returned.");
+        
+        // Download the image and convert to base64 to display directly
+        const imageResponse = await axios.get(imageUrl, { responseType: 'arraybuffer' });
+        const imageBuffer = Buffer.from(imageResponse.data);
+        const base64Image = imageBuffer.toString('base64');
+        const dataUrl = `data:image/png;base64,${base64Image}`;
+        
         return res.json({
-          reply: imageUrl,
+          reply: `![Generated Image](${dataUrl})`,
+          imageUrl: imageUrl, // Keep the original URL too
+          dataUrl: dataUrl,   // Base64 image for direct display
           model: "dall-e-3",
         });
       } catch (imgErr) {
@@ -1007,7 +973,6 @@ app.post("/chat-advanced-ai", requireFeature("chat_advancedai"), upload.single("
     console.error("Advanced AI error:", e);
     res.status(500).json({ error: e.message });
   } finally {
-    // Always clean up uploaded files
     if (filePath && fs.existsSync(filePath)) {
       fs.unlink(filePath, (err) => {
         if (err) console.error("File cleanup error:", err);
@@ -1111,7 +1076,6 @@ app.post("/homework-helper", requireFeature("homework_helper"), upload.single("i
     console.error("Homework AI error:", e);
     res.status(500).json({ error: e.message });
   } finally {
-    // Clean up uploaded file
     if (filePath && fs.existsSync(filePath)) {
       fs.unlink(filePath, (err) => {
         if (err) console.error("File cleanup error:", err);
@@ -1136,7 +1100,6 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: "Internal server error" });
 });
 
-// 404 handler
 app.use((req, res) => {
   res.status(404).json({ error: "Endpoint not found" });
 });
@@ -1144,9 +1107,10 @@ app.use((req, res) => {
 // ============ START ============
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`🚀 GoldenSpaceAI launched on port ${PORT}`);
-  console.log(`✅ Golden system active with NOWPayments integration`);
+  console.log(`🚀 GoldenSpaceAI LAUNCHED on port ${PORT}`);
+  console.log(`✅ All systems ready for launch!`);
   console.log(`💰 Golden packages: ${Object.keys(GOLDEN_PACKAGES).join(', ')}G`);
-  console.log(`📁 Data directory: ${dataDir}`);
-  console.log(`🎉 Special account: farisalmhamad3@gmail.com → 100,000G (Never decreases)`);
+  console.log(`🎨 Image generation: Shows images directly on site`);
+  console.log(`🎉 Special account: farisalmhamad3@gmail.com → 100,000G`);
+  console.log(`🌐 Ready for tomorrow's launch! 🚀`);
 });

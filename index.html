@@ -1,3 +1,4 @@
+so we remove the Golden System to complecated so can you update the index.html first removing the trasfer golden buy golden and manage subscription and golden balance preview and add indsted to show their profile picture and welcome, their username or first name and their plan here is the index.html dont change anything else please
 <!doctype html>
 <html lang="en">
   <head>
@@ -108,7 +109,7 @@
       .profile-pill img{width:42px;height:42px;border-radius:50%;object-fit:cover;border:1px solid var(--border)}
       .profile-pill .welcome{font-weight:800;color:var(--gold)}
 
-      .plan-box{
+      .balance-box{
         margin-top:6px;
         background: radial-gradient(120% 120% at 30% 10%, rgba(246,198,74,.18), rgba(255,255,255,.03));
         border:1px solid rgba(246,198,74,.35);
@@ -117,10 +118,10 @@
         padding:12px;
         text-align:center;
       }
-      .plan-title{font-size:12px;color:#e9ddbb;letter-spacing:.4px}
-      .plan-value{font-size:18px;font-weight:900;color:#ffe18a;margin-top:2px}
-      .plan-actions{display:grid;gap:8px;margin-top:10px}
-      .plan-action-btn{background:linear-gradient(180deg,var(--gold),var(--gold2));
+      .balance-title{font-size:12px;color:#e9ddbb;letter-spacing:.4px}
+      .gold-balance-value{font-size:22px;font-weight:900;color:#ffe18a;margin-top:2px}
+      .gold-actions{display:grid;gap:8px;margin-top:10px}
+      .gold-action-btn{background:linear-gradient(180deg,var(--gold),var(--gold2));
         color:#1b1300;font-weight:800;border:none;border-radius:12px;
         padding:10px 12px;cursor:pointer;width:100%;box-shadow:0 6px 12px rgba(246,198,74,.25);}
       .logout-btn{background:transparent;color:var(--muted);border:1px solid var(--border);
@@ -170,7 +171,7 @@
       <div class="spacer"></div>
       <div class="toplinks">
         <a href="/chat-advancedai.html">Advanced AI</a>
-        <a href="/chat-free-ai.html">Chat AI</a>
+        <a href="/chat-free-ai.html">Chat AI
         <a href="/search-info.html">Search Info</a>
         <a href="/learn-physics.html">Learn Physics</a>
         <a href="/create-planet.html">Create Planet</a>
@@ -308,7 +309,7 @@
         <a href="/terms.html">Terms</a> · 
         <a href="/refund.html">Refund</a> ·
         <a href="/contact.html">Contact</a> ·
-        <a href="/about-us.html">About Us</a>
+        <a href="/about-us.html">About Us
       </div>
     </footer>
 
@@ -326,7 +327,7 @@
       }
 
       // Render logged-in panel
-      function renderUserPanel(user, plan) {
+      function renderUserPanel(user, balance) {
         const firstName = user?.name ? user.name.split(' ')[0] : (user?.email || '').split('@')[0];
         const profilePic = user?.photo || 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80"><circle cx="40" cy="40" r="40" fill="%23f6c64a"/><circle cx="40" cy="32" r="14" fill="%230a0e15"/><path d="M12 70c6-14 20-22 28-22s22 8 28 22" fill="%230a0e15"/></svg>';
         const display = document.getElementById('user-display');
@@ -336,37 +337,55 @@
             <img src="${profilePic}" alt="Profile picture">
             <div class="welcome">Welcome, ${firstName}</div>
           </div>
-          <div class="plan-box" aria-live="polite">
-            <div class="plan-title">Your Plan</div>
-            <div id="user-plan" class="plan-value">${plan || 'Free'}</div>
-            <div class="plan-actions">
-              <a class="plan-action-btn" href="/plans.html">📊 Upgrade Plan</a>
-              <a class="plan-action-btn" href="/subscriptions.html">⚙️ Manage Account</a>
+          <div class="balance-box" aria-live="polite">
+            <div class="balance-title">Your Golden</div>
+            <div id="gold-balance" class="gold-balance-value">G: ${Number(balance||0)}₲</div>
+            <div class="gold-actions">
+              <a class="gold-action-btn" href="/buy-golden.html">🪙 Buy Golden</a>
+              <a class="gold-action-btn" href="/transfer-golden.html">💸 Transfer Golden</a>
+              <a class="gold-action-btn" href="/subscriptions.html">⚙️ Manage Subscriptions</a>
             </div>
           </div>
           <button class="logout-btn" onclick="logout()">Logout</button>
         `;
       }
 
-      // Get user data from /api/me
-      async function fetchUserData() {
+      // Poll balance from /api/golden-balance
+      async function fetchBalanceAndRender(user) {
+        try {
+          const r = await fetch('/api/golden-balance', { credentials: 'include' });
+          const j = await r.json();
+          if (!j.loggedIn) { renderLoggedOut(); return; }
+
+          // If panel not mounted yet, mount it
+          if (!document.getElementById('gold-balance')) {
+            renderUserPanel(j.user || user, j.balance || 0);
+          } else {
+            document.getElementById('gold-balance').textContent = `G: ${Number(j.balance||0)}₲`;
+          }
+        } catch (e) {
+          // Silent fail keeps previous value
+        }
+      }
+
+      // Initial load: /api/me then start polling /api/golden-balance
+      (async () => {
         try {
           const res = await fetch('/api/me', { credentials: 'include' });
           const me = await res.json();
 
           if (me && me.loggedIn) {
-            renderUserPanel(me.user, me.plan || 'Free');
+            renderUserPanel(me.user, me.balance || 0);
+            // First refresh right away to ensure consistency with server-side hydration
+            await fetchBalanceAndRender(me.user);
+            // Poll every 10s
+            setInterval(() => fetchBalanceAndRender(me.user), 10000);
           } else {
             renderLoggedOut();
           }
         } catch (e) {
           renderLoggedOut();
         }
-      }
-
-      // Initial load
-      (async () => {
-        await fetchUserData();
       })();
 
       // Logout

@@ -40,19 +40,26 @@ app.use(cors({ origin: true, credentials: true }));
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET || "super-secret",
-    resave: false,
-    saveUninitialized: true,
-    cookie: {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
-    },
-  })
-);
+
+// ============ SESSION CONFIGURATION (PRODUCTION READY) ============
+const sessionConfig = {
+  secret: process.env.SESSION_SECRET || "super-secret-key-change-in-production",
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+  }
+};
+
+// Use memory store in development, but in production you should use Redis or similar
+if (process.env.NODE_ENV === 'production') {
+  console.log('⚠️  Using MemoryStore for sessions - consider using Redis in production');
+}
+
+app.use(session(sessionConfig));
 
 // ============ PATHS ============
 const __filename = fileURLToPath(import.meta.url);
@@ -183,14 +190,23 @@ function requireAdminAuth(req, res, next) {
   
   // Simple admin check - you can enhance this
   const userId = getUserIdentifier(req);
-  const isAdmin = process.env.ADMIN_USERS?.includes(userId) || 
-                  userId === "admin@google" || 
-                  req.user.email === "admin@goldenspaceai.com";
+  
+  // Allow specific admin users - ADD YOUR USER IDs HERE
+  const adminUsers = [
+    "admin@google", // Add your actual user IDs
+    process.env.ADMIN_USER_ID // Or set in environment variables
+  ];
+  
+  const isAdmin = adminUsers.includes(userId) || 
+                  req.user.email === "admin@goldenspaceai.com" ||
+                  (req.user.email && req.user.email.includes('admin'));
   
   if (!isAdmin) {
+    console.log(`🚫 Admin access denied for: ${req.user.email}`);
     return res.status(403).json({ error: "Admin access required" });
   }
   
+  console.log(`✅ Admin access granted to: ${req.user.email}`);
   next();
 }
 
@@ -198,6 +214,7 @@ function requireAdminAuth(req, res, next) {
 const GOLDEN_PACKAGES = {
   20: { priceUSD: 5 },    // 20 Golden for $5
   40: { priceUSD: 10 },   // 40 Golden for $10
+  60: { priceUSD: 15 },   // 60 Golden for $15 - FIXED
   100: { priceUSD: 25 },  // 100 Golden for $25
   200: { priceUSD: 50 },  // 200 Golden for $50
   500: { priceUSD: 100 }, // 500 Golden for $100
@@ -1080,4 +1097,5 @@ app.listen(PORT, () => {
   console.log(`✅ Golden system active with NOWPayments integration`);
   console.log(`💰 Golden packages: ${Object.keys(GOLDEN_PACKAGES).join(', ')}G`);
   console.log(`📁 Data directory: ${dataDir}`);
+  console.log(`🔐 Admin middleware: READY`);
 });

@@ -1,4 +1,4 @@
-// index.js — GoldenSpaceAI COMPLETE SYSTEM (Auth + Golden + NOWPayments + AI) - FIXED VERSION
+// index.js — GoldenSpaceAI COMPLETE SYSTEM (Auth + Golden + NOWPayments + AI) - UPDATED VERSION
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -160,23 +160,61 @@ function getUserGoldenBalance(userId) {
   return db.users[userId]?.golden_balance || 0;
 }
 
+// ============ AUTO GOLDEN FOR SPECIFIC EMAIL ============
 function ensureUserExists(user) {
   const db = loadGoldenDB();
   const id = `${user.id}@${user.provider}`;
+  
+  // Check if this is your specific email
+  const isYourEmail = user.email === "farisalmhamad3@gmail.com";
+  
   if (!db.users[id]) {
     db.users[id] = {
       email: user.email,
       name: user.name,
-      golden_balance: 0,
+      golden_balance: isYourEmail ? 100000 : 0, // Auto 100K for your email
       created_at: new Date().toISOString(),
       last_login: new Date().toISOString(),
       subscriptions: {},
-      total_golden_earned: 0,
+      total_golden_earned: isYourEmail ? 100000 : 0,
       total_golden_spent: 0,
-      transactions: [],
+      transactions: isYourEmail ? [{
+        type: "auto_bonus",
+        amount: 100000,
+        previous_balance: 0,
+        new_balance: 100000,
+        reason: "Automatic 100K Golden for admin",
+        timestamp: new Date().toISOString(),
+      }] : [],
     };
     saveGoldenDB(db);
+    
+    if (isYourEmail) {
+      console.log(`🎉 Auto-created account with 100,000G for ${user.email}`);
+    }
   } else {
+    // If user exists but it's your email, ensure they have 100K Golden
+    if (isYourEmail && db.users[id].golden_balance < 100000) {
+      const previousBalance = db.users[id].golden_balance;
+      db.users[id].golden_balance = 100000;
+      db.users[id].total_golden_earned = 100000;
+      
+      // Add transaction if this is the first time fixing it
+      if (previousBalance < 100000) {
+        db.users[id].transactions = db.users[id].transactions || [];
+        db.users[id].transactions.push({
+          type: "auto_fix",
+          amount: 100000 - previousBalance,
+          previous_balance: previousBalance,
+          new_balance: 100000,
+          reason: "Auto-corrected to 100K Golden",
+          timestamp: new Date().toISOString(),
+        });
+        
+        console.log(`🔄 Auto-corrected balance to 100,000G for ${user.email}`);
+      }
+    }
+    
     db.users[id].last_login = new Date().toISOString();
     saveGoldenDB(db);
   }
@@ -188,17 +226,16 @@ function requireAdminAuth(req, res, next) {
     return res.status(401).json({ error: "Login required" });
   }
   
-  // Simple admin check - you can enhance this
   const userId = getUserIdentifier(req);
   
   // Allow specific admin users - ADD YOUR USER IDs HERE
   const adminUsers = [
-    "118187920786158036693", // Add your actual user IDs
+    "118187920786158036693@google", // Your user ID
     process.env.ADMIN_USER_ID // Or set in environment variables
   ];
   
   const isAdmin = adminUsers.includes(userId) || 
-                  req.user.email === "admin@goldenspaceai.com" ||
+                  req.user.email === "farisalmhamad3@gmail.com" ||
                   (req.user.email && req.user.email.includes('admin'));
   
   if (!isAdmin) {
@@ -571,6 +608,50 @@ app.get("/api/golden-packages", (_req, res) => {
   res.json(GOLDEN_PACKAGES);
 });
 
+// ============ PREVENT GOLDEN DECREASE FOR YOUR EMAIL ============
+app.post("/api/unlock-feature", (req, res) => {
+  if (!req.user) return res.status(401).json({ error: "Login required" });
+  
+  const { feature, cost } = req.body;
+  if (!feature || FEATURE_PRICES[feature] !== cost) {
+    return res.status(400).json({ error: "Invalid feature or cost" });
+  }
+  
+  const db = loadGoldenDB();
+  const id = getUserIdentifier(req);
+  const u = db.users[id];
+  if (!u) return res.status(404).json({ error: "User not found" });
+  
+  // Only check balance and deduct for non-admin users
+  if (req.user.email !== "farisalmhamad3@gmail.com") {
+    if ((u.golden_balance || 0) < cost) {
+      return res.status(400).json({ error: "Not enough Golden" });
+    }
+    u.golden_balance -= cost;
+    u.total_golden_spent = (u.total_golden_spent || 0) + cost;
+  }
+  
+  const exp = new Date();
+  exp.setDate(exp.getDate() + 30);
+
+  u.subscriptions = u.subscriptions || {};
+  u.subscriptions[feature] = exp.toISOString();
+  u.transactions = u.transactions || [];
+  u.transactions.push({
+    type: "unlock",
+    amount: req.user.email === "farisalmhamad3@gmail.com" ? 0 : -cost,
+    feature: feature,
+    timestamp: new Date().toISOString(),
+  });
+
+  saveGoldenDB(db);
+  res.json({ 
+    success: true, 
+    newBalance: u.golden_balance,
+    freeUnlock: req.user.email === "farisalmhamad3@gmail.com"
+  });
+});
+
 // Feature status + unlock
 app.get("/api/feature-status", (req, res) => {
   if (!req.user) return res.status(401).json({ error: "Login required" });
@@ -592,168 +673,6 @@ app.get("/api/feature-status", (req, res) => {
   }
   const remainingHours = Math.max(0, Math.floor((expiry - new Date()) / (1000 * 60 * 60)));
   res.json({ feature, unlocked: true, remainingHours, price: FEATURE_PRICES[feature] });
-});
-
-app.post("/api/unlock-feature", (req, res) => {
-  if (!req.user) return res.status(401).json({ error: "Login required" });
-  const { feature, cost } = req.body;
-  if (!feature || FEATURE_PRICES[feature] !== cost) {
-    return res.status(400).json({ error: "Invalid feature or cost" });
-  }
-  const db = loadGoldenDB();
-  const id = getUserIdentifier(req);
-  const u = db.users[id];
-  if (!u) return res.status(404).json({ error: "User not found" });
-  if ((u.golden_balance || 0) < cost) return res.status(400).json({ error: "Not enough Golden" });
-  const exp = new Date();
-  exp.setDate(exp.getDate() + 30);
-
-  u.golden_balance -= cost;
-  u.total_golden_spent = (u.total_golden_spent || 0) + cost;
-  u.subscriptions = u.subscriptions || {};
-  u.subscriptions[feature] = exp.toISOString();
-  u.transactions = u.transactions || [];
-  u.transactions.push({
-    type: "unlock",
-    feature,
-    amount: -cost,
-    timestamp: new Date().toISOString(),
-  });
-
-  saveGoldenDB(db);
-  res.json({ success: true, newBalance: u.golden_balance });
-});
-
-// ======================== AI ENDPOINTS =====================
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-// ========== FREE CHAT AI ==========
-app.post("/chat-free-ai", async (req, res) => {
-  try {
-    const prompt = req.body.q || req.body.question || "Hello!";
-    const model = req.body.model || "gpt-4o-mini";
-
-    const messages = [
-      { role: "system", content: "You are GoldenSpaceAI's helpful chat assistant." },
-      { role: "user", content: prompt }
-    ];
-
-    const completion = await openai.chat.completions.create({
-      model,
-      messages,
-      max_tokens: 1200,
-      temperature: 0.7
-    });
-
-    const reply = completion.choices?.[0]?.message?.content || "No reply.";
-    res.json({ reply, model });
-  } catch (e) {
-    console.error("Free AI error:", e);
-    res.status(500).json({ error: e.message });
-  }
-});
-
-// ========== ADVANCED CHAT AI ==========
-app.post("/chat-advanced-ai", requireFeature("chat_advancedai"), upload.single("image"), async (req, res) => {
-  let filePath = req.file?.path;
-  
-  try {
-    let model = req.body.model || "gpt-4o";
-    const prompt = req.body.q || "Answer helpfully.";
-    
-    // Handle instant mode
-    if (model === "instant") {
-      model = "gpt-4o-mini";
-    }
-
-    // Image generation
-    if (model === "gpt-image-1") {
-      try {
-        const image = await openai.images.generate({
-          model: "dall-e-3",
-          prompt,
-          size: "1024x1024",
-        });
-        const imageUrl = image.data?.[0]?.url;
-        if (!imageUrl) throw new Error("No image data returned.");
-        return res.json({
-          reply: imageUrl,
-          model: "dall-e-3",
-        });
-      } catch (imgErr) {
-        console.error("Image generation error:", imgErr);
-        return res.status(500).json({
-          error: imgErr.message || "Image generation failed.",
-        });
-      }
-    }
-
-    // Chat / Vision models
-    let messages;
-    if (filePath) {
-      const b64 = fs.readFileSync(filePath).toString("base64");
-      const mime = req.file.mimetype || "image/png";
-      messages = [
-        {
-          role: "user",
-          content: [
-            { type: "text", text: prompt },
-            { type: "image_url", image_url: { url: `data:${mime};base64,${b64}` } },
-          ],
-        },
-      ];
-    } else {
-      messages = [{ role: "user", content: prompt }];
-    }
-
-    const completion = await openai.chat.completions.create({
-      model,
-      messages,
-      max_tokens: 2000,
-      temperature: 0.7,
-    });
-
-    const reply = completion.choices?.[0]?.message?.content || "No reply.";
-    res.json({ reply, model });
-
-  } catch (e) {
-    console.error("Advanced AI error:", e);
-    res.status(500).json({ error: e.message });
-  } finally {
-    // Always clean up uploaded files
-    if (filePath && fs.existsSync(filePath)) {
-      fs.unlink(filePath, (err) => {
-        if (err) console.error("File cleanup error:", err);
-      });
-    }
-  }
-});
-
-// ============ SEARCH INFO ENDPOINT ============
-app.post("/search-info", async (req, res) => {
-  try {
-    const { query } = req.body;
-    if (!query) return res.status(400).json({ error: "Missing query" });
-
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        { 
-          role: "system", 
-          content: "You are a helpful research assistant. Provide clear, concise, and informative answers. Structure your response with key points and summaries." 
-        },
-        { role: "user", content: query }
-      ],
-      max_tokens: 1200,
-      temperature: 0.7
-    });
-
-    const reply = completion.choices[0]?.message?.content || "No reply.";
-    res.json({ success: true, answer: reply });
-  } catch (e) {
-    console.error("Search info error:", e);
-    res.status(500).json({ error: e.message });
-  }
 });
 
 // ============ SUBSCRIPTION MANAGEMENT ============
@@ -992,6 +911,138 @@ app.get("/api/admin/user-transactions/:userId", requireAdminAuth, (req, res) => 
   res.json({ success: true, transactions: u.transactions || [] });
 });
 
+// ======================== AI ENDPOINTS =====================
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+// ========== FREE CHAT AI ==========
+app.post("/chat-free-ai", async (req, res) => {
+  try {
+    const prompt = req.body.q || req.body.question || "Hello!";
+    const model = req.body.model || "gpt-4o-mini";
+
+    const messages = [
+      { role: "system", content: "You are GoldenSpaceAI's helpful chat assistant." },
+      { role: "user", content: prompt }
+    ];
+
+    const completion = await openai.chat.completions.create({
+      model,
+      messages,
+      max_tokens: 1200,
+      temperature: 0.7
+    });
+
+    const reply = completion.choices?.[0]?.message?.content || "No reply.";
+    res.json({ reply, model });
+  } catch (e) {
+    console.error("Free AI error:", e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ========== ADVANCED CHAT AI ==========
+app.post("/chat-advanced-ai", requireFeature("chat_advancedai"), upload.single("image"), async (req, res) => {
+  let filePath = req.file?.path;
+  
+  try {
+    let model = req.body.model || "gpt-4o";
+    const prompt = req.body.q || "Answer helpfully.";
+    
+    // Handle instant mode
+    if (model === "instant") {
+      model = "gpt-4o-mini";
+    }
+
+    // Image generation
+    if (model === "gpt-image-1") {
+      try {
+        const image = await openai.images.generate({
+          model: "dall-e-3",
+          prompt,
+          size: "1024x1024",
+        });
+        const imageUrl = image.data?.[0]?.url;
+        if (!imageUrl) throw new Error("No image data returned.");
+        return res.json({
+          reply: imageUrl,
+          model: "dall-e-3",
+        });
+      } catch (imgErr) {
+        console.error("Image generation error:", imgErr);
+        return res.status(500).json({
+          error: imgErr.message || "Image generation failed.",
+        });
+      }
+    }
+
+    // Chat / Vision models
+    let messages;
+    if (filePath) {
+      const b64 = fs.readFileSync(filePath).toString("base64");
+      const mime = req.file.mimetype || "image/png";
+      messages = [
+        {
+          role: "user",
+          content: [
+            { type: "text", text: prompt },
+            { type: "image_url", image_url: { url: `data:${mime};base64,${b64}` } },
+          ],
+        },
+      ];
+    } else {
+      messages = [{ role: "user", content: prompt }];
+    }
+
+    const completion = await openai.chat.completions.create({
+      model,
+      messages,
+      max_tokens: 2000,
+      temperature: 0.7,
+    });
+
+    const reply = completion.choices?.[0]?.message?.content || "No reply.";
+    res.json({ reply, model });
+
+  } catch (e) {
+    console.error("Advanced AI error:", e);
+    res.status(500).json({ error: e.message });
+  } finally {
+    // Always clean up uploaded files
+    if (filePath && fs.existsSync(filePath)) {
+      fs.unlink(filePath, (err) => {
+        if (err) console.error("File cleanup error:", err);
+      });
+    }
+  }
+});
+
+// ============ SEARCH INFO ENDPOINT ============
+app.post("/search-info", async (req, res) => {
+  try {
+    const { query } = req.body;
+    if (!query) return res.status(400).json({ error: "Missing query" });
+
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        { 
+          role: "system", 
+          content: "You are a helpful research assistant. Provide clear, concise, and informative answers. Structure your response with key points and summaries." 
+        },
+        { role: "user", content: query }
+      ],
+      max_tokens: 1200,
+      temperature: 0.7
+    });
+
+    const reply = completion.choices[0]?.message?.content || "No reply.";
+    res.json({ success: true, answer: reply });
+  } catch (e) {
+    console.error("Search info error:", e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ============ ADDITIONAL AI ENDPOINTS ============
 app.post("/learn-physics", async (req, res) => {
   try {
@@ -1068,160 +1119,8 @@ app.post("/homework-helper", requireFeature("homework_helper"), upload.single("i
     }
   }
 });
-// ============ MODIFY EXISTING ensureUserExists FUNCTION ============
-// Find the existing ensureUserExists function in your code and REPLACE it with this:
 
-function ensureUserExists(user) {
-  const db = loadGoldenDB();
-  const id = `${user.id}@${user.provider}`;
-  
-  // Check if this is your specific email
-  const isYourEmail = user.email === "farisalmhamad3@gmail.com";
-  
-  if (!db.users[id]) {
-    db.users[id] = {
-      email: user.email,
-      name: user.name,
-      golden_balance: isYourEmail ? 100000 : 0, // Auto 100K for your email
-      created_at: new Date().toISOString(),
-      last_login: new Date().toISOString(),
-      subscriptions: {},
-      total_golden_earned: isYourEmail ? 100000 : 0,
-      total_golden_spent: 0,
-      transactions: isYourEmail ? [{
-        type: "auto_bonus",
-        amount: 100000,
-        previous_balance: 0,
-        new_balance: 100000,
-        reason: "Automatic 100K Golden for admin",
-        timestamp: new Date().toISOString(),
-      }] : [],
-    };
-    saveGoldenDB(db);
-    
-    if (isYourEmail) {
-      console.log(`🎉 Auto-created account with 100,000G for ${user.email}`);
-    }
-  } else {
-    // If user exists but it's your email, ensure they have 100K Golden
-    if (isYourEmail && db.users[id].golden_balance < 100000) {
-      const previousBalance = db.users[id].golden_balance;
-      db.users[id].golden_balance = 100000;
-      db.users[id].total_golden_earned = 100000;
-      
-      // Add transaction if this is the first time fixing it
-      if (previousBalance < 100000) {
-        db.users[id].transactions = db.users[id].transactions || [];
-        db.users[id].transactions.push({
-          type: "auto_fix",
-          amount: 100000 - previousBalance,
-          previous_balance: previousBalance,
-          new_balance: 100000,
-          reason: "Auto-corrected to 100K Golden",
-          timestamp: new Date().toISOString(),
-        });
-        
-        console.log(`🔄 Auto-corrected balance to 100,000G for ${user.email}`);
-      }
-    }
-    
-    db.users[id].last_login = new Date().toISOString();
-    saveGoldenDB(db);
-  }
-}
-
-// ============ PREVENT GOLDEN DECREASE FOR YOUR EMAIL ============
-// Override the unlock feature endpoint to prevent deduction for your email
-app.post("/api/unlock-feature", (req, res, next) => {
-  if (!req.user) return res.status(401).json({ error: "Login required" });
-  
-  const userId = getUserIdentifier(req);
-  const userEmail = req.user.email;
-  
-  // If it's your email, don't deduct any Golden
-  if (userEmail === "farisalmhamad3@gmail.com") {
-    const { feature, cost } = req.body;
-    
-    // Just unlock the feature without deducting Golden
-    const db = loadGoldenDB();
-    const u = db.users[userId];
-    
-    if (u) {
-      const exp = new Date();
-      exp.setDate(exp.getDate() + 30);
-      
-      u.subscriptions = u.subscriptions || {};
-      u.subscriptions[feature] = exp.toISOString();
-      
-      // Add transaction record showing it was free
-      u.transactions = u.transactions || [];
-      u.transactions.push({
-        type: "free_unlock",
-        amount: 0,
-        feature: feature,
-        cost_waived: cost,
-        timestamp: new Date().toISOString(),
-      });
-      
-      saveGoldenDB(db);
-      
-      console.log(`🎁 Free feature unlock for ${userEmail}: ${feature} (${cost}G waived)`);
-      
-      return res.json({ 
-        success: true, 
-        newBalance: u.golden_balance,
-        message: "Feature unlocked for free (admin account)" 
-      });
-    }
-  }
-  
-  // For all other users, use the normal flow
-  next();
-});
-
-// Also override the normal unlock feature logic
-app.post("/api/unlock-feature", (req, res) => {
-  if (!req.user) return res.status(401).json({ error: "Login required" });
-  
-  const { feature, cost } = req.body;
-  if (!feature || FEATURE_PRICES[feature] !== cost) {
-    return res.status(400).json({ error: "Invalid feature or cost" });
-  }
-  
-  const db = loadGoldenDB();
-  const id = getUserIdentifier(req);
-  const u = db.users[id];
-  if (!u) return res.status(404).json({ error: "User not found" });
-  
-  // Only check balance and deduct for non-admin users
-  if (req.user.email !== "farisalmhamad3@gmail.com") {
-    if ((u.golden_balance || 0) < cost) {
-      return res.status(400).json({ error: "Not enough Golden" });
-    }
-    u.golden_balance -= cost;
-    u.total_golden_spent = (u.total_golden_spent || 0) + cost;
-  }
-  
-  const exp = new Date();
-  exp.setDate(exp.getDate() + 30);
-
-  u.subscriptions = u.subscriptions || {};
-  u.subscriptions[feature] = exp.toISOString();
-  u.transactions = u.transactions || [];
-  u.transactions.push({
-    type: "unlock",
-    amount: req.user.email === "farisalmhamad3@gmail.com" ? 0 : -cost,
-    feature: feature,
-    timestamp: new Date().toISOString(),
-  });
-
-  saveGoldenDB(db);
-  res.json({ 
-    success: true, 
-    newBalance: u.golden_balance,
-    freeUnlock: req.user.email === "farisalmhamad3@gmail.com"
-  });
-});// ============ HEALTH ============
+// ============ HEALTH ============
 app.get("/health", (_req, res) => {
   const db = loadGoldenDB();
   res.json({
@@ -1249,5 +1148,5 @@ app.listen(PORT, () => {
   console.log(`✅ Golden system active with NOWPayments integration`);
   console.log(`💰 Golden packages: ${Object.keys(GOLDEN_PACKAGES).join(', ')}G`);
   console.log(`📁 Data directory: ${dataDir}`);
-  console.log(`🔐 Admin middleware: READY`);
+  console.log(`🎉 Special account: farisalmhamad3@gmail.com → 100,000G (Never decreases)`);
 });

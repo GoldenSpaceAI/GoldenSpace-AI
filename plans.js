@@ -1,7 +1,5 @@
-// plans.js - GoldenSpaceAI Golden Packages with NOWPayments
+// plans.js - GoldenSpaceAI Golden Packages with NOWPayments ($15 minimum)
 const GOLDEN_PACKAGES = {
-  20: { priceUSD: 5, description: "Starter Pack", popular: false },
-  40: { priceUSD: 10, description: "Basic Pack", popular: false },
   60: { priceUSD: 15, description: "Standard Pack", popular: true },
   100: { priceUSD: 20, description: "Pro Pack", popular: false },
   200: { priceUSD: 40, description: "Ultimate Pack", popular: false }
@@ -35,12 +33,12 @@ function renderGoldenPackages() {
   
   container.innerHTML = Object.entries(GOLDEN_PACKAGES)
     .map(([amount, info]) => {
-      const valuePerGolden = (info.priceUSD / amount).toFixed(2);
+      const valuePerGolden = (info.priceUSD / amount).toFixed(3);
       const savings = amount >= 60 ? `Save $${(0.25 * amount - info.priceUSD).toFixed(2)}` : '';
       
       return `
         <div class="package-card ${info.popular ? 'popular' : ''}">
-          ${info.popular ? '<div class="popular-badge">MOST POPULAR</div>' : ''}
+          ${info.popular ? '<div class="popular-badge">BEST VALUE</div>' : ''}
           <div class="golden-amount">${amount}G</div>
           <div class="price">$${info.priceUSD}</div>
           <div class="value">$${valuePerGolden} per Golden • ${savings}</div>
@@ -105,7 +103,6 @@ async function buyGolden(packageSize) {
 // Check payment status (for when users return to the page)
 async function checkPendingPayments() {
   try {
-    // This would check for any pending payments and update balance if completed
     const balanceResponse = await fetch('/api/golden-balance', { credentials: 'include' });
     const balanceData = await balanceResponse.json();
     
@@ -124,9 +121,7 @@ function checkUrlForPaymentSuccess() {
   
   if (paymentStatus === 'success') {
     alert('✅ Payment successful! Your Golden tokens have been added to your account.');
-    // Remove the parameter from URL
     window.history.replaceState({}, document.title, window.location.pathname);
-    // Reload balance
     loadUserBalance();
   } else if (paymentStatus === 'cancelled') {
     alert('ℹ️ Payment was cancelled. You can try again anytime.');
@@ -137,5 +132,5 @@ function checkUrlForPaymentSuccess() {
 // Check for payment status when page loads
 checkUrlForPaymentSuccess();
 
-// Periodically check balance updates (in case webhook adds Golden)
-setInterval(loadUserBalance, 30000); // Every 30 seconds
+// Periodically check balance updates
+setInterval(loadUserBalance, 30000);

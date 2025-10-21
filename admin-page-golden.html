@@ -265,7 +265,7 @@
             <div class="auth-section">
                 <div class="input-group">
                     <label for="adminKey">Admin Secret Key</label>
-                    <input type="password" id="adminKey" placeholder="Enter admin secret key">
+                    <input type="password" id="adminKey" placeholder="Enter admin secret key from environment">
                 </div>
                 <button onclick="authenticate()">Authenticate</button>
             </div>
@@ -298,7 +298,7 @@
                 </div>
 
                 <div id="usersList">
-                    <div class="loading">Loading users...</div>
+                    <div class="loading">Click "Refresh All Users" to load data</div>
                 </div>
             </div>
         </div>
@@ -334,291 +334,335 @@
     </div>
 
     <script>
-let currentAdminKey = '';
+// Configuration - Set your admin key here (matches what you set in Render environment)
+const VALID_ADMIN_KEYS = [
+    "2200112211001122",
+    "golden-space-ai-master-key",
+    "admin-golden-space-ai-2024"
+];
+
 let currentUsers = [];
 let currentEditingUserId = '';
+let isAuthenticated = false;
 
 function showAlert(message, type = 'error') {
-  const alert = document.getElementById('alert');
-  alert.textContent = message;
-  alert.className = `alert ${type}`;
-  alert.style.display = 'block';
-  setTimeout(() => (alert.style.display = 'none'), 5000);
+    const alert = document.getElementById('alert');
+    alert.textContent = message;
+    alert.className = `alert ${type}`;
+    alert.style.display = 'block';
+    setTimeout(() => {
+        alert.style.display = 'none';
+    }, 5000);
 }
 
 function authenticate() {
-  const adminKey = document.getElementById('adminKey').value.trim();
-  if (!adminKey) return showAlert('Please enter admin secret key');
-  currentAdminKey = adminKey;
-  document.getElementById('authenticatedSection').style.display = 'block';
-  showAlert('Successfully authenticated!', 'success');
-  loadAllUsers(true);
+    const adminKey = document.getElementById('adminKey').value.trim();
+    
+    if (!adminKey) {
+        showAlert('Please enter admin secret key');
+        return;
+    }
+    
+    if (VALID_ADMIN_KEYS.includes(adminKey)) {
+        isAuthenticated = true;
+        document.getElementById('authenticatedSection').style.display = 'block';
+        showAlert('Successfully authenticated!', 'success');
+        loadAllUsers();
+    } else {
+        showAlert('Invalid admin key');
+    }
 }
 
 async function makeAdminRequest(url, options = {}) {
-  try {
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${currentAdminKey}`,
-        ...options.headers,
-      },
-    });
-    if (response.status === 401 || response.status === 403) {
-      showAlert('Authentication failed. Please check your admin key.');
-      return null;
+    if (!isAuthenticated) {
+        showAlert('Please authenticate first');
+        return null;
     }
-    return await response.json();
-  } catch (e) {
-    showAlert('Network error: ' + e.message);
-    return null;
-  }
+    
+    try {
+        const response = await fetch(url, {
+            ...options,
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers,
+            },
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        return await response.json();
+    } catch (error) {
+        showAlert('Request failed: ' + error.message);
+        return null;
+    }
 }
 
-/* ✅ Load every user ever created (no filter on current usage)
-   The backend returns all from golden_database.json */
-async function loadAllUsers(force = false) {
-  const response = await makeAdminRequest('/api/admin/all-users');
-  if (!response) return;
-  let users = response.users || [];
-
-  // Remove accidental duplicates if same email logged multiple times
-  // But preserve distinct userId@provider entries (e.g., Google vs GitHub)
-  users = users.filter(
-    (v, i, a) => a.findIndex(u => u.userId === v.userId) === i
-  );
-
-  // Sort by creation date (oldest first for full historical view)
-  users.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-
-  currentUsers = users;
-  displayUsers(users);
-  updateStats(response);
+async function loadAllUsers() {
+    const response = await makeAdminRequest('/api/admin/all-users');
+    if (!response) return;
+    
+    let users = response.users || [];
+    
+    // Remove duplicates and sort by creation date
+    users = users.filter((v, i, a) => a.findIndex(u => u.userId === v.userId) === i);
+    users.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+    
+    currentUsers = users;
+    displayUsers(users);
+    updateStats(response);
 }
 
 async function searchUsers() {
-  const query = document.getElementById('searchUsers').value.trim();
-  if (!query) return loadAllUsers();
-  const response = await makeAdminRequest(
-    `/api/admin/search-users?query=${encodeURIComponent(query)}`
-  );
-  if (response) {
-    currentUsers = response.users;
-    displayUsers(currentUsers);
-  }
+    const query = document.getElementById('searchUsers').value.trim();
+    if (!query) return loadAllUsers();
+    
+    const response = await makeAdminRequest(`/api/admin/search-users?query=${encodeURIComponent(query)}`);
+    if (response) {
+        currentUsers = response.users;
+        displayUsers(currentUsers);
+    }
 }
 
 function displayUsers(users) {
-  const container = document.getElementById('usersList');
-  if (!users.length)
-    return (container.innerHTML = '<div class="loading">No users found</div>');
+    const container = document.getElementById('usersList');
+    if (!users.length) {
+        container.innerHTML = '<div class="loading">No users found</div>';
+        return;
+    }
 
-  let html = `
-    <table class="users-table">
-      <thead>
-        <tr>
-          <th>User ID</th>
-          <th>Name</th>
-          <th>Email</th>
-          <th>Golden Balance</th>
-          <th>Provider</th>
-          <th>Created At</th>
-          <th>Last Login</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-  `;
-
-  users.forEach(u => {
-    html += `
-      <tr>
-        <td title="${u.userId}">${u.userId.substring(0, 18)}...</td>
-        <td>${u.name || 'N/A'}</td>
-        <td>${u.email || 'N/A'}</td>
-        <td class="golden-amount">${u.golden_balance || 0}G</td>
-        <td>${u.provider || 'N/A'}</td>
-        <td>${new Date(u.created_at).toLocaleDateString()}</td>
-        <td>${new Date(u.last_login).toLocaleDateString()}</td>
-        <td class="user-actions">
-          <button class="success" onclick="openAddModal('${u.userId}')">+ Add</button>
-          <button class="danger" onclick="openSubtractModal('${u.userId}')">- Subtract</button>
-          <button onclick="openSetModal('${u.userId}')">Set</button>
-          <button onclick="viewTransactions('${u.userId}')">History</button>
-        </td>
-      </tr>
+    let html = `
+        <table class="users-table">
+            <thead>
+                <tr>
+                    <th>User ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Golden Balance</th>
+                    <th>Provider</th>
+                    <th>Created At</th>
+                    <th>Last Login</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
     `;
-  });
 
-  html += '</tbody></table>';
-  container.innerHTML = html;
+    users.forEach(u => {
+        html += `
+            <tr>
+                <td title="${u.userId}">${u.userId.substring(0, 18)}...</td>
+                <td>${u.name || 'N/A'}</td>
+                <td>${u.email || 'N/A'}</td>
+                <td class="golden-amount">${u.golden_balance || 0}G</td>
+                <td>${u.provider || 'N/A'}</td>
+                <td>${new Date(u.created_at).toLocaleDateString()}</td>
+                <td>${new Date(u.last_login).toLocaleDateString()}</td>
+                <td class="user-actions">
+                    <button class="success" onclick="openAddModal('${u.userId}')">+ Add</button>
+                    <button class="danger" onclick="openSubtractModal('${u.userId}')">- Subtract</button>
+                    <button onclick="openSetModal('${u.userId}')">Set</button>
+                    <button onclick="viewTransactions('${u.userId}')">History</button>
+                </td>
+            </tr>
+        `;
+    });
+
+    html += '</tbody></table>';
+    container.innerHTML = html;
 }
 
 function updateStats(data) {
-  document.getElementById('totalUsers').textContent = data.totalUsers || currentUsers.length;
-  const totalGolden = currentUsers.reduce((sum, u) => sum + (u.golden_balance || 0), 0);
-  document.getElementById('totalGolden').textContent = totalGolden;
-  document.getElementById('avgBalance').textContent =
-    currentUsers.length > 0 ? Math.round(totalGolden / currentUsers.length) : 0;
+    document.getElementById('totalUsers').textContent = data.totalUsers || currentUsers.length;
+    const totalGolden = currentUsers.reduce((sum, u) => sum + (u.golden_balance || 0), 0);
+    document.getElementById('totalGolden').textContent = totalGolden;
+    document.getElementById('avgBalance').textContent = 
+        currentUsers.length > 0 ? Math.round(totalGolden / currentUsers.length) : 0;
 }
 
-/* ======= MODALS ======= */
+// Modal functions
 function openAddModal(userId) {
-  currentEditingUserId = userId;
-  document.getElementById('modalTitle').textContent = `Add Golden to ${userId.substring(0, 15)}...`;
-  const btn = document.getElementById('confirmAdjust');
-  btn.className = 'success';
-  btn.textContent = 'Add Golden';
-  btn.onclick = addGolden;
-  document.getElementById('adjustModal').style.display = 'flex';
+    currentEditingUserId = userId;
+    document.getElementById('modalTitle').textContent = `Add Golden to ${userId.substring(0, 15)}...`;
+    const btn = document.getElementById('confirmAdjust');
+    btn.className = 'success';
+    btn.textContent = 'Add Golden';
+    btn.onclick = addGolden;
+    document.getElementById('adjustModal').style.display = 'flex';
 }
 
 function openSubtractModal(userId) {
-  currentEditingUserId = userId;
-  document.getElementById('modalTitle').textContent = `Subtract Golden from ${userId.substring(0, 15)}...`;
-  const btn = document.getElementById('confirmAdjust');
-  btn.className = 'danger';
-  btn.textContent = 'Subtract Golden';
-  btn.onclick = subtractGolden;
-  document.getElementById('adjustModal').style.display = 'flex';
+    currentEditingUserId = userId;
+    document.getElementById('modalTitle').textContent = `Subtract Golden from ${userId.substring(0, 15)}...`;
+    const btn = document.getElementById('confirmAdjust');
+    btn.className = 'danger';
+    btn.textContent = 'Subtract Golden';
+    btn.onclick = subtractGolden;
+    document.getElementById('adjustModal').style.display = 'flex';
 }
 
 function openSetModal(userId) {
-  currentEditingUserId = userId;
-  document.getElementById('modalTitle').textContent = `Set Golden Balance for ${userId.substring(0, 15)}...`;
-  const btn = document.getElementById('confirmAdjust');
-  btn.className = '';
-  btn.textContent = 'Set Balance';
-  btn.onclick = setGolden;
-  document.getElementById('adjustModal').style.display = 'flex';
+    currentEditingUserId = userId;
+    document.getElementById('modalTitle').textContent = `Set Golden Balance for ${userId.substring(0, 15)}...`;
+    const btn = document.getElementById('confirmAdjust');
+    btn.className = '';
+    btn.textContent = 'Set Balance';
+    btn.onclick = setGolden;
+    document.getElementById('adjustModal').style.display = 'flex';
 }
 
-/* ======= ADMIN ACTIONS (even for offline users) ======= */
+// Admin actions
 async function addGolden() {
-  const amount = parseFloat(document.getElementById('adjustAmount').value);
-  const reason = document.getElementById('adjustReason').value;
-  if (!amount || amount <= 0) return showAlert('Please enter a valid positive amount');
+    const amount = parseFloat(document.getElementById('adjustAmount').value);
+    const reason = document.getElementById('adjustReason').value;
+    if (!amount || amount <= 0) {
+        showAlert('Please enter a valid positive amount');
+        return;
+    }
 
-  const response = await makeAdminRequest('/api/admin/add-golden', {
-    method: 'POST',
-    body: JSON.stringify({ userId: currentEditingUserId, amount, reason }),
-  });
-  if (response?.success) {
-    showAlert(`Successfully added ${amount}G to user!`, 'success');
-    closeModal('adjustModal');
-    loadAllUsers();
-  }
+    const response = await makeAdminRequest('/api/admin/add-golden', {
+        method: 'POST',
+        body: JSON.stringify({ 
+            userId: currentEditingUserId, 
+            amount, 
+            reason: reason || 'Admin adjustment - Add' 
+        }),
+    });
+    
+    if (response?.success) {
+        showAlert(`Successfully added ${amount}G to user!`, 'success');
+        closeModal('adjustModal');
+        loadAllUsers();
+    }
 }
 
 async function subtractGolden() {
-  const amount = parseFloat(document.getElementById('adjustAmount').value);
-  const reason = document.getElementById('adjustReason').value;
-  if (!amount || amount <= 0) return showAlert('Please enter a valid positive amount');
+    const amount = parseFloat(document.getElementById('adjustAmount').value);
+    const reason = document.getElementById('adjustReason').value;
+    if (!amount || amount <= 0) {
+        showAlert('Please enter a valid positive amount');
+        return;
+    }
 
-  const response = await makeAdminRequest('/api/admin/subtract-golden', {
-    method: 'POST',
-    body: JSON.stringify({ userId: currentEditingUserId, amount, reason }),
-  });
-  if (response?.success) {
-    showAlert(`Successfully subtracted ${amount}G from user!`, 'success');
-    closeModal('adjustModal');
-    loadAllUsers();
-  }
+    const response = await makeAdminRequest('/api/admin/subtract-golden', {
+        method: 'POST',
+        body: JSON.stringify({ 
+            userId: currentEditingUserId, 
+            amount, 
+            reason: reason || 'Admin adjustment - Subtract' 
+        }),
+    });
+    
+    if (response?.success) {
+        showAlert(`Successfully subtracted ${amount}G from user!`, 'success');
+        closeModal('adjustModal');
+        loadAllUsers();
+    }
 }
 
 async function setGolden() {
-  const balance = parseFloat(document.getElementById('adjustAmount').value);
-  const reason = document.getElementById('adjustReason').value;
-  if (balance < 0) return showAlert('Balance cannot be negative');
+    const balance = parseFloat(document.getElementById('adjustAmount').value);
+    const reason = document.getElementById('adjustReason').value;
+    if (balance < 0) {
+        showAlert('Balance cannot be negative');
+        return;
+    }
 
-  const response = await makeAdminRequest('/api/admin/set-golden', {
-    method: 'POST',
-    body: JSON.stringify({ userId: currentEditingUserId, balance, reason }),
-  });
-  if (response?.success) {
-    showAlert(`Successfully set user balance to ${balance}G!`, 'success');
-    closeModal('adjustModal');
-    loadAllUsers();
-  }
+    const response = await makeAdminRequest('/api/admin/set-golden', {
+        method: 'POST',
+        body: JSON.stringify({ 
+            userId: currentEditingUserId, 
+            balance, 
+            reason: reason || 'Admin adjustment - Set' 
+        }),
+    });
+    
+    if (response?.success) {
+        showAlert(`Successfully set user balance to ${balance}G!`, 'success');
+        closeModal('adjustModal');
+        loadAllUsers();
+    }
 }
 
-/* ======= TRANSACTIONS ======= */
+// Transactions
 async function viewTransactions(userId) {
-  const res = await makeAdminRequest(`/api/admin/user-transactions/${userId}`);
-  const list = document.getElementById('transactionsList');
-  if (!res?.transactions?.length)
-    return (list.innerHTML = '<p>No transactions found</p>'), 
-           (document.getElementById('transactionsModal').style.display = 'flex');
-
-  let html = '<div style="max-height:400px;overflow-y:auto;">';
-  res.transactions.slice().reverse().forEach(tx => {
-    const color =
-      tx.type === 'add' ? '#00ff00' : tx.type === 'subtract' ? '#ff4444' : '#ffd700';
-    html += `
-      <div style="border-bottom:1px solid #333;padding:10px 0;">
-        <div style="display:flex;justify-content:space-between;">
-          <span style="color:${color};font-weight:bold;">${tx.type.toUpperCase()}</span>
-          <span style="color:gold;font-weight:bold;">${tx.amount > 0 ? '+' : ''}${tx.amount}G</span>
-        </div>
-        <div style="font-size:0.9em;color:#ccc;">Balance: ${tx.previous_balance}G → ${tx.new_balance}G</div>
-        <div style="font-size:0.8em;color:#999;">${tx.reason || '—'} • ${new Date(tx.timestamp).toLocaleString()}</div>
-      </div>`;
-  });
-  list.innerHTML = html + '</div>';
-  document.getElementById('transactionsModal').style.display = 'flex';
+    const response = await makeAdminRequest(`/api/admin/user-transactions/${userId}`);
+    const list = document.getElementById('transactionsList');
+    
+    if (!response?.transactions?.length) {
+        list.innerHTML = '<p>No transactions found</p>';
+    } else {
+        let html = '<div style="max-height:400px;overflow-y:auto;">';
+        response.transactions.slice().reverse().forEach(tx => {
+            const color = tx.amount > 0 ? '#00ff00' : tx.amount < 0 ? '#ff4444' : '#ffd700';
+            html += `
+                <div style="border-bottom:1px solid #333;padding:10px 0;">
+                    <div style="display:flex;justify-content:space-between;">
+                        <span style="color:${color};font-weight:bold;">${tx.type?.toUpperCase() || 'ADJUSTMENT'}</span>
+                        <span style="color:gold;font-weight:bold;">${tx.amount > 0 ? '+' : ''}${tx.amount}G</span>
+                    </div>
+                    <div style="font-size:0.9em;color:#ccc;">Balance: ${tx.previous_balance}G → ${tx.new_balance}G</div>
+                    <div style="font-size:0.8em;color:#999;">${tx.reason || '—'} • ${new Date(tx.timestamp).toLocaleString()}</div>
+                </div>`;
+        });
+        list.innerHTML = html + '</div>';
+    }
+    
+    document.getElementById('transactionsModal').style.display = 'flex';
 }
 
-/* ======= UTILITIES ======= */
+// Utility functions
 function closeModal(id) {
-  document.getElementById(id).style.display = 'none';
-  document.getElementById('adjustAmount').value = '';
-  document.getElementById('adjustReason').value = '';
+    document.getElementById(id).style.display = 'none';
+    document.getElementById('adjustAmount').value = '';
+    document.getElementById('adjustReason').value = '';
 }
 
 function exportData() {
-  const headers = [
-    'User ID',
-    'Name',
-    'Email',
-    'Golden Balance',
-    'Provider',
-    'Created At',
-    'Last Login',
-  ];
-  const rows = currentUsers.map(u => [
-    u.userId,
-    u.name || '',
-    u.email || '',
-    u.golden_balance || 0,
-    u.provider || '',
-    u.created_at || '',
-    u.last_login || '',
-  ]);
-  const csv =
-    [headers, ...rows]
-      .map(r => r.map(f => `"${String(f).replace(/"/g, '""')}"`).join(','))
-      .join('\n');
+    if (!currentUsers.length) {
+        showAlert('No data to export');
+        return;
+    }
+    
+    const headers = ['User ID', 'Name', 'Email', 'Golden Balance', 'Provider', 'Created At', 'Last Login'];
+    const rows = currentUsers.map(u => [
+        u.userId,
+        u.name || '',
+        u.email || '',
+        u.golden_balance || 0,
+        u.provider || '',
+        u.created_at || '',
+        u.last_login || '',
+    ]);
+    
+    const csv = [headers, ...rows]
+        .map(r => r.map(f => `"${String(f).replace(/"/g, '""')}"`).join(','))
+        .join('\n');
 
-  const blob = new Blob([csv], { type: 'text/csv' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `golden-users-${new Date().toISOString().split('T')[0]}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
-  showAlert('Data exported successfully!', 'success');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `golden-users-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showAlert('Data exported successfully!', 'success');
 }
 
-window.onclick = e => {
-  document.querySelectorAll('.modal').forEach(m => {
-    if (e.target === m) m.style.display = 'none';
-  });
+// Event listeners
+window.onclick = function(e) {
+    if (e.target.classList.contains('modal')) {
+        e.target.style.display = 'none';
+    }
 };
-document.getElementById('adminKey').addEventListener('keypress', e => {
-  if (e.key === 'Enter') authenticate();
-});
-</script>
 
+document.getElementById('adminKey').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        authenticate();
+    }
+});
+    </script>
 </body>
 </html>

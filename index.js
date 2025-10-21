@@ -193,7 +193,7 @@ function requireAdminAuth(req, res, next) {
   
   // Allow specific admin users - ADD YOUR USER IDs HERE
   const adminUsers = [
-    "admin@google", // Add your actual user IDs
+    "118187920786158036693", // Add your actual user IDs
     process.env.ADMIN_USER_ID // Or set in environment variables
   ];
   

@@ -1,4 +1,4 @@
-// index.js — GoldenSpaceAI COMPLETE SYSTEM (Auth + Golden + NOWPayments + AI)
+// index.js — GoldenSpaceAI COMPLETE SYSTEM (Auth + Golden + NOWPayments + AI) - FIXED VERSION
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -19,6 +19,21 @@ import nodemailer from "nodemailer";
 dotenv.config();
 const app = express();
 app.set("trust proxy", 1);
+
+// ============ ENVIRONMENT VALIDATION ============
+function validateEnvironment() {
+  const required = ['OPENAI_API_KEY', 'SESSION_SECRET'];
+  const missing = required.filter(key => !process.env[key]);
+  
+  if (missing.length > 0) {
+    console.error('❌ Missing required environment variables:', missing);
+    console.error('Please check your .env file');
+    process.exit(1);
+  }
+  
+  console.log('✅ Environment variables validated');
+}
+validateEnvironment();
 
 // ============ MIDDLEWARE ============
 app.use(cors({ origin: true, credentials: true }));
@@ -52,15 +67,40 @@ passport.deserializeUser((obj, done) => done(null, obj));
 app.use(passport.initialize());
 app.use(passport.session());
 
+// ============ SECURE FILE UPLOAD ============
+const upload = multer({
+  dest: "uploads/",
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    // Only allow image files
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed'), false);
+    }
+  }
+});
+
 // ============ DB HELPERS (Persistent Storage) ============
-const GOLDEN_DB_PATH = "/data/golden_database.json";
-const PAYMENT_DB_PATH = "/data/payment_database.json";
+const GOLDEN_DB_PATH = "./data/golden_database.json";
+const PAYMENT_DB_PATH = "./data/payment_database.json";
+
+// Ensure data directory exists
+const dataDir = path.dirname(GOLDEN_DB_PATH);
+if (!fs.existsSync(dataDir)) {
+  fs.mkdirSync(dataDir, { recursive: true });
+}
 
 function loadGoldenDB() {
   try {
     if (fs.existsSync(GOLDEN_DB_PATH)) {
       const file = fs.readFileSync(GOLDEN_DB_PATH, "utf8");
-      if (!file.trim()) return { users: {}, family_plans: {} };
+      if (!file.trim()) {
+        console.log("Golden DB file is empty, initializing...");
+        return { users: {}, family_plans: {} };
+      }
       return JSON.parse(file);
     } else {
       const initial = { users: {}, family_plans: {} };
@@ -95,15 +135,15 @@ function loadPaymentDB() {
   return { transactions: {}, user_packages: {}, nowpayments_orders: {} };
 }
 
-function savePaymentDB(d) {
+function savePaymentDB(data) {
   try {
-    fs.writeFileSync(PAYMENT_DB_PATH, JSON.stringify(d, null, 2));
+    fs.writeFileSync(PAYMENT_DB_PATH, JSON.stringify(data, null, 2));
   } catch (e) {
     console.error("Payment DB save error:", e);
   }
 }
 
-// Helpers
+// ============ HELPER FUNCTIONS ============
 function getUserIdentifier(req) {
   return req.user ? `${req.user.id}@${req.user.provider}` : null;
 }
@@ -133,6 +173,25 @@ function ensureUserExists(user) {
     db.users[id].last_login = new Date().toISOString();
     saveGoldenDB(db);
   }
+}
+
+// ============ ADMIN AUTH MIDDLEWARE ============
+function requireAdminAuth(req, res, next) {
+  if (!req.user) {
+    return res.status(401).json({ error: "Login required" });
+  }
+  
+  // Simple admin check - you can enhance this
+  const userId = getUserIdentifier(req);
+  const isAdmin = process.env.ADMIN_USERS?.includes(userId) || 
+                  userId === "admin@google" || 
+                  req.user.email === "admin@goldenspaceai.com";
+  
+  if (!isAdmin) {
+    return res.status(403).json({ error: "Admin access required" });
+  }
+  
+  next();
 }
 
 // ============ GOLDEN SYSTEM CONFIG ============
@@ -224,7 +283,7 @@ app.post("/api/nowpayments/create-golden", async (req, res) => {
 
     const amountUSD = packageInfo.priceUSD;
     const orderId = `golden-${req.user.id}-${packageSize}-${Date.now()}`;
-    const callbackUrl = "https://goldenspaceai.space/api/nowpayments/webhook";
+    const callbackUrl = `${req.protocol}://${req.get('host')}/api/nowpayments/webhook`;
 
     const payload = {
       price_amount: amountUSD,
@@ -233,8 +292,8 @@ app.post("/api/nowpayments/create-golden", async (req, res) => {
       order_id: orderId,
       order_description: `GoldenSpaceAI ${packageSize} Golden Package`,
       ipn_callback_url: callbackUrl,
-      success_url: "https://goldenspaceai.space/success.html",
-      cancel_url: "https://goldenspaceai.space/plans.html"
+      success_url: `${req.protocol}://${req.get('host')}/success.html`,
+      cancel_url: `${req.protocol}://${req.get('host')}/plans.html`
     };
 
     console.log('Creating NOWPayments invoice:', payload);
@@ -385,7 +444,7 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
         callbackURL: "/auth/google/callback",
         proxy: true,
       },
-      (_a, _b, profile, done) => {
+      (_accessToken, _refreshToken, profile, done) => {
         const user = {
           id: profile.id,
           name: profile.displayName,
@@ -402,7 +461,7 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
   app.get(
     "/auth/google/callback",
     passport.authenticate("google", { failureRedirect: "/login-signup.html" }),
-    (_req, res) => res.redirect("https://goldenspaceai.space")
+    (_req, res) => res.redirect("/")
   );
 }
 
@@ -415,7 +474,7 @@ if (process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET) {
         callbackURL: "/auth/github/callback",
         proxy: true,
       },
-      (_a, _b, profile, done) => {
+      (_accessToken, _refreshToken, profile, done) => {
         const user = {
           id: profile.id,
           name: profile.displayName || profile.username,
@@ -433,18 +492,26 @@ if (process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET) {
   app.get(
     "/auth/github/callback",
     passport.authenticate("github", { failureRedirect: "/login-signup.html" }),
-    (_req, res) => res.redirect("https://goldenspaceai.space")
+    (_req, res) => res.redirect("/")
   );
 }
 
 // Simple pages
 app.get("/", (_req, res) => res.sendFile(path.join(__dirname, "index.html")));
 app.get("/login", (_req, res) => res.sendFile(path.join(__dirname, "login-signup.html")));
-app.get("/:page.html", (req, res) => res.sendFile(path.join(__dirname, req.params.page + ".html")));
+app.get("/:page.html", (req, res) => {
+  const page = req.params.page;
+  const filePath = path.join(__dirname, `${page}.html`);
+  if (fs.existsSync(filePath)) {
+    res.sendFile(filePath);
+  } else {
+    res.status(404).send("Page not found");
+  }
+});
 
 // Logout
 app.post("/logout", (req, res) => {
-  req.logout(err => {
+  req.logout((err) => {
     if (err) return res.status(500).json({ error: "Logout failed" });
     req.session.destroy(() => {
       res.clearCookie("connect.sid");
@@ -542,7 +609,6 @@ app.post("/api/unlock-feature", (req, res) => {
 
 // ======================== AI ENDPOINTS =====================
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-const upload = multer({ dest: "uploads/" });
 
 // ========== FREE CHAT AI ==========
 app.post("/chat-free-ai", async (req, res) => {
@@ -572,11 +638,12 @@ app.post("/chat-free-ai", async (req, res) => {
 
 // ========== ADVANCED CHAT AI ==========
 app.post("/chat-advanced-ai", requireFeature("chat_advancedai"), upload.single("image"), async (req, res) => {
+  let filePath = req.file?.path;
+  
   try {
     let model = req.body.model || "gpt-4o";
     const prompt = req.body.q || "Answer helpfully.";
-    const filePath = req.file?.path;
-
+    
     // Handle instant mode
     if (model === "instant") {
       model = "gpt-4o-mini";
@@ -630,12 +697,18 @@ app.post("/chat-advanced-ai", requireFeature("chat_advancedai"), upload.single("
     });
 
     const reply = completion.choices?.[0]?.message?.content || "No reply.";
-    if (filePath) fs.unlink(filePath, () => {}); // cleanup temp file
     res.json({ reply, model });
 
   } catch (e) {
     console.error("Advanced AI error:", e);
     res.status(500).json({ error: e.message });
+  } finally {
+    // Always clean up uploaded files
+    if (filePath && fs.existsSync(filePath)) {
+      fs.unlink(filePath, (err) => {
+        if (err) console.error("File cleanup error:", err);
+      });
+    }
   }
 });
 
@@ -726,7 +799,7 @@ app.post("/api/cancel-subscription", (req, res) => {
   });
 });
 
-// ============ ADMIN PAGE ============
+// ============ ADMIN ROUTES ============
 app.get("/admin-page-golden.html", (req, res) => {
   res.sendFile(path.join(__dirname, "admin-page-golden.html"));
 });
@@ -928,11 +1001,13 @@ app.post("/learn-physics", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
 app.post("/homework-helper", requireFeature("homework_helper"), upload.single("image"), async (req, res) => {
+  let filePath = req.file?.path;
+  
   try {
     const model = req.body.model || "gpt-4o";
     const prompt = req.body.q || "Solve this homework step-by-step.";
-    const filePath = req.file?.path;
 
     if (!filePath) {
       return res.status(400).json({ error: "No image provided" });
@@ -963,11 +1038,17 @@ app.post("/homework-helper", requireFeature("homework_helper"), upload.single("i
     });
 
     const reply = completion.choices?.[0]?.message?.content || "No reply.";
-    fs.unlink(filePath, () => {});
     res.json({ reply, model });
   } catch (e) {
     console.error("Homework AI error:", e);
     res.status(500).json({ error: e.message });
+  } finally {
+    // Clean up uploaded file
+    if (filePath && fs.existsSync(filePath)) {
+      fs.unlink(filePath, (err) => {
+        if (err) console.error("File cleanup error:", err);
+      });
+    }
   }
 });
 
@@ -981,10 +1062,22 @@ app.get("/health", (_req, res) => {
   });
 });
 
+// ============ ERROR HANDLING ============
+app.use((err, req, res, next) => {
+  console.error("Unhandled error:", err);
+  res.status(500).json({ error: "Internal server error" });
+});
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({ error: "Endpoint not found" });
+});
+
 // ============ START ============
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 GoldenSpaceAI launched on port ${PORT}`);
   console.log(`✅ Golden system active with NOWPayments integration`);
   console.log(`💰 Golden packages: ${Object.keys(GOLDEN_PACKAGES).join(', ')}G`);
+  console.log(`📁 Data directory: ${dataDir}`);
 });

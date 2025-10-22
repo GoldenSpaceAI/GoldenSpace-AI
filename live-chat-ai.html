@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>GoldenSpaceAI · Live Chat AI</title>
+<style>
+:root {
+  --gold1: #ffd700;
+  --gold2: #ffed4e;
+  --border: rgba(255,255,255,.12);
+  --text-dark: #f8f8f8;
+}
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", Roboto, system-ui;
+  color: var(--text-dark);
+  background: url("https://images.unsplash.com/photo-1444703686981-a3abbc4d4fe3?q=80&w=1600&auto=format&fit=crop")
+              center/cover fixed no-repeat #04050a;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  flex: 1;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 30px;
+  padding: 20px;
+  background: rgba(255, 215, 0, 0.1);
+  border-radius: 15px;
+  border: 2px solid gold;
+}
+
+.header h1 {
+  font-size: 2.5em;
+  color: gold;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+  margin-bottom: 10px;
+}
+
+.chat-interface {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 15px;
+  padding: 20px;
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  margin-bottom: 20px;
+}
+
+.usage-counter {
+  background: rgba(255, 215, 0, 0.1);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  border-radius: 10px;
+  padding: 15px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.usage-counter h3 {
+  color: gold;
+  margin: 0 0 10px 0;
+}
+
+.controls {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  background: linear-gradient(45deg, var(--gold1), var(--gold2));
+  color: #000;
+  border: none;
+  padding: 15px 25px;
+  border-radius: 10px;
+  font-weight: bold;
+  cursor: pointer;
+  flex: 1;
+  min-width: 120px;
+  transition: all 0.3s ease;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(255, 215, 0, 0.4);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn.secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border: 1px solid rgba(255, 215, 0, 0.3);
+}
+
+.conversation {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 10px;
+  padding: 20px;
+  min-height: 300px;
+  max-height: 400px;
+  overflow-y: auto;
+  margin-bottom: 20px;
+}
+
+.message {
+  margin-bottom: 15px;
+  padding: 10px;
+  border-radius: 10px;
+}
+
+.message.user {
+  background: rgba(255, 215, 0, 0.1);
+  border-left: 3px solid gold;
+}
+
+.message.ai {
+  background: rgba(255, 255, 255, 0.05);
+  border-left: 3px solid #fff;
+}
+
+.message .sender {
+  font-weight: bold;
+  color: gold;
+  margin-bottom: 5px;
+}
+
+.status {
+  text-align: center;
+  padding: 10px;
+  color: #888;
+  font-style: italic;
+}
+
+.subscription-banner {
+  background: linear-gradient(45deg, #ffd700, #ffed4e);
+  color: #000;
+  padding: 15px;
+  border-radius: 10px;
+  text-align: center;
+  margin-top: 20px;
+}
+
+.subscription-banner h3 {
+  margin: 0 0 10px 0;
+}
+
+.upgrade-btn {
+  background: #000;
+  color: #ffd700;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.upgrade-btn:hover {
+  background: #333;
+  transform: translateY(-2px);
+}
+
+.recording {
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>🎤 Live Chat AI</h1>
+    <p>Speak with AI naturally - Convert speech to text, AI responds, then speaks back!</p>
+  </div>
+
+  <div class="usage-counter" id="usageCounter">
+    <h3>📊 Daily Usage</h3>
+    <div id="usageText">Loading your usage...</div>
+  </div>
+
+  <div class="chat-interface">
+    <div class="controls">
+      <button class="btn" id="startBtn" onclick="startListening()">🎤 Start Speaking</button>
+      <button class="btn secondary" id="stopBtn" onclick="stopListening()" disabled>⏹️ Stop</button>
+      <button class="btn secondary" onclick="clearConversation()">🗑️ Clear Chat</button>
+    </div>
+
+    <div class="conversation" id="conversation">
+      <div class="message ai">
+        <div class="sender">AI Assistant</div>
+        <div>Hello! I'm your live AI assistant. Click "Start Speaking" and talk to me naturally. I'll convert your speech to text, process it with AI, and speak back to you!</div>
+      </div>
+    </div>
+
+    <div class="status" id="status">Ready to listen...</div>
+  </div>
+
+  <div class="subscription-banner" id="subscriptionBanner">
+    <h3>🚀 Upgrade to Unlimited Live Chat!</h3>
+    <p>Get 1 million tokens per month for only 8 Golden</p>
+    <button class="upgrade-btn" onclick="upgradeToPro()">Upgrade Now →</button>
+  </div>
+</div>
+
+<script>
+// Global variables
+let recognition;
+let isListening = false;
+let conversationHistory = [];
+let dailyUsage = 0;
+const MAX_FREE_QUESTIONS = 20;
+let userSubscription = 'free'; // free or pro
+
+// Initialize
+checkSubscriptionStatus();
+loadUsage();
+
+// Speech Recognition Setup
+function setupSpeechRecognition() {
+  recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+  recognition.continuous = false;
+  recognition.interimResults = false;
+  recognition.lang = 'en-US';
+
+  recognition.onstart = function() {
+    isListening = true;
+    document.getElementById('startBtn').disabled = true;
+    document.getElementById('stopBtn').disabled = false;
+    document.getElementById('status').textContent = '🎤 Listening... Speak now!';
+    document.getElementById('startBtn').classList.add('recording');
+  };
+
+  recognition.onresult = function(event) {
+    const transcript = event.results[0][0].transcript;
+    addMessage('user', transcript);
+    processUserMessage(transcript);
+  };
+
+  recognition.onerror = function(event) {
+    console.error('Speech recognition error:', event.error);
+    document.getElementById('status').textContent = 'Error: ' + event.error;
+    resetListeningState();
+  };
+
+  recognition.onend = function() {
+    resetListeningState();
+  };
+}
+
+function startListening() {
+  if (dailyUsage >= MAX_FREE_QUESTIONS && userSubscription === 'free') {
+    alert(`You've used your ${MAX_FREE_QUESTIONS} free questions today. Upgrade to Pro for unlimited access!`);
+    return;
+  }
+
+  if (!recognition) {
+    setupSpeechRecognition();
+  }
+  
+  try {
+    recognition.start();
+  } catch (error) {
+    console.error('Failed to start recognition:', error);
+    document.getElementById('status').textContent = 'Error starting speech recognition';
+  }
+}
+
+function stopListening() {
+  if (recognition && isListening) {
+    recognition.stop();
+  }
+}
+
+function resetListeningState() {
+  isListening = false;
+  document.getElementById('startBtn').disabled = false;
+  document.getElementById('stopBtn').disabled = true;
+  document.getElementById('status').textContent = 'Ready to listen...';
+  document.getElementById('startBtn').classList.remove('recording');
+}
+
+async function processUserMessage(message) {
+  // Check usage limits
+  if (userSubscription === 'free') {
+    dailyUsage++;
+    saveUsage();
+    updateUsageDisplay();
+    
+    if (dailyUsage >= MAX_FREE_QUESTIONS) {
+      document.getElementById('status').textContent = 'Daily limit reached. Upgrade to Pro!';
+      return;
+    }
+  }
+
+  document.getElementById('status').textContent = '🤔 AI is thinking...';
+
+  try {
+    // Send to GPT-5-nano for fast, cheap response
+    const response = await fetch('/live-chat-process', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({
+        message: message,
+        conversation: conversationHistory,
+        model: 'gpt-5-nano' // Your cheap, fast model
+      })
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      addMessage('ai', result.reply);
+      speakResponse(result.reply);
+      document.getElementById('status').textContent = '✅ Response ready!';
+      
+      // Add to conversation history
+      conversationHistory.push(
+        { role: 'user', content: message },
+        { role: 'assistant', content: result.reply }
+      );
+    } else {
+      throw new Error(result.error || 'Failed to get AI response');
+    }
+
+  } catch (error) {
+    console.error('Error processing message:', error);
+    document.getElementById('status').textContent = '❌ Error: ' + error.message;
+  }
+}
+
+function addMessage(sender, text) {
+  const conversation = document.getElementById('conversation');
+  const messageDiv = document.createElement('div');
+  messageDiv.className = `message ${sender}`;
+  
+  const senderName = sender === 'user' ? 'You' : 'AI Assistant';
+  messageDiv.innerHTML = `
+    <div class="sender">${senderName}</div>
+    <div>${text}</div>
+  `;
+  
+  conversation.appendChild(messageDiv);
+  conversation.scrollTop = conversation.scrollHeight;
+}
+
+function speakResponse(text) {
+  // Use browser's built-in text-to-speech (FREE)
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.rate = 1.0;
+  utterance.pitch = 1.0;
+  utterance.volume = 1.0;
+  
+  speechSynthesis.speak(utterance);
+}
+
+function clearConversation() {
+  document.getElementById('conversation').innerHTML = `
+    <div class="message ai">
+      <div class="sender">AI Assistant</div>
+      <div>Hello! I'm your live AI assistant. Click "Start Speaking" and talk to me naturally!</div>
+    </div>
+  `;
+  conversationHistory = [];
+}
+
+// Subscription and Usage Management
+async function checkSubscriptionStatus() {
+  try {
+    const userData = await fetch('/api/me', { credentials: 'include' }).then(r => r.json());
+    
+    // Check if user has live chat subscription
+    const liveChatSub = localStorage.getItem('goldenspace_livechat_sub');
+    if (liveChatSub) {
+      userSubscription = 'pro';
+      document.getElementById('subscriptionBanner').style.display = 'none';
+    } else {
+      userSubscription = 'free';
+    }
+    
+    updateUsageDisplay();
+  } catch (error) {
+    console.error('Error checking subscription:', error);
+  }
+}
+
+function loadUsage() {
+  const today = new Date().toDateString();
+  const usageData = localStorage.getItem('goldenspace_livechat_usage');
+  
+  if (usageData) {
+    const data = JSON.parse(usageData);
+    if (data.date === today) {
+      dailyUsage = data.count;
+    } else {
+      dailyUsage = 0;
+    }
+  } else {
+    dailyUsage = 0;
+  }
+}
+
+function saveUsage() {
+  const today = new Date().toDateString();
+  const usageData = {
+    date: today,
+    count: dailyUsage
+  };
+  localStorage.setItem('goldenspace_livechat_usage', JSON.stringify(usageData));
+}
+
+function updateUsageDisplay() {
+  const usageText = document.getElementById('usageText');
+  if (userSubscription === 'pro') {
+    usageText.innerHTML = '✅ <strong>Pro User</strong> - Unlimited messages';
+  } else {
+    usageText.innerHTML = `📝 <strong>Free User</strong> - ${dailyUsage}/${MAX_FREE_QUESTIONS} questions today`;
+  }
+}
+
+async function upgradeToPro() {
+  try {
+    const response = await fetch('/api/unlock-feature', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({
+        feature: 'live_chat_pro',
+        cost: 8
+      })
+    });
+
+    const result = await response.json();
+    
+    if (result.success) {
+      userSubscription = 'pro';
+      localStorage.setItem('goldenspace_livechat_sub', 'true');
+      document.getElementById('subscriptionBanner').style.display = 'none';
+      updateUsageDisplay();
+      addMessage('ai', '🎉 Welcome to Live Chat Pro! You now have unlimited access to our AI conversation system.');
+    } else {
+      alert('Upgrade failed: ' + (result.error || 'Unknown error'));
+    }
+  } catch (error) {
+    alert('Error upgrading: ' + error.message);
+  }
+}
+
+// Initialize speech recognition on page load
+setupSpeechRecognition();
+</script>
+</body>
+</html>

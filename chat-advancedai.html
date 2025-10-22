@@ -103,6 +103,13 @@ body.light .msg.user { background: #fff9cc; }
   margin: 8px 0;
   border: 1px solid var(--border);
 }
+.generated-image {
+  max-width: 100%;
+  max-height: 500px;
+  border-radius: 10px;
+  border: 2px solid gold;
+  margin: 10px 0;
+}
 .tools { margin-top: 6px; display: flex; gap: 8px; flex-wrap: wrap; }
 .speak-btn, .copy-btn {
   background: linear-gradient(180deg,var(--gold1),var(--gold2));
@@ -170,6 +177,10 @@ body.light .composer-wrap { background: rgba(255,255,255,.7); }
   background: linear-gradient(45deg,var(--gold1),var(--gold2));
   color: #141209;
   box-shadow: 0 0 20px rgba(255,215,0,.45);
+}
+.act-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* ===== Chat Management ===== */
@@ -406,6 +417,44 @@ body.light .composer-wrap { background: rgba(255,255,255,.7); }
   z-index: 102;
   backdrop-filter: blur(10px);
 }
+
+/* ===== Subscription Banner ===== */
+.subscription-banner {
+  background: linear-gradient(45deg, #ffd700, #ffed4e);
+  color: #000;
+  padding: 12px 20px;
+  text-align: center;
+  font-weight: bold;
+  border-bottom: 2px solid gold;
+  display: none;
+}
+.subscription-banner .upgrade-btn {
+  background: #000;
+  color: #ffd700;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-left: 15px;
+  transition: all 0.3s ease;
+}
+.subscription-banner .upgrade-btn:hover {
+  background: #333;
+  transform: translateY(-2px);
+}
+
+/* ===== Image Counter ===== */
+.image-counter {
+  background: rgba(255,215,0,0.1);
+  border: 1px solid rgba(255,215,0,0.3);
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: gold;
+  display: none;
+  margin-bottom: 10px;
+}
 </style>
 </head>
 <body>
@@ -420,6 +469,12 @@ body.light .composer-wrap { background: rgba(255,255,255,.7); }
   </div>
   <button id="themeToggle" class="theme-toggle">🌙 Dark Mode</button>
 </header>
+
+<!-- Subscription Upgrade Banner -->
+<div class="subscription-banner" id="upgradeBanner">
+  🚀 Upgrade to Pro for unlimited images, GPT-5 access, and more features!
+  <button class="upgrade-btn" onclick="showUpgradeModal()">Upgrade to Pro →</button>
+</div>
 
 <!-- Chat Sidebar -->
 <div class="chat-sidebar" id="chatSidebar">
@@ -464,6 +519,29 @@ body.light .composer-wrap { background: rgba(255,255,255,.7); }
   </div>
 </div>
 
+<!-- Upgrade Modal -->
+<div class="modal-overlay" id="upgradeModal">
+  <div class="golden-modal">
+    <div class="golden-icon">🚀</div>
+    <div class="golden-title">Upgrade to Pro</div>
+    <div class="golden-desc">
+      Get unlimited images, GPT-5 access, chat management, and all premium features for 40 Golden per month.
+    </div>
+    <div class="golden-balance">
+      Your Balance: <strong id="upgradeBalance">0</strong> Golden
+    </div>
+    <div class="golden-actions">
+      <button class="golden-btn" id="upgradeToPro" onclick="upgradeToPro()">
+        Upgrade for 40G/month
+      </button>
+      <button class="golden-btn secondary" onclick="closeUpgradeModal()">
+        Maybe Later
+      </button>
+    </div>
+    <div class="lock-msg" id="upgradeMessage"></div>
+  </div>
+</div>
+
 <main id="chat">
   <div class="msg ai">
     <small>GoldenSpaceAI</small>
@@ -474,6 +552,11 @@ body.light .composer-wrap { background: rgba(255,255,255,.7); }
 
 <div class="composer-wrap">
   <div class="composer">
+    <!-- Image Counter -->
+    <div class="image-counter" id="imageCounter">
+      🖼️ Images this month: <span id="imagesUsed">0</span>/<span id="imageLimit">50</span>
+    </div>
+    
     <textarea id="prompt" placeholder="Type your message… (Shift + Enter = newline)" disabled></textarea>
     <div class="actions">
       <button class="act-btn" id="uploadBtn" disabled>📁 Upload Image</button>
@@ -496,6 +579,10 @@ const deepThinkBtn = document.getElementById("deepThinkBtn");
 const instantBtn = document.getElementById("instantBtn");
 const goldenBalanceEl = document.getElementById("goldenBalance");
 const currentBalanceEl = document.getElementById("currentBalance");
+const imageCounter = document.getElementById("imageCounter");
+const imagesUsedEl = document.getElementById("imagesUsed");
+const imageLimitEl = document.getElementById("imageLimit");
+const upgradeBanner = document.getElementById("upgradeBanner");
 const BACKEND = "/chat-advanced-ai";
 
 let fileData = null;
@@ -505,11 +592,15 @@ let currentMode = 'normal';
 let customInstructions = localStorage.getItem('goldenspace_custom_instructions') || '';
 let userBalance = 0;
 let featureUnlocked = false;
+let userSubscription = 'free'; // free, plus, pro
+let imagesUsedThisMonth = 0;
+let monthlyImageLimit = 50;
 
 // Initialize
 loadChats();
 checkFeatureAccess();
 loadUserBalance();
+checkSubscriptionStatus();
 
 /* THEME */
 document.getElementById("themeToggle").onclick = () => {
@@ -542,6 +633,98 @@ function saveCustomInstructions() {
   customInstructions = document.getElementById("customInstructions").value;
   localStorage.setItem('goldenspace_custom_instructions', customInstructions);
   closeInstructionsModal();
+}
+
+/* SUBSCRIPTION SYSTEM */
+async function checkSubscriptionStatus() {
+  try {
+    // In a real app, this would come from your backend
+    const userData = await fetch('/api/me', { credentials: 'include' }).then(r => r.json());
+    
+    // For demo, we'll use localStorage. Replace with actual backend calls
+    const subData = localStorage.getItem('goldenspace_subscription');
+    if (subData) {
+      const subscription = JSON.parse(subData);
+      userSubscription = subscription.plan;
+      imagesUsedThisMonth = subscription.imagesUsed || 0;
+      
+      if (userSubscription === 'plus') {
+        monthlyImageLimit = 50;
+        imageCounter.style.display = 'block';
+        imagesUsedEl.textContent = imagesUsedThisMonth;
+        imageLimitEl.textContent = monthlyImageLimit;
+        
+        // Show upgrade banner only to Plus users
+        upgradeBanner.style.display = 'block';
+        
+        // Enable Deep Think for Plus users
+        deepThinkBtn.disabled = false;
+      } else if (userSubscription === 'pro') {
+        monthlyImageLimit = Infinity;
+        imageCounter.style.display = 'none';
+        upgradeBanner.style.display = 'none';
+        
+        // Enable all features for Pro users
+        deepThinkBtn.disabled = false;
+        // Pro users get additional features like custom instructions, chat management, etc.
+      }
+    }
+  } catch (error) {
+    console.error('Error checking subscription:', error);
+  }
+}
+
+function showUpgradeModal() {
+  document.getElementById('upgradeModal').style.display = 'flex';
+  document.getElementById('upgradeBalance').textContent = userBalance;
+  
+  const upgradeBtn = document.getElementById('upgradeToPro');
+  if (userBalance >= 40) {
+    upgradeBtn.disabled = false;
+    upgradeBtn.textContent = "Upgrade for 40G/month";
+  } else {
+    upgradeBtn.disabled = true;
+    upgradeBtn.textContent = "Insufficient Golden";
+    document.getElementById('upgradeMessage').textContent = `You need ${40 - userBalance} more Golden to upgrade.`;
+  }
+}
+
+function closeUpgradeModal() {
+  document.getElementById('upgradeModal').style.display = 'none';
+}
+
+async function upgradeToPro() {
+  try {
+    // In real app, this would call your backend to upgrade subscription
+    // For demo, we'll simulate it
+    if (userBalance >= 40) {
+      userSubscription = 'pro';
+      monthlyImageLimit = Infinity;
+      imageCounter.style.display = 'none';
+      upgradeBanner.style.display = 'none';
+      
+      // Save to localStorage (replace with backend in production)
+      localStorage.setItem('goldenspace_subscription', JSON.stringify({
+        plan: 'pro',
+        upgradedAt: new Date().toISOString(),
+        imagesUsed: 0
+      }));
+      
+      closeUpgradeModal();
+      addMsg("ai", "🎉 Welcome to Pro! You now have unlimited images, GPT-5 access, and all premium features.");
+      
+      // Enable all Pro features
+      updateUIForPro();
+    }
+  } catch (error) {
+    document.getElementById('upgradeMessage').textContent = "Upgrade failed: " + error.message;
+  }
+}
+
+function updateUIForPro() {
+  // Enable all premium features for Pro users
+  deepThinkBtn.disabled = false;
+  // Add other Pro-only features here
 }
 
 /* GOLDEN PAYMENT SYSTEM */
@@ -582,14 +765,12 @@ async function unlockFeature() {
     const result = await response.json();
     
     if (result.success) {
-      // Feature unlocked successfully
       userBalance = result.newBalance;
       featureUnlocked = true;
       updateUI();
       closeGoldenModal();
       
-      // Show success message
-      addMsg("ai", "✅ Advanced AI feature unlocked! You now have access to GPT-5, image generation, and all advanced features for 30 days. Your new balance: " + userBalance + " Golden.");
+      addMsg("ai", "✅ Advanced AI feature unlocked! You now have access to GPT-5, image generation, and all advanced features for 30 days.");
       
     } else {
       document.getElementById("goldenMessage").textContent = result.error || "Failed to unlock feature";
@@ -630,16 +811,13 @@ async function checkFeatureAccess() {
       featureUnlocked = true;
       updateUI();
       
-      // Show welcome message for unlocked feature
       if (!localStorage.getItem('feature_welcomed')) {
-        addMsg("ai", "✅ Advanced AI feature active! You have access to GPT-5, image generation, and all advanced features. " + 
-               (data.remainingHours ? `Expires in ${Math.ceil(data.remainingHours / 24)} days.` : ""));
+        addMsg("ai", "✅ Advanced AI feature active! You have access to GPT-5, image generation, and all advanced features.");
         localStorage.setItem('feature_welcomed', 'true');
       }
     } else {
       featureUnlocked = false;
       updateUI();
-      // Show lock overlay if not unlocked
       showGoldenModal();
     }
   } catch (error) {
@@ -652,19 +830,22 @@ async function checkFeatureAccess() {
 
 function updateUI() {
   if (featureUnlocked) {
-    // Enable all features
     promptEl.disabled = false;
     promptEl.placeholder = "Type your message… (Shift + Enter = newline)";
     uploadBtn.disabled = false;
     micBtn.disabled = false;
     generateImageBtn.disabled = false;
-    deepThinkBtn.disabled = false;
     instantBtn.disabled = false;
     
-    // Update status indicator
+    // Deep Think is only for Plus/Pro users
+    if (userSubscription === 'plus' || userSubscription === 'pro') {
+      deepThinkBtn.disabled = false;
+    } else {
+      deepThinkBtn.disabled = true;
+    }
+    
     goldenBalanceEl.innerHTML = `<span>⚡</span> ${userBalance} Golden (Active)`;
   } else {
-    // Disable all features
     promptEl.disabled = true;
     promptEl.placeholder = "Unlock Advanced AI to start chatting...";
     uploadBtn.disabled = true;
@@ -673,12 +854,11 @@ function updateUI() {
     deepThinkBtn.disabled = true;
     instantBtn.disabled = true;
     
-    // Update status indicator
     goldenBalanceEl.innerHTML = `<span>🔒</span> ${userBalance} Golden`;
   }
 }
 
-// Rest of your existing chat functions remain the same...
+// Chat management functions
 function getChats() {
   return JSON.parse(localStorage.getItem('goldenspace_chats') || '[]');
 }
@@ -798,12 +978,25 @@ function addMsg(role, text, image = null) {
   let content = `<small>${role === "user" ? "You" : "GoldenSpaceAI"}</small><div>${text.replace(/\n/g, "<br>")}</div>`;
   
   if (image) {
-    content += `<img src="${image}" class="uploaded-image" alt="Uploaded image">`;
+    if (typeof image === 'string' && image.startsWith('data:image')) {
+      // Generated image - show with link
+      content += `
+        <div style="text-align: center; margin: 20px 0;">
+          <img src="${image}" class="generated-image" alt="Generated Image">
+          <div style="margin-top: 10px; font-size: 12px; color: #888;">
+            <span>🖼️ AI Generated Image</span>
+          </div>
+        </div>
+      `;
+    } else {
+      // Uploaded image
+      content += `<img src="${image}" class="uploaded-image" alt="Uploaded image">`;
+    }
   }
   
   m.innerHTML = content;
   
-  if (role === "ai") {
+  if (role === "ai" && !text.includes('generated-image')) {
     const tools = document.createElement("div");
     tools.className = "tools";
     
@@ -831,11 +1024,11 @@ function addMsg(role, text, image = null) {
   }
   
   chat.appendChild(m);
-  scrollToMessage(m);
+  scrollToBottom();
 }
 
-function scrollToMessage(messageElement) {
-  messageElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+function scrollToBottom() {
+  chat.scrollTop = chat.scrollHeight;
 }
 
 function spinner() {
@@ -843,7 +1036,7 @@ function spinner() {
   s.className = "msg ai";
   s.innerHTML = '<div>Thinking...</div>';
   chat.appendChild(s);
-  scrollToMessage(s);
+  scrollToBottom();
   return s;
 }
 
@@ -934,6 +1127,13 @@ generateImageBtn.onclick = () => {
     showGoldenModal();
     return;
   }
+  
+  // Check image limit for Plus users
+  if (userSubscription === 'plus' && imagesUsedThisMonth >= monthlyImageLimit) {
+    alert(`You've reached your monthly limit of ${monthlyImageLimit} images. Upgrade to Pro for unlimited images.`);
+    return;
+  }
+  
   currentMode = 'image';
   generateImageBtn.classList.add("active");
   deepThinkBtn.classList.remove("active");
@@ -945,6 +1145,13 @@ deepThinkBtn.onclick = () => {
     showGoldenModal();
     return;
   }
+  
+  // Deep Think is only for Plus/Pro users
+  if (userSubscription === 'free') {
+    alert("Deep Think is available for Plus and Pro subscribers. Upgrade to access this feature.");
+    return;
+  }
+  
   currentMode = 'deep';
   deepThinkBtn.classList.add("active");
   generateImageBtn.classList.remove("active");
@@ -984,6 +1191,24 @@ async function sendMessage() {
     
     if (currentMode === 'image') {
       fd.append("model", "gpt-image-1");
+      
+      // Update image counter for Plus users
+      if (userSubscription === 'plus') {
+        imagesUsedThisMonth++;
+        imagesUsedEl.textContent = imagesUsedThisMonth;
+        
+        // Save to localStorage (replace with backend)
+        localStorage.setItem('goldenspace_subscription', JSON.stringify({
+          plan: 'plus',
+          imagesUsed: imagesUsedThisMonth,
+          lastUpdated: new Date().toISOString()
+        }));
+        
+        // Disable button if limit reached
+        if (imagesUsedThisMonth >= monthlyImageLimit) {
+          generateImageBtn.disabled = true;
+        }
+      }
     } else if (currentMode === 'instant') {
       fd.append("model", "instant");
     } else if (currentMode === 'deep') {
@@ -996,7 +1221,20 @@ async function sendMessage() {
     const j = await r.json();
     chat.removeChild(s);
     
-    if (j.reply && j.reply.startsWith('data:image/')) {
+    // Handle image response with direct display
+    if (j.dataUrl) {
+      const imageHtml = `
+        <div style="text-align: center; margin: 20px 0;">
+          <img src="${j.dataUrl}" class="generated-image" alt="Generated Image">
+          <div style="margin-top: 10px; font-size: 12px; color: #888;">
+            <span>🖼️ AI Generated Image</span>
+            ${j.imageUrl ? `<br><a href="${j.imageUrl}" target="_blank" style="color: gold;">🔗 Open original URL</a>` : ''}
+          </div>
+        </div>
+      `;
+      addMsg("ai", imageHtml);
+      saveMessage("ai", `[Image generated]`, j.dataUrl);
+    } else if (j.reply && j.reply.startsWith('data:image/')) {
       addMsg("ai", "", j.reply);
       saveMessage("ai", "[Image generated]", j.reply);
     } else {
@@ -1030,17 +1268,14 @@ promptEl.addEventListener("keydown", e => {
   }
 });
 
-// Auto-scroll when new messages are added
+// Auto-scroll to bottom when new messages are added
 const observer = new MutationObserver(() => {
-  const lastMessage = chat.lastElementChild;
-  if (lastMessage) {
-    lastMessage.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
+  scrollToBottom();
 });
 observer.observe(chat, { childList: true });
 
 // Periodically refresh balance
-setInterval(loadUserBalance, 30000); // Refresh every 30 seconds
+setInterval(loadUserBalance, 30000);
 </script>
 </body>
 </html>

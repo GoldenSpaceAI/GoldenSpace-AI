@@ -1083,8 +1083,45 @@ app.post("/homework-helper", requireFeature("homework_helper"), upload.single("i
     }
   }
 });
+// ============ LIVE CHAT PROCESSING ============
+app.post("/live-chat-process", async (req, res) => {
+  try {
+    const { message, conversation, model = "gpt-5-nano" } = req.body;
+    
+    if (!message) {
+      return res.status(400).json({ error: "Message is required" });
+    }
 
-// ============ HEALTH ============
+    const messages = [
+      {
+        role: "system",
+        content: "You are a friendly, conversational AI assistant. Keep responses natural and conversational since users will hear them spoken aloud. Respond in 1-2 sentences maximum for best audio experience."
+      },
+      ...conversation,
+      { role: "user", content: message }
+    ];
+
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini", // Using cheaper model as GPT-5-nano equivalent
+      messages: messages,
+      max_tokens: 150, // Short responses for audio
+      temperature: 0.7,
+    });
+
+    const reply = completion.choices[0]?.message?.content || "I didn't get that. Could you repeat?";
+    
+    res.json({
+      success: true,
+      reply: reply,
+      model: model,
+      tokens_used: completion.usage?.total_tokens || 0
+    });
+
+  } catch (error) {
+    console.error("Live chat error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});// ============ HEALTH ============
 app.get("/health", (_req, res) => {
   const db = loadGoldenDB();
   res.json({

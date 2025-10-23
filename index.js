@@ -1281,7 +1281,35 @@ function getClientIP(req) {
          req.socket.remoteAddress ||
          (req.connection.socket ? req.connection.socket.remoteAddress : null) ||
          'unknown';
-}// ============ HEALTH ============
+}
+// ============ NOWPAYMENTS DEBUG ENDPOINT ============
+app.get('/api/nowpayments/debug', async (req, res) => {
+    try {
+        if (!NOWPAYMENTS_API_KEY) {
+            return res.json({ error: 'NOWPAYMENTS_API_KEY not set' });
+        }
+
+        // Test NOWPayments API connection
+        const testResponse = await axios.get(`${NOWPAYMENTS_API}/status`, {
+            headers: { 
+                "x-api-key": NOWPAYMENTS_API_KEY
+            }
+        });
+
+        res.json({
+            apiKey: NOWPAYMENTS_API_KEY ? 'Set' : 'Missing',
+            apiStatus: testResponse.data,
+            apiUrl: NOWPAYMENTS_API
+        });
+
+    } catch (error) {
+        res.json({
+            error: 'NOWPayments API test failed',
+            details: error.response?.data || error.message,
+            apiKey: NOWPAYMENTS_API_KEY ? 'Set' : 'Missing'
+        });
+    }
+});// ============ HEALTH ============
 app.get("/health", (_req, res) => {
   const db = loadGoldenDB();
   res.json({

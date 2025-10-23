@@ -1121,7 +1121,159 @@ app.post("/live-chat-process", async (req, res) => {
     console.error("Live chat error:", error);
     res.status(500).json({ error: error.message });
   }
-});// ============ HEALTH ============
+  // ============ GOLDEN TRANSFER SYSTEM ============
+
+app.post("/api/transfer-golden", async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: "Login required" });
+    }
+
+    const { recipientEmail, amount } = req.body;
+    
+    if (!recipientEmail || !amount || amount <= 0) {
+      return res.status(400).json({ error: "Valid recipient email and amount required" });
+    }
+
+    const db = loadGoldenDB();
+    const senderId = getUserIdentifier(req);
+    const sender = db.users[senderId];
+
+    if (!sender) {
+      return res.status(404).json({ error: "Sender account not found" });
+    }
+
+    // Calculate fee (5%)
+    const fee = Math.ceil(amount * 0.05);
+    const totalDeduction = amount + fee;
+
+    // Check if sender has enough balance
+    if (sender.golden_balance < totalDeduction) {
+      return res.status(400).json({ 
+        error: `Insufficient balance. Need ${totalDeduction}G (${amount}G + ${fee}G fee), but only have ${sender.golden_balance}G` 
+      });
+    }
+
+    // Find recipient by email
+    let recipient = null;
+    let recipientId = null;
+
+    for (const [userId, user] of Object.entries(db.users)) {
+      if (user.email && user.email.toLowerCase() === recipientEmail.toLowerCase()) {
+        recipient = user;
+        recipientId = userId;
+        break;
+      }
+    }
+
+    if (!recipient) {
+      return res.status(404).json({ error: "Recipient not found. Make sure they have a GoldenSpaceAI account." });
+    }
+
+    // Prevent self-transfer
+    if (recipientId === senderId) {
+      return res.status(400).json({ error: "Cannot transfer Golden to yourself" });
+    }
+
+    const previousSenderBalance = sender.golden_balance;
+    const previousRecipientBalance = recipient.golden_balance;
+
+    // Perform transfer
+    sender.golden_balance -= totalDeduction;
+    sender.total_golden_spent = (sender.total_golden_spent || 0) + totalDeduction;
+
+    recipient.golden_balance += amount;
+    recipient.total_golden_earned = (recipient.total_golden_earned || 0) + amount;
+
+    // Record transactions for sender
+    sender.transactions = sender.transactions || [];
+    sender.transactions.push({
+      type: "transfer_out",
+      amount: -totalDeduction,
+      previous_balance: previousSenderBalance,
+      new_balance: sender.golden_balance,
+      recipient: recipientEmail,
+      fee: fee,
+      net_amount: amount,
+      timestamp: new Date().toISOString()
+    });
+
+    // Record transactions for recipient
+    recipient.transactions = recipient.transactions || [];
+    recipient.transactions.push({
+      type: "transfer_in",
+      amount: amount,
+      previous_balance: previousRecipientBalance,
+      new_balance: recipient.golden_balance,
+      sender: sender.email,
+      timestamp: new Date().toISOString()
+    });
+
+    // Track Golden transaction in MongoDB analytics
+    try {
+      const ip = getClientIP(req);
+      await trackGoldenTransaction(senderId, 'transfer_out', -totalDeduction, sender.golden_balance, {
+        recipient: recipientEmail,
+        fee: fee,
+        net_amount: amount,
+        ip: ip
+      });
+
+      await trackGoldenTransaction(recipientId, 'transfer_in', amount, recipient.golden_balance, {
+        sender: sender.email,
+        ip: ip
+      });
+    } catch (mongoError) {
+      console.error('MongoDB tracking error (non-critical):', mongoError);
+      // Don't fail the transfer if analytics tracking fails
+    }
+
+    saveGoldenDB(db);
+
+    console.log(`✅ Golden transfer: ${sender.email} → ${recipient.email} | Amount: ${amount}G | Fee: ${fee}G`);
+
+    res.json({
+      success: true,
+      message: `Successfully transferred ${amount}G to ${recipientEmail} (${fee}G fee applied)`,
+      newBalance: sender.golden_balance,
+      fee: fee,
+      totalDeduction: totalDeduction
+    });
+
+  } catch (error) {
+    console.error("Transfer Golden error:", error);
+    res.status(500).json({ 
+      error: "Transfer failed due to server error",
+      details: error.message 
+    });
+  }
+});
+
+// Optional: Add transfer history endpoint
+app.get("/api/transfer-history", (req, res) => {
+  if (!req.user) {
+    return res.status(401).json({ error: "Login required" });
+  }
+
+  const db = loadGoldenDB();
+  const userId = getUserIdentifier(req);
+  const user = db.users[userId];
+
+  if (!user) {
+    return res.status(404).json({ error: "User not found" });
+  }
+
+  const transfers = (user.transactions || [])
+    .filter(tx => tx.type === 'transfer_out' || tx.type === 'transfer_in')
+    .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+    .slice(0, 50); // Last 50 transfers
+
+  res.json({
+    success: true,
+    transfers: transfers,
+    totalTransfers: transfers.length
+  });
+});});// ============ HEALTH ============
 app.get("/health", (_req, res) => {
   const db = loadGoldenDB();
   res.json({

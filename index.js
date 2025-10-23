@@ -1342,8 +1342,66 @@ function getClientIP(req) {
          (req.connection.socket ? req.connection.socket.remoteAddress : null) ||
          'unknown';
 }
+// Add this route for the current webhook URL
+app.post("/api/nowpay/webhook", async (req, res) => {
+  try {
+    const event = req.body;
+    console.log("💰 NOWPayments Webhook Received:", event);
 
-// ============ HEALTH ============
+    const paymentId = event.payment_id;
+    const orderId = event.order_id;
+
+    const payDB = loadPaymentDB();
+    const goldDB = loadGoldenDB();
+
+    const order = payDB.nowpayments_orders[orderId];
+    if (!order) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+
+    if (event.payment_status === "finished" || event.payment_status === "confirmed") {
+      order.status = "completed";
+      order.confirmedAt = new Date().toISOString();
+      order.transactionHash = event.payin_hash;
+
+      const userId = order.user;
+      const user = goldDB.users[userId];
+      const goldenAmount = order.packageSize;
+      
+      if (user) {
+        const previousBalance = user.golden_balance || 0;
+        user.golden_balance = previousBalance + goldenAmount;
+        user.total_golden_earned = (user.total_golden_earned || 0) + goldenAmount;
+        
+        user.transactions = user.transactions || [];
+        user.transactions.push({
+          type: "purchase",
+          amount: goldenAmount,
+          previous_balance: previousBalance,
+          new_balance: user.golden_balance,
+          package: `${goldenAmount} Golden`,
+          usdAmount: order.amountUSD,
+          paymentMethod: "NOWPayments",
+          timestamp: new Date().toISOString()
+        });
+
+        console.log(`✅ Golden AUTO-ADDED: ${userId} +${goldenAmount}G`);
+      }
+
+      savePaymentDB(payDB);
+      saveGoldenDB(goldDB);
+    } else if (event.payment_status === "failed") {
+      order.status = "failed";
+      savePaymentDB(payDB);
+    }
+
+    res.json({ ok: true });
+
+  } catch (error) {
+    console.error("NOWPayments webhook error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});// ============ HEALTH ============
 app.get("/health", (_req, res) => {
   const db = loadGoldenDB();
   res.json({

@@ -1273,7 +1273,15 @@ app.get("/api/transfer-history", (req, res) => {
     transfers: transfers,
     totalTransfers: transfers.length
   });
-});});// ============ HEALTH ============
+});});
+// Helper function to get client IP
+function getClientIP(req) {
+  return req.headers['x-forwarded-for'] || 
+         req.connection.remoteAddress || 
+         req.socket.remoteAddress ||
+         (req.connection.socket ? req.connection.socket.remoteAddress : null) ||
+         'unknown';
+}// ============ HEALTH ============
 app.get("/health", (_req, res) => {
   const db = loadGoldenDB();
   res.json({

@@ -1,179 +1,645 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>GoldenSpaceAI • Buy Golden Tokens</title>
-  <link rel="icon" href="/favicon.ico"/>
-  <style>
-    :root{
-      --bg:#070b14;
-      --card:#0e1626;
-      --card2:#0a1222;
-      --border:#1f2b45;
-      --text:#eaf1ff;
-      --muted:#b8c3dc;
-      --gold:#f6c64a;
-      --gold2:#eb8b36;
-      --accent:#7aa6ff;
-      --ok:#25d366;
-      --x:#ff6262;
-      --radius:18px;
-      --shadow:0 24px 80px rgba(0,0,0,.55);
-      --max:1100px;
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0;color:var(--text);
-      font:16px/1.6 Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background:
-        linear-gradient(180deg, rgba(7,11,20,.75), rgba(7,11,20,.9)),
-        url("https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?q=80&w=1920&auto=format&fit=crop") center/cover fixed no-repeat;
-      -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
-    }
-    a{color:inherit;text-decoration:none}
-
-    .top{position:sticky;top:0;z-index:20;backdrop-filter:blur(10px);
-      background:linear-gradient(180deg, rgba(7,11,20,.85), rgba(7,11,20,.45) 60%, transparent);
-      border-bottom:1px solid var(--border); padding:12px 16px; display:flex; align-items:center; gap:12px;}
-    .brand{display:flex;align-items:center;gap:10px;color:var(--gold);font-weight:900;letter-spacing:.4px}
-    .dot{width:10px;height:10px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#ffd86a,#f6c64a 50%,#eb8b36 90%);box-shadow:0 0 18px rgba(246,198,74,.6)}
-    .wrap{max-width:var(--max);margin:22px auto;padding:0 16px}
-
-    .hero{text-align:center; margin-bottom:30px;}
-    .hero h1{margin:6px 0 12px;font-size:clamp(22px,4vw,34px)}
-    .hero p{color:var(--muted); font-size:18px;}
-
-    .packages-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:20px;margin:30px 0;}
-    
-    .package-card{
-      background:linear-gradient(180deg,var(--card),var(--card2)); 
-      border:1px solid var(--border);border-radius:var(--radius); 
-      padding:25px; text-align:center; position:relative;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-    .package-card:hover{
-      transform: translateY(-5px);
-      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-    }
-    .package-card.popular{border:2px solid var(--gold);}
-    .popular-badge{
-      position:absolute; top:-10px; left:50%; transform:translateX(-50%);
-      background:linear-gradient(135deg,var(--gold),var(--gold2)); color:#1c1500;
-      padding:5px 15px; border-radius:15px; font-weight:900; font-size:12px;
-    }
-    
-    .golden-amount{font-size:32px; font-weight:900; color:var(--gold); margin:10px 0;}
-    .price{font-size:24px; font-weight:800; color:var(--text); margin:10px 0;}
-    .value{font-size:14px; color:var(--muted); margin-bottom:15px;}
-    
-    .btn{
-      display:inline-flex;align-items:center;justify-content:center;gap:10px;
-      padding:12px 20px;border-radius:12px;border:none;font-weight:900;cursor:pointer;
-      width:100%; transition: all 0.3s ease;
-    }
-    .btn.gold{
-      background:linear-gradient(135deg,var(--gold),var(--gold2));color:#1c1500;
-      box-shadow:0 10px 26px rgba(246,198,74,.25);
-    }
-    .btn.gold:hover{
-      transform: translateY(-2px);
-      box-shadow: 0 15px 35px rgba(246,198,74,.4);
-    }
-    .btn.ghost{
-      background:transparent;color:var(--muted);border:1px solid var(--border);
-    }
-
-    .features-section{margin:40px 0;}
-    .features-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(250px, 1fr));gap:15px;margin:20px 0;}
-    .feature-card{background:rgba(255,255,255,.05); padding:15px; border-radius:12px; border:1px solid var(--border);}
-    .feature-card h4{color:var(--gold); margin:0 0 8px 0;}
-    .feature-card p{color:var(--muted); margin:0; font-size:14px;}
-
-    .loading{opacity:0.7; pointer-events:none;}
-    .loading::after{content:"..."; animation: loading 1.5s infinite;}
-
-    @keyframes loading{0%,100%{content:"."}50%{content:".."}}
-
-    footer{max-width:var(--max);margin:40px auto 34px;padding:0 16px;color:#aeb7c5;font-size:12px;
-      display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;border-top:1px solid var(--border);padding-top:12px}
-    :focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-radius:8px}
-
-    .user-balance{
-      background:linear-gradient(135deg, rgba(246,198,74,.1), rgba(246,198,74,.05));
-      border:1px solid rgba(246,198,74,.3); border-radius:12px;
-      padding:15px; text-align:center; margin:20px 0;
-    }
-    .balance-amount{font-size:24px; font-weight:900; color:var(--gold);}
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buy Golden Tokens • GoldenSpaceAI</title>
+    <link rel="icon" href="/favicon.ico">
+    <style>
+        :root {
+            --bg: #070b14;
+            --card: #0e1626;
+            --card2: #0a1222;
+            --border: #1f2b45;
+            --text: #eaf1ff;
+            --muted: #b8c3dc;
+            --gold: #f6c64a;
+            --gold2: #eb8b36;
+            --accent: #7aa6ff;
+            --ok: #25d366;
+            --error: #ff6262;
+            --radius: 18px;
+            --shadow: 0 24px 80px rgba(0,0,0,.55);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(180deg, rgba(7,11,20,.85), rgba(7,11,20,.95)),
+                        url("https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?q=80&w=1920&auto=format&fit=crop") center/cover fixed no-repeat;
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            margin-bottom: 40px;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 900;
+            font-size: 24px;
+            color: var(--gold);
+        }
+        
+        .logo-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #ffd86a, #f6c64a 50%, #eb8b36 90%);
+            box-shadow: 0 0 18px rgba(246,198,74,.6);
+        }
+        
+        .back-btn {
+            background: transparent;
+            color: var(--muted);
+            border: 1px solid var(--border);
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .back-btn:hover {
+            background: rgba(255,255,255,0.05);
+            color: var(--text);
+        }
+        
+        .hero {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+        
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, var(--gold), var(--gold2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .hero p {
+            font-size: 1.2rem;
+            color: var(--muted);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .balance-card {
+            background: linear-gradient(135deg, rgba(246,198,74,.1), rgba(246,198,74,.05));
+            border: 1px solid rgba(246,198,74,.3);
+            border-radius: var(--radius);
+            padding: 25px;
+            text-align: center;
+            margin: 0 auto 50px;
+            max-width: 400px;
+        }
+        
+        .balance-label {
+            font-size: 1rem;
+            color: var(--muted);
+            margin-bottom: 10px;
+        }
+        
+        .balance-amount {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: var(--gold);
+            margin-bottom: 10px;
+        }
+        
+        .balance-info {
+            font-size: 0.9rem;
+            color: var(--muted);
+        }
+        
+        .packages-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 60px;
+        }
+        
+        .package-card {
+            background: linear-gradient(180deg, var(--card), var(--card2));
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 30px;
+            text-align: center;
+            position: relative;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .package-card:hover {
+            transform: translateY(-10px);
+            box-shadow: var(--shadow);
+        }
+        
+        .package-card.popular {
+            border: 2px solid var(--gold);
+            transform: scale(1.05);
+        }
+        
+        .popular-badge {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, var(--gold), var(--gold2));
+            color: #1c1500;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: 900;
+            font-size: 0.9rem;
+        }
+        
+        .golden-amount {
+            font-size: 3rem;
+            font-weight: 900;
+            color: var(--gold);
+            margin: 20px 0 10px;
+        }
+        
+        .price {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+        }
+        
+        .save-badge {
+            display: inline-block;
+            background: rgba(37, 211, 102, 0.2);
+            color: var(--ok);
+            padding: 5px 12px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+        
+        .value {
+            font-size: 1rem;
+            color: var(--muted);
+            margin-bottom: 25px;
+        }
+        
+        .purchase-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 15px 25px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 900;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s ease;
+            font-size: 1.1rem;
+            background: linear-gradient(135deg, var(--gold), var(--gold2));
+            color: #1c1500;
+            box-shadow: 0 10px 26px rgba(246,198,74,.25);
+        }
+        
+        .purchase-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(246,198,74,.4);
+        }
+        
+        .purchase-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .features-section {
+            margin: 60px 0;
+        }
+        
+        .features-title {
+            text-align: center;
+            font-size: 2rem;
+            margin-bottom: 30px;
+            color: var(--gold);
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        
+        .feature-card {
+            background: rgba(255,255,255,.05);
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+        
+        .feature-card h4 {
+            color: var(--gold);
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+        
+        .feature-card p {
+            color: var(--muted);
+            font-size: 0.95rem;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 30px 0;
+            color: var(--muted);
+            border-top: 1px solid var(--border);
+            margin-top: 50px;
+        }
+        
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+        
+        .footer-links a {
+            color: var(--muted);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        
+        .footer-links a:hover {
+            color: var(--gold);
+        }
+        
+        .copyright {
+            font-size: 0.9rem;
+        }
+        
+        .payment-message {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 12px;
+            color: white;
+            font-weight: bold;
+            z-index: 10000;
+            max-width: 400px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .payment-success {
+            background: linear-gradient(135deg, var(--ok), #1ebc5a);
+        }
+        
+        .payment-error {
+            background: linear-gradient(135deg, var(--error), #ff4757);
+        }
+        
+        .payment-info {
+            background: linear-gradient(135deg, var(--accent), #5d8eff);
+        }
+        
+        @media (max-width: 768px) {
+            .packages-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .package-card.popular {
+                transform: none;
+            }
+            
+            .hero h1 {
+                font-size: 2.2rem;
+            }
+            
+            .hero p {
+                font-size: 1rem;
+            }
+        }
+    </style>
 </head>
 <body>
-  <div class="top">
-    <div class="brand"><span class="dot"></span> GoldenSpaceAI</div>
-    <div style="flex:1"></div>
-    <a class="btn ghost" href="/index.html">← Back to Home</a>
-  </div>
-
-  <main class="wrap" aria-label="Golden Packages">
-    <div class="hero">
-      <h1>Buy Golden Tokens</h1>
-      <p>Purchase Golden tokens to unlock premium AI features</p>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <span class="logo-dot"></span>
+                GoldenSpaceAI
+            </div>
+            <a href="/index.html" class="back-btn">← Back to Home</a>
+        </header>
+        
+        <section class="hero">
+            <h1>Buy Golden Tokens</h1>
+            <p>One-time payment for permanent Golden tokens to unlock premium AI features</p>
+        </section>
+        
+        <div class="balance-card" id="userBalanceSection" style="display: none;">
+            <div class="balance-label">Your Current Balance</div>
+            <div class="balance-amount" id="currentBalance">0</div>
+            <div class="balance-info">Golden tokens never expire • 1 Golden = $0.25 value</div>
+        </div>
+        
+        <div class="packages-grid">
+            <!-- 60 Golden Package -->
+            <div class="package-card">
+                <div class="golden-amount">60 Golden</div>
+                <div class="price">$15</div>
+                <div class="value">$0.25 per Golden</div>
+                <button class="purchase-btn" onclick="purchaseGolden(60)" id="btn-60">
+                    💳 Purchase Now
+                </button>
+            </div>
+            
+            <!-- 100 Golden Package -->
+            <div class="package-card popular">
+                <div class="popular-badge">BEST VALUE</div>
+                <div class="golden-amount">100 Golden</div>
+                <div class="price">$20</div>
+                <div class="save-badge">Save $5</div>
+                <div class="value">$0.20 per Golden</div>
+                <button class="purchase-btn" onclick="purchaseGolden(100)" id="btn-100">
+                    💳 Purchase Now
+                </button>
+            </div>
+            
+            <!-- 200 Golden Package -->
+            <div class="package-card">
+                <div class="golden-amount">200 Golden</div>
+                <div class="price">$40</div>
+                <div class="save-badge">Save $10</div>
+                <div class="value">$0.20 per Golden</div>
+                <button class="purchase-btn" onclick="purchaseGolden(200)" id="btn-200">
+                    💳 Purchase Now
+                </button>
+            </div>
+        </div>
+        
+        <section class="features-section">
+            <h2 class="features-title">What Can You Unlock?</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <h4>🔍 Search Info</h4>
+                    <p>Advanced information search with detailed summaries - 4 Golden</p>
+                </div>
+                <div class="feature-card">
+                    <h4>📚 Homework Helper</h4>
+                    <p>Solve homework with image upload and step-by-step solutions - 20 Golden</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🧠 Advanced AI Chat</h4>
+                    <p>GPT-4o with file upload and image generation - 20 Golden</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🚀 Space Creation</h4>
+                    <p>Create rockets, satellites, and planets - 4 Golden each</p>
+                </div>
+                <div class="feature-card">
+                    <h4>📘 Lesson Search</h4>
+                    <p>Find and summarize educational content - 10 Golden</p>
+                </div>
+                <div class="feature-card">
+                    <h4>⚡ Physics Tools</h4>
+                    <p>Physics explanations and tutoring - 4 Golden</p>
+                </div>
+            </div>
+        </section>
+        
+        <footer>
+            <div class="footer-links">
+                <a href="/privacy.html">Privacy Policy</a>
+                <a href="/terms.html">Terms of Service</a>
+                <a href="/refund.html">Refund Policy</a>
+            </div>
+            <div class="copyright">© <span id="currentYear"></span> GoldenSpaceAI. All rights reserved.</div>
+        </footer>
     </div>
 
-    <!-- User Balance -->
-    <div class="user-balance" id="userBalanceSection" style="display:none;">
-      <div>Your Current Balance</div>
-      <div class="balance-amount" id="currentBalance">0</div>
-      <div style="color:var(--muted); font-size:14px; margin-top:5px;">1 Golden = $0.25 • Unlock features for 30 days</div>
-    </div>
+    <script>
+        // Set current year in footer
+        document.getElementById('currentYear').textContent = new Date().getFullYear();
+        
+        // Load user balance on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUserBalance();
+        });
+        
+        // Load user's current Golden balance
+        async function loadUserBalance() {
+            try {
+                const response = await fetch('/api/golden-balance', {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                
+                if (data.loggedIn) {
+                    document.getElementById('currentBalance').textContent = data.balance;
+                    document.getElementById('userBalanceSection').style.display = 'block';
+                } else {
+                    showMessage('Please log in to purchase Golden tokens', 'payment-info');
+                }
+            } catch (error) {
+                console.error('Failed to load balance:', error);
+            }
+        }
+        
+        // Purchase Golden tokens - COMPLETE WORKING VERSION
+        async function purchaseGolden(packageSize) {
+            const button = document.getElementById(`btn-${packageSize}`);
+            const originalText = button.innerHTML;
+            
+            try {
+                button.innerHTML = '🔄 Processing...';
+                button.disabled = true;
+                
+                // First check if user is logged in
+                const balanceResponse = await fetch('/api/golden-balance', {
+                    credentials: 'include'
+                });
+                const balanceData = await balanceResponse.json();
+                
+                if (!balanceData.loggedIn) {
+                    throw new Error('Please log in to make a purchase');
+                }
+                
+                console.log('Sending purchase request for package:', packageSize);
+                
+                const response = await fetch('/api/nowpayments/create-golden', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        packageSize: parseInt(packageSize)
+                    })
+                });
 
-    <!-- Golden Packages -->
-    <div class="packages-grid" id="packagesContainer">
-      <!-- Packages will be loaded by JavaScript -->
-    </div>
+                const data = await response.json();
+                console.log('Payment response:', data);
 
-    <!-- Features Info -->
-    <div class="features-section">
-      <h2 style="text-align:center; margin-bottom:20px;">What Can You Unlock?</h2>
-      <div class="features-grid">
-        <div class="feature-card">
-          <h4>🔍 Search Info</h4>
-          <p>Advanced information search with detailed summaries - 4 Golden</p>
-        </div>
-        <div class="feature-card">
-          <h4>📚 Homework Helper</h4>
-          <p>Solve homework with image upload and step-by-step solutions - 20 Golden</p>
-        </div>
-        <div class="feature-card">
-          <h4>🧠 Advanced AI Chat</h4>
-          <p>GPT-4o with file upload and image generation - 20 Golden</p>
-        </div>
-        <div class="feature-card">
-          <h4>🚀 Space Creation</h4>
-          <p>Create rockets, satellites, and planets - 4 Golden each</p>
-        </div>
-        <div class="feature-card">
-          <h4>📘 Lesson Search</h4>
-          <p>Find and summarize educational content - 10 Golden</p>
-        </div>
-        <div class="feature-card">
-          <h4>⚡ Physics Tools</h4>
-          <p>Physics explanations and tutoring - 4 Golden</p>
-        </div>
-      </div>
-    </div>
+                if (!response.ok) {
+                    const errorMessage = data.error || data.details || `Payment failed with status ${response.status}`;
+                    throw new Error(errorMessage);
+                }
 
-    <footer>
-      <div>©️ <span id="yr"></span> GoldenSpaceAI</div>
-      <div>
-        <a href="/privacy.html">Privacy</a> ·
-        <a href="/terms.html">Terms</a> ·
-        <a href="/refund.html">Refund Policy</a>
-      </div>
-    </footer>
-  </main>
+                if (data.success && data.invoiceUrl) {
+                    showMessage('✅ Payment initiated! Complete payment in the new tab.', 'payment-success');
+                    
+                    // Open payment page in new tab
+                    const paymentWindow = window.open(data.invoiceUrl, '_blank');
+                    
+                    if (paymentWindow) {
+                        // Start checking payment status
+                        checkPaymentStatus(data.orderId);
+                    } else {
+                        showMessage('⚠️ Popup blocked! Please allow popups and click the payment link.', 'payment-info');
+                    }
+                } else {
+                    throw new Error('Invalid response from payment server');
+                }
 
-  <script src="/plans.js"></script>
+            } catch (error) {
+                console.error('Purchase error:', error);
+                let userMessage = error.message;
+                
+                // User-friendly error messages
+                if (error.message.includes('NetworkError') || error.message.includes('Failed to fetch')) {
+                    userMessage = 'Network error. Please check your connection and try again.';
+                } else if (error.message.includes('logged in')) {
+                    userMessage = 'Please log in to make a purchase.';
+                } else if (error.message.includes('404')) {
+                    userMessage = 'Payment service temporarily unavailable. Please try again later.';
+                }
+                
+                showMessage(`❌ ${userMessage}`, 'payment-error');
+            } finally {
+                button.innerHTML = originalText;
+                button.disabled = false;
+            }
+        }
+        
+        // Check payment status with retry logic
+        async function checkPaymentStatus(orderId, retryCount = 0) {
+            const maxRetries = 30; // 2.5 minutes total (5 seconds * 30)
+            
+            try {
+                console.log(`Checking payment status for order: ${orderId} (attempt ${retryCount + 1})`);
+                
+                const response = await fetch(`/api/nowpayments/status/${orderId}`, {
+                    credentials: 'include'
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Status check failed: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('Payment status:', data);
+
+                if (data.status === 'completed') {
+                    showMessage('🎉 Payment completed! Golden tokens added to your account.', 'payment-success');
+                    loadUserBalance(); // Refresh balance display
+                    
+                    // Show success for longer
+                    setTimeout(() => {
+                        const successMsg = document.querySelector('.payment-success');
+                        if (successMsg) successMsg.remove();
+                    }, 10000);
+                    
+                } else if (data.status === 'failed' || data.status === 'expired') {
+                    showMessage('❌ Payment failed or expired. Please try again.', 'payment-error');
+                } else if (data.status === 'pending' || data.status === 'waiting') {
+                    // Still pending, check again in 5 seconds if we haven't exceeded max retries
+                    if (retryCount < maxRetries) {
+                        setTimeout(() => checkPaymentStatus(orderId, retryCount + 1), 5000);
+                        
+                        // Update message every few checks to show it's still working
+                        if (retryCount % 6 === 0) { // Every 30 seconds
+                            showMessage('⏳ Waiting for payment confirmation...', 'payment-info');
+                        }
+                    } else {
+                        showMessage('⏰ Payment taking longer than expected. Please check your payment status in your account.', 'payment-info');
+                    }
+                } else {
+                    // Unknown status, retry with backoff
+                    if (retryCount < maxRetries) {
+                        const backoffTime = Math.min(1000 * Math.pow(2, retryCount), 30000); // Exponential backoff max 30s
+                        setTimeout(() => checkPaymentStatus(orderId, retryCount + 1), backoffTime);
+                    }
+                }
+            } catch (error) {
+                console.error('Status check error:', error);
+                
+                if (retryCount < maxRetries) {
+                    const backoffTime = Math.min(1000 * Math.pow(2, retryCount), 30000);
+                    setTimeout(() => checkPaymentStatus(orderId, retryCount + 1), backoffTime);
+                } else {
+                    showMessage('⚠️ Unable to verify payment status. Please check your account balance.', 'payment-info');
+                }
+            }
+        }
+        
+        // Show message to user
+        function showMessage(message, type) {
+            // Remove existing message
+            const existingMessage = document.querySelector('.payment-message');
+            if (existingMessage) {
+                existingMessage.remove();
+            }
+            
+            // Create new message
+            const messageEl = document.createElement('div');
+            messageEl.className = `payment-message ${type}`;
+            messageEl.textContent = message;
+            document.body.appendChild(messageEl);
+            
+            // Auto remove after 5 seconds (longer for success messages)
+            const removeTime = type === 'payment-success' ? 10000 : 5000;
+            setTimeout(() => {
+                if (messageEl.parentNode) {
+                    messageEl.parentNode.removeChild(messageEl);
+                }
+            }, removeTime);
+        }
+        
+        // Add click handlers for all purchase buttons to prevent double-clicks
+        document.addEventListener('DOMContentLoaded', function() {
+            // This ensures buttons are properly handled even if clicked rapidly
+            const buttons = document.querySelectorAll('.purchase-btn');
+            buttons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    if (this.disabled) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 </html>

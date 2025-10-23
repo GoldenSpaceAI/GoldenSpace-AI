@@ -183,7 +183,123 @@ body.light .composer-wrap { background: rgba(255,255,255,.7); }
   cursor: not-allowed;
 }
 
-/* ===== Chat Management ===== */
+/* ===== Subscription Plans Modal ===== */
+.plans-modal {
+  background: linear-gradient(145deg, rgba(30,25,0,0.95), rgba(20,15,0,0.92));
+  border: 2px solid rgba(255,215,0,0.6);
+  border-radius: 20px;
+  padding: 30px;
+  max-width: 800px;
+  width: 90%;
+  color: #fff;
+  text-align: center;
+}
+.plans-title {
+  font-size: 2rem;
+  font-weight: 900;
+  margin-bottom: 10px;
+  color: gold;
+}
+.plans-subtitle {
+  color: #ccc;
+  margin-bottom: 30px;
+  font-size: 1.1rem;
+}
+.plans-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 30px;
+}
+.plan-card {
+  background: rgba(255,255,255,0.05);
+  border: 2px solid rgba(255,255,255,0.1);
+  border-radius: 15px;
+  padding: 25px;
+  text-align: left;
+  transition: all 0.3s ease;
+  position: relative;
+}
+.plan-card.featured {
+  border-color: gold;
+  background: rgba(255,215,0,0.05);
+  transform: scale(1.05);
+}
+.plan-card.featured::before {
+  content: "🔥 MOST POPULAR";
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: gold;
+  color: #000;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: bold;
+}
+.plan-name {
+  font-size: 1.5rem;
+  font-weight: 900;
+  margin-bottom: 10px;
+  color: gold;
+}
+.plan-price {
+  font-size: 2rem;
+  font-weight: 900;
+  margin-bottom: 15px;
+}
+.plan-features {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 20px 0;
+}
+.plan-features li {
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.plan-features li:last-child {
+  border-bottom: none;
+}
+.plan-features li::before {
+  content: "✓ ";
+  color: gold;
+  font-weight: bold;
+  margin-right: 8px;
+}
+.subscribe-btn {
+  width: 100%;
+  background: linear-gradient(45deg, var(--gold1), var(--gold2));
+  color: #141209;
+  border: none;
+  border-radius: 12px;
+  padding: 15px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1.1rem;
+}
+.subscribe-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 20px rgba(255,215,0,0.4);
+}
+.subscribe-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+.plan-badge {
+  display: inline-block;
+  background: rgba(255,215,0,0.2);
+  color: gold;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: bold;
+  margin-left: 10px;
+}
+
+/* ===== Existing styles remain the same ===== */
 .chat-sidebar {
   position: fixed;
   left: 0;
@@ -229,7 +345,6 @@ body.light .composer-wrap { background: rgba(255,255,255,.7); }
   width: 100%;
 }
 
-/* ===== Custom Instructions Modal ===== */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -240,166 +355,7 @@ body.light .composer-wrap { background: rgba(255,255,255,.7); }
   align-items: center;
   z-index: 1000;
 }
-.modal-content {
-  background: linear-gradient(145deg,rgba(18,18,22,.95),rgba(10,10,15,.92));
-  border: 2px solid rgba(255,215,0,.45);
-  border-radius: 22px;
-  padding: 30px;
-  max-width: 500px;
-  width: 90%;
-  color: #fff;
-}
-.modal-title {
-  font-size: 1.5rem;
-  font-weight: 900;
-  margin-bottom: 15px;
-  color: gold;
-  text-align: center;
-}
-#customInstructions {
-  width: 100%;
-  height: 120px;
-  background: rgba(255,255,255,.08);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  color: inherit;
-  padding: 12px;
-  margin-bottom: 15px;
-  resize: vertical;
-}
-.modal-buttons {
-  display: flex;
-  gap: 10px;
-  justify-content: flex-end;
-}
 
-/* ===== Lock Overlay ===== */
-#lockOverlay {
-  position: fixed;
-  inset: 0;
-  display: none;
-  justify-content: center;
-  align-items: center;
-  background: rgba(0,0,0,.8);
-  backdrop-filter: blur(18px);
-  z-index: 9999;
-  text-align: center;
-}
-.lock-box {
-  background: linear-gradient(145deg,rgba(18,18,22,.95),rgba(10,10,15,.92));
-  border: 2px solid rgba(255,215,0,.45);
-  border-radius: 22px;
-  padding: 40px 35px;
-  box-shadow: 0 0 40px rgba(255,215,0,.25);
-  max-width: 440px;
-  color: #fff;
-}
-.lock-icon {
-  font-size: 3.2rem;
-  color: gold;
-  text-shadow: 0 0 18px rgba(255,215,0,.6);
-  animation: pulse 2s infinite;
-}
-@keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.08)} }
-.lock-title { font-size: 1.8rem; font-weight: 900; margin: 12px 0; color: gold; }
-.lock-desc { color: #ccc; margin-bottom: 26px; }
-.unlock-btn {
-  background: linear-gradient(45deg,var(--gold1),var(--gold2));
-  color: #141209;
-  font-weight: 900;
-  border: none;
-  border-radius: 12px;
-  padding: 14px 38px;
-  cursor: pointer;
-  box-shadow: 0 0 25px rgba(255,215,0,.35);
-  transition: .25s;
-}
-.unlock-btn:hover { transform: translateY(-2px); box-shadow: 0 0 40px rgba(255,215,0,.5); }
-.lock-msg { margin-top: 10px; color: #ccc; font-size: .9rem; }
-
-/* ===== Golden Payment Modal ===== */
-.golden-modal {
-  background: linear-gradient(145deg, rgba(30,25,0,0.95), rgba(20,15,0,0.92));
-  border: 2px solid rgba(255,215,0,0.6);
-  border-radius: 20px;
-  padding: 30px;
-  max-width: 450px;
-  width: 90%;
-  color: #fff;
-  text-align: center;
-}
-.golden-icon {
-  font-size: 3rem;
-  color: gold;
-  margin-bottom: 15px;
-}
-.golden-title {
-  font-size: 1.5rem;
-  font-weight: 900;
-  margin-bottom: 10px;
-  color: gold;
-}
-.golden-desc {
-  color: #ccc;
-  margin-bottom: 25px;
-  line-height: 1.5;
-}
-.golden-balance {
-  background: rgba(255,215,0,0.1);
-  border: 1px solid rgba(255,215,0,0.3);
-  border-radius: 10px;
-  padding: 15px;
-  margin: 20px 0;
-  font-size: 1.1rem;
-}
-.golden-actions {
-  display: flex;
-  gap: 12px;
-  justify-content: center;
-  flex-wrap: wrap;
-}
-.golden-btn {
-  background: linear-gradient(45deg, var(--gold1), var(--gold2));
-  color: #141209;
-  border: none;
-  border-radius: 12px;
-  padding: 12px 24px;
-  font-weight: 900;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  min-width: 120px;
-}
-.golden-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 20px rgba(255,215,0,0.4);
-}
-.golden-btn.secondary {
-  background: rgba(255,255,255,0.1);
-  color: #fff;
-  border: 1px solid rgba(255,255,255,0.3);
-}
-.golden-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
-/* ===== Menu Button ===== */
-.menu-btn {
-  position: fixed;
-  top: 14px;
-  left: 20px;
-  background: rgba(255,255,255,.1);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 8px 12px;
-  color: inherit;
-  cursor: pointer;
-  z-index: 101;
-  backdrop-filter: blur(10px);
-}
-
-/* ===== Status Indicator ===== */
 .status-indicator {
   position: fixed;
   top: 14px;
@@ -418,33 +374,6 @@ body.light .composer-wrap { background: rgba(255,255,255,.7); }
   backdrop-filter: blur(10px);
 }
 
-/* ===== Subscription Banner ===== */
-.subscription-banner {
-  background: linear-gradient(45deg, #ffd700, #ffed4e);
-  color: #000;
-  padding: 12px 20px;
-  text-align: center;
-  font-weight: bold;
-  border-bottom: 2px solid gold;
-  display: none;
-}
-.subscription-banner .upgrade-btn {
-  background: #000;
-  color: #ffd700;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-weight: bold;
-  cursor: pointer;
-  margin-left: 15px;
-  transition: all 0.3s ease;
-}
-.subscription-banner .upgrade-btn:hover {
-  background: #333;
-  transform: translateY(-2px);
-}
-
-/* ===== Image Counter ===== */
 .image-counter {
   background: rgba(255,215,0,0.1);
   border: 1px solid rgba(255,215,0,0.3);
@@ -470,83 +399,84 @@ body.light .composer-wrap { background: rgba(255,255,255,.7); }
   <button id="themeToggle" class="theme-toggle">🌙 Dark Mode</button>
 </header>
 
-<!-- Subscription Upgrade Banner -->
-<div class="subscription-banner" id="upgradeBanner">
-  🚀 Upgrade to Pro for unlimited images, GPT-5 access, and more features!
-  <button class="upgrade-btn" onclick="showUpgradeModal()">Upgrade to Pro →</button>
-</div>
-
-<!-- Chat Sidebar -->
-<div class="chat-sidebar" id="chatSidebar">
-  <button class="new-chat-btn" id="newChatBtn">+ New Chat</button>
-  <button class="act-btn" id="instructionsBtn" style="margin-bottom: 15px;">⚙️ Custom Instructions</button>
-  <div id="chatList"></div>
-</div>
-
-<!-- Custom Instructions Modal -->
-<div class="modal-overlay" id="instructionsModal">
-  <div class="modal-content">
-    <div class="modal-title">Custom Instructions</div>
-    <textarea id="customInstructions" placeholder="Tell the AI how to behave, respond, or any specific preferences..."></textarea>
-    <div class="modal-buttons">
-      <button class="act-btn" onclick="saveCustomInstructions()">Save</button>
-      <button class="act-btn" onclick="closeInstructionsModal()">Cancel</button>
+<!-- Subscription Plans Modal -->
+<div class="modal-overlay" id="plansModal">
+  <div class="plans-modal">
+    <div class="plans-title">Choose Your Advanced AI Plan</div>
+    <div class="plans-subtitle">Unlock powerful AI features with our subscription plans</div>
+    
+    <div class="plans-container">
+      <!-- Plus Plan -->
+      <div class="plan-card">
+        <div class="plan-name">Plus Plan</div>
+        <div class="plan-price">20G<span style="font-size: 1rem; color: #ccc;">/month</span></div>
+        <ul class="plan-features">
+          <li>GPT-5-Nano Chat Access</li>
+          <li>20 Image Generations per month</li>
+          <li>Chat Memory & History</li>
+          <li>Custom Instructions</li>
+          <li>Basic AI Features</li>
+        </ul>
+        <button class="subscribe-btn" onclick="subscribeToPlan('plus')" id="subscribePlus">
+          Subscribe to Plus
+        </button>
+      </div>
+      
+      <!-- Pro Plan -->
+      <div class="plan-card featured">
+        <div class="plan-name">Pro Plan</div>
+        <div class="plan-price">40G<span style="font-size: 1rem; color: #ccc;">/month</span></div>
+        <ul class="plan-features">
+          <li>Full GPT-5 Model Access</li>
+          <li>50 Image Generations per month</li>
+          <li>Unlimited Chat Messages</li>
+          <li>Deep Search & Analysis</li>
+          <li>Study & Learn Mode</li>
+          <li>Deep Think Feature</li>
+          <li>All Plus Features Included</li>
+        </ul>
+        <button class="subscribe-btn" onclick="subscribeToPlan('pro')" id="subscribePro">
+          Subscribe to Pro
+        </button>
+      </div>
+    </div>
+    
+    <div style="color: #ccc; font-size: 0.9rem;">
+      💡 Subscription automatically renews monthly. Cancel anytime.
     </div>
   </div>
 </div>
 
-<!-- Golden Payment Modal -->
+<!-- Existing modals remain... -->
 <div class="modal-overlay" id="goldenModal">
   <div class="golden-modal">
     <div class="golden-icon">⚡</div>
-    <div class="golden-title">Unlock Advanced AI</div>
-    <div class="golden-desc">
-      Access GPT-5, image generation, and advanced features with 20 Golden. 
-      This unlocks the feature for 30 days.
+    <div class="golden-title">Insufficient Golden</div>
+    <div class="golden-desc" id="goldenModalDesc">
+      You don't have enough Golden for this action.
     </div>
     <div class="golden-balance">
       Your Balance: <strong id="currentBalance">0</strong> Golden
     </div>
     <div class="golden-actions">
-      <button class="golden-btn" id="unlockWithGolden" onclick="unlockFeature()">
-        Unlock for 20G
+      <button class="golden-btn" onclick="showPlansModal()">
+        View Subscription Plans
       </button>
       <button class="golden-btn secondary" onclick="closeGoldenModal()">
         Cancel
       </button>
     </div>
-    <div class="lock-msg" id="goldenMessage"></div>
-  </div>
-</div>
-
-<!-- Upgrade Modal -->
-<div class="modal-overlay" id="upgradeModal">
-  <div class="golden-modal">
-    <div class="golden-icon">🚀</div>
-    <div class="golden-title">Upgrade to Pro</div>
-    <div class="golden-desc">
-      Get unlimited images, GPT-5 access, chat management, and all premium features for 40 Golden per month.
-    </div>
-    <div class="golden-balance">
-      Your Balance: <strong id="upgradeBalance">0</strong> Golden
-    </div>
-    <div class="golden-actions">
-      <button class="golden-btn" id="upgradeToPro" onclick="upgradeToPro()">
-        Upgrade for 40G/month
-      </button>
-      <button class="golden-btn secondary" onclick="closeUpgradeModal()">
-        Maybe Later
-      </button>
-    </div>
-    <div class="lock-msg" id="upgradeMessage"></div>
   </div>
 </div>
 
 <main id="chat">
   <div class="msg ai">
     <small>GoldenSpaceAI</small>
-    Welcome to Advanced AI Chat! This feature requires 20 Golden to unlock. 
-    You'll get access to GPT-5, image generation, and advanced AI capabilities for 30 days.
+    Welcome to Advanced AI Chat! Choose a subscription plan to unlock powerful AI features including GPT-5, image generation, and advanced capabilities.
+    <br><br>
+    <button class="subscribe-btn" onclick="showPlansModal()" style="max-width: 200px; margin: 10px 0;">
+      View Subscription Plans
+    </button>
   </div>
 </main>
 
@@ -554,16 +484,16 @@ body.light .composer-wrap { background: rgba(255,255,255,.7); }
   <div class="composer">
     <!-- Image Counter -->
     <div class="image-counter" id="imageCounter">
-      🖼️ Images this month: <span id="imagesUsed">0</span>/<span id="imageLimit">50</span>
+      🖼️ Images this month: <span id="imagesUsed">0</span>/<span id="imageLimit">0</span>
     </div>
     
-    <textarea id="prompt" placeholder="Type your message… (Shift + Enter = newline)" disabled></textarea>
+    <textarea id="prompt" placeholder="Subscribe to unlock Advanced AI features..." disabled></textarea>
     <div class="actions">
       <button class="act-btn" id="uploadBtn" disabled>📁 Upload Image</button>
-      <button class="act-btn" id="micBtn" disabled>🎤 Voice</button>
       <button class="act-btn" id="generateImageBtn" disabled>🖼️ Generate Image</button>
       <button class="act-btn" id="deepThinkBtn" disabled>🤔 Deep Think</button>
-      <button class="act-btn" id="instantBtn" disabled>⚡ Instant</button>
+      <button class="act-btn" id="instantBtn" disabled>⚡ GPT-5-Nano</button>
+      <button class="act-btn" id="gpt5Btn" disabled>🚀 GPT-5 Pro</button>
     </div>
   </div>
 </div>
@@ -573,210 +503,177 @@ body.light .composer-wrap { background: rgba(255,255,255,.7); }
 const chat = document.getElementById("chat");
 const promptEl = document.getElementById("prompt");
 const uploadBtn = document.getElementById("uploadBtn");
-const micBtn = document.getElementById("micBtn");
 const generateImageBtn = document.getElementById("generateImageBtn");
 const deepThinkBtn = document.getElementById("deepThinkBtn");
 const instantBtn = document.getElementById("instantBtn");
+const gpt5Btn = document.getElementById("gpt5Btn");
 const goldenBalanceEl = document.getElementById("goldenBalance");
-const currentBalanceEl = document.getElementById("currentBalance");
 const imageCounter = document.getElementById("imageCounter");
 const imagesUsedEl = document.getElementById("imagesUsed");
 const imageLimitEl = document.getElementById("imageLimit");
-const upgradeBanner = document.getElementById("upgradeBanner");
-const BACKEND = "/chat-advanced-ai";
 
 let fileData = null;
-let recorder, chunks = [], recording = false;
 let currentChatId = 'default';
 let currentMode = 'normal';
-let customInstructions = localStorage.getItem('goldenspace_custom_instructions') || '';
 let userBalance = 0;
-let featureUnlocked = false;
-let userSubscription = 'free'; // free, plus, pro
+let userSubscription = null; // null, 'plus', or 'pro'
+let subscriptionExpiry = null;
 let imagesUsedThisMonth = 0;
-let monthlyImageLimit = 50;
+let monthlyImageLimit = 0;
+
+const BACKEND = "/chat-advanced-ai";
 
 // Initialize
-loadChats();
-checkFeatureAccess();
 loadUserBalance();
 checkSubscriptionStatus();
+updateUI();
 
-/* THEME */
+// Theme toggle
 document.getElementById("themeToggle").onclick = () => {
   document.body.classList.toggle("light");
   document.getElementById("themeToggle").textContent = document.body.classList.contains("light") ? "🌞 Light Mode" : "🌙 Dark Mode";
 };
 
-/* CHAT MANAGEMENT */
-document.getElementById("menuBtn").onclick = () => {
-  document.getElementById("chatSidebar").classList.toggle("open");
-};
-
-document.getElementById("newChatBtn").onclick = () => {
-  const chatName = prompt("Enter chat name:", "New Chat " + (getChats().length + 1));
-  if (chatName) {
-    createNewChat(chatName);
-  }
-};
-
-document.getElementById("instructionsBtn").onclick = () => {
-  document.getElementById("customInstructions").value = customInstructions;
-  document.getElementById("instructionsModal").style.display = 'flex';
-};
-
-function closeInstructionsModal() {
-  document.getElementById("instructionsModal").style.display = 'none';
+// Subscription Management
+function showPlansModal() {
+  document.getElementById('plansModal').style.display = 'flex';
+  updateSubscribeButtons();
 }
 
-function saveCustomInstructions() {
-  customInstructions = document.getElementById("customInstructions").value;
-  localStorage.setItem('goldenspace_custom_instructions', customInstructions);
-  closeInstructionsModal();
+function closePlansModal() {
+  document.getElementById('plansModal').style.display = 'none';
 }
 
-/* SUBSCRIPTION SYSTEM */
-async function checkSubscriptionStatus() {
-  try {
-    // In a real app, this would come from your backend
-    const userData = await fetch('/api/me', { credentials: 'include' }).then(r => r.json());
-    
-    // For demo, we'll use localStorage. Replace with actual backend calls
-    const subData = localStorage.getItem('goldenspace_subscription');
-    if (subData) {
-      const subscription = JSON.parse(subData);
-      userSubscription = subscription.plan;
-      imagesUsedThisMonth = subscription.imagesUsed || 0;
-      
-      if (userSubscription === 'plus') {
-        monthlyImageLimit = 50;
-        imageCounter.style.display = 'block';
-        imagesUsedEl.textContent = imagesUsedThisMonth;
-        imageLimitEl.textContent = monthlyImageLimit;
-        
-        // Show upgrade banner only to Plus users
-        upgradeBanner.style.display = 'block';
-        
-        // Enable Deep Think for Plus users
-        deepThinkBtn.disabled = false;
-      } else if (userSubscription === 'pro') {
-        monthlyImageLimit = Infinity;
-        imageCounter.style.display = 'none';
-        upgradeBanner.style.display = 'none';
-        
-        // Enable all features for Pro users
-        deepThinkBtn.disabled = false;
-        // Pro users get additional features like custom instructions, chat management, etc.
-      }
-    }
-  } catch (error) {
-    console.error('Error checking subscription:', error);
-  }
-}
-
-function showUpgradeModal() {
-  document.getElementById('upgradeModal').style.display = 'flex';
-  document.getElementById('upgradeBalance').textContent = userBalance;
+function updateSubscribeButtons() {
+  const plusBtn = document.getElementById('subscribePlus');
+  const proBtn = document.getElementById('subscribePro');
   
-  const upgradeBtn = document.getElementById('upgradeToPro');
-  if (userBalance >= 40) {
-    upgradeBtn.disabled = false;
-    upgradeBtn.textContent = "Upgrade for 40G/month";
-  } else {
-    upgradeBtn.disabled = true;
-    upgradeBtn.textContent = "Insufficient Golden";
-    document.getElementById('upgradeMessage').textContent = `You need ${40 - userBalance} more Golden to upgrade.`;
-  }
-}
-
-function closeUpgradeModal() {
-  document.getElementById('upgradeModal').style.display = 'none';
-}
-
-async function upgradeToPro() {
-  try {
-    // In real app, this would call your backend to upgrade subscription
-    // For demo, we'll simulate it
-    if (userBalance >= 40) {
-      userSubscription = 'pro';
-      monthlyImageLimit = Infinity;
-      imageCounter.style.display = 'none';
-      upgradeBanner.style.display = 'none';
-      
-      // Save to localStorage (replace with backend in production)
-      localStorage.setItem('goldenspace_subscription', JSON.stringify({
-        plan: 'pro',
-        upgradedAt: new Date().toISOString(),
-        imagesUsed: 0
-      }));
-      
-      closeUpgradeModal();
-      addMsg("ai", "🎉 Welcome to Pro! You now have unlimited images, GPT-5 access, and all premium features.");
-      
-      // Enable all Pro features
-      updateUIForPro();
-    }
-  } catch (error) {
-    document.getElementById('upgradeMessage').textContent = "Upgrade failed: " + error.message;
-  }
-}
-
-function updateUIForPro() {
-  // Enable all premium features for Pro users
-  deepThinkBtn.disabled = false;
-  // Add other Pro-only features here
-}
-
-/* GOLDEN PAYMENT SYSTEM */
-function showGoldenModal() {
-  document.getElementById("goldenModal").style.display = 'flex';
-  currentBalanceEl.textContent = userBalance;
-  
-  const unlockBtn = document.getElementById("unlockWithGolden");
   if (userBalance >= 20) {
-    unlockBtn.disabled = false;
-    unlockBtn.textContent = "Unlock for 20G";
-    document.getElementById("goldenMessage").textContent = "";
+    plusBtn.disabled = false;
+    plusBtn.textContent = "Subscribe to Plus";
   } else {
-    unlockBtn.disabled = true;
-    unlockBtn.textContent = "Insufficient Golden";
-    document.getElementById("goldenMessage").textContent = `You need ${20 - userBalance} more Golden to unlock this feature.`;
+    plusBtn.disabled = true;
+    plusBtn.textContent = "Insufficient Golden";
+  }
+  
+  if (userBalance >= 40) {
+    proBtn.disabled = false;
+    proBtn.textContent = "Subscribe to Pro";
+  } else {
+    proBtn.disabled = true;
+    proBtn.textContent = "Insufficient Golden";
   }
 }
 
-function closeGoldenModal() {
-  document.getElementById("goldenModal").style.display = 'none';
-}
-
-async function unlockFeature() {
+async function subscribeToPlan(plan) {
   try {
-    const response = await fetch('/api/unlock-feature', {
+    const planCost = plan === 'plus' ? 20 : 40;
+    
+    if (userBalance < planCost) {
+      showGoldenModal(`You need ${planCost} Golden to subscribe to ${plan} plan.`);
+      return;
+    }
+
+    const response = await fetch('/api/subscribe-advanced-ai', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       credentials: 'include',
-      body: JSON.stringify({
-        feature: 'chat_advancedai',
-        cost: 20
-      })
+      body: JSON.stringify({ plan: plan })
     });
 
     const result = await response.json();
     
     if (result.success) {
       userBalance = result.newBalance;
-      featureUnlocked = true;
-      updateUI();
-      closeGoldenModal();
+      userSubscription = plan;
+      subscriptionExpiry = result.subscription.expires_at;
+      imagesUsedThisMonth = 0;
+      monthlyImageLimit = plan === 'plus' ? 20 : 50;
       
-      addMsg("ai", "✅ Advanced AI feature unlocked! You now have access to GPT-5, image generation, and all advanced features for 30 days.");
+      updateUI();
+      closePlansModal();
+      
+      addMsg("ai", `🎉 Welcome to ${plan === 'plus' ? 'Plus' : 'Pro'}! Your subscription is active. You now have access to advanced AI features.`);
       
     } else {
-      document.getElementById("goldenMessage").textContent = result.error || "Failed to unlock feature";
+      alert('Subscription failed: ' + (result.error || 'Unknown error'));
     }
   } catch (error) {
-    document.getElementById("goldenMessage").textContent = "Network error: " + error.message;
+    alert('Subscription error: ' + error.message);
+  }
+}
+
+async function checkSubscriptionStatus() {
+  try {
+    const response = await fetch('/api/advanced-ai-status', {
+      credentials: 'include'
+    });
+    const data = await response.json();
+    
+    if (data.active) {
+      userSubscription = data.plan;
+      subscriptionExpiry = data.expires_at;
+      imagesUsedThisMonth = data.images_used || 0;
+      monthlyImageLimit = data.plan === 'plus' ? 20 : 50;
+      
+      updateUI();
+    } else {
+      userSubscription = null;
+      updateUI();
+    }
+  } catch (error) {
+    console.error('Failed to check subscription status:', error);
+    userSubscription = null;
+    updateUI();
+  }
+}
+
+function updateUI() {
+  if (userSubscription) {
+    // User has active subscription
+    promptEl.disabled = false;
+    promptEl.placeholder = "Type your message... (Shift + Enter = newline)";
+    uploadBtn.disabled = false;
+    generateImageBtn.disabled = false;
+    
+    // Enable features based on plan
+    if (userSubscription === 'plus') {
+      instantBtn.disabled = false;
+      gpt5Btn.disabled = true; // Plus users don't get full GPT-5
+      deepThinkBtn.disabled = true; // Plus users don't get deep think
+      
+      // Show image counter for Plus users
+      imageCounter.style.display = 'block';
+      imagesUsedEl.textContent = imagesUsedThisMonth;
+      imageLimitEl.textContent = monthlyImageLimit;
+      
+      goldenBalanceEl.innerHTML = `<span>⚡</span> ${userBalance} Golden <span class="plan-badge">Plus</span>`;
+      
+    } else if (userSubscription === 'pro') {
+      instantBtn.disabled = false;
+      gpt5Btn.disabled = false;
+      deepThinkBtn.disabled = false;
+      
+      // Hide image counter for Pro users (unlimited)
+      imageCounter.style.display = 'none';
+      
+      goldenBalanceEl.innerHTML = `<span>🚀</span> ${userBalance} Golden <span class="plan-badge">Pro</span>`;
+    }
+    
+  } else {
+    // No active subscription
+    promptEl.disabled = true;
+    promptEl.placeholder = "Subscribe to unlock Advanced AI features...";
+    uploadBtn.disabled = true;
+    generateImageBtn.disabled = true;
+    deepThinkBtn.disabled = true;
+    instantBtn.disabled = true;
+    gpt5Btn.disabled = true;
+    imageCounter.style.display = 'none';
+    
+    goldenBalanceEl.innerHTML = `<span>🔒</span> ${userBalance} Golden`;
   }
 }
 
@@ -789,188 +686,28 @@ async function loadUserBalance() {
     
     if (data.loggedIn) {
       userBalance = data.balance;
-      goldenBalanceEl.textContent = userBalance + ' Golden';
+      goldenBalanceEl.querySelector('span:last-child').textContent = userBalance + ' Golden';
     } else {
       userBalance = 0;
-      goldenBalanceEl.textContent = 'Login Required';
+      goldenBalanceEl.innerHTML = `<span>🔒</span> Login Required`;
     }
   } catch (error) {
     console.error('Failed to load balance:', error);
-    goldenBalanceEl.textContent = 'Error';
+    goldenBalanceEl.innerHTML = `<span>❌</span> Error`;
   }
 }
 
-async function checkFeatureAccess() {
-  try {
-    const response = await fetch('/api/feature-status?feature=chat_advancedai', {
-      credentials: 'include'
-    });
-    const data = await response.json();
-    
-    if (data.unlocked) {
-      featureUnlocked = true;
-      updateUI();
-      
-      if (!localStorage.getItem('feature_welcomed')) {
-        addMsg("ai", "✅ Advanced AI feature active! You have access to GPT-5, image generation, and all advanced features.");
-        localStorage.setItem('feature_welcomed', 'true');
-      }
-    } else {
-      featureUnlocked = false;
-      updateUI();
-      showGoldenModal();
-    }
-  } catch (error) {
-    console.error('Failed to check feature status:', error);
-    featureUnlocked = false;
-    updateUI();
-    showGoldenModal();
-  }
+function showGoldenModal(message = "You don't have enough Golden for this action.") {
+  document.getElementById("goldenModalDesc").textContent = message;
+  document.getElementById("currentBalance").textContent = userBalance;
+  document.getElementById("goldenModal").style.display = 'flex';
 }
 
-function updateUI() {
-  if (featureUnlocked) {
-    promptEl.disabled = false;
-    promptEl.placeholder = "Type your message… (Shift + Enter = newline)";
-    uploadBtn.disabled = false;
-    micBtn.disabled = false;
-    generateImageBtn.disabled = false;
-    instantBtn.disabled = false;
-    
-    // Deep Think is only for Plus/Pro users
-    if (userSubscription === 'plus' || userSubscription === 'pro') {
-      deepThinkBtn.disabled = false;
-    } else {
-      deepThinkBtn.disabled = true;
-    }
-    
-    goldenBalanceEl.innerHTML = `<span>⚡</span> ${userBalance} Golden (Active)`;
-  } else {
-    promptEl.disabled = true;
-    promptEl.placeholder = "Unlock Advanced AI to start chatting...";
-    uploadBtn.disabled = true;
-    micBtn.disabled = true;
-    generateImageBtn.disabled = true;
-    deepThinkBtn.disabled = true;
-    instantBtn.disabled = true;
-    
-    goldenBalanceEl.innerHTML = `<span>🔒</span> ${userBalance} Golden`;
-  }
+function closeGoldenModal() {
+  document.getElementById("goldenModal").style.display = 'none';
 }
 
-// Chat management functions
-function getChats() {
-  return JSON.parse(localStorage.getItem('goldenspace_chats') || '[]');
-}
-
-function saveChats(chats) {
-  localStorage.setItem('goldenspace_chats', JSON.stringify(chats));
-}
-
-function loadChats() {
-  const chats = getChats();
-  const chatList = document.getElementById("chatList");
-  chatList.innerHTML = '';
-  
-  chats.forEach(chat => {
-    const chatItem = document.createElement("div");
-    chatItem.className = `chat-item ${chat.id === currentChatId ? 'active' : ''}`;
-    chatItem.innerHTML = `
-      <div style="font-weight: bold;">${chat.name}</div>
-      <div style="font-size: 12px; opacity: 0.7;">${chat.messages.length} messages</div>
-      <button onclick="deleteChat('${chat.id}')" style="background: transparent; border: none; color: #ff6b6b; float: right;">🗑️</button>
-    `;
-    chatItem.onclick = () => loadChat(chat.id);
-    chatList.appendChild(chatItem);
-  });
-}
-
-function createNewChat(name) {
-  if (!featureUnlocked) {
-    showGoldenModal();
-    return;
-  }
-  
-  const chats = getChats();
-  const newChat = {
-    id: 'chat_' + Date.now(),
-    name: name,
-    messages: [],
-    createdAt: new Date().toISOString()
-  };
-  chats.unshift(newChat);
-  saveChats(chats);
-  loadChats();
-  loadChat(newChat.id);
-}
-
-function loadChat(chatId) {
-  if (!featureUnlocked) {
-    showGoldenModal();
-    return;
-  }
-  
-  const chats = getChats();
-  const chat = chats.find(c => c.id === chatId);
-  if (chat) {
-    currentChatId = chatId;
-    chat.innerHTML = '';
-    
-    if (chat.messages.length === 0) {
-      addMsg('ai', 'Welcome to your new chat! How can I help you today?');
-    } else {
-      chat.messages.forEach(msg => {
-        addMsg(msg.role, msg.content, msg.image);
-      });
-    }
-    
-    loadChats();
-    document.getElementById("chatSidebar").classList.remove("open");
-  }
-}
-
-function deleteChat(chatId) {
-  if (confirm('Are you sure you want to delete this chat?')) {
-    const chats = getChats().filter(c => c.id !== chatId);
-    saveChats(chats);
-    if (currentChatId === chatId) {
-      currentChatId = 'default';
-      chat.innerHTML = '';
-      addMsg('ai', 'Welcome! Start a new conversation.');
-    }
-    loadChats();
-  }
-}
-
-function saveMessage(role, content, image = null) {
-  const chats = getChats();
-  let currentChat = chats.find(c => c.id === currentChatId);
-  
-  if (!currentChat && currentChatId !== 'default') {
-    currentChat = {
-      id: currentChatId,
-      name: 'Chat ' + new Date().toLocaleDateString(),
-      messages: [],
-      createdAt: new Date().toISOString()
-    };
-    chats.unshift(currentChat);
-  }
-  
-  if (currentChat) {
-    const message = { role, content, timestamp: new Date().toISOString() };
-    if (image) message.image = image;
-    
-    currentChat.messages.push(message);
-    
-    if (currentChat.messages.length > 50) {
-      currentChat.messages = currentChat.messages.slice(-50);
-    }
-    
-    saveChats(chats);
-    loadChats();
-  }
-}
-
+// Chat functionality
 function addMsg(role, text, image = null) {
   const m = document.createElement("div");
   m.className = "msg " + role;
@@ -979,7 +716,6 @@ function addMsg(role, text, image = null) {
   
   if (image) {
     if (typeof image === 'string' && image.startsWith('data:image')) {
-      // Generated image - show with link
       content += `
         <div style="text-align: center; margin: 20px 0;">
           <img src="${image}" class="generated-image" alt="Generated Image">
@@ -989,40 +725,11 @@ function addMsg(role, text, image = null) {
         </div>
       `;
     } else {
-      // Uploaded image
       content += `<img src="${image}" class="uploaded-image" alt="Uploaded image">`;
     }
   }
   
   m.innerHTML = content;
-  
-  if (role === "ai" && !text.includes('generated-image')) {
-    const tools = document.createElement("div");
-    tools.className = "tools";
-    
-    const speakBtn = document.createElement("button");
-    speakBtn.className = "speak-btn";
-    speakBtn.textContent = "🔊 Speak";
-    speakBtn.onclick = () => {
-      speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      speechSynthesis.speak(utterance);
-    };
-    
-    const copyBtn = document.createElement("button");
-    copyBtn.className = "copy-btn";
-    copyBtn.textContent = "📋 Copy";
-    copyBtn.onclick = () => {
-      navigator.clipboard.writeText(text);
-      copyBtn.textContent = "✓ Copied!";
-      setTimeout(() => copyBtn.textContent = "📋 Copy", 2000);
-    };
-    
-    tools.appendChild(speakBtn);
-    tools.appendChild(copyBtn);
-    m.appendChild(tools);
-  }
-  
   chat.appendChild(m);
   scrollToBottom();
 }
@@ -1040,20 +747,10 @@ function spinner() {
   return s;
 }
 
-function resetButtons() {
-  uploadBtn.classList.remove("active");
-  micBtn.classList.remove("active");
-  generateImageBtn.classList.remove("active");
-  deepThinkBtn.classList.remove("active");
-  instantBtn.classList.remove("active");
-  fileData = null;
-  currentMode = 'normal';
-}
-
-/* UPLOAD */
+// Action buttons
 uploadBtn.onclick = () => {
-  if (!featureUnlocked) {
-    showGoldenModal();
+  if (!userSubscription) {
+    showPlansModal();
     return;
   }
   
@@ -1062,126 +759,56 @@ uploadBtn.onclick = () => {
   input.accept = "image/*";
   input.onchange = e => {
     fileData = e.target.files[0];
-    uploadBtn.classList.add("active");
-    
     const reader = new FileReader();
     reader.onload = (e) => {
       addMsg("user", "Uploaded image:", e.target.result);
-      saveMessage("user", "Uploaded image", e.target.result);
     };
     reader.readAsDataURL(fileData);
   };
   input.click();
 };
 
-/* VOICE RECORDING */
-micBtn.onclick = async () => {
-  if (!featureUnlocked) {
-    showGoldenModal();
-    return;
-  }
-  
-  if (!recording) {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      recorder = new MediaRecorder(stream);
-      chunks = [];
-      recorder.ondataavailable = e => chunks.push(e.data);
-      recorder.onstop = async () => {
-        const blob = new Blob(chunks, { type: "audio/webm" });
-        
-        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        recognition.lang = 'en-US';
-        recognition.continuous = false;
-        
-        recognition.onresult = (event) => {
-          const text = event.results[0][0].transcript;
-          promptEl.value = text;
-          resetButtons();
-        };
-        
-        recognition.onerror = (event) => {
-          alert("Speech recognition error: " + event.error);
-          resetButtons();
-        };
-        
-        recognition.start();
-      };
-      recorder.start();
-      recording = true;
-      micBtn.classList.add("active");
-      micBtn.textContent = "⏹️ Stop";
-    } catch (e) {
-      alert("Microphone error: " + e.message);
+[generateImageBtn, deepThinkBtn, instantBtn, gpt5Btn].forEach(btn => {
+  btn.onclick = () => {
+    if (!userSubscription) {
+      showPlansModal();
+      return;
     }
-  } else {
-    recorder.stop();
-    recording = false;
-    micBtn.textContent = "🎤 Voice";
-  }
-};
+    
+    // Check image limits for Plus users
+    if (btn === generateImageBtn && userSubscription === 'plus' && imagesUsedThisMonth >= monthlyImageLimit) {
+      showGoldenModal(`You've reached your monthly limit of ${monthlyImageLimit} images. Upgrade to Pro for unlimited images.`);
+      return;
+    }
+    
+    // Check feature access
+    if (btn === gpt5Btn && userSubscription !== 'pro') {
+      showGoldenModal("Full GPT-5 access is only available for Pro subscribers.");
+      return;
+    }
+    
+    if (btn === deepThinkBtn && userSubscription !== 'pro') {
+      showGoldenModal("Deep Think feature is only available for Pro subscribers.");
+      return;
+    }
+    
+    if (promptEl.value.trim()) {
+      sendMessage(btn.id.replace('Btn', ''));
+    }
+  };
+});
 
-/* ACTION BUTTONS */
-generateImageBtn.onclick = () => {
-  if (!featureUnlocked) {
-    showGoldenModal();
+// Send message function
+async function sendMessage(mode = 'normal') {
+  if (!userSubscription) {
+    showPlansModal();
     return;
   }
-  
-  // Check image limit for Plus users
-  if (userSubscription === 'plus' && imagesUsedThisMonth >= monthlyImageLimit) {
-    alert(`You've reached your monthly limit of ${monthlyImageLimit} images. Upgrade to Pro for unlimited images.`);
-    return;
-  }
-  
-  currentMode = 'image';
-  generateImageBtn.classList.add("active");
-  deepThinkBtn.classList.remove("active");
-  instantBtn.classList.remove("active");
-};
 
-deepThinkBtn.onclick = () => {
-  if (!featureUnlocked) {
-    showGoldenModal();
-    return;
-  }
-  
-  // Deep Think is only for Plus/Pro users
-  if (userSubscription === 'free') {
-    alert("Deep Think is available for Plus and Pro subscribers. Upgrade to access this feature.");
-    return;
-  }
-  
-  currentMode = 'deep';
-  deepThinkBtn.classList.add("active");
-  generateImageBtn.classList.remove("active");
-  instantBtn.classList.remove("active");
-};
-
-instantBtn.onclick = () => {
-  if (!featureUnlocked) {
-    showGoldenModal();
-    return;
-  }
-  currentMode = 'instant';
-  instantBtn.classList.add("active");
-  generateImageBtn.classList.remove("active");
-  deepThinkBtn.classList.remove("active");
-};
-
-/* SEND MESSAGE */
-async function sendMessage() {
-  if (!featureUnlocked) {
-    showGoldenModal();
-    return;
-  }
-  
   const text = (promptEl.value || "").trim();
   if (!text && !fileData) return;
 
   addMsg("user", text, fileData ? URL.createObjectURL(fileData) : null);
-  saveMessage("user", text, fileData ? URL.createObjectURL(fileData) : null);
-
   const s = spinner();
   
   try {
@@ -1189,30 +816,21 @@ async function sendMessage() {
     if (fileData) fd.append("image", fileData);
     fd.append("q", text);
     
-    if (currentMode === 'image') {
+    // Set model based on mode and subscription
+    if (mode === 'generateImage') {
       fd.append("model", "gpt-image-1");
       
       // Update image counter for Plus users
       if (userSubscription === 'plus') {
         imagesUsedThisMonth++;
         imagesUsedEl.textContent = imagesUsedThisMonth;
-        
-        // Save to localStorage (replace with backend)
-        localStorage.setItem('goldenspace_subscription', JSON.stringify({
-          plan: 'plus',
-          imagesUsed: imagesUsedThisMonth,
-          lastUpdated: new Date().toISOString()
-        }));
-        
-        // Disable button if limit reached
-        if (imagesUsedThisMonth >= monthlyImageLimit) {
-          generateImageBtn.disabled = true;
-        }
       }
-    } else if (currentMode === 'instant') {
-      fd.append("model", "instant");
-    } else if (currentMode === 'deep') {
+    } else if (mode === 'instant') {
+      fd.append("model", "gpt-5-nano");
+    } else if (mode === 'gpt5') {
       fd.append("model", "gpt-5");
+    } else if (mode === 'deepThink') {
+      fd.append("model", "gpt-5-deep");
     } else {
       fd.append("model", "gpt-4o");
     }
@@ -1221,61 +839,52 @@ async function sendMessage() {
     const j = await r.json();
     chat.removeChild(s);
     
-    // Handle image response with direct display
     if (j.dataUrl) {
-      const imageHtml = `
-        <div style="text-align: center; margin: 20px 0;">
-          <img src="${j.dataUrl}" class="generated-image" alt="Generated Image">
-          <div style="margin-top: 10px; font-size: 12px; color: #888;">
-            <span>🖼️ AI Generated Image</span>
-            ${j.imageUrl ? `<br><a href="${j.imageUrl}" target="_blank" style="color: gold;">🔗 Open original URL</a>` : ''}
-          </div>
-        </div>
-      `;
-      addMsg("ai", imageHtml);
-      saveMessage("ai", `[Image generated]`, j.dataUrl);
+      addMsg("ai", "", j.dataUrl);
     } else if (j.reply && j.reply.startsWith('data:image/')) {
       addMsg("ai", "", j.reply);
-      saveMessage("ai", "[Image generated]", j.reply);
     } else {
       addMsg("ai", j.reply || j.answer || j.error || "[No reply]");
-      saveMessage("ai", j.reply || j.answer || j.error || "[No reply]");
     }
   } catch (e) {
     chat.removeChild(s);
     addMsg("ai", "⚠️ Error: " + e.message);
-    saveMessage("ai", "⚠️ Error: " + e.message);
   } finally {
     promptEl.value = "";
-    resetButtons();
+    fileData = null;
   }
 }
-
-// Add event listeners for action buttons
-[generateImageBtn, deepThinkBtn, instantBtn].forEach(btn => {
-  btn.addEventListener('click', () => {
-    if (promptEl.value.trim()) {
-      sendMessage();
-    }
-  });
-});
 
 // Enter key to send
 promptEl.addEventListener("keydown", e => {
   if (e.key === "Enter" && !e.shiftKey) {
     e.preventDefault();
-    sendMessage();
+    if (userSubscription && promptEl.value.trim()) {
+      sendMessage(currentMode);
+    } else if (!userSubscription) {
+      showPlansModal();
+    }
   }
 });
 
-// Auto-scroll to bottom when new messages are added
+// Auto-scroll
 const observer = new MutationObserver(() => {
   scrollToBottom();
 });
 observer.observe(chat, { childList: true });
 
-// Periodically refresh balance
-setInterval(loadUserBalance, 30000);
+// Periodically refresh balance and subscription status
+setInterval(() => {
+  loadUserBalance();
+  checkSubscriptionStatus();
+}, 30000);
+
+// Close modals when clicking outside
+document.addEventListener('click', (e) => {
+  if (e.target.classList.contains('modal-overlay')) {
+    e.target.style.display = 'none';
+  }
+});
 </script>
 </body>
 </html>

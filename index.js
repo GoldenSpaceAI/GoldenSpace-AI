@@ -238,12 +238,9 @@ function requireAdminAuth(req, res, next) {
 
 // ============ GOLDEN SYSTEM CONFIG ============
 const GOLDEN_PACKAGES = {
-  20: { priceUSD: 5 },
-  40: { priceUSD: 10 },
   60: { priceUSD: 15 },
-  100: { priceUSD: 25 },
-  200: { priceUSD: 50 },
-  500: { priceUSD: 100 },
+  100: { priceUSD: 20 },
+  200: { priceUSD: 40 },
 };
 
 const FEATURE_PRICES = {
@@ -304,24 +301,42 @@ app.use((req, _res, next) => {
   next();
 });
 
-// ============ NOWPAYMENTS INTEGRATION ============
+// ============ NOWPAYMENTS INTEGRATION (FIXED) ============
 const NOWPAYMENTS_API = "https://api.nowpayments.io/v1";
 const NOWPAYMENTS_API_KEY = process.env.NOWPAYMENTS_API_KEY;
 
+// Create Golden purchase with NOWPayments
 app.post("/api/nowpayments/create-golden", async (req, res) => {
   try {
-    if (!req.user) return res.status(401).json({ error: "Login required" });
+    console.log("💰 NOWPayments purchase request received");
+    
+    if (!req.user) {
+      return res.status(401).json({ error: "Login required" });
+    }
     
     const { packageSize } = req.body;
+    console.log("Package size requested:", packageSize);
+    
     const packageInfo = GOLDEN_PACKAGES[packageSize];
     
     if (!packageInfo) {
       return res.status(400).json({ error: "Invalid package size" });
     }
 
+    if (!NOWPAYMENTS_API_KEY) {
+      console.error("NOWPAYMENTS_API_KEY is missing");
+      return res.status(500).json({ error: "Payment service not configured" });
+    }
+
     const amountUSD = packageInfo.priceUSD;
     const orderId = `golden-${req.user.id}-${packageSize}-${Date.now()}`;
     const callbackUrl = `${req.protocol}://${req.get('host')}/api/nowpayments/webhook`;
+
+    console.log("Creating invoice with:", {
+      price_amount: amountUSD,
+      order_id: orderId,
+      callback_url: callbackUrl
+    });
 
     const payload = {
       price_amount: amountUSD,
@@ -340,6 +355,8 @@ app.post("/api/nowpayments/create-golden", async (req, res) => {
         "Content-Type": "application/json"
       },
     });
+
+    console.log("NOWPayments response:", response.data);
 
     const payDB = loadPaymentDB();
     payDB.nowpayments_orders = payDB.nowpayments_orders || {};
@@ -452,6 +469,35 @@ app.get("/api/nowpayments/status/:orderId", async (req, res) => {
   } catch (error) {
     console.error("Status check error:", error);
     res.status(500).json({ error: error.message });
+  }
+});
+
+// ============ NOWPAYMENTS DEBUG ENDPOINT ============
+app.get('/api/nowpayments/debug', async (req, res) => {
+  try {
+    if (!NOWPAYMENTS_API_KEY) {
+      return res.json({ error: 'NOWPAYMENTS_API_KEY not set' });
+    }
+
+    // Test NOWPayments API connection
+    const testResponse = await axios.get(`${NOWPAYMENTS_API}/status`, {
+      headers: { 
+        "x-api-key": NOWPAYMENTS_API_KEY
+      }
+    });
+
+    res.json({
+      apiKey: NOWPAYMENTS_API_KEY ? 'Set' : 'Missing',
+      apiStatus: testResponse.data,
+      apiUrl: NOWPAYMENTS_API
+    });
+
+  } catch (error) {
+    res.json({
+      error: 'NOWPayments API test failed',
+      details: error.response?.data || error.message,
+      apiKey: NOWPAYMENTS_API_KEY ? 'Set' : 'Missing'
+    });
   }
 });
 
@@ -637,6 +683,114 @@ app.get("/api/feature-status", (req, res) => {
   }
   const remainingHours = Math.max(0, Math.floor((expiry - new Date()) / (1000 * 60 * 60)));
   res.json({ feature, unlocked: true, remainingHours, price: FEATURE_PRICES[feature] });
+});
+
+// ============ GOLDEN TRANSFER SYSTEM ============
+app.post("/api/transfer-golden", async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: "Login required" });
+    }
+
+    const { recipientEmail, amount } = req.body;
+    
+    if (!recipientEmail || !amount || amount <= 0) {
+      return res.status(400).json({ error: "Valid recipient email and amount required" });
+    }
+
+    const db = loadGoldenDB();
+    const senderId = getUserIdentifier(req);
+    const sender = db.users[senderId];
+
+    if (!sender) {
+      return res.status(404).json({ error: "Sender account not found" });
+    }
+
+    // Calculate fee (5%)
+    const fee = Math.ceil(amount * 0.05);
+    const totalDeduction = amount + fee;
+
+    // Check if sender has enough balance
+    if (sender.golden_balance < totalDeduction) {
+      return res.status(400).json({ 
+        error: `Insufficient balance. Need ${totalDeduction}G (${amount}G + ${fee}G fee), but only have ${sender.golden_balance}G` 
+      });
+    }
+
+    // Find recipient by email
+    let recipient = null;
+    let recipientId = null;
+
+    for (const [userId, user] of Object.entries(db.users)) {
+      if (user.email && user.email.toLowerCase() === recipientEmail.toLowerCase()) {
+        recipient = user;
+        recipientId = userId;
+        break;
+      }
+    }
+
+    if (!recipient) {
+      return res.status(404).json({ error: "Recipient not found. Make sure they have a GoldenSpaceAI account." });
+    }
+
+    // Prevent self-transfer
+    if (recipientId === senderId) {
+      return res.status(400).json({ error: "Cannot transfer Golden to yourself" });
+    }
+
+    const previousSenderBalance = sender.golden_balance;
+    const previousRecipientBalance = recipient.golden_balance;
+
+    // Perform transfer
+    sender.golden_balance -= totalDeduction;
+    sender.total_golden_spent = (sender.total_golden_spent || 0) + totalDeduction;
+
+    recipient.golden_balance += amount;
+    recipient.total_golden_earned = (recipient.total_golden_earned || 0) + amount;
+
+    // Record transactions for sender
+    sender.transactions = sender.transactions || [];
+    sender.transactions.push({
+      type: "transfer_out",
+      amount: -totalDeduction,
+      previous_balance: previousSenderBalance,
+      new_balance: sender.golden_balance,
+      recipient: recipientEmail,
+      fee: fee,
+      net_amount: amount,
+      timestamp: new Date().toISOString()
+    });
+
+    // Record transactions for recipient
+    recipient.transactions = recipient.transactions || [];
+    recipient.transactions.push({
+      type: "transfer_in",
+      amount: amount,
+      previous_balance: previousRecipientBalance,
+      new_balance: recipient.golden_balance,
+      sender: sender.email,
+      timestamp: new Date().toISOString()
+    });
+
+    saveGoldenDB(db);
+
+    console.log(`✅ Golden transfer: ${sender.email} → ${recipient.email} | Amount: ${amount}G | Fee: ${fee}G`);
+
+    res.json({
+      success: true,
+      message: `Successfully transferred ${amount}G to ${recipientEmail} (${fee}G fee applied)`,
+      newBalance: sender.golden_balance,
+      fee: fee,
+      totalDeduction: totalDeduction
+    });
+
+  } catch (error) {
+    console.error("Transfer Golden error:", error);
+    res.status(500).json({ 
+      error: "Transfer failed due to server error",
+      details: error.message 
+    });
+  }
 });
 
 // ============ SUBSCRIPTION MANAGEMENT ============
@@ -1083,6 +1237,7 @@ app.post("/homework-helper", requireFeature("homework_helper"), upload.single("i
     }
   }
 });
+
 // ============ LIVE CHAT PROCESSING ============
 app.post("/live-chat-process", async (req, res) => {
   try {
@@ -1121,159 +1276,8 @@ app.post("/live-chat-process", async (req, res) => {
     console.error("Live chat error:", error);
     res.status(500).json({ error: error.message });
   }
-  // ============ GOLDEN TRANSFER SYSTEM ============
-
-app.post("/api/transfer-golden", async (req, res) => {
-  try {
-    if (!req.user) {
-      return res.status(401).json({ error: "Login required" });
-    }
-
-    const { recipientEmail, amount } = req.body;
-    
-    if (!recipientEmail || !amount || amount <= 0) {
-      return res.status(400).json({ error: "Valid recipient email and amount required" });
-    }
-
-    const db = loadGoldenDB();
-    const senderId = getUserIdentifier(req);
-    const sender = db.users[senderId];
-
-    if (!sender) {
-      return res.status(404).json({ error: "Sender account not found" });
-    }
-
-    // Calculate fee (5%)
-    const fee = Math.ceil(amount * 0.05);
-    const totalDeduction = amount + fee;
-
-    // Check if sender has enough balance
-    if (sender.golden_balance < totalDeduction) {
-      return res.status(400).json({ 
-        error: `Insufficient balance. Need ${totalDeduction}G (${amount}G + ${fee}G fee), but only have ${sender.golden_balance}G` 
-      });
-    }
-
-    // Find recipient by email
-    let recipient = null;
-    let recipientId = null;
-
-    for (const [userId, user] of Object.entries(db.users)) {
-      if (user.email && user.email.toLowerCase() === recipientEmail.toLowerCase()) {
-        recipient = user;
-        recipientId = userId;
-        break;
-      }
-    }
-
-    if (!recipient) {
-      return res.status(404).json({ error: "Recipient not found. Make sure they have a GoldenSpaceAI account." });
-    }
-
-    // Prevent self-transfer
-    if (recipientId === senderId) {
-      return res.status(400).json({ error: "Cannot transfer Golden to yourself" });
-    }
-
-    const previousSenderBalance = sender.golden_balance;
-    const previousRecipientBalance = recipient.golden_balance;
-
-    // Perform transfer
-    sender.golden_balance -= totalDeduction;
-    sender.total_golden_spent = (sender.total_golden_spent || 0) + totalDeduction;
-
-    recipient.golden_balance += amount;
-    recipient.total_golden_earned = (recipient.total_golden_earned || 0) + amount;
-
-    // Record transactions for sender
-    sender.transactions = sender.transactions || [];
-    sender.transactions.push({
-      type: "transfer_out",
-      amount: -totalDeduction,
-      previous_balance: previousSenderBalance,
-      new_balance: sender.golden_balance,
-      recipient: recipientEmail,
-      fee: fee,
-      net_amount: amount,
-      timestamp: new Date().toISOString()
-    });
-
-    // Record transactions for recipient
-    recipient.transactions = recipient.transactions || [];
-    recipient.transactions.push({
-      type: "transfer_in",
-      amount: amount,
-      previous_balance: previousRecipientBalance,
-      new_balance: recipient.golden_balance,
-      sender: sender.email,
-      timestamp: new Date().toISOString()
-    });
-
-    // Track Golden transaction in MongoDB analytics
-    try {
-      const ip = getClientIP(req);
-      await trackGoldenTransaction(senderId, 'transfer_out', -totalDeduction, sender.golden_balance, {
-        recipient: recipientEmail,
-        fee: fee,
-        net_amount: amount,
-        ip: ip
-      });
-
-      await trackGoldenTransaction(recipientId, 'transfer_in', amount, recipient.golden_balance, {
-        sender: sender.email,
-        ip: ip
-      });
-    } catch (mongoError) {
-      console.error('MongoDB tracking error (non-critical):', mongoError);
-      // Don't fail the transfer if analytics tracking fails
-    }
-
-    saveGoldenDB(db);
-
-    console.log(`✅ Golden transfer: ${sender.email} → ${recipient.email} | Amount: ${amount}G | Fee: ${fee}G`);
-
-    res.json({
-      success: true,
-      message: `Successfully transferred ${amount}G to ${recipientEmail} (${fee}G fee applied)`,
-      newBalance: sender.golden_balance,
-      fee: fee,
-      totalDeduction: totalDeduction
-    });
-
-  } catch (error) {
-    console.error("Transfer Golden error:", error);
-    res.status(500).json({ 
-      error: "Transfer failed due to server error",
-      details: error.message 
-    });
-  }
 });
 
-// Optional: Add transfer history endpoint
-app.get("/api/transfer-history", (req, res) => {
-  if (!req.user) {
-    return res.status(401).json({ error: "Login required" });
-  }
-
-  const db = loadGoldenDB();
-  const userId = getUserIdentifier(req);
-  const user = db.users[userId];
-
-  if (!user) {
-    return res.status(404).json({ error: "User not found" });
-  }
-
-  const transfers = (user.transactions || [])
-    .filter(tx => tx.type === 'transfer_out' || tx.type === 'transfer_in')
-    .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-    .slice(0, 50); // Last 50 transfers
-
-  res.json({
-    success: true,
-    transfers: transfers,
-    totalTransfers: transfers.length
-  });
-});});
 // Helper function to get client IP
 function getClientIP(req) {
   return req.headers['x-forwarded-for'] || 
@@ -1282,34 +1286,8 @@ function getClientIP(req) {
          (req.connection.socket ? req.connection.socket.remoteAddress : null) ||
          'unknown';
 }
-// ============ NOWPAYMENTS DEBUG ENDPOINT ============
-app.get('/api/nowpayments/debug', async (req, res) => {
-    try {
-        if (!NOWPAYMENTS_API_KEY) {
-            return res.json({ error: 'NOWPAYMENTS_API_KEY not set' });
-        }
 
-        // Test NOWPayments API connection
-        const testResponse = await axios.get(`${NOWPAYMENTS_API}/status`, {
-            headers: { 
-                "x-api-key": NOWPAYMENTS_API_KEY
-            }
-        });
-
-        res.json({
-            apiKey: NOWPAYMENTS_API_KEY ? 'Set' : 'Missing',
-            apiStatus: testResponse.data,
-            apiUrl: NOWPAYMENTS_API
-        });
-
-    } catch (error) {
-        res.json({
-            error: 'NOWPayments API test failed',
-            details: error.response?.data || error.message,
-            apiKey: NOWPAYMENTS_API_KEY ? 'Set' : 'Missing'
-        });
-    }
-});// ============ HEALTH ============
+// ============ HEALTH ============
 app.get("/health", (_req, res) => {
   const db = loadGoldenDB();
   res.json({
@@ -1337,5 +1315,5 @@ app.listen(PORT, () => {
   console.log(`💰 Golden packages: ${Object.keys(GOLDEN_PACKAGES).join(', ')}G`);
   console.log(`🎨 Image generation: Shows images directly on site`);
   console.log(`🎉 Special account: farisalmhamad3@gmail.com → 100,000G`);
-  console.log(`🌐 Ready for tomorrow's launch! 🚀`);
+  console.log(`🌐 Ready for launch! 🚀`);
 });

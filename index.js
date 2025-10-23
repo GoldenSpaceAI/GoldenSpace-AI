@@ -1,4 +1,4 @@
-// index.js — GoldenSpaceAI COMPLETE SYSTEM - LAUNCH READY
+// index.js — GoldenSpaceAI COMPLETE SYSTEM - LAUNCH READY (FIXED)
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -301,11 +301,11 @@ app.use((req, _res, next) => {
   next();
 });
 
-// ============ NOWPAYMENTS INTEGRATION (FIXED) ============
+// ============ NOWPAYMENTS INTEGRATION (COMPLETELY FIXED) ============
 const NOWPAYMENTS_API = "https://api.nowpayments.io/v1";
 const NOWPAYMENTS_API_KEY = process.env.NOWPAYMENTS_API_KEY;
 
-// Create Golden purchase with NOWPayments
+// Create Golden purchase with NOWPayments - FIXED VERSION
 app.post("/api/nowpayments/create-golden", async (req, res) => {
   try {
     console.log("💰 NOWPayments purchase request received");
@@ -317,47 +317,82 @@ app.post("/api/nowpayments/create-golden", async (req, res) => {
     const { packageSize } = req.body;
     console.log("Package size requested:", packageSize);
     
+    // Validate package
     const packageInfo = GOLDEN_PACKAGES[packageSize];
-    
     if (!packageInfo) {
       return res.status(400).json({ error: "Invalid package size" });
     }
 
+    // Check API key
     if (!NOWPAYMENTS_API_KEY) {
-      console.error("NOWPAYMENTS_API_KEY is missing");
-      return res.status(500).json({ error: "Payment service not configured" });
+      console.error("❌ NOWPAYMENTS_API_KEY is missing from environment variables");
+      return res.status(500).json({ 
+        error: "Payment service not configured",
+        details: "NOWPayments API key is missing. Please check your .env file"
+      });
     }
 
     const amountUSD = packageInfo.priceUSD;
     const orderId = `golden-${req.user.id}-${packageSize}-${Date.now()}`;
-    const callbackUrl = `${req.protocol}://${req.get('host')}/api/nowpayments/webhook`;
+    
+    // Get the correct callback URL
+    const host = req.get('host');
+    const protocol = req.protocol;
+    const callbackUrl = `${protocol}://${host}/api/nowpayments/webhook`;
 
-    console.log("Creating invoice with:", {
+    console.log("🔄 Creating NOWPayments invoice with details:", {
       price_amount: amountUSD,
       order_id: orderId,
-      callback_url: callbackUrl
+      callback_url: callbackUrl,
+      host: host,
+      protocol: protocol
     });
 
+    // Prepare the payload
     const payload = {
       price_amount: amountUSD,
-      price_currency: "USD",
-      pay_currency: "usdt",
+      price_currency: "usd", // Changed to lowercase
+      pay_currency: "usdt", 
       order_id: orderId,
       order_description: `GoldenSpaceAI ${packageSize} Golden Package`,
       ipn_callback_url: callbackUrl,
-      success_url: `${req.protocol}://${req.get('host')}/success.html`,
-      cancel_url: `${req.protocol}://${req.get('host')}/plans.html`
+      success_url: `${protocol}://${host}/success.html`,
+      cancel_url: `${protocol}://${host}/plans.html`
     };
 
-    const response = await axios.post(`${NOWPAYMENTS_API}/invoice`, payload, {
-      headers: { 
-        "x-api-key": NOWPAYMENTS_API_KEY,
-        "Content-Type": "application/json"
-      },
-    });
+    console.log("📤 Sending request to NOWPayments API...");
+    
+    // Make the API request with better error handling
+    let response;
+    try {
+      response = await axios.post(`${NOWPAYMENTS_API}/invoice`, payload, {
+        headers: { 
+          "x-api-key": NOWPAYMENTS_API_KEY,
+          "Content-Type": "application/json"
+        },
+        timeout: 30000 // 30 second timeout
+      });
+      console.log("✅ NOWPayments API response received:", response.data);
+    } catch (apiError) {
+      console.error("❌ NOWPayments API call failed:", {
+        status: apiError.response?.status,
+        data: apiError.response?.data,
+        message: apiError.message
+      });
+      
+      throw new Error(
+        apiError.response?.data?.message || 
+        apiError.message || 
+        "NOWPayments API request failed"
+      );
+    }
 
-    console.log("NOWPayments response:", response.data);
+    // Validate response
+    if (!response.data.invoice_url) {
+      throw new Error("Invalid response from NOWPayments: missing invoice_url");
+    }
 
+    // Save order to database
     const payDB = loadPaymentDB();
     payDB.nowpayments_orders = payDB.nowpayments_orders || {};
     payDB.nowpayments_orders[orderId] = {
@@ -371,6 +406,9 @@ app.post("/api/nowpayments/create-golden", async (req, res) => {
     };
     savePaymentDB(payDB);
 
+    console.log(`✅ Payment created successfully for user ${getUserIdentifier(req)}`);
+
+    // Return success response
     res.json({
       success: true,
       paymentId: response.data.id,
@@ -381,14 +419,21 @@ app.post("/api/nowpayments/create-golden", async (req, res) => {
     });
 
   } catch (error) {
-    console.error("NOWPayments Golden error:", error.response?.data || error.message);
+    console.error("💥 NOWPayments Golden error:", {
+      message: error.message,
+      stack: error.stack,
+      response: error.response?.data
+    });
+    
     res.status(500).json({ 
       error: "Payment creation failed",
-      details: error.response?.data || error.message 
+      details: error.message,
+      debug: error.response?.data
     });
   }
 });
 
+// NOWPayments webhook
 app.post("/api/nowpayments/webhook", async (req, res) => {
   try {
     const event = req.body;
@@ -402,6 +447,7 @@ app.post("/api/nowpayments/webhook", async (req, res) => {
 
     const order = payDB.nowpayments_orders[orderId];
     if (!order) {
+      console.log("❌ Order not found in database:", orderId);
       return res.status(404).json({ error: "Order not found" });
     }
 
@@ -449,6 +495,7 @@ app.post("/api/nowpayments/webhook", async (req, res) => {
   }
 });
 
+// Payment status check
 app.get("/api/nowpayments/status/:orderId", async (req, res) => {
   try {
     const { orderId } = req.params;
@@ -476,27 +523,36 @@ app.get("/api/nowpayments/status/:orderId", async (req, res) => {
 app.get('/api/nowpayments/debug', async (req, res) => {
   try {
     if (!NOWPAYMENTS_API_KEY) {
-      return res.json({ error: 'NOWPAYMENTS_API_KEY not set' });
+      return res.json({ 
+        error: 'NOWPAYMENTS_API_KEY not set in environment variables',
+        help: 'Add NOWPAYMENTS_API_KEY=your_key_here to your .env file'
+      });
     }
 
+    console.log("🔧 Testing NOWPayments API connection...");
+    
     // Test NOWPayments API connection
     const testResponse = await axios.get(`${NOWPAYMENTS_API}/status`, {
       headers: { 
         "x-api-key": NOWPAYMENTS_API_KEY
-      }
+      },
+      timeout: 10000
     });
 
     res.json({
-      apiKey: NOWPAYMENTS_API_KEY ? 'Set' : 'Missing',
+      apiKey: 'Set ✅',
       apiStatus: testResponse.data,
-      apiUrl: NOWPAYMENTS_API
+      apiUrl: NOWPAYMENTS_API,
+      message: 'NOWPayments API is working correctly'
     });
 
   } catch (error) {
+    console.error("NOWPayments debug error:", error.response?.data || error.message);
     res.json({
       error: 'NOWPayments API test failed',
       details: error.response?.data || error.message,
-      apiKey: NOWPAYMENTS_API_KEY ? 'Set' : 'Missing'
+      apiKey: NOWPAYMENTS_API_KEY ? 'Set' : 'Missing',
+      help: 'Check your API key and make sure it has invoice creation permissions'
     });
   }
 });
@@ -1316,4 +1372,5 @@ app.listen(PORT, () => {
   console.log(`🎨 Image generation: Shows images directly on site`);
   console.log(`🎉 Special account: farisalmhamad3@gmail.com → 100,000G`);
   console.log(`🌐 Ready for launch! 🚀`);
+  console.log(`🔧 Debug endpoint: http://localhost:${PORT}/api/nowpayments/debug`);
 });

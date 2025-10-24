@@ -826,8 +826,68 @@ app.post("/live-chat-process", async (req, res) => {
 function getClientIP(req) {
   return req.headers['x-forwarded-for'] || req.connection.remoteAddress || req.socket.remoteAddress || (req.connection.socket ? req.connection.socket.remoteAddress : null) || 'unknown';
 }
+// ============ NOWPAYMENTS DEBUG ENDPOINT ============
+app.get('/api/nowpayments/test-payment', async (req, res) => {
+  try {
+    console.log("🧪 Testing NOWPayments payment creation...");
+    
+    if (!NOWPAYMENTS_API_KEY) {
+      return res.json({ error: 'NOWPAYMENTS_API_KEY is missing from .env file' });
+    }
 
-// ============ HEALTH ============
+    // Test payload
+    const testPayload = {
+      price_amount: 15,
+      price_currency: "usd",
+      pay_currency: "usdt", 
+      order_id: `test-${Date.now()}`,
+      order_description: `Test Payment`,
+      ipn_callback_url: `https://goldenspaceai.space/api/nowpay/webhook`,
+      success_url: `https://goldenspaceai.space/success.html`,
+      cancel_url: `https://goldenspaceai.space/plans.html`
+    };
+
+    console.log("📤 Test payload:", testPayload);
+    
+    let response;
+    try {
+      response = await axios.post(`${NOWPAYMENTS_API}/payment`, testPayload, {
+        headers: { 
+          "x-api-key": NOWPAYMENTS_API_KEY,
+          "Content-Type": "application/json"
+        },
+        timeout: 30000
+      });
+      console.log("✅ NOWPayments test SUCCESS:", response.data);
+      res.json({ 
+        success: true, 
+        message: 'NOWPayments API is working!',
+        data: response.data 
+      });
+      
+    } catch (apiError) {
+      console.error("❌ NOWPayments test FAILED:", {
+        status: apiError.response?.status,
+        statusText: apiError.response?.statusText,
+        data: apiError.response?.data,
+        message: apiError.message
+      });
+      
+      res.json({
+        success: false,
+        error: 'NOWPayments API request failed',
+        status: apiError.response?.status,
+        statusText: apiError.response?.statusText,
+        data: apiError.response?.data,
+        message: apiError.message
+      });
+    }
+
+  } catch (error) {
+    console.error("💥 Test endpoint error:", error);
+    res.json({ error: 'Test failed', message: error.message });
+  }
+});// ============ HEALTH ============
 app.get("/health", (_req, res) => {
   const db = loadGoldenDB();
   res.json({ status: "OK", users: Object.keys(db.users || {}).length, lastCheck: new Date().toISOString() });

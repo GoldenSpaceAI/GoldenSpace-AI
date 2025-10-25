@@ -1,4 +1,4 @@
-// index.js — GoldenSpaceAI COMPLETE SYSTEM - OPTIMIZED FOR goldenspaceai.space
+// index.js — GoldenSpaceAI COMPLETE SYSTEM
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -17,9 +17,7 @@ import fs from "fs";
 // ============ ENV & APP ============
 dotenv.config();
 const app = express();
-
-// Render-specific configuration
-app.set("trust proxy", 1); // Trust Render's proxy
+app.set("trust proxy", 1);
 
 // ============ ENVIRONMENT VALIDATION ============
 function validateEnvironment() {
@@ -28,43 +26,31 @@ function validateEnvironment() {
   
   if (missing.length > 0) {
     console.error('❌ Missing required environment variables:', missing);
-    console.error('Please check your Render environment variables');
+    process.exit(1);
   }
   
-  console.log('✅ Environment check complete');
-  console.log('🔑 NOWPayments API Key:', process.env.NOWPAYMENTS_API_KEY ? 'Set' : 'Missing');
-  console.log('🔑 Google OAuth:', process.env.GOOGLE_CLIENT_ID ? 'Set' : 'Missing');
-  console.log('🔑 GitHub OAuth:', process.env.GITHUB_CLIENT_ID ? 'Set' : 'Missing');
+  console.log('✅ Environment variables validated');
 }
 validateEnvironment();
 
 // ============ MIDDLEWARE ============
-app.use(cors({ 
-  origin: true, 
-  credentials: true 
-}));
+app.use(cors({ origin: true, credentials: true }));
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// ============ SESSION CONFIGURATION FOR RENDER ============
+// ============ SESSION CONFIGURATION ============
 const sessionConfig = {
-  secret: process.env.SESSION_SECRET || "goldenspaceai-session-secret-2024",
+  secret: process.env.SESSION_SECRET || "super-secret-key-change-in-production",
   resave: false,
   saveUninitialized: false,
   cookie: {
     httpOnly: true,
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     maxAge: 1000 * 60 * 60 * 24 * 7,
   }
 };
-
-// On Render, we need to handle the fact that it uses reverse proxy
-if (process.env.NODE_ENV === 'production') {
-  sessionConfig.proxy = true; // Trust Render's proxy
-  console.log('🔒 Production mode: Secure cookies enabled');
-}
 
 app.use(session(sessionConfig));
 
@@ -96,11 +82,9 @@ const upload = multer({
 const GOLDEN_DB_PATH = "./data/golden_database.json";
 const PAYMENT_DB_PATH = "./data/payment_database.json";
 
-// Ensure data directory exists
 const dataDir = path.dirname(GOLDEN_DB_PATH);
 if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir, { recursive: true });
-  console.log('📁 Created data directory');
 }
 
 function loadGoldenDB() {
@@ -271,7 +255,7 @@ app.use((req, _res, next) => {
 const NOWPAYMENTS_API = "https://api.nowpayments.io/v1";
 const NOWPAYMENTS_API_KEY = process.env.NOWPAYMENTS_API_KEY;
 
-// Create Golden purchase - OPTIMIZED FOR goldenspaceai.space
+// Create Golden purchase
 app.post("/api/nowpayments/create-golden", async (req, res) => {
   try {
     if (!req.user) return res.status(401).json({ error: "Login required" });
@@ -280,11 +264,10 @@ app.post("/api/nowpayments/create-golden", async (req, res) => {
     const packageInfo = GOLDEN_PACKAGES[packageSize];
     if (!packageInfo) return res.status(400).json({ error: "Invalid package size" });
 
-    // Use your domain for all URLs
-    const siteUrl = process.env.RENDER_EXTERNAL_URL || "https://goldenspaceai.space";
+    const siteUrl = "https://goldenspaceai.space";
     const amountUSD = packageInfo.priceUSD;
     const orderId = `golden-${req.user.id}-${packageSize}-${Date.now()}`;
-    
+
     const payload = {
       price_amount: amountUSD,
       price_currency: "usd",
@@ -296,11 +279,8 @@ app.post("/api/nowpayments/create-golden", async (req, res) => {
       cancel_url: `${siteUrl}/plans.html`
     };
 
-    console.log('💰 Creating NOWPayments order for:', siteUrl);
-
     const response = await axios.post(`${NOWPAYMENTS_API}/payment`, payload, {
       headers: { "x-api-key": NOWPAYMENTS_API_KEY, "Content-Type": "application/json" },
-      timeout: 30000
     });
 
     const payDB = loadPaymentDB();
@@ -327,15 +307,12 @@ app.post("/api/nowpayments/create-golden", async (req, res) => {
 
   } catch (error) {
     console.error("NOWPayments error:", error.response?.data || error.message);
-    res.status(500).json({ 
-      error: "Payment creation failed", 
-      details: error.response?.data || error.message 
-    });
+    res.status(500).json({ error: "Payment creation failed", details: error.response?.data || error.message });
   }
 });
 
-// WEBHOOK ENDPOINT - OPTIMIZED FOR goldenspaceai.space
-app.post("/api/nowpay/webhook", express.json(), async (req, res) => {
+// WEBHOOK ENDPOINT - AUTOMATIC GOLDEN ADDITION
+app.post("/api/nowpay/webhook", async (req, res) => {
   try {
     const event = req.body;
     console.log("💰 NOWPayments Webhook Received:", event);
@@ -409,38 +386,22 @@ app.get("/api/nowpayments/status/:orderId", async (req, res) => {
 // NOWPayments debug endpoint
 app.get('/api/nowpayments/debug', async (req, res) => {
   try {
-    if (!NOWPAYMENTS_API_KEY) {
-      return res.json({ 
-        error: 'NOWPAYMENTS_API_KEY not set in Render environment variables',
-        setupInstructions: 'Add NOWPAYMENTS_API_KEY to your Render environment variables'
-      });
-    }
+    if (!NOWPAYMENTS_API_KEY) return res.json({ error: 'NOWPAYMENTS_API_KEY not set' });
 
     const testResponse = await axios.get(`${NOWPAYMENTS_API}/status`, {
-      headers: { "x-api-key": NOWPAYMENTS_API_KEY },
-      timeout: 10000
+      headers: { "x-api-key": NOWPAYMENTS_API_KEY }
     });
 
-    res.json({ 
-      apiKey: 'Set ✅', 
-      apiStatus: testResponse.data, 
-      apiUrl: NOWPAYMENTS_API, 
-      message: 'NOWPayments API working',
-      siteUrl: process.env.RENDER_EXTERNAL_URL || "https://goldenspaceai.space"
-    });
+    res.json({ apiKey: 'Set ✅', apiStatus: testResponse.data, apiUrl: NOWPAYMENTS_API, message: 'NOWPayments API working' });
 
   } catch (error) {
-    res.json({ 
-      error: 'NOWPayments API test failed', 
-      details: error.response?.data || error.message, 
-      apiKey: NOWPAYMENTS_API_KEY ? 'Set' : 'Missing' 
-    });
+    res.json({ error: 'NOWPayments API test failed', details: error.response?.data || error.message, apiKey: NOWPAYMENTS_API_KEY ? 'Set' : 'Missing' });
   }
 });
 
-// ============ AUTH - OPTIMIZED FOR goldenspaceai.space ============
+// ============ AUTH ============
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
-  const siteUrl = process.env.RENDER_EXTERNAL_URL || "https://goldenspaceai.space";
+  const siteUrl = "https://goldenspaceai.space";
   
   passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
@@ -466,7 +427,7 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
 }
 
 if (process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET) {
-  const siteUrl = process.env.RENDER_EXTERNAL_URL || "https://goldenspaceai.space";
+  const siteUrl = "https://goldenspaceai.space";
   
   passport.use(new GitHubStrategy({
     clientID: process.env.GITHUB_CLIENT_ID,
@@ -517,16 +478,8 @@ app.get("/api/me", (req, res) => {
   const id = `${req.user.id}@${req.user.provider}`;
   const db = loadGoldenDB();
   const userData = db.users[id];
-  if (!userData) { 
-    ensureUserExists(req.user); 
-    return res.json({ loggedIn: true, user: req.user, balance: 0 }); 
-  }
-  res.json({ 
-    loggedIn: true, 
-    user: req.user, 
-    balance: userData.golden_balance || 0, 
-    subscriptions: userData.subscriptions || {} 
-  });
+  if (!userData) { ensureUserExists(req.user); return res.json({ loggedIn: true, user: req.user, balance: 0 }); }
+  res.json({ loggedIn: true, user: req.user, balance: userData.golden_balance || 0, subscriptions: userData.subscriptions || {} });
 });
 
 // ============ GOLDEN PUBLIC APIS ============
@@ -555,24 +508,14 @@ app.post("/api/unlock-feature", (req, res) => {
     u.total_golden_spent = (u.total_golden_spent || 0) + cost;
   }
   
-  const exp = new Date(); 
-  exp.setDate(exp.getDate() + 30);
+  const exp = new Date(); exp.setDate(exp.getDate() + 30);
   u.subscriptions = u.subscriptions || {};
   u.subscriptions[feature] = exp.toISOString();
   u.transactions = u.transactions || [];
-  u.transactions.push({ 
-    type: "unlock", 
-    amount: req.user.email === "farisalmhamad3@gmail.com" ? 0 : -cost, 
-    feature, 
-    timestamp: new Date().toISOString() 
-  });
+  u.transactions.push({ type: "unlock", amount: req.user.email === "farisalmhamad3@gmail.com" ? 0 : -cost, feature, timestamp: new Date().toISOString() });
 
   saveGoldenDB(db);
-  res.json({ 
-    success: true, 
-    newBalance: u.golden_balance, 
-    freeUnlock: req.user.email === "farisalmhamad3@gmail.com" 
-  });
+  res.json({ success: true, newBalance: u.golden_balance, freeUnlock: req.user.email === "farisalmhamad3@gmail.com" });
 });
 
 app.get("/api/feature-status", (req, res) => {
@@ -776,19 +719,25 @@ app.post("/chat-advanced-ai", requireFeature("chat_advancedai"), upload.single("
     const prompt = req.body.q || "Answer helpfully.";
     if (model === "instant") model = "gpt-4o-mini";
 
+    // DALL-E 3 Image Generation
     if (model === "gpt-image-1") {
       try {
-        const image = await openai.images.generate({ model: "dall-e-3", prompt, size: "1024x1024" });
-        const imageUrl = image.data?.[0]?.url;
-        if (!imageUrl) throw new Error("No image data returned.");
-        const imageResponse = await axios.get(imageUrl, { responseType: 'arraybuffer' });
-        const imageBuffer = Buffer.from(imageResponse.data);
-        const base64Image = imageBuffer.toString('base64');
-        const dataUrl = `data:image/png;base64,${base64Image}`;
-        return res.json({ reply: `![Generated Image](${dataUrl})`, imageUrl, dataUrl, model: "dall-e-3" });
+        const image = await openai.images.generate({ 
+          model: "dall-e-3", 
+          prompt: prompt,
+          size: "1024x1024",
+          quality: "standard",
+          n: 1
+        });
+        const imageUrl = image.data[0].url;
+        return res.json({ 
+          reply: `![Generated Image](${imageUrl})`, 
+          imageUrl: imageUrl, 
+          model: "dall-e-3" 
+        });
       } catch (imgErr) {
-        console.error("Image generation error:", imgErr);
-        return res.status(500).json({ error: imgErr.message || "Image generation failed." });
+        console.error("DALL-E 3 Image generation error:", imgErr);
+        return res.status(500).json({ error: imgErr.message || "DALL-E 3 image generation failed." });
       }
     }
 
@@ -909,7 +858,7 @@ app.get('/api/nowpayments/test-payment', async (req, res) => {
       return res.json({ error: 'NOWPAYMENTS_API_KEY is missing from .env file' });
     }
 
-    const siteUrl = process.env.RENDER_EXTERNAL_URL || "https://goldenspaceai.space";
+    const siteUrl = "https://goldenspaceai.space";
     const testPayload = {
       price_amount: 15,
       price_currency: "usd",
@@ -963,16 +912,10 @@ app.get('/api/nowpayments/test-payment', async (req, res) => {
   }
 });
 
-// ============ HEALTH CHECK FOR RENDER ============
+// ============ HEALTH ============
 app.get("/health", (_req, res) => {
   const db = loadGoldenDB();
-  res.json({ 
-    status: "OK", 
-    users: Object.keys(db.users || {}).length, 
-    lastCheck: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development',
-    siteUrl: process.env.RENDER_EXTERNAL_URL || "https://goldenspaceai.space"
-  });
+  res.json({ status: "OK", users: Object.keys(db.users || {}).length, lastCheck: new Date().toISOString() });
 });
 
 // ============ ERROR HANDLING ============
@@ -985,16 +928,14 @@ app.use((req, res) => {
   res.status(404).json({ error: "Endpoint not found" });
 });
 
-// ============ START SERVER ============
+// ============ START ============
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, "0.0.0.0", () => {
-  const siteUrl = process.env.RENDER_EXTERNAL_URL || "https://goldenspaceai.space";
-  console.log(`🚀 GoldenSpaceAI LAUNCHED on Render - Port ${PORT}`);
-  console.log(`🌐 Live at: ${siteUrl}`);
-  console.log(`✅ All systems ready for production!`);
+  console.log(`🚀 GoldenSpaceAI LAUNCHED on port ${PORT}`);
+  console.log(`✅ All systems ready for launch!`);
   console.log(`💰 Golden packages: 60G/$15, 100G/$20, 200G/$40`);
-  console.log(`🔑 NOWPayments: ${NOWPAYMENTS_API_KEY ? 'Configured' : 'NOT SETUP'}`);
-  console.log(`🔑 Google OAuth: ${process.env.GOOGLE_CLIENT_ID ? 'Configured' : 'NOT SETUP'}`);
-  console.log(`🔑 GitHub OAuth: ${process.env.GITHUB_CLIENT_ID ? 'Configured' : 'NOT SETUP'}`);
-  console.log(`🚀 Ready for production at goldenspaceai.space!`);
+  console.log(`🎨 DALL-E 3 Image generation: Ready`);
+  console.log(`🎉 Special account: farisalmhamad3@gmail.com → 100,000G`);
+  console.log(`🌐 Domain: goldenspaceai.space`);
+  console.log(`🚀 Ready for production!`);
 });

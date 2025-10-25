@@ -826,67 +826,89 @@ app.post("/live-chat-process", async (req, res) => {
 function getClientIP(req) {
   return req.headers['x-forwarded-for'] || req.connection.remoteAddress || req.socket.remoteAddress || (req.connection.socket ? req.connection.socket.remoteAddress : null) || 'unknown';
 }
-// ============ NOWPAYMENTS DEBUG ENDPOINT ============
-app.get('/api/nowpayments/test-payment', async (req, res) => {
-  try {
-    console.log("🧪 Testing NOWPayments payment creation...");
+// Purchase Golden tokens - FIXED VERSION
+async function purchaseGolden(packageSize) {
+    const button = document.getElementById(`btn-${packageSize}`);
+    const originalText = button.innerHTML;
     
-    if (!NOWPAYMENTS_API_KEY) {
-      return res.json({ error: 'NOWPAYMENTS_API_KEY is missing from .env file' });
-    }
-
-    // Test payload
-    const testPayload = {
-      price_amount: 15,
-      price_currency: "usd",
-      pay_currency: "usdt", 
-      order_id: `test-${Date.now()}`,
-      order_description: `Test Payment`,
-      ipn_callback_url: `https://goldenspaceai.space/api/nowpay/webhook`,
-      success_url: `https://goldenspaceai.space/success.html`,
-      cancel_url: `https://goldenspaceai.space/plans.html`
-    };
-
-    console.log("📤 Test payload:", testPayload);
-    
-    let response;
     try {
-      response = await axios.post(`${NOWPAYMENTS_API}/payment`, testPayload, {
-        headers: { 
-          "x-api-key": NOWPAYMENTS_API_KEY,
-          "Content-Type": "application/json"
-        },
-        timeout: 30000
-      });
-      console.log("✅ NOWPayments test SUCCESS:", response.data);
-      res.json({ 
-        success: true, 
-        message: 'NOWPayments API is working!',
-        data: response.data 
-      });
-      
-    } catch (apiError) {
-      console.error("❌ NOWPayments test FAILED:", {
-        status: apiError.response?.status,
-        statusText: apiError.response?.statusText,
-        data: apiError.response?.data,
-        message: apiError.message
-      });
-      
-      res.json({
-        success: false,
-        error: 'NOWPayments API request failed',
-        status: apiError.response?.status,
-        statusText: apiError.response?.statusText,
-        data: apiError.response?.data,
-        message: apiError.message
-      });
-    }
+        button.innerHTML = '🔄 Processing...';
+        button.disabled = true;
+        
+        // First check if user is logged in
+        const balanceResponse = await fetch('/api/golden-balance', {
+            credentials: 'include'
+        });
+        const balanceData = await balanceResponse.json();
+        
+        if (!balanceData.loggedIn) {
+            throw new Error('Please log in to make a purchase');
+        }
+        
+        console.log('Sending purchase request for package:', packageSize);
+        
+        const response = await fetch('/api/nowpayments/create-golden', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                packageSize: parseInt(packageSize)
+            })
+        });
 
-  } catch (error) {
-    console.error("💥 Test endpoint error:", error);
-    res.json({ error: 'Test failed', message: error.message });
-  }
+        const data = await response.json();
+        console.log('Payment response:', data);
+
+        if (!response.ok) {
+            const errorMessage = data.error || data.details || `Payment failed with status ${response.status}`;
+            throw new Error(errorMessage);
+        }
+
+        // FIX: Check for the correct property names from backend
+        if (data.success && data.invoiceUrl) {
+            // invoiceUrl exists, use it directly
+            showMessage('✅ Payment initiated! Complete payment in the new tab.', 'payment-success');
+            const paymentWindow = window.open(data.invoiceUrl, '_blank');
+            
+            if (paymentWindow) {
+                checkPaymentStatus(data.orderId);
+            } else {
+                showMessage('⚠️ Popup blocked! Please allow popups and click the payment link.', 'payment-info');
+            }
+        } else if (data.success && data.invoice_url) {
+            // invoice_url exists (alternative)
+            showMessage('✅ Payment initiated! Complete payment in the new tab.', 'payment-success');
+            const paymentWindow = window.open(data.invoice_url, '_blank');
+            
+            if (paymentWindow) {
+                checkPaymentStatus(data.orderId);
+            } else {
+                showMessage('⚠️ Popup blocked! Please allow popups and click the payment link.', 'payment-info');
+            }
+        } else {
+            throw new Error('Invalid response from payment server: ' + JSON.stringify(data));
+        }
+
+    } catch (error) {
+        console.error('Purchase error:', error);
+        let userMessage = error.message;
+        
+        if (error.message.includes('NetworkError') || error.message.includes('Failed to fetch')) {
+            userMessage = 'Network error. Please check your connection and try again.';
+        } else if (error.message.includes('logged in')) {
+            userMessage = 'Please log in to make a purchase.';
+        } else if (error.message.includes('404')) {
+            userMessage = 'Payment service temporarily unavailable. Please try again later.';
+        }
+        
+        showMessage(`❌ ${userMessage}`, 'payment-error');
+    } finally {
+        button.innerHTML = originalText;
+        button.disabled = false;
+    }
+}
 });// ============ HEALTH ============
 app.get("/health", (_req, res) => {
   const db = loadGoldenDB();

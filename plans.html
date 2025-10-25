@@ -440,7 +440,44 @@
     </div>
 
     <script>
-        // Set current year in footer
+       // Debug function - test this in browser console
+async function testPaymentFlow() {
+    try {
+        console.log('🧪 Testing payment flow...');
+        
+        // Test 1: Check if user is logged in
+        const balanceResponse = await fetch('/api/golden-balance', {credentials: 'include'});
+        const balanceData = await balanceResponse.json();
+        console.log('✅ Login status:', balanceData.loggedIn);
+        
+        if (!balanceData.loggedIn) {
+            console.log('❌ User not logged in');
+            return;
+        }
+        
+        // Test 2: Check NOWPayments API status
+        const debugResponse = await fetch('/api/nowpayments/debug', {credentials: 'include'});
+        const debugData = await debugResponse.json();
+        console.log('✅ NOWPayments API status:', debugData);
+        
+        // Test 3: Try to create a small payment
+        const paymentResponse = await fetch('/api/nowpayments/create-golden', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            credentials: 'include',
+            body: JSON.stringify({packageSize: 60})
+        });
+        
+        const paymentData = await paymentResponse.json();
+        console.log('✅ Payment creation response:', paymentData);
+        
+        return paymentData;
+        
+    } catch (error) {
+        console.error('❌ Test failed:', error);
+        return {error: error.message};
+    }
+}        // Set current year in footer
         document.getElementById('currentYear').textContent = new Date().getFullYear();
         
         // Load user balance on page load

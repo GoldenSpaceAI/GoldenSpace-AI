@@ -439,7 +439,7 @@ app.get('/api/nowpayments/debug', async (req, res) => {
 
 // ============ AUTH ============
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
-  const renderUrl = process.env.RENDER_EXTERNAL_URL || "https://your-app-name.onrender.com";
+  const renderUrl = process.env.RENDER_EXTERNAL_URL || "https://goldenspaceai.space";
   
   passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,

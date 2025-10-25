@@ -440,46 +440,48 @@
     </div>
 
     <script>
-       // Debug function - test this in browser console
-async function testPaymentFlow() {
-    try {
-        console.log('🧪 Testing payment flow...');
-        
-        // Test 1: Check if user is logged in
-        const balanceResponse = await fetch('/api/golden-balance', {credentials: 'include'});
-        const balanceData = await balanceResponse.json();
-        console.log('✅ Login status:', balanceData.loggedIn);
-        
-        if (!balanceData.loggedIn) {
-            console.log('❌ User not logged in');
-            return;
-        }
-        
-        // Test 2: Check NOWPayments API status
-        const debugResponse = await fetch('/api/nowpayments/debug', {credentials: 'include'});
-        const debugData = await debugResponse.json();
-        console.log('✅ NOWPayments API status:', debugData);
-        
-        // Test 3: Try to create a small payment
-        const paymentResponse = await fetch('/api/nowpayments/create-golden', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            credentials: 'include',
-            body: JSON.stringify({packageSize: 60})
-        });
-        
-        const paymentData = await paymentResponse.json();
-        console.log('✅ Payment creation response:', paymentData);
-        
-        return paymentData;
-        
-    } catch (error) {
-        console.error('❌ Test failed:', error);
-        return {error: error.message};
-    }
-}        // Set current year in footer
+        // Set current year in footer
         document.getElementById('currentYear').textContent = new Date().getFullYear();
         
+        // Debug function - test this in browser console
+        async function testPaymentFlow() {
+            try {
+                console.log('🧪 Testing payment flow...');
+                
+                // Test 1: Check if user is logged in
+                const balanceResponse = await fetch('/api/golden-balance', {credentials: 'include'});
+                const balanceData = await balanceResponse.json();
+                console.log('✅ Login status:', balanceData.loggedIn);
+                
+                if (!balanceData.loggedIn) {
+                    console.log('❌ User not logged in');
+                    return;
+                }
+                
+                // Test 2: Check NOWPayments API status
+                const debugResponse = await fetch('/api/nowpayments/debug', {credentials: 'include'});
+                const debugData = await debugResponse.json();
+                console.log('✅ NOWPayments API status:', debugData);
+                
+                // Test 3: Try to create a small payment
+                const paymentResponse = await fetch('/api/nowpayments/create-golden', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    credentials: 'include',
+                    body: JSON.stringify({packageSize: 60})
+                });
+                
+                const paymentData = await paymentResponse.json();
+                console.log('✅ Payment creation response:', paymentData);
+                
+                return paymentData;
+                
+            } catch (error) {
+                console.error('❌ Test failed:', error);
+                return {error: error.message};
+            }
+        }
+
         // Load user balance on page load
         document.addEventListener('DOMContentLoaded', function() {
             loadUserBalance();
@@ -504,7 +506,7 @@ async function testPaymentFlow() {
             }
         }
         
-        // Purchase Golden tokens - COMPLETE WORKING VERSION
+        // Purchase Golden tokens - FIXED VERSION
         async function purchaseGolden(packageSize) {
             const button = document.getElementById(`btn-${packageSize}`);
             const originalText = button.innerHTML;
@@ -513,17 +515,7 @@ async function testPaymentFlow() {
                 button.innerHTML = '🔄 Processing...';
                 button.disabled = true;
                 
-                // First check if user is logged in
-                const balanceResponse = await fetch('/api/golden-balance', {
-                    credentials: 'include'
-                });
-                const balanceData = await balanceResponse.json();
-                
-                if (!balanceData.loggedIn) {
-                    throw new Error('Please log in to make a purchase');
-                }
-                
-                console.log('Sending purchase request for package:', packageSize);
+                console.log('Starting purchase for package:', packageSize);
                 
                 const response = await fetch('/api/nowpayments/create-golden', {
                     method: 'POST',
@@ -537,15 +529,14 @@ async function testPaymentFlow() {
                 });
 
                 const data = await response.json();
-                console.log('Payment response:', data);
+                console.log('Payment API response:', data);
 
                 if (!response.ok) {
-                    const errorMessage = data.error || data.details || `Payment failed with status ${response.status}`;
-                    throw new Error(errorMessage);
+                    throw new Error(data.error || `Payment failed with status ${response.status}`);
                 }
 
                 if (data.success && data.invoiceUrl) {
-                    showMessage('✅ Payment initiated! Complete payment in the new tab.', 'payment-success');
+                    showMessage('✅ Payment initiated! Redirecting to payment page...', 'payment-success');
                     
                     // Open payment page in new tab
                     const paymentWindow = window.open(data.invoiceUrl, '_blank');
@@ -554,10 +545,12 @@ async function testPaymentFlow() {
                         // Start checking payment status
                         checkPaymentStatus(data.orderId);
                     } else {
-                        showMessage('⚠️ Popup blocked! Please allow popups and click the payment link.', 'payment-info');
+                        showMessage('⚠️ Popup blocked! Please allow popups or click the payment link manually.', 'payment-info');
+                        // Fallback: show the URL so user can copy it
+                        console.log('Payment URL:', data.invoiceUrl);
                     }
                 } else {
-                    throw new Error('Invalid response from payment server');
+                    throw new Error('Invalid response from payment server: ' + JSON.stringify(data));
                 }
 
             } catch (error) {
@@ -582,7 +575,7 @@ async function testPaymentFlow() {
         
         // Check payment status with retry logic
         async function checkPaymentStatus(orderId, retryCount = 0) {
-            const maxRetries = 30; // 2.5 minutes total (5 seconds * 30)
+            const maxRetries = 30;
             
             try {
                 console.log(`Checking payment status for order: ${orderId} (attempt ${retryCount + 1})`);
@@ -600,9 +593,8 @@ async function testPaymentFlow() {
 
                 if (data.status === 'completed') {
                     showMessage('🎉 Payment completed! Golden tokens added to your account.', 'payment-success');
-                    loadUserBalance(); // Refresh balance display
+                    loadUserBalance();
                     
-                    // Show success for longer
                     setTimeout(() => {
                         const successMsg = document.querySelector('.payment-success');
                         if (successMsg) successMsg.remove();
@@ -611,21 +603,18 @@ async function testPaymentFlow() {
                 } else if (data.status === 'failed' || data.status === 'expired') {
                     showMessage('❌ Payment failed or expired. Please try again.', 'payment-error');
                 } else if (data.status === 'pending' || data.status === 'waiting') {
-                    // Still pending, check again in 5 seconds if we haven't exceeded max retries
                     if (retryCount < maxRetries) {
                         setTimeout(() => checkPaymentStatus(orderId, retryCount + 1), 5000);
                         
-                        // Update message every few checks to show it's still working
-                        if (retryCount % 6 === 0) { // Every 30 seconds
+                        if (retryCount % 6 === 0) {
                             showMessage('⏳ Waiting for payment confirmation...', 'payment-info');
                         }
                     } else {
-                        showMessage('⏰ Payment taking longer than expected. Please check your payment status in your account.', 'payment-info');
+                        showMessage('⏰ Payment taking longer than expected. Please check your payment status.', 'payment-info');
                     }
                 } else {
-                    // Unknown status, retry with backoff
                     if (retryCount < maxRetries) {
-                        const backoffTime = Math.min(1000 * Math.pow(2, retryCount), 30000); // Exponential backoff max 30s
+                        const backoffTime = Math.min(1000 * Math.pow(2, retryCount), 30000);
                         setTimeout(() => checkPaymentStatus(orderId, retryCount + 1), backoffTime);
                     }
                 }
@@ -643,19 +632,16 @@ async function testPaymentFlow() {
         
         // Show message to user
         function showMessage(message, type) {
-            // Remove existing message
             const existingMessage = document.querySelector('.payment-message');
             if (existingMessage) {
                 existingMessage.remove();
             }
             
-            // Create new message
             const messageEl = document.createElement('div');
             messageEl.className = `payment-message ${type}`;
             messageEl.textContent = message;
             document.body.appendChild(messageEl);
             
-            // Auto remove after 5 seconds (longer for success messages)
             const removeTime = type === 'payment-success' ? 10000 : 5000;
             setTimeout(() => {
                 if (messageEl.parentNode) {
@@ -666,7 +652,6 @@ async function testPaymentFlow() {
         
         // Add click handlers for all purchase buttons to prevent double-clicks
         document.addEventListener('DOMContentLoaded', function() {
-            // This ensures buttons are properly handled even if clicked rapidly
             const buttons = document.querySelectorAll('.purchase-btn');
             buttons.forEach(button => {
                 button.addEventListener('click', function(e) {

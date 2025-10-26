@@ -911,7 +911,7 @@ app.get('/api/nowpayments/test-payment', async (req, res) => {
     res.json({ error: 'Test failed', message: error.message });
   }
 });
-// Add these routes to your index.js
+//===================file naming==========
 app.get("/success", (req, res) => {
   res.sendFile(path.join(__dirname, "success.html"));
 });
@@ -919,53 +919,69 @@ app.get("/success", (req, res) => {
 app.get("/plans", (req, res) => {
   res.sendFile(path.join(__dirname, "plans.html"));
 });
+
 app.get("/FreeAI", (req, res) => {
   res.sendFile(path.join(__dirname, "chat-free-ai.html"));
 });
-app.get("/advancedAI", (req, ews =>{
-  res.sendFile(path.json(__dirname, "chat-advancedai.html"));
+
+app.get("/advancedAI", (req, res) => {
+  res.sendFile(path.join(__dirname, "chat-advancedai.html"));
 });
-app.get("/homework-helper", (req, ews =>{
-  res.sendFile(path.json(__dirname, "homework-helper.html"));
+
+app.get("/homework-helper", (req, res) => {
+  res.sendFile(path.join(__dirname, "homework-helper.html"));
 });
-app.get("search-info", (req, ews =>{
-  res.sendFile(path.json(__dirname, "search-info.html"));
+
+app.get("/search-info", (req, res) => {
+  res.sendFile(path.join(__dirname, "search-info.html"));
 });
-app.get("/create-your-universe", (req, ews =>{
-  res.sendFile(path.json(__dirname, "your-space.html"));
+
+app.get("/create-your-universe", (req, res) => {
+  res.sendFile(path.join(__dirname, "your-space.html"));
 });
-app.get("/search-educational-lessons", (req, ews =>{
-  res.sendFile(path.json(__dirname, "search-lessons.html"));
+
+app.get("/search-educational-lessons", (req, res) => {
+  res.sendFile(path.join(__dirname, "search-lessons.html"));
 });
-app.get("/create-your-rocket", (req, ews =>{
-  res.sendFile(path.json(__dirname, "create-rocket.html"));
+
+app.get("/create-your-rocket", (req, res) => {
+  res.sendFile(path.join(__dirname, "create-rocket.html"));
 });
+
 app.get("/payment-cancel", (req, res) => {
   res.sendFile(path.join(__dirname, "plans.html"));
 });
-app.get("/create-satellite", (req, ews =>{
-  res.sendFile(path.json(__dirname, "create-satellite.html"));
+
+app.get("/create-satellite", (req, res) => {
+  res.sendFile(path.join(__dirname, "create-satellite.html"));
 });
-app.get("/create-planet", (req, ews =>{
-  res.sendFile(path.json(__dirname, "create-planet.html"));
+
+app.get("/create-planet", (req, res) => {
+  res.sendFile(path.join(__dirname, "create-planet.html"));
 });
-app.get("/create-advanced-planet", (req, ews =>{
-  res.sendFile(path.json(__dirname, "create-advanced-planet.html"));
+
+app.get("/create-advanced-planet", (req, res) => {
+  res.sendFile(path.join(__dirname, "create-advanced-planet.html"));
 });
-app.get("/privacy-policy", (req, ews =>{
-  res.sendFile(path.json(__dirname, "privacy.html"));
+
+app.get("/privacy-policy", (req, res) => {
+  res.sendFile(path.join(__dirname, "privacy.html"));
 });
-app.get("/terms-of-service", (req, ews =>{
-  res.sendFile(path.json(__dirname, "terms.html"));
+
+app.get("/terms-of-service", (req, res) => {
+  res.sendFile(path.join(__dirname, "terms.html"));
 });
-app.get("/refund-policy", (req, ews =>{
-  res.sendFile(path.json(__dirname, "refund.html"));
+
+app.get("/refund-policy", (req, res) => {
+  res.sendFile(path.join(__dirname, "refund.html"));
 });
-app.get("/contact-page", (req, ews =>{
-  res.sendFile(path.json(__dirname, "contact.html"));
+
+app.get("/contact-page", (req, res) => {
+  res.sendFile(path.join(__dirname, "contact.html"));
 });
-app.get("/about-us-page", (req, ews =>{
-  res.sendFile(path.json(__dirname, "about-us.html"));
+
+app.get("/about-us-page", (req, res) => {
+  res.sendFile(path.join(__dirname, "about-us.html"));
 });
 // ============ HEALTH ============
 app.get("/health", (_req, res) => {

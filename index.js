@@ -911,7 +911,62 @@ app.get('/api/nowpayments/test-payment', async (req, res) => {
     res.json({ error: 'Test failed', message: error.message });
   }
 });
+// Add these routes to your index.js
+app.get("/success", (req, res) => {
+  res.sendFile(path.join(__dirname, "success.html"));
+});
 
+app.get("/plans", (req, res) => {
+  res.sendFile(path.join(__dirname, "plans.html"));
+});
+app.get("/FreeAI", (req, res) => {
+  res.sendFile(path.join(__dirname, "chat-free-ai.html"));
+});
+app.get("/advancedAI", (req, ews =>{
+  res.sendFile(path.json(__dirname, "chat-advancedai.html"));
+});
+app.get("/homework-helper", (req, ews =>{
+  res.sendFile(path.json(__dirname, "homework-helper.html"));
+});
+app.get("search-info", (req, ews =>{
+  res.sendFile(path.json(__dirname, "search-info.html"));
+});
+app.get("/create-your-universe", (req, ews =>{
+  res.sendFile(path.json(__dirname, "your-space.html"));
+});
+app.get("/search-educational-lessons", (req, ews =>{
+  res.sendFile(path.json(__dirname, "search-lessons.html"));
+});
+app.get("/create-your-rocket", (req, ews =>{
+  res.sendFile(path.json(__dirname, "create-rocket.html"));
+});
+app.get("/payment-cancel", (req, res) => {
+  res.sendFile(path.join(__dirname, "plans.html"));
+});
+app.get("/create-satellite", (req, ews =>{
+  res.sendFile(path.json(__dirname, "create-satellite.html"));
+});
+app.get("/create-planet", (req, ews =>{
+  res.sendFile(path.json(__dirname, "create-planet.html"));
+});
+app.get("/create-advanced-planet", (req, ews =>{
+  res.sendFile(path.json(__dirname, "create-advanced-planet.html"));
+});
+app.get("/privacy-policy", (req, ews =>{
+  res.sendFile(path.json(__dirname, "privacy.html"));
+});
+app.get("/terms-of-service", (req, ews =>{
+  res.sendFile(path.json(__dirname, "terms.html"));
+});
+app.get("/refund-policy", (req, ews =>{
+  res.sendFile(path.json(__dirname, "refund.html"));
+});
+app.get("/contact-page", (req, ews =>{
+  res.sendFile(path.json(__dirname, "contact.html"));
+});
+app.get("/about-us-page", (req, ews =>{
+  res.sendFile(path.json(__dirname, "about-us.html"));
+});
 // ============ HEALTH ============
 app.get("/health", (_req, res) => {
   const db = loadGoldenDB();

@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exam Prepare - GoldenSpaceAI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: #fff;
+            min-height: 100vh;
+        }
+
+        .golden-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 215, 0, 0.1);
+            border-radius: 15px;
+            border: 2px solid #ffd700;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            color: #ffd700;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .golden-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .section-title {
+            color: #ffd700;
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .upload-area {
+            border: 3px dashed #ffd700;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .upload-area:hover {
+            background: rgba(255, 215, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .upload-area i {
+            font-size: 3em;
+            color: #ffd700;
+            margin-bottom: 15px;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-list {
+            margin-top: 15px;
+        }
+
+        .file-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin: 5px 0;
+            display: flex;
+            justify-content: between;
+            align-items: center;
+        }
+
+        .file-item .file-name {
+            flex-grow: 1;
+        }
+
+        .file-item .remove-file {
+            color: #ff6b6b;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #ffd700;
+            font-weight: 600;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 215, 0, 0.3);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 16px;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #ffd700;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+        }
+
+        textarea.form-control {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            color: #1a1a2e;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            display: inline-block;
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-block {
+            display: block;
+            width: 100%;
+        }
+
+        .study-guide {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .test-container {
+            display: none;
+        }
+
+        .question {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid #ffd700;
+        }
+
+        .question h4 {
+            color: #ffd700;
+            margin-bottom: 15px;
+        }
+
+        .options {
+            display: grid;
+            gap: 10px;
+        }
+
+        .option {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 215, 0, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+        }
+
+        .option:hover {
+            background: rgba(255, 215, 0, 0.2);
+            transform: translateX(5px);
+        }
+
+        .option.correct {
+            background: rgba(76, 175, 80, 0.3);
+            border-color: #4caf50;
+        }
+
+        .option.incorrect {
+            background: rgba(244, 67, 54, 0.3);
+            border-color: #f44336;
+        }
+
+        .option:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .results {
+            text-align: center;
+            padding: 30px;
+            background: rgba(255, 215, 0, 0.1);
+            border-radius: 15px;
+            margin-top: 30px;
+            display: none;
+        }
+
+        .score {
+            font-size: 3em;
+            color: #ffd700;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            border: 4px solid rgba(255, 215, 0, 0.3);
+            border-top: 4px solid #ffd700;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .tab-navigation {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 10px;
+        }
+
+        .tab-btn {
+            padding: 15px 30px;
+            background: none;
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            border-radius: 8px;
+            margin: 0 5px;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn.active {
+            background: #ffd700;
+            color: #1a1a2e;
+            font-weight: 600;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .feature-cost {
+            text-align: center;
+            color: #ffd700;
+            font-size: 1.1em;
+            margin-bottom: 20px;
+        }
+
+        .balance-info {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+
+        .balance-amount {
+            color: #ffd700;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="golden-container">
+        <div class="header">
+            <h1>🎓 Exam Prepare</h1>
+            <p>AI-powered exam preparation with personalized study guides and interactive tests</p>
+            <div class="feature-cost">Cost: 20 Golden Credits</div>
+            <div class="balance-info">Your Balance: <span class="balance-amount" id="userBalance">0</span> Golden Credits</div>
+        </div>
+
+        <div class="tab-navigation">
+            <button class="tab-btn active" onclick="switchTab('study-tab')">📚 Study Guide</button>
+            <button class="tab-btn" onclick="switchTab('test-tab')">📝 Take Test</button>
+            <button class="tab-btn" onclick="switchTab('results-tab')">🏆 Results</button>
+        </div>
+
+        <!-- Study Guide Tab -->
+        <div id="study-tab" class="tab-content active">
+            <div class="golden-card">
+                <h2 class="section-title">Upload Your Study Materials</h2>
+                
+                <div class="upload-area" id="uploadArea">
+                    <i>📁</i>
+                    <h3>Drag & Drop Files Here</h3>
+                    <p>or click to select files (Images, PDF, DOC, TXT)</p>
+                    <input type="file" id="fileInput" class="file-input" multiple accept="image/*,.pdf,.doc,.docx,.txt">
+                </div>
+
+                <div id="fileList" class="file-list"></div>
+
+                <div class="form-group">
+                    <label for="examTopic">Exam Topic/Subject</label>
+                    <input type="text" id="examTopic" class="form-control" placeholder="e.g., Physics - Newton's Laws, Calculus Derivatives, World History WWII">
+                </div>
+
+                <div class="form-group">
+                    <label for="examDescription">Exam Description & Requirements</label>
+                    <textarea id="examDescription" class="form-control" placeholder="Describe your exam: what topics will be covered, difficulty level, specific areas you need help with, etc."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="questionCount">Number of Practice Questions</label>
+                    <select id="questionCount" class="form-control">
+                        <option value="5">5 Questions</option>
+                        <option value="10" selected>10 Questions</option>
+                        <option value="15">15 Questions</option>
+                        <option value="20">20 Questions</option>
+                    </select>
+                </div>
+
+                <button class="btn btn-block" onclick="generateStudyGuide()" id="generateBtn">
+                    🚀 Generate Study Guide & Practice Test
+                </button>
+
+                <div id="studyGuide" class="study-guide" style="display: none;">
+                    <h3>📖 Your Personalized Study Guide</h3>
+                    <div id="guideContent"></div>
+                </div>
+
+                <div id="loadingStudy" class="loading" style="display: none;">
+                    <div class="spinner"></div>
+                    <p>AI is analyzing your materials and creating your study guide...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Test Tab -->
+        <div id="test-tab" class="tab-content">
+            <div class="golden-card">
+                <h2 class="section-title">Practice Test</h2>
+                <p class="balance-info">Complete your study guide first, then take this interactive test</p>
+                
+                <div id="testContainer" class="test-container">
+                    <!-- AI-generated test will appear here -->
+                </div>
+
+                <div id="noTestMessage" style="text-align: center; padding: 40px;">
+                    <h3>No test generated yet</h3>
+                    <p>Go to the Study Guide tab and generate your practice test first.</p>
+                    <button class="btn" onclick="switchTab('study-tab')">Create Study Guide</button>
+                </div>
+
+                <div id="testControls" style="text-align: center; margin-top: 20px; display: none;">
+                    <button class="btn" onclick="submitTest()">Submit Test</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Tab -->
+        <div id="results-tab" class="tab-content">
+            <div class="golden-card">
+                <h2 class="section-title">Test Results</h2>
+                <div id="results" class="results">
+                    <h3>Complete a test to see your results</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let uploadedFiles = [];
+        let currentTest = null;
+        let userAnswers = {};
+
+        // Check user balance and feature access
+        async function checkFeatureAccess() {
+            try {
+                const response = await fetch('/api/feature-status?feature=exam_prepare');
+                const data = await response.json();
+                
+                if (data.unlocked) {
+                    document.getElementById('userBalance').textContent = data.userBalance || 0;
+                } else {
+                    alert(`This feature requires ${data.price} Golden Credits. You have ${data.userBalance}.`);
+                    window.location.href = '/plans.html';
+                }
+            } catch (error) {
+                console.error('Error checking feature access:', error);
+            }
+        }
+
+        // Tab switching
+        function switchTab(tabId) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Show selected tab
+            document.getElementById(tabId).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // File upload handling
+        document.getElementById('uploadArea').addEventListener('click', () => {
+            document.getElementById('fileInput').click();
+        });
+
+        document.getElementById('fileInput').addEventListener('change', handleFileSelect);
+        
+        function handleFileSelect(event) {
+            const files = Array.from(event.target.files);
+            uploadedFiles = [...uploadedFiles, ...files];
+            updateFileList();
+        }
+
+        function updateFileList() {
+            const fileList = document.getElementById('fileList');
+            fileList.innerHTML = '';
+
+            uploadedFiles.forEach((file, index) => {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                fileItem.innerHTML = `
+                    <span class="file-name">${file.name}</span>
+                    <span class="remove-file" onclick="removeFile(${index})">✕</span>
+                `;
+                fileList.appendChild(fileItem);
+            });
+        }
+
+        function removeFile(index) {
+            uploadedFiles.splice(index, 1);
+            updateFileList();
+        }
+
+        // Generate study guide
+        async function generateStudyGuide() {
+            const topic = document.getElementById('examTopic').value;
+            const description = document.getElementById('examDescription').value;
+
+            if (!topic.trim()) {
+                alert('Please enter an exam topic');
+                return;
+            }
+
+            // Show loading
+            document.getElementById('loadingStudy').style.display = 'block';
+            document.getElementById('generateBtn').disabled = true;
+
+            try {
+                const formData = new FormData();
+                formData.append('topic', topic);
+                formData.append('description', description);
+                formData.append('questionCount', document.getElementById('questionCount').value);
+
+                // Add files
+                uploadedFiles.forEach(file => {
+                    formData.append('files', file);
+                });
+
+                const response = await fetch('/api/prepare-exam', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Display study guide
+                    document.getElementById('guideContent').innerHTML = data.studyGuide;
+                    document.getElementById('studyGuide').style.display = 'block';
+                    
+                    // Store test data for later
+                    currentTest = data.testData;
+                    
+                    // Enable test tab
+                    document.querySelector('.tab-btn[onclick="switchTab(\'test-tab\')"]').style.display = 'block';
+                    
+                    alert('Study guide generated successfully! Now go to the Test tab to take your practice test.');
+                } else {
+                    alert('Error: ' + (data.error || 'Failed to generate study guide'));
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to generate study guide. Please try again.');
+            } finally {
+                document.getElementById('loadingStudy').style.display = 'none';
+                document.getElementById('generateBtn').disabled = false;
+            }
+        }
+
+        // Load test when test tab is opened
+        document.querySelector('.tab-btn[onclick="switchTab(\'test-tab\')"]').addEventListener('click', function() {
+            if (currentTest) {
+                loadTest(currentTest);
+            }
+        });
+
+        function loadTest(testData) {
+            const testContainer = document.getElementById('testContainer');
+            const noTestMessage = document.getElementById('noTestMessage');
+            const testControls = document.getElementById('testControls');
+
+            if (testData && testData.html) {
+                testContainer.innerHTML = testData.html;
+                testContainer.style.display = 'block';
+                noTestMessage.style.display = 'none';
+                testControls.style.display = 'block';
+                
+                // Add event listeners to options
+                setupTestInteractions();
+            } else {
+                testContainer.style.display = 'none';
+                noTestMessage.style.display = 'block';
+                testControls.style.display = 'none';
+            }
+        }
+
+        function setupTestInteractions() {
+            const options = document.querySelectorAll('.option');
+            options.forEach(option => {
+                option.addEventListener('click', function() {
+                    const question = this.closest('.question');
+                    const questionId = question.dataset.questionId;
+                    const optionIndex = this.dataset.optionIndex;
+                    
+                    // Store user's answer
+                    userAnswers[questionId] = optionIndex;
+                    
+                    // Disable all options in this question
+                    const allOptions = question.querySelectorAll('.option');
+                    allOptions.forEach(opt => opt.disabled = true);
+                    
+                    // Show immediate feedback
+                    const isCorrect = this.dataset.correct === 'true';
+                    if (isCorrect) {
+                        this.classList.add('correct');
+                    } else {
+                        this.classList.add('incorrect');
+                        // Highlight correct answer
+                        const correctOption = question.querySelector('.option[data-correct="true"]');
+                        if (correctOption) correctOption.classList.add('correct');
+                    }
+                });
+            });
+        }
+
+        function submitTest() {
+            const totalQuestions = document.querySelectorAll('.question').length;
+            const correctAnswers = document.querySelectorAll('.option.correct:not(.incorrect)').length;
+            const score = Math.round((correctAnswers / totalQuestions) * 100);
+
+            // Show results
+            switchTab('results-tab');
+            document.getElementById('results').innerHTML = `
+                <h3>Test Completed! 🎉</h3>
+                <div class="score">${score}%</div>
+                <p>You got ${correctAnswers} out of ${totalQuestions} questions correct</p>
+                <button class="btn" onclick="switchTab('study-tab')">Take Another Test</button>
+            `;
+            document.getElementById('results').style.display = 'block';
+        }
+
+        // Initialize
+        checkFeatureAccess();
+    </script>
+</body>
+</html>

@@ -340,7 +340,58 @@ app.use((req, _res, next) => {
   }
   next();
 });
+// ============ ADVANCED AI INTEGRATION (No extra billing logic) ============
 
+// Subscribe user to Plus or Pro
+app.post("/api/subscribe-advanced-ai", (req, res) => {
+  if (!req.user) return res.status(401).json({ error: "Login required" });
+  const { plan } = req.body;
+  if (!["plus", "pro"].includes(plan)) return res.status(400).json({ error: "Invalid plan" });
+
+  const db = loadGoldenDB();
+  const id = getUserIdentifier(req);
+  const user = db.users[id];
+  if (!user) return res.status(404).json({ error: "User not found" });
+
+  // Only tag the subscription — Golden deduction handled elsewhere
+  const now = new Date();
+  const expiry = new Date(now);
+  expiry.setMonth(now.getMonth() + 1);
+
+  user.subscriptions = user.subscriptions || {};
+  user.subscriptions.chat_advancedai = expiry.toISOString();
+  user.subscriptions.chat_advancedai_plan = plan;
+
+  saveGoldenDB(db);
+
+  res.json({
+    success: true,
+    subscription: { plan, expires_at: expiry.toISOString() },
+    newBalance: user.golden_balance || 0
+  });
+});
+
+// Return current Advanced AI status
+app.get("/api/advanced-ai-status", (req, res) => {
+  if (!req.user) return res.json({ active: false, loggedIn: false });
+
+  const db = loadGoldenDB();
+  const id = getUserIdentifier(req);
+  const user = db.users[id];
+  if (!user) return res.json({ active: false, loggedIn: true });
+
+  const now = new Date();
+  const expiry = user.subscriptions?.chat_advancedai;
+  const plan = user.subscriptions?.chat_advancedai_plan;
+
+  const active = expiry && new Date(expiry) > now;
+  res.json({
+    active,
+    plan: active ? plan : null,
+    expires_at: expiry || null,
+    balance: user.golden_balance || 0
+  });
+});
 // ============ NOWPAYMENTS INTEGRATION ============
 const NOWPAYMENTS_API = "https://api.nowpayments.io/v1";
 const NOWPAYMENTS_API_KEY = process.env.NOWPAYMENTS_API_KEY;

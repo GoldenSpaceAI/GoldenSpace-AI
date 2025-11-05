@@ -1,200 +1,122 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>GoldenSpaceAI • Advanced Chat</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GoldenSpaceAI • Advanced AI</title>
 <style>
 :root {
-  --gold1: #ffd700;
-  --gold2: #ffed4e;
-  --border: rgba(255,255,255,.12);
+  --gold1:#ffd700;--gold2:#ffed4e;--border:rgba(255,255,255,.1);--bg:#050509;--text:#f8f8f8;
 }
 body {
-  margin: 0;
-  font-family: "Segoe UI", Roboto, system-ui;
-  color: #fff;
-  background: linear-gradient(145deg, #0a0a0f, #1a1a2e);
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+  margin:0;font-family:"Segoe UI",Roboto,system-ui;color:var(--text);
+  background:url("https://images.unsplash.com/photo-1522205408450-add114ad53fe?q=80&w=2000&auto=format&fit=crop")
+  center/cover fixed no-repeat var(--bg);
+  display:flex;overflow:hidden;height:100vh;
 }
-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 14px 20px;
-  background: rgba(0,0,0,0.6);
-  border-bottom: 1px solid var(--border);
-  backdrop-filter: blur(8px);
-}
-.logo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-weight: 900;
-  font-size: 1.1rem;
-  color: var(--gold1);
-}
-.logo div {
-  width: 28px; height: 28px;
-  border-radius: 50%;
-  background: conic-gradient(from 220deg, var(--gold1), var(--gold2), #b99a00, var(--gold1));
-}
-button {
-  cursor: pointer;
-}
-main {
-  flex: 1;
-  padding: 20px;
-  overflow-y: auto;
-  max-width: 900px;
-  margin: auto;
-}
-.msg {
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 12px 16px;
-  margin-bottom: 12px;
-  backdrop-filter: blur(6px);
-}
-.msg.user { background: rgba(255,215,0,.08); }
-.msg.ai { background: rgba(255,255,255,.06); }
-.msg small { opacity: .6; font-size: .75rem; display: block; margin-bottom: 5px; }
-footer {
-  background: rgba(0,0,0,0.6);
-  padding: 14px;
-  border-top: 1px solid var(--border);
-  backdrop-filter: blur(8px);
-  position: sticky;
-  bottom: 0;
-}
-textarea {
-  width: 100%;
-  resize: none;
-  border-radius: 10px;
-  border: 1px solid rgba(255,255,255,0.2);
-  background: rgba(255,255,255,0.08);
-  color: white;
-  padding: 12px;
-  min-height: 60px;
-  font-size: 15px;
-}
-.controls {
-  margin-top: 10px;
-  display: flex;
-  gap: 10px;
-  justify-content: center;
-}
-.control-btn {
-  background: rgba(255,215,0,.1);
-  border: 1px solid rgba(255,215,0,.3);
-  color: var(--gold1);
-  font-weight: 700;
-  padding: 10px 14px;
-  border-radius: 10px;
-  min-width: 120px;
-}
-.control-btn:hover { background: rgba(255,215,0,.2); }
-.control-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+/* Sidebar */
+.sidebar{width:260px;background:rgba(0,0,0,.7);backdrop-filter:blur(12px);
+  border-right:1px solid var(--border);display:flex;flex-direction:column;}
+.sidebar-header{text-align:center;padding:20px;font-weight:900;color:var(--gold1);}
+.new-chat{background:linear-gradient(45deg,var(--gold1),var(--gold2));border:none;border-radius:10px;
+  color:#222;font-weight:800;padding:10px;margin:10px;cursor:pointer;}
+.chat-list{flex:1;overflow-y:auto;padding:0 10px 20px;}
+.chat-item{padding:10px 12px;border-radius:10px;margin:8px 0;cursor:pointer;
+  background:rgba(255,255,255,.05);border:1px solid transparent;}
+.chat-item:hover{background:rgba(255,255,255,.1);}
+.chat-item.active{border-color:var(--gold1);background:rgba(255,215,0,.1);}
 
-/* subscription modal */
-.modal {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,.8);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-  backdrop-filter: blur(10px);
-}
-.modal-content {
-  background: rgba(30,30,40,.95);
-  border: 2px solid var(--gold1);
-  border-radius: 20px;
-  padding: 30px;
-  width: 90%;
-  max-width: 600px;
-  text-align: center;
-}
-.plan-card {
-  border: 1px solid rgba(255,215,0,.3);
-  border-radius: 12px;
-  padding: 18px;
-  margin: 12px 0;
-  background: rgba(255,255,255,.05);
-}
-.plan-card h3 { margin: 0; color: var(--gold1); }
-.plan-card p { margin: 6px 0; color: #ccc; }
-.subscribe-btn {
-  background: linear-gradient(45deg,var(--gold1),var(--gold2));
-  color: #222;
-  border: none;
-  border-radius: 10px;
-  padding: 10px 18px;
-  font-weight: 800;
-}
-.subscribe-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 0 15px rgba(255,215,0,.4);
-}
-.status-bar {
-  position: fixed;
-  top: 10px; right: 10px;
-  background: rgba(255,215,0,.1);
-  border: 1px solid rgba(255,215,0,.3);
-  border-radius: 20px;
-  padding: 6px 12px;
-  font-size: 13px;
-  color: gold;
-}
+/* Main */
+main{flex:1;display:flex;flex-direction:column;}
+header{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;
+  background:rgba(0,0,0,.65);border-bottom:1px solid var(--border);}
+.logo{display:flex;align-items:center;gap:10px;font-weight:900;color:var(--gold1);}
+.logo div{width:26px;height:26px;border-radius:50%;
+  background:conic-gradient(from 220deg,var(--gold1),var(--gold2),#b99a00,var(--gold1));}
+.status{background:rgba(255,215,0,.1);border:1px solid rgba(255,215,0,.3);
+  border-radius:20px;padding:6px 12px;color:gold;font-size:13px;}
+#chat{flex:1;overflow-y:auto;padding:20px;}
+.msg{max-width:760px;margin:10px auto;border-radius:14px;padding:12px 16px;line-height:1.5;
+  backdrop-filter:blur(8px);}
+.msg.user{background:rgba(255,215,0,.12);border:1px solid rgba(255,215,0,.3);}
+.msg.ai{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);}
+.msg small{display:block;font-size:.75rem;opacity:.6;margin-bottom:5px;}
+footer{background:rgba(0,0,0,.6);border-top:1px solid var(--border);padding:14px;}
+textarea{width:100%;resize:none;border-radius:10px;border:1px solid rgba(255,255,255,.2);
+  background:rgba(255,255,255,.08);color:white;padding:12px;font-size:15px;min-height:60px;}
+.controls{display:flex;justify-content:center;gap:10px;margin-top:10px;}
+.control-btn{background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.3);color:var(--gold1);
+  font-weight:700;padding:10px 14px;border-radius:10px;}
+.control-btn:hover{background:rgba(255,215,0,.18);}
+.control-btn:disabled{opacity:.5;cursor:not-allowed;}
+/* Modal */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;justify-content:center;
+  align-items:center;backdrop-filter:blur(10px);z-index:100;}
+.modal-content{background:rgba(30,30,40,.95);border:2px solid var(--gold1);border-radius:20px;
+  padding:30px;width:90%;max-width:600px;text-align:center;}
+.plan-card{border:1px solid rgba(255,215,0,.3);border-radius:12px;padding:18px;margin:12px 0;
+  background:rgba(255,255,255,.05);}
+.plan-card h3{margin:0;color:var(--gold1);}
+.plan-card p{margin:6px 0;color:#ccc;}
+.subscribe-btn{background:linear-gradient(45deg,var(--gold1),var(--gold2));color:#222;border:none;
+  border-radius:10px;padding:10px 18px;font-weight:800;cursor:pointer;}
+.subscribe-btn:hover{transform:translateY(-2px);box-shadow:0 0 15px rgba(255,215,0,.4);}
 </style>
 </head>
 <body>
 
-<header>
-  <div class="logo"><div></div>GoldenSpaceAI</div>
-  <div class="status-bar" id="status">Loading...</div>
-</header>
+<div class="sidebar">
+  <div class="sidebar-header">💬 GoldenSpace Chats</div>
+  <button class="new-chat" onclick="newChat()">+ New Chat</button>
+  <div class="chat-list" id="chatList">
+    <div class="chat-item active">Welcome Chat</div>
+  </div>
+</div>
 
-<main id="chat">
-  <div class="msg ai">
-    <small>GoldenSpaceAI</small>
-    Welcome to Advanced AI Chat!  
-    To start chatting with GPT-5 and image generation, please subscribe to a plan below.
-    <div style="text-align:center;margin-top:15px;">
-      <button class="subscribe-btn" onclick="openPlans()">Subscribe to a Plan</button>
+<main>
+  <header>
+    <div class="logo"><div></div>GoldenSpaceAI</div>
+    <div class="status" id="status">Loading...</div>
+  </header>
+
+  <div id="chat">
+    <div class="msg ai">
+      <small>GoldenSpaceAI</small>
+      Welcome to <b>GoldenSpaceAI Advanced</b> — your portal to GPT-5, image generation, and custom projects.<br><br>
+      🌟 <b>Public Access:</b> Anyone can try. Subscribe to unlock all features!
+      <div style="text-align:center;margin-top:15px;">
+        <button class="subscribe-btn" onclick="openPlans()">Subscribe Now</button>
+      </div>
     </div>
   </div>
+
+  <footer>
+    <textarea id="prompt" placeholder="Subscribe to unlock advanced features..." disabled></textarea>
+    <div class="controls">
+      <button class="control-btn" id="instantBtn" disabled>⚡ GPT-5-Nano</button>
+      <button class="control-btn" id="proBtn" disabled>🚀 GPT-5-Pro</button>
+      <button class="control-btn" id="imageBtn" disabled>🖼️ Generate Image</button>
+    </div>
+  </footer>
 </main>
 
-<footer>
-  <textarea id="prompt" placeholder="Subscribe to unlock advanced features..." disabled></textarea>
-  <div class="controls">
-    <button class="control-btn" id="instantBtn" disabled>⚡ GPT-5-Nano</button>
-    <button class="control-btn" id="proBtn" disabled>🚀 GPT-5-Pro</button>
-    <button class="control-btn" id="imageBtn" disabled>🖼️ Generate Image</button>
-  </div>
-</footer>
-
-<!-- Subscription Modal -->
+<!-- Plans Modal -->
 <div class="modal" id="plansModal">
   <div class="modal-content">
     <h2 style="color:var(--gold1);margin-bottom:10px;">Choose Your Plan</h2>
-    <p style="color:#ccc;margin-bottom:20px;">Unlock GPT-5 models, image generation, and memory.</p>
+    <p style="color:#ccc;margin-bottom:20px;">Subscriptions last 30 days • Golden deducted automatically</p>
 
     <div class="plan-card">
       <h3>✨ Plus Plan</h3>
-      <p>20 G per month</p>
-      <p>Access GPT-5-Nano, 20 images/month, and chat memory.</p>
+      <p>Cost: 20 G / 30 days</p>
+      <p>GPT-5-Nano • 20 images / month • Chat memory</p>
       <button class="subscribe-btn" onclick="subscribe('plus')">Subscribe to Plus</button>
     </div>
 
     <div class="plan-card">
       <h3>🚀 Pro Plan</h3>
-      <p>40 G per month</p>
-      <p>Full GPT-5 access, unlimited images, and extended memory.</p>
+      <p>Cost: 40 G / 30 days</p>
+      <p>Full GPT-5 • Unlimited images • Deep Think & Projects</p>
       <button class="subscribe-btn" onclick="subscribe('pro')">Subscribe to Pro</button>
     </div>
 
@@ -203,113 +125,109 @@ textarea {
 </div>
 
 <script>
-const chat = document.getElementById("chat");
-const promptEl = document.getElementById("prompt");
-const statusEl = document.getElementById("status");
-const plansModal = document.getElementById("plansModal");
+const chat=document.getElementById("chat");
+const chatList=document.getElementById("chatList");
+const promptEl=document.getElementById("prompt");
+const statusEl=document.getElementById("status");
+const plansModal=document.getElementById("plansModal");
 
-let userPlan = null;
-let active = false;
-let balance = 0;
+let active=false,userPlan=null,balance=0,currentChat="default";
 
-function addMsg(role, text) {
-  const div = document.createElement("div");
-  div.className = "msg " + role;
-  div.innerHTML = `<small>${role === "ai" ? "GoldenSpaceAI" : "You"}</small>${text}`;
-  chat.appendChild(div);
-  chat.scrollTop = chat.scrollHeight;
-}
-
-function openPlans() { plansModal.style.display = "flex"; }
-function closePlans() { plansModal.style.display = "none"; }
-
-async function loadStatus() {
-  const r = await fetch("/api/advanced-ai-status", { credentials: "include" });
-  const data = await r.json();
-  if (!data.loggedIn) {
-    statusEl.textContent = "🔒 Login Required";
-    return;
-  }
-  balance = data.balance || 0;
-  if (data.active) {
-    userPlan = data.plan;
-    active = true;
-    statusEl.textContent = `✅ ${userPlan.toUpperCase()} • ${balance} G`;
-    enableChat();
-  } else {
-    userPlan = null;
-    active = false;
-    statusEl.textContent = `⚠️ No Active Plan • ${balance} G`;
-    disableChat();
-  }
-}
-
-function enableChat() {
-  promptEl.disabled = false;
-  promptEl.placeholder = "Type your message...";
-  document.getElementById("instantBtn").disabled = false;
-  document.getElementById("proBtn").disabled = (userPlan !== "pro");
-  document.getElementById("imageBtn").disabled = false;
-}
-
-function disableChat() {
-  promptEl.disabled = true;
-  promptEl.placeholder = "Subscribe to unlock advanced features...";
-  document.querySelectorAll(".control-btn").forEach(b => b.disabled = true);
-}
-
-async function subscribe(plan) {
-  try {
-    const r = await fetch("/api/subscribe-advanced-ai", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ plan })
-    });
-    const data = await r.json();
-    if (data.success) {
-      userPlan = plan;
-      active = true;
-      balance = data.newBalance;
-      closePlans();
-      statusEl.textContent = `✅ ${plan.toUpperCase()} • ${balance} G`;
+/* ---------- Load Subscription Status ---------- */
+async function loadStatus(){
+  try{
+    const res=await fetch("/api/advanced-ai-status",{credentials:"include"});
+    const data=await res.json();
+    if(!data.loggedIn){statusEl.textContent="🔒 Login Required";return;}
+    balance=data.balance||0;
+    if(data.active){
+      userPlan=data.plan;active=true;
+      statusEl.textContent=`✅ ${userPlan.toUpperCase()} • ${balance} G`;
       enableChat();
-      addMsg("ai", `🎉 You are now subscribed to the <b>${plan.toUpperCase()}</b> plan!`);
-    } else {
-      alert(data.error || "Subscription failed");
+    }else{
+      disableChat();
+      statusEl.textContent=`⚠️ No Active Plan • ${balance} G`;
     }
-  } catch (err) {
-    alert("Error: " + err.message);
-  }
+  }catch(e){statusEl.textContent="❌ Error";}
+}
+function enableChat(){
+  promptEl.disabled=false;promptEl.placeholder="Type your message...";
+  document.getElementById("instantBtn").disabled=false;
+  document.getElementById("proBtn").disabled=(userPlan!=="pro");
+  document.getElementById("imageBtn").disabled=false;
+}
+function disableChat(){
+  promptEl.disabled=true;promptEl.placeholder="Subscribe to unlock features...";
+  document.querySelectorAll(".control-btn").forEach(b=>b.disabled=true);
 }
 
-// Send message
-promptEl.addEventListener("keydown", async e => {
-  if (e.key === "Enter" && !e.shiftKey) {
+/* ---------- Projects ---------- */
+function newChat(){
+  const name=prompt("Enter chat name:");if(!name)return;
+  const div=document.createElement("div");
+  div.className="chat-item";div.textContent=name;
+  div.onclick=()=>selectChat(name,div);
+  chatList.appendChild(div);
+}
+function selectChat(name,el){
+  document.querySelectorAll(".chat-item").forEach(i=>i.classList.remove("active"));
+  el.classList.add("active");
+  currentChat=name;chat.innerHTML="";
+  addMsg("ai",`New chat: <b>${name}</b>`);
+}
+
+/* ---------- Chat ---------- */
+function addMsg(role,text){
+  const m=document.createElement("div");
+  m.className="msg "+role;
+  m.innerHTML=`<small>${role==="ai"?"GoldenSpaceAI":"You"}</small>${text}`;
+  chat.appendChild(m);chat.scrollTop=chat.scrollHeight;
+}
+promptEl.addEventListener("keydown",async e=>{
+  if(e.key==="Enter"&&!e.shiftKey){
     e.preventDefault();
-    if (!active) return openPlans();
-    const text = promptEl.value.trim();
-    if (!text) return;
-    addMsg("user", text);
-    promptEl.value = "";
-    const s = document.createElement("div");
-    s.className = "msg ai";
-    s.textContent = "Thinking...";
-    chat.appendChild(s);
-    try {
-      const fd = new FormData();
-      fd.append("q", text);
-      fd.append("model", userPlan === "pro" ? "gpt-5" : "gpt-5-nano");
-      const r = await fetch("/chat-advanced-ai", { method: "POST", body: fd, credentials: "include" });
-      const j = await r.json();
-      chat.removeChild(s);
-      addMsg("ai", j.reply || j.error || "[No reply]");
-    } catch (err) {
-      chat.removeChild(s);
-      addMsg("ai", "⚠️ " + err.message);
+    if(!active)return openPlans();
+    const text=promptEl.value.trim();if(!text)return;
+    addMsg("user",text);promptEl.value="";
+    const loading=document.createElement("div");
+    loading.className="msg ai";loading.textContent="Thinking...";chat.appendChild(loading);
+    try{
+      const fd=new FormData();
+      fd.append("q",text);
+      fd.append("chat_id",currentChat);
+      fd.append("model",userPlan==="pro"?"gpt-5":"gpt-5-nano");
+      const r=await fetch("/chat-advanced-ai",{method:"POST",body:fd,credentials:"include"});
+      const j=await r.json();
+      chat.removeChild(loading);
+      addMsg("ai",j.reply||j.error||"[No reply]");
+    }catch(err){
+      chat.removeChild(loading);
+      addMsg("ai","⚠️ "+err.message);
     }
   }
 });
+
+/* ---------- Subscription ---------- */
+function openPlans(){plansModal.style.display="flex";}
+function closePlans(){plansModal.style.display="none";}
+async function subscribe(plan){
+  try{
+    const res=await fetch("/api/subscribe-advanced-ai",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      credentials:"include",
+      body:JSON.stringify({plan})
+    });
+    const data=await res.json();
+    if(data.success){
+      userPlan=plan;active=true;balance=data.newBalance;
+      closePlans();
+      statusEl.textContent=`✅ ${plan.toUpperCase()} • ${balance} G`;
+      enableChat();
+      addMsg("ai",`🎉 You are now subscribed to <b>${plan.toUpperCase()}</b> for 30 days!`);
+    }else alert(data.error||"Subscription failed");
+  }catch(e){alert("Error: "+e.message);}
+}
 
 loadStatus();
 </script>

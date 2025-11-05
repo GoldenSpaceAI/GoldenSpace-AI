@@ -924,33 +924,68 @@ app.post("/chat-free-ai", async (req, res) => {
     res.status(500).json({ error: e.message });
   }
 });
-// Advanced Chat AI (with Supabase memory)
+// ========== ADVANCED CHAT AI (Supabase + Golden Integration) ==========
 app.post("/chat-advanced-ai", requireFeature("chat_advancedai"), upload.single("image"), async (req, res) => {
   let filePath = req.file?.path;
   try {
-    const model = req.body.model === "instant" ? "gpt-4o-mini" : (req.body.model || "gpt-4o");
-    const prompt = req.body.q || "Answer helpfully.";
-    const chatId = req.body.chat_id || null; // frontend will send chat_id if available
-    const userId = req.user ? getUserIdentifier(req) : "guest";
+    const userId = req.user ? getUserIdentifier(req) : null;
+    if (!userId) return res.status(401).json({ error: "Login required" });
 
-    // 🧠 Step 1: Get last messages from Supabase (if chat_id exists)
-    let contextMessages = [];
-    if (chatId) {
-      const { data: history, error: historyErr } = await supabase
+    const db = loadGoldenDB();
+    const user = db.users[userId];
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    const { model: requestedModel, q: prompt, project_id } = req.body;
+    if (!prompt) return res.status(400).json({ error: "Missing prompt" });
+
+    // 🔐 Step 1: Check subscription plan
+    const plan = user.subscriptions?.chat_advancedai_plan || "free";
+    const expiry = user.subscriptions?.chat_advancedai_expiry;
+    const now = new Date();
+    if (!expiry || new Date(expiry) < now) {
+      return res.status(403).json({ error: "Subscription expired" });
+    }
+
+    let model = "gpt-4o-mini";
+    let imageLimit = 0;
+    if (plan === "plus") {
+      model = requestedModel === "gpt-5-nano" ? "gpt-5-nano" : "gpt-4o-mini";
+      imageLimit = 20;
+    } else if (plan === "pro") {
+      model = requestedModel === "gpt-5" ? "gpt-5" : requestedModel || "gpt-4o";
+      imageLimit = Infinity;
+    }
+
+    // 🧮 Step 2: Handle image usage limit
+    if (requestedModel === "gpt-image-1") {
+      const { data: count, error: countErr } = await supabase
         .from("messages")
-        .select("sender, content")
-        .eq("chat_id", chatId)
-        .order("timestamp", { ascending: false })
-        .limit(10);
-      if (!historyErr && history?.length) {
-        contextMessages = history.reverse().map(m => ({
-          role: m.sender === "ai" ? "assistant" : "user",
-          content: m.content
-        }));
+        .select("id", { count: "exact" })
+        .eq("sender", "ai")
+        .eq("chat_id", project_id)
+        .like("content", "%Image generated:%");
+
+      if (!countErr && count.length >= imageLimit && plan !== "pro") {
+        return res.status(403).json({ error: "Image limit reached for this month." });
       }
     }
 
-    // 🖼️ Step 2: If user uploaded image
+    // 🧠 Step 3: Load context (last 30 messages)
+    const { data: history, error: histErr } = await supabase
+      .from("messages")
+      .select("sender, content")
+      .eq("chat_id", project_id)
+      .order("timestamp", { ascending: true })
+      .limit(30);
+
+    const contextMessages = !histErr && history?.length
+      ? history.map(m => ({
+          role: m.sender === "ai" ? "assistant" : "user",
+          content: m.content
+        }))
+      : [];
+
+    // 🧾 Step 4: Add user message (and optional image)
     let newMessage;
     if (filePath) {
       const b64 = fs.readFileSync(filePath).toString("base64");
@@ -966,88 +1001,88 @@ app.post("/chat-advanced-ai", requireFeature("chat_advancedai"), upload.single("
       newMessage = { role: "user", content: prompt };
     }
 
-    // Add to conversation
-    const messages = [...contextMessages, newMessage];
+    const conversation = [...contextMessages, newMessage];
 
-    // 💬 Step 3: Save the user’s message to Supabase
-    if (chatId) {
-      try {
-        await supabase.from("messages").insert([
-          { chat_id: chatId, sender: userId, content: prompt }
-        ]);
-      } catch (dbErr) {
-        console.error("Failed to save user message:", dbErr.message);
-      }
-    }
+    // 💾 Step 5: Save user's message
+    await supabase.from("messages").insert([
+      { chat_id: project_id, sender: userId, content: prompt }
+    ]);
 
-    // 🎨 Step 4: Handle image generation mode
-    if (model === "gpt-image-1") {
+    // 🎨 Step 6: Handle image generation
+    if (requestedModel === "gpt-image-1") {
       try {
-        const image = await openai.images.generate({
+        const img = await openai.images.generate({
           model: "dall-e-3",
           prompt,
           size: "1024x1024",
-          quality: "standard",
           n: 1
         });
-        const imageUrl = image.data[0].url;
+        const imageUrl = img.data[0].url;
 
-        // Save AI image reply
-        if (chatId) {
-          await supabase.from("messages").insert([
-            { chat_id: chatId, sender: "ai", content: `Image generated: ${imageUrl}` }
-          ]);
-        }
+        await supabase.from("messages").insert([
+          { chat_id: project_id, sender: "ai", content: `Image generated: ${imageUrl}` }
+        ]);
 
         return res.json({
           reply: `![Generated Image](${imageUrl})`,
           imageUrl,
           model: "dall-e-3"
         });
-      } catch (imgErr) {
-        console.error("DALL-E 3 error:", imgErr);
-        return res.status(500).json({ error: imgErr.message || "Image generation failed." });
+      } catch (err) {
+        console.error("DALL-E error:", err);
+        return res.status(500).json({ error: "Image generation failed" });
       }
     }
 
-    // 🤖 Step 5: Generate AI reply using context
+    // 🤖 Step 7: Get AI reply
     const completion = await openai.chat.completions.create({
       model,
-      messages,
+      messages: conversation,
       max_tokens: 2000,
       temperature: 0.7
     });
-
     const reply = completion.choices?.[0]?.message?.content || "No reply.";
 
-    // 💾 Step 6: Save AI message to Supabase
-    if (chatId) {
-      try {
-        await supabase.from("messages").insert([
-          { chat_id: chatId, sender: "ai", content: reply }
-        ]);
-      } catch (dbErr) {
-        console.error("Failed to save AI message:", dbErr.message);
+    // 💾 Step 8: Save AI message
+    await supabase.from("messages").insert([
+      { chat_id: project_id, sender: "ai", content: reply }
+    ]);
+
+    // ⚙️ Step 9: Trim to last 30 messages
+    const { data: allMsgs } = await supabase
+      .from("messages")
+      .select("id")
+      .eq("chat_id", project_id)
+      .order("timestamp", { ascending: false });
+
+    if (allMsgs?.length > 30) {
+      const extra = allMsgs.slice(30).map(m => m.id);
+      await supabase.from("messages").delete().in("id", extra);
+    }
+
+    // 💰 Step 10: Deduct Golden monthly if not done
+    const lastPaid = user.subscriptions?.chat_advancedai_lastPaid || null;
+    if (!lastPaid || new Date(lastPaid).getMonth() !== now.getMonth()) {
+      const cost = plan === "pro" ? 40 : 20;
+      if ((user.golden_balance || 0) >= cost) {
+        user.golden_balance -= cost;
+        user.subscriptions.chat_advancedai_lastPaid = now.toISOString();
+        saveGoldenDB(db);
+      } else {
+        return res.status(402).json({ error: "Insufficient Golden to renew subscription." });
       }
     }
 
-    // ✅ Step 7: Respond to frontend
-    res.json({ reply, model });
+    // ✅ Step 11: Send response
+    res.json({ reply, model, plan });
 
   } catch (e) {
     console.error("Advanced AI error:", e);
     res.status(500).json({ error: e.message });
   } finally {
-    // 🧹 Clean up uploaded file
-    if (filePath && fs.existsSync(filePath)) {
-      fs.unlink(filePath, err => {
-        if (err) console.error("File cleanup error:", err);
-      });
-    }
+    if (filePath && fs.existsSync(filePath)) fs.unlink(filePath, () => {});
   }
 });
-
-
 // Search Info
 app.post("/search-info", async (req, res) => {
   try {

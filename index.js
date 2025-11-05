@@ -13,7 +13,7 @@ import OpenAI from "openai";
 import axios from "axios";
 import multer from "multer";
 import fs from "fs";
-
+import { createClient } from "@supabase/supabase-js";
 // ============ ENV & APP ============
 dotenv.config();
 const app = express();
@@ -32,12 +32,102 @@ function validateEnvironment() {
   console.log('✅ Environment variables validated');
 }
 validateEnvironment();
-
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_ANON_KEY
+);
+console.log("✅ Supabase connected");
 // ============ MIDDLEWARE ============
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+// ============ SUPABASE CHAT / PROJECT SYSTEM ============
+app.post("/api/chat/create", async (req, res) => {
+  try {
+    const { title } = req.body;
+    if (!req.user) return res.status(401).json({ error: "Login required" });
+    const userId = getUserIdentifier(req);
+
+    const { data, error } = await supabase
+      .from("chats")
+      .insert([{ user_id: userId, title }])
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.json({ success: true, chat: data });
+  } catch (err) {
+    console.error("Chat create error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/api/chat/:chat_id", async (req, res) => {
+  try {
+    const { chat_id } = req.params;
+    const { data, error } = await supabase
+      .from("messages")
+      .select("*")
+      .eq("chat_id", chat_id)
+      .order("timestamp", { ascending: false })
+      .limit(10);
+    if (error) throw error;
+    res.json({ success: true, messages: data.reverse() });
+  } catch (err) {
+    console.error("Chat fetch error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/api/chat/message", async (req, res) => {
+  try {
+    const { chat_id, sender, content } = req.body;
+    if (!chat_id || !content)
+      return res.status(400).json({ error: "Missing chat_id or content" });
+
+    const { error } = await supabase
+      .from("messages")
+      .insert([{ chat_id, sender, content }]);
+    if (error) throw error;
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Chat save error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/api/projects", async (req, res) => {
+  try {
+    if (!req.user) return res.status(401).json({ error: "Login required" });
+    const userId = getUserIdentifier(req);
+    const { data, error } = await supabase
+      .from("projects")
+      .select("*")
+      .eq("user_id", userId);
+    if (error) throw error;
+    res.json({ success: true, projects: data });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/api/projects/create", async (req, res) => {
+  try {
+    if (!req.user) return res.status(401).json({ error: "Login required" });
+    const { name, description } = req.body;
+    const userId = getUserIdentifier(req);
+    const { data, error } = await supabase
+      .from("projects")
+      .insert([{ user_id: userId, name, description }])
+      .select()
+      .single();
+    if (error) throw error;
+    res.json({ success: true, project: data });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // ============ SESSION CONFIGURATION ============
 const sessionConfig = {
@@ -578,120 +668,244 @@ app.post("/api/transfer-golden", async (req, res) => {
     res.status(500).json({ error: "Transfer failed due to server error", details: error.message });
   }
 });
+//=========================================================
+// ============ SUBSCRIPTION MANAGEMENT ====================
+app.get("/subscriptions.html", (req, res) =>
+  res.sendFile(path.join(__dirname, "subscriptions.html"))
+);
 
-// ============ SUBSCRIPTION MANAGEMENT ============
-app.get("/subscriptions.html", (req, res) => res.sendFile(path.join(__dirname, "subscriptions.html")));
-
-app.get("/api/user-subscriptions", (req, res) => {
+// ✅ unified route name so frontend /api/subscriptions works
+app.get("/api/subscriptions", (req, res) => {
   if (!req.user) return res.status(401).json({ error: "Login required" });
+
   const db = loadGoldenDB();
   const id = getUserIdentifier(req);
   const user = db.users[id];
-  if (!user) return res.status(404).json({ error: "User not found" });
+  if (!user)
+    return res.status(404).json({ error: "User not found" });
 
   const now = new Date();
-  const subscriptions = Object.entries(user.subscriptions || {}).map(([feature, expiry]) => {
-    const exp = new Date(expiry);
-    const active = exp > now;
-    const daysLeft = Math.max(0, Math.ceil((exp - now) / (1000 * 60 * 60 * 24)));
-    return { feature, cost: FEATURE_PRICES[feature] || 0, expiry, active, daysLeft, expired: !active };
-  });
+  const subscriptions = Object.entries(user.subscriptions || {}).map(
+    ([feature, expiry]) => {
+      const exp = new Date(expiry);
+      const active = exp > now;
+      const daysLeft = Math.max(
+        0,
+        Math.ceil((exp - now) / (1000 * 60 * 60 * 24))
+      );
+      return {
+        feature,
+        cost: FEATURE_PRICES[feature] || 0,
+        expiry,
+        active,
+        daysLeft,
+        expired: !active
+      };
+    }
+  );
 
-  res.json({ success: true, subscriptions, balance: user.golden_balance || 0 });
+  res.json({
+    success: true,
+    subscriptions,
+    balance: user.golden_balance || 0
+  });
 });
 
+// ✅ cancel subscription route unchanged but clarified
 app.post("/api/cancel-subscription", (req, res) => {
   if (!req.user) return res.status(401).json({ error: "Login required" });
+
   const { feature } = req.body;
-  if (!feature) return res.status(400).json({ error: "Feature required" });
+  if (!feature)
+    return res.status(400).json({ error: "Feature required" });
+
   const db = loadGoldenDB();
   const id = getUserIdentifier(req);
   const user = db.users[id];
-  if (!user || !user.subscriptions) return res.status(404).json({ error: "User or subscription not found" });
+
+  if (!user || !user.subscriptions)
+    return res
+      .status(404)
+      .json({ error: "User or subscription not found" });
+
   delete user.subscriptions[feature];
   saveGoldenDB(db);
-  res.json({ success: true, message: `Subscription for ${feature} cancelled` });
+
+  res.json({
+    success: true,
+    message: `Subscription for ${feature} cancelled`
+  });
 });
 
-// ============ ADMIN ROUTES ============
-app.get("/admin-page-golden.html", (req, res) => res.sendFile(path.join(__dirname, "admin-page-golden.html")));
+// ============ ADMIN ROUTES =================
+app.get("/admin-page-golden.html", (req, res) =>
+  res.sendFile(path.join(__dirname, "admin-page-golden.html"))
+);
 
+// 🧾 Fetch all users with totals
 app.get("/api/admin/all-users", requireAdminAuth, (_req, res) => {
   const db = loadGoldenDB();
-  const users = [];
-  for (const [userId, u] of Object.entries(db.users || {})) {
-    users.push({ userId, name: u.name, email: u.email, golden_balance: u.golden_balance || 0, total_golden_earned: u.total_golden_earned || 0, total_golden_spent: u.total_golden_spent || 0, created_at: u.created_at, last_login: u.last_login, provider: userId.split("@")[1] });
-  }
+  const users = Object.entries(db.users || {}).map(([userId, u]) => ({
+    userId,
+    name: u.name,
+    email: u.email,
+    golden_balance: u.golden_balance || 0,
+    total_golden_earned: u.total_golden_earned || 0,
+    total_golden_spent: u.total_golden_spent || 0,
+    created_at: u.created_at,
+    last_login: u.last_login,
+    provider: userId.split("@")[1],
+  }));
+
   users.sort((a, b) => b.golden_balance - a.golden_balance);
   const totalGolden = users.reduce((s, u) => s + (u.golden_balance || 0), 0);
-  res.json({ success: true, users, totalUsers: users.length, totalGolden });
+
+  res.json({
+    success: true,
+    users,
+    totalUsers: users.length,
+    totalGolden,
+  });
 });
 
+// 🔍 Search for specific user
 app.get("/api/admin/search-users", requireAdminAuth, (req, res) => {
   const q = (req.query.query || "").toLowerCase();
   const db = loadGoldenDB();
-  const results = [];
-  for (const [userId, u] of Object.entries(db.users || {})) {
-    const hit = userId.toLowerCase().includes(q) || (u.email && u.email.toLowerCase().includes(q)) || (u.name && u.name.toLowerCase().includes(q));
-    if (hit) results.push({ userId, name: u.name, email: u.email, golden_balance: u.golden_balance || 0, total_golden_earned: u.total_golden_earned || 0, total_golden_spent: u.total_golden_spent || 0, created_at: u.created_at, last_login: u.last_login, provider: userId.split("@")[1] });
-  }
+
+  const results = Object.entries(db.users || {})
+    .filter(([id, u]) =>
+      id.toLowerCase().includes(q) ||
+      (u.email && u.email.toLowerCase().includes(q)) ||
+      (u.name && u.name.toLowerCase().includes(q))
+    )
+    .map(([userId, u]) => ({
+      userId,
+      name: u.name,
+      email: u.email,
+      golden_balance: u.golden_balance || 0,
+      total_golden_earned: u.total_golden_earned || 0,
+      total_golden_spent: u.total_golden_spent || 0,
+      created_at: u.created_at,
+      last_login: u.last_login,
+      provider: userId.split("@")[1],
+    }));
+
   res.json({ success: true, users: results });
 });
 
+// ➕ Add Golden
 app.post("/api/admin/add-golden", requireAdminAuth, (req, res) => {
   const { userId, amount, reason } = req.body;
-  if (!userId || !amount) return res.status(400).json({ error: "User ID and amount required" });
+  const amt = Number(amount);
+  if (!userId || isNaN(amt) || amt <= 0)
+    return res.status(400).json({ error: "Valid user ID and positive amount required" });
+
   const db = loadGoldenDB();
   const u = db.users[userId];
   if (!u) return res.status(404).json({ error: "User not found" });
+
   const prev = u.golden_balance || 0;
-  u.golden_balance = prev + Number(amount);
-  u.total_golden_earned = (u.total_golden_earned || 0) + Number(amount);
+  u.golden_balance = prev + amt;
+  u.total_golden_earned = (u.total_golden_earned || 0) + amt;
+
   u.transactions = u.transactions || [];
-  u.transactions.push({ type: "admin_add", amount: Number(amount), previous_balance: prev, new_balance: u.golden_balance, reason: reason || "Admin adjustment", timestamp: new Date().toISOString() });
+  u.transactions.push({
+    type: "admin_add",
+    amount: amt,
+    previous_balance: prev,
+    new_balance: u.golden_balance,
+    reason: reason || "Admin adjustment",
+    timestamp: new Date().toISOString(),
+  });
+
   saveGoldenDB(db);
-  res.json({ success: true, message: `Added ${amount}G to ${u.email}`, newBalance: u.golden_balance });
+  res.json({
+    success: true,
+    message: `Added ${amt}G to ${u.email}`,
+    newBalance: u.golden_balance,
+  });
 });
 
+// ➖ Subtract Golden
 app.post("/api/admin/subtract-golden", requireAdminAuth, (req, res) => {
   const { userId, amount, reason } = req.body;
-  if (!userId || !amount) return res.status(400).json({ error: "User ID and amount required" });
+  const amt = Number(amount);
+  if (!userId || isNaN(amt) || amt <= 0)
+    return res.status(400).json({ error: "Valid user ID and positive amount required" });
+
   const db = loadGoldenDB();
   const u = db.users[userId];
   if (!u) return res.status(404).json({ error: "User not found" });
+
   const prev = u.golden_balance || 0;
-  const amt = Number(amount);
-  if (prev < amt) return res.status(400).json({ error: "Insufficient balance" });
+  if (prev < amt)
+    return res.status(400).json({ error: "Insufficient balance" });
+
   u.golden_balance = prev - amt;
   u.total_golden_spent = (u.total_golden_spent || 0) + amt;
+
   u.transactions = u.transactions || [];
-  u.transactions.push({ type: "admin_subtract", amount: -amt, previous_balance: prev, new_balance: u.golden_balance, reason: reason || "Admin adjustment", timestamp: new Date().toISOString() });
+  u.transactions.push({
+    type: "admin_subtract",
+    amount: -amt,
+    previous_balance: prev,
+    new_balance: u.golden_balance,
+    reason: reason || "Admin adjustment",
+    timestamp: new Date().toISOString(),
+  });
+
   saveGoldenDB(db);
-  res.json({ success: true, message: `Subtracted ${amount}G from ${u.email}`, newBalance: u.golden_balance });
+  res.json({
+    success: true,
+    message: `Subtracted ${amt}G from ${u.email}`,
+    newBalance: u.golden_balance,
+  });
 });
 
+// ⚖️ Set Golden balance directly
 app.post("/api/admin/set-golden", requireAdminAuth, (req, res) => {
   const { userId, balance, reason } = req.body;
-  if (!userId || balance === undefined) return res.status(400).json({ error: "User ID and balance required" });
+  const newBal = Number(balance);
+  if (!userId || isNaN(newBal) || newBal < 0)
+    return res.status(400).json({ error: "Valid user ID and non-negative balance required" });
+
   const db = loadGoldenDB();
   const u = db.users[userId];
   if (!u) return res.status(404).json({ error: "User not found" });
+
   const prev = u.golden_balance || 0;
-  const newBal = Number(balance);
   u.golden_balance = newBal;
+
   u.transactions = u.transactions || [];
-  u.transactions.push({ type: "admin_set", amount: newBal - prev, previous_balance: prev, new_balance: newBal, reason: reason || "Admin set balance", timestamp: new Date().toISOString() });
+  u.transactions.push({
+    type: "admin_set",
+    amount: newBal - prev,
+    previous_balance: prev,
+    new_balance: newBal,
+    reason: reason || "Admin set balance",
+    timestamp: new Date().toISOString(),
+  });
+
   saveGoldenDB(db);
-  res.json({ success: true, message: `Set balance to ${newBal}G for ${u.email}` });
+  res.json({
+    success: true,
+    message: `Set balance to ${newBal}G for ${u.email}`,
+    newBalance: u.golden_balance,
+  });
 });
 
+// 📜 User transaction history
 app.get("/api/admin/user-transactions/:userId", requireAdminAuth, (req, res) => {
   const { userId } = req.params;
   const db = loadGoldenDB();
   const u = db.users[userId];
-  if (!u) return res.status(404).json({ error: "User not found" });
+  if (!u)
+    return res.status(404).json({ error: "User not found" });
+
   res.json({ success: true, transactions: u.transactions || [] });
 });
+
 
 // ======================== AI ENDPOINTS =====================
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -710,57 +924,129 @@ app.post("/chat-free-ai", async (req, res) => {
     res.status(500).json({ error: e.message });
   }
 });
-
-// Advanced Chat AI
+// Advanced Chat AI (with Supabase memory)
 app.post("/chat-advanced-ai", requireFeature("chat_advancedai"), upload.single("image"), async (req, res) => {
   let filePath = req.file?.path;
   try {
-    let model = req.body.model || "gpt-4o";
+    const model = req.body.model === "instant" ? "gpt-4o-mini" : (req.body.model || "gpt-4o");
     const prompt = req.body.q || "Answer helpfully.";
-    if (model === "instant") model = "gpt-4o-mini";
+    const chatId = req.body.chat_id || null; // frontend will send chat_id if available
+    const userId = req.user ? getUserIdentifier(req) : "guest";
 
-    // DALL-E 3 Image Generation
+    // 🧠 Step 1: Get last messages from Supabase (if chat_id exists)
+    let contextMessages = [];
+    if (chatId) {
+      const { data: history, error: historyErr } = await supabase
+        .from("messages")
+        .select("sender, content")
+        .eq("chat_id", chatId)
+        .order("timestamp", { ascending: false })
+        .limit(10);
+      if (!historyErr && history?.length) {
+        contextMessages = history.reverse().map(m => ({
+          role: m.sender === "ai" ? "assistant" : "user",
+          content: m.content
+        }));
+      }
+    }
+
+    // 🖼️ Step 2: If user uploaded image
+    let newMessage;
+    if (filePath) {
+      const b64 = fs.readFileSync(filePath).toString("base64");
+      const mime = req.file.mimetype || "image/png";
+      newMessage = {
+        role: "user",
+        content: [
+          { type: "text", text: prompt },
+          { type: "image_url", image_url: { url: `data:${mime};base64,${b64}` } }
+        ]
+      };
+    } else {
+      newMessage = { role: "user", content: prompt };
+    }
+
+    // Add to conversation
+    const messages = [...contextMessages, newMessage];
+
+    // 💬 Step 3: Save the user’s message to Supabase
+    if (chatId) {
+      try {
+        await supabase.from("messages").insert([
+          { chat_id: chatId, sender: userId, content: prompt }
+        ]);
+      } catch (dbErr) {
+        console.error("Failed to save user message:", dbErr.message);
+      }
+    }
+
+    // 🎨 Step 4: Handle image generation mode
     if (model === "gpt-image-1") {
       try {
-        const image = await openai.images.generate({ 
-          model: "dall-e-3", 
-          prompt: prompt,
+        const image = await openai.images.generate({
+          model: "dall-e-3",
+          prompt,
           size: "1024x1024",
           quality: "standard",
           n: 1
         });
         const imageUrl = image.data[0].url;
-        return res.json({ 
-          reply: `![Generated Image](${imageUrl})`, 
-          imageUrl: imageUrl, 
-          model: "dall-e-3" 
+
+        // Save AI image reply
+        if (chatId) {
+          await supabase.from("messages").insert([
+            { chat_id: chatId, sender: "ai", content: `Image generated: ${imageUrl}` }
+          ]);
+        }
+
+        return res.json({
+          reply: `![Generated Image](${imageUrl})`,
+          imageUrl,
+          model: "dall-e-3"
         });
       } catch (imgErr) {
-        console.error("DALL-E 3 Image generation error:", imgErr);
-        return res.status(500).json({ error: imgErr.message || "DALL-E 3 image generation failed." });
+        console.error("DALL-E 3 error:", imgErr);
+        return res.status(500).json({ error: imgErr.message || "Image generation failed." });
       }
     }
 
-    let messages;
-    if (filePath) {
-      const b64 = fs.readFileSync(filePath).toString("base64");
-      const mime = req.file.mimetype || "image/png";
-      messages = [{ role: "user", content: [{ type: "text", text: prompt }, { type: "image_url", image_url: { url: `data:${mime};base64,${b64}` } }] }];
-    } else {
-      messages = [{ role: "user", content: prompt }];
+    // 🤖 Step 5: Generate AI reply using context
+    const completion = await openai.chat.completions.create({
+      model,
+      messages,
+      max_tokens: 2000,
+      temperature: 0.7
+    });
+
+    const reply = completion.choices?.[0]?.message?.content || "No reply.";
+
+    // 💾 Step 6: Save AI message to Supabase
+    if (chatId) {
+      try {
+        await supabase.from("messages").insert([
+          { chat_id: chatId, sender: "ai", content: reply }
+        ]);
+      } catch (dbErr) {
+        console.error("Failed to save AI message:", dbErr.message);
+      }
     }
 
-    const completion = await openai.chat.completions.create({ model, messages, max_tokens: 2000, temperature: 0.7 });
-    const reply = completion.choices?.[0]?.message?.content || "No reply.";
+    // ✅ Step 7: Respond to frontend
     res.json({ reply, model });
 
   } catch (e) {
     console.error("Advanced AI error:", e);
     res.status(500).json({ error: e.message });
   } finally {
-    if (filePath && fs.existsSync(filePath)) fs.unlink(filePath, (err) => { if (err) console.error("File cleanup error:", err); });
+    // 🧹 Clean up uploaded file
+    if (filePath && fs.existsSync(filePath)) {
+      fs.unlink(filePath, err => {
+        if (err) console.error("File cleanup error:", err);
+      });
+    }
   }
 });
+
 
 // Search Info
 app.post("/search-info", async (req, res) => {

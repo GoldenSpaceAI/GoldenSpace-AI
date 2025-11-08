@@ -409,10 +409,11 @@ app.post("/api/nowpayments/create-golden", async (req, res) => {
     const amountUSD = packageInfo.priceUSD;
     const orderId = `golden-${req.user.id}-${packageSize}-${Date.now()}`;
 
+    // ✅ fixed version — price in USDT, pay with ANY crypto
     const payload = {
       price_amount: amountUSD,
-      price_currency: "usd",
-      pay_currency: "usdt",
+      price_currency: "usdt",  // now crypto base, not USD
+      pay_currency: "all",     // allow 100+ supported coins
       order_id: orderId,
       order_description: `GoldenSpaceAI ${packageSize} Golden Package`,
       ipn_callback_url: `${siteUrl}/api/nowpay/webhook`,
@@ -448,10 +449,12 @@ app.post("/api/nowpayments/create-golden", async (req, res) => {
 
   } catch (error) {
     console.error("NOWPayments error:", error.response?.data || error.message);
-    res.status(500).json({ error: "Payment creation failed", details: error.response?.data || error.message });
+    res.status(500).json({
+      error: "Payment creation failed",
+      details: error.response?.data || error.message
+    });
   }
 });
-
 // WEBHOOK ENDPOINT - AUTOMATIC GOLDEN ADDITION
 app.post("/api/nowpay/webhook", async (req, res) => {
   try {

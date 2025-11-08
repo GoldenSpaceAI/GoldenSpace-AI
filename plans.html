@@ -1,53 +1,52 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Buy Golden Tokens • GoldenSpaceAI</title>
-  <link rel="icon" href="/favicon.ico">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Golden Tokens • GoldenSpaceAI</title>
+  <link rel="icon" href="/favicon.ico" />
   <style>
     :root {
       --gold: #f6c64a;
       --gold2: #eb8b36;
       --bg: #070b14;
-      --card: #0f1728;
+      --card: rgba(15, 23, 40, 0.9);
       --text: #eaf1ff;
       --muted: #b8c3dc;
-      --border: #1e2b45;
+      --border: #1f2b45;
       --radius: 18px;
-      --shadow: 0 24px 60px rgba(0, 0, 0, .5);
     }
 
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
 
     body {
-      background: linear-gradient(180deg, rgba(7,11,20,.85), rgba(7,11,20,.95)),
-                  url("https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?q=80&w=1920&auto=format&fit=crop") center/cover fixed no-repeat;
+      background: linear-gradient(180deg, rgba(7, 11, 20, 0.8), rgba(7, 11, 20, 0.95)),
+        url("https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?q=80&w=1920&auto=format&fit=crop") center/cover fixed no-repeat;
       color: var(--text);
-      line-height: 1.6;
       min-height: 100vh;
-      padding: 20px;
+      display: flex;
+      flex-direction: column;
     }
 
     header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 20px 0;
+      padding: 25px 8%;
     }
 
     .logo {
-      font-weight: 900;
-      font-size: 24px;
-      color: var(--gold);
       display: flex;
       align-items: center;
       gap: 10px;
+      font-weight: 900;
+      font-size: 24px;
+      color: var(--gold);
     }
 
     .logo-dot {
@@ -55,7 +54,7 @@
       height: 10px;
       border-radius: 50%;
       background: radial-gradient(circle at 30% 30%, #ffd86a, #f6c64a 50%, #eb8b36 90%);
-      box-shadow: 0 0 10px rgba(246,198,74,.7);
+      box-shadow: 0 0 10px rgba(246, 198, 74, 0.7);
     }
 
     .back-btn {
@@ -66,23 +65,23 @@
       border-radius: 12px;
       transition: 0.3s;
     }
-
     .back-btn:hover {
+      background: rgba(255, 255, 255, 0.05);
       color: var(--text);
-      background: rgba(255,255,255,0.05);
     }
 
     .hero {
       text-align: center;
-      margin: 50px 0;
+      margin: 50px 0 30px;
     }
 
     .hero h1 {
       font-size: 3rem;
+      font-weight: 900;
       background: linear-gradient(135deg, var(--gold), var(--gold2));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
     }
 
     .hero p {
@@ -91,82 +90,98 @@
     }
 
     .plans {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 30px;
-      justify-items: center;
-      margin-top: 40px;
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      flex-wrap: wrap;
+      margin: 40px auto 70px;
+      width: 90%;
+      max-width: 1100px;
     }
 
     .plan {
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 30px;
       text-align: center;
-      box-shadow: var(--shadow);
+      width: 300px;
+      padding: 40px 30px;
       transition: 0.3s;
+      backdrop-filter: blur(8px);
     }
 
     .plan:hover {
-      transform: translateY(-8px);
-      box-shadow: 0 24px 80px rgba(246,198,74,.15);
+      transform: translateY(-6px);
+      box-shadow: 0 15px 40px rgba(246, 198, 74, 0.25);
     }
 
     .plan h2 {
-      font-size: 2rem;
       color: var(--gold);
+      font-size: 2rem;
+      margin-bottom: 10px;
     }
 
-    .plan p.price {
-      font-size: 1.8rem;
+    .plan .price {
+      font-size: 2rem;
       font-weight: 800;
-      margin: 15px 0;
+      margin-bottom: 10px;
     }
 
     .plan small {
       color: var(--muted);
+      font-size: 0.95rem;
     }
 
     .plan a {
       display: inline-block;
-      margin-top: 20px;
-      padding: 14px 24px;
-      border-radius: 12px;
+      margin-top: 25px;
+      padding: 14px 26px;
       background: linear-gradient(135deg, var(--gold), var(--gold2));
       color: #1c1500;
       font-weight: 700;
+      border-radius: 12px;
       text-decoration: none;
-      box-shadow: 0 10px 26px rgba(246,198,74,.25);
-      transition: 0.3s;
+      box-shadow: 0 10px 26px rgba(246, 198, 74, 0.25);
+      transition: all 0.3s;
     }
 
     .plan a:hover {
       transform: translateY(-3px);
-      box-shadow: 0 15px 35px rgba(246,198,74,.4);
+      box-shadow: 0 15px 35px rgba(246, 198, 74, 0.4);
     }
 
     .notice {
-      margin: 60px auto;
+      max-width: 750px;
+      margin: 0 auto 60px;
       text-align: center;
-      max-width: 700px;
       color: var(--muted);
       font-size: 0.95rem;
       line-height: 1.6;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      padding: 25px;
+      border-radius: 12px;
+    }
+
+    .notice strong {
+      color: var(--gold);
     }
 
     footer {
       text-align: center;
-      padding: 40px 0;
+      padding: 25px 0;
       color: var(--muted);
       border-top: 1px solid var(--border);
       font-size: 0.9rem;
-      margin-top: 50px;
     }
 
     @media (max-width: 768px) {
-      .hero h1 { font-size: 2.2rem; }
-      .plan h2 { font-size: 1.6rem; }
+      .hero h1 {
+        font-size: 2.2rem;
+      }
+      .plan {
+        width: 90%;
+      }
     }
   </style>
 </head>
@@ -178,44 +193,41 @@
 
   <section class="hero">
     <h1>Buy Golden Tokens</h1>
-    <p>Use any cryptocurrency to buy Golden Tokens. 1 Golden = $1 USD</p>
+    <p>Use any cryptocurrency to purchase Golden Tokens. 1 Golden = $1 USD</p>
   </section>
 
-  <div class="plans">
+  <section class="plans">
     <div class="plan">
       <h2>15 Golden</h2>
       <p class="price">$15</p>
-      <small>Full crypto support</small>
-      <br>
+      <small>Full crypto support</small><br />
       <a href="https://nowpayments.io/payment/?iid=5804556996" target="_blank">💳 Purchase Now</a>
     </div>
 
     <div class="plan">
       <h2>25 Golden</h2>
       <p class="price">$20</p>
-      <small>Instant AI access</small>
-      <br>
+      <small>Instant AI access</small><br />
       <a href="https://nowpayments.io/payment?iid=5821025976" target="_blank">💳 Purchase Now</a>
     </div>
 
     <div class="plan">
       <h2>50 Golden</h2>
       <p class="price">$40</p>
-      <small>Lifetime Golden credit</small>
-      <br>
+      <small>Lifetime Golden credit</small><br />
       <a href="https://nowpayments.io/payment/?iid=6276643485" target="_blank">💳 Purchase Now</a>
     </div>
-  </div>
+  </section>
 
   <div class="notice">
-    ⚠️ <strong>Important Notice:</strong>  
-    <br>All payments are operated securely through <b>NOWPayments</b>.  
-    Once your transaction is confirmed, your Golden Tokens will be added to your account within <b>1 business day</b> due to manual verification.  
-    <br><br>Please ensure you send the correct amount and use a supported crypto wallet.
+    ⚠️ <strong>Important Notice:</strong><br />
+    All payments are securely operated by <b>NOWPayments</b>.<br />
+    After your transaction is confirmed, your Golden Tokens will be added to your account within <b>one business day</b> due to manual verification.<br /><br />
+    Please make sure you send the correct amount using a supported crypto wallet.
   </div>
 
   <footer>
-    ©️ <span id="year"></span> GoldenSpaceAI. All rights reserved.
+    ©️ <span id="year"></span> GoldenSpaceAI • All rights reserved.
   </footer>
 
   <script>

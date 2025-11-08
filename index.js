@@ -413,8 +413,8 @@ app.post("/api/nowpayments/create-golden", async (req, res) => {
     // ✅ fixed version — price in USDT, pay with ANY crypto
     const payload = {
       price_amount: amountUSD,
-      price_currency: "usdt",  // now crypto base, not USD
-      pay_currency: "usdt",     // allow 100+ supported coins
+      price_currency: "usd",  // now crypto base, not USD
+      pay_currency: "btc",     // allow 100+ supported coins
       order_id: orderId,
       order_description: `GoldenSpaceAI ${packageSize} Golden Package`,
       ipn_callback_url: `${siteUrl}/api/nowpay/webhook`,

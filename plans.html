@@ -1,228 +1,225 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>GoldenSpaceAI – Buy Golden</title>
-  <link rel="icon" href="favicon.png" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Buy Golden Tokens • GoldenSpaceAI</title>
+  <link rel="icon" href="/favicon.ico">
   <style>
-    body {
+    :root {
+      --gold: #f6c64a;
+      --gold2: #eb8b36;
+      --bg: #070b14;
+      --card: #0f1728;
+      --text: #eaf1ff;
+      --muted: #b8c3dc;
+      --border: #1e2b45;
+      --radius: 18px;
+      --shadow: 0 24px 60px rgba(0, 0, 0, .5);
+    }
+
+    * {
       margin: 0;
-      font-family: "Poppins", sans-serif;
-      color: #fff;
-      background: url("assets/space-bg.jpg") no-repeat center center fixed;
-      background-size: cover;
-      overflow-x: hidden;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     }
 
-    .container {
+    body {
+      background: linear-gradient(180deg, rgba(7,11,20,.85), rgba(7,11,20,.95)),
+                  url("https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?q=80&w=1920&auto=format&fit=crop") center/cover fixed no-repeat;
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    header {
       display: flex;
-      flex-direction: column;
+      justify-content: space-between;
       align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 50px 20px;
+      padding: 20px 0;
     }
 
-    h1 {
-      color: #ffd700;
-      font-size: 2.3em;
-      margin-bottom: 10px;
-    }
-
-    p.subtext {
-      color: #ccc;
-      margin-bottom: 40px;
-      font-size: 1em;
-    }
-
-    .balance-box {
-      background: rgba(0, 0, 0, 0.6);
-      border: 2px solid #ffd700;
-      border-radius: 12px;
-      padding: 10px 30px;
-      margin-bottom: 40px;
-      color: #ffd700;
-      font-weight: bold;
-    }
-
-    .plans {
+    .logo {
+      font-weight: 900;
+      font-size: 24px;
+      color: var(--gold);
       display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 20px;
+      align-items: center;
+      gap: 10px;
     }
 
-    .plan {
-      background: rgba(0, 0, 0, 0.7);
-      border-radius: 12px;
-      border: 1px solid #222;
-      width: 230px;
-      padding: 25px;
-      text-align: center;
-      transition: all 0.3s ease;
-      box-shadow: 0 0 15px rgba(255, 215, 0, 0.15);
-    }
-
-    .plan.best {
-      border: 2px solid #ffd700;
-      transform: scale(1.03);
-    }
-
-    .plan h2 {
-      color: #ffd700;
-      font-size: 1.6em;
-      margin: 10px 0;
-    }
-
-    .plan .price {
-      font-size: 1.4em;
-      color: #00ffcc;
-      font-weight: bold;
-      margin: 5px 0 10px;
-    }
-
-    .plan p {
-      color: #ccc;
-      font-size: 0.9em;
-      margin-bottom: 20px;
-    }
-
-    .plan button {
-      background: linear-gradient(90deg, #ffd700, #ffb300);
-      color: #000;
-      font-weight: bold;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: 0.3s;
-    }
-
-    .plan button:hover {
-      background: linear-gradient(90deg, #ffcc00, #ff9900);
-    }
-
-    .message {
-      margin-top: 30px;
-      font-weight: bold;
-    }
-
-    .message.success {
-      color: #00ffcc;
-    }
-
-    .message.error {
-      color: #ff6b6b;
-    }
-
-    footer {
-      text-align: center;
-      margin-top: 60px;
-      color: #999;
-      font-size: 0.85em;
+    .logo-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, #ffd86a, #f6c64a 50%, #eb8b36 90%);
+      box-shadow: 0 0 10px rgba(246,198,74,.7);
     }
 
     .back-btn {
-      position: fixed;
-      top: 15px;
-      left: 20px;
-      background: rgba(0, 0, 0, 0.6);
-      border: 1px solid #555;
-      color: #fff;
-      padding: 8px 14px;
-      border-radius: 8px;
       text-decoration: none;
-      font-size: 0.9em;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      padding: 10px 18px;
+      border-radius: 12px;
       transition: 0.3s;
     }
 
     .back-btn:hover {
-      background: rgba(255, 215, 0, 0.2);
-      color: #ffd700;
+      color: var(--text);
+      background: rgba(255,255,255,0.05);
+    }
+
+    .hero {
+      text-align: center;
+      margin: 50px 0;
+    }
+
+    .hero h1 {
+      font-size: 3rem;
+      background: linear-gradient(135deg, var(--gold), var(--gold2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 10px;
+    }
+
+    .hero p {
+      color: var(--muted);
+      font-size: 1.1rem;
+    }
+
+    .plans {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 30px;
+      justify-items: center;
+      margin-top: 40px;
+    }
+
+    .plan {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 30px;
+      text-align: center;
+      box-shadow: var(--shadow);
+      transition: 0.3s;
+    }
+
+    .plan:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 24px 80px rgba(246,198,74,.15);
+    }
+
+    .plan h2 {
+      font-size: 2rem;
+      color: var(--gold);
+    }
+
+    .plan p.price {
+      font-size: 1.8rem;
+      font-weight: 800;
+      margin: 15px 0;
+    }
+
+    .plan small {
+      color: var(--muted);
+    }
+
+    .plan a {
+      display: inline-block;
+      margin-top: 20px;
+      padding: 14px 24px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--gold), var(--gold2));
+      color: #1c1500;
+      font-weight: 700;
+      text-decoration: none;
+      box-shadow: 0 10px 26px rgba(246,198,74,.25);
+      transition: 0.3s;
+    }
+
+    .plan a:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 15px 35px rgba(246,198,74,.4);
+    }
+
+    .notice {
+      margin: 60px auto;
+      text-align: center;
+      max-width: 700px;
+      color: var(--muted);
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    footer {
+      text-align: center;
+      padding: 40px 0;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+      font-size: 0.9rem;
+      margin-top: 50px;
+    }
+
+    @media (max-width: 768px) {
+      .hero h1 { font-size: 2.2rem; }
+      .plan h2 { font-size: 1.6rem; }
     }
   </style>
 </head>
-
 <body>
-  <a href="index.html" class="back-btn">← Back to Home</a>
+  <header>
+    <div class="logo"><span class="logo-dot"></span> GoldenSpaceAI</div>
+    <a href="/index.html" class="back-btn">← Back to Home</a>
+  </header>
 
-  <div class="container">
+  <section class="hero">
     <h1>Buy Golden Tokens</h1>
-    <p class="subtext">Use any crypto to buy Golden Tokens. 1 Golden = $1 USD</p>
-    <div class="balance-box" id="balanceBox">Loading balance...</div>
+    <p>Use any cryptocurrency to buy Golden Tokens. 1 Golden = $1 USD</p>
+  </section>
 
-    <div class="plans">
-      <div class="plan">
-        <h2>60 Golden</h2>
-        <div class="price">$15</div>
-        <p>Full crypto support</p>
-        <button onclick="buyPackage(60)">Purchase Now</button>
-      </div>
-
-      <div class="plan best">
-        <h2>100 Golden</h2>
-        <div class="price">$20</div>
-        <p><strong>Best Value</strong> – Instant AI access</p>
-        <button onclick="buyPackage(100)">Purchase Now</button>
-      </div>
-
-      <div class="plan">
-        <h2>200 Golden</h2>
-        <div class="price">$40</div>
-        <p>Lifetime Golden credit</p>
-        <button onclick="buyPackage(200)">Purchase Now</button>
-      </div>
+  <div class="plans">
+    <div class="plan">
+      <h2>15 Golden</h2>
+      <p class="price">$15</p>
+      <small>Full crypto support</small>
+      <br>
+      <a href="https://nowpayments.io/payment/?iid=5804556996" target="_blank">💳 Purchase Now</a>
     </div>
 
-    <div class="message" id="message"></div>
+    <div class="plan">
+      <h2>25 Golden</h2>
+      <p class="price">$20</p>
+      <small>Instant AI access</small>
+      <br>
+      <a href="https://nowpayments.io/payment?iid=5821025976" target="_blank">💳 Purchase Now</a>
+    </div>
+
+    <div class="plan">
+      <h2>50 Golden</h2>
+      <p class="price">$40</p>
+      <small>Lifetime Golden credit</small>
+      <br>
+      <a href="https://nowpayments.io/payment/?iid=6276643485" target="_blank">💳 Purchase Now</a>
+    </div>
   </div>
 
-  <footer>©️ 2025 GoldenSpaceAI. All rights reserved.</footer>
+  <div class="notice">
+    ⚠️ <strong>Important Notice:</strong>  
+    <br>All payments are operated securely through <b>NOWPayments</b>.  
+    Once your transaction is confirmed, your Golden Tokens will be added to your account within <b>1 business day</b> due to manual verification.  
+    <br><br>Please ensure you send the correct amount and use a supported crypto wallet.
+  </div>
+
+  <footer>
+    ©️ <span id="year"></span> GoldenSpaceAI. All rights reserved.
+  </footer>
 
   <script>
-    async function loadBalance() {
-      const box = document.getElementById("balanceBox");
-      try {
-        const res = await fetch("/api/golden-balance");
-        const data = await res.json();
-        if (data.loggedIn) {
-          box.textContent = `Your Balance: ${data.balance} G`;
-        } else {
-          box.textContent = "Login required to buy Golden.";
-        }
-      } catch {
-        box.textContent = "Failed to load balance.";
-      }
-    }
-
-    async function buyPackage(size) {
-      const msg = document.getElementById("message");
-      msg.textContent = "Creating crypto payment...";
-      msg.className = "message";
-
-      try {
-        const res = await fetch("/api/nowpayments/create-golden", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ packageSize: size })
-        });
-        const data = await res.json();
-        if (data.success && data.invoiceUrl) {
-          msg.textContent = "Redirecting to secure payment...";
-          msg.className = "message success";
-          window.location.href = data.invoiceUrl;
-        } else {
-          msg.textContent = data.error || "Payment creation failed.";
-          msg.className = "message error";
-        }
-      } catch {
-        msg.textContent = "Network error while creating payment.";
-        msg.className = "message error";
-      }
-    }
-
-    loadBalance();
+    document.getElementById("year").textContent = new Date().getFullYear();
   </script>
 </body>
 </html>

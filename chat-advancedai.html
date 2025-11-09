@@ -44,6 +44,10 @@ body{
   font-weight:800;
   cursor:pointer;
   margin-bottom:10px;
+  transition:transform 0.2s ease;
+}
+.new-chat-btn:hover{
+  transform:translateY(-2px);
 }
 .custom-instructions-btn{
   width:100%;
@@ -59,6 +63,7 @@ body{
 }
 .custom-instructions-btn:hover{
   background:rgba(255,255,255,.15);
+  transform:translateY(-1px);
 }
 .chats-list{
   flex:1;
@@ -76,6 +81,7 @@ body{
 }
 .chat-item:hover{
   background:rgba(255,255,255,.12);
+  transform:translateY(-1px);
 }
 .chat-item.active{
   border-color:var(--gold1);
@@ -96,6 +102,7 @@ body{
   font-size:12px;
   padding:2px 6px;
   border-radius:4px;
+  transition:background 0.2s ease;
 }
 .delete-btn:hover{
   background:rgba(255,85,85,.2);
@@ -116,6 +123,7 @@ header{
   justify-content:space-between;
   padding:12px 20px;
   border-bottom:1px solid var(--border);
+  z-index:100;
 }
 header .logo{
   width:34px;
@@ -133,6 +141,7 @@ header h1{
 #userBalance{
   font-size:14px;
   color:#ddd;
+  font-weight:600;
 }
 .menuBtn{
   background:none;
@@ -142,9 +151,13 @@ header h1{
   font-weight:bold;
   cursor:pointer;
   margin-left:10px;
+  transition:transform 0.2s ease;
+}
+.menuBtn:hover{
+  transform:scale(1.1);
 }
 
-/* Lock Screen - Completely removed when unlocked */
+/* Lock Screen */
 #locked{
   flex:1;
   display:flex;
@@ -152,6 +165,8 @@ header h1{
   justify-content:center;
   background:rgba(0,0,0,.8);
   backdrop-filter:blur(20px);
+  position:relative;
+  z-index:50;
 }
 .lockBox{
   background:rgba(0,0,0,.9);
@@ -161,6 +176,7 @@ header h1{
   max-width:400px;
   text-align:center;
   box-shadow:0 0 50px rgba(255,215,0,.3);
+  animation:fadeIn 0.5s ease;
 }
 .lockBox h2{
   color:var(--gold1);
@@ -171,6 +187,7 @@ header h1{
   font-size:16px;
   margin-bottom:25px;
   line-height:1.5;
+  color:#ddd;
 }
 .lockBtn{
   background:linear-gradient(45deg,var(--gold1),var(--gold2));
@@ -181,10 +198,15 @@ header h1{
   font-size:16px;
   color:#141000;
   cursor:pointer;
-  transition:transform 0.2s ease;
+  transition:all 0.3s ease;
+  box-shadow:0 5px 15px rgba(255,215,0,.3);
 }
 .lockBtn:hover{
-  transform:scale(1.05);
+  transform:translateY(-3px);
+  box-shadow:0 8px 25px rgba(255,215,0,.4);
+}
+.lockBtn:active{
+  transform:translateY(-1px);
 }
 
 /* Chat Area */
@@ -209,28 +231,37 @@ header h1{
   to{opacity:1;transform:translateY(0);}
 }
 .msg.user{
-  background:linear-gradient(180deg,rgba(255,215,0,.12),rgba(255,215,0,.08));
+  background:linear-gradient(135deg,rgba(255,215,0,.15),rgba(255,215,0,.08));
   margin-left:auto;
   margin-right:0;
+  border-color:rgba(255,215,0,.3);
 }
 .msg.ai{
-  background:rgba(15,15,30,.6);
+  background:rgba(15,15,30,.7);
+  border-color:rgba(255,255,255,.1);
 }
 .msg small{
   display:block;
   font-size:.75rem;
   opacity:.6;
   margin-bottom:5px;
+  font-weight:600;
 }
 .msg img{
   max-width:100%;
   border-radius:10px;
   margin-top:10px;
   border:1px solid var(--border);
+  box-shadow:0 5px 15px rgba(0,0,0,.3);
 }
 .thinking{
   color:var(--gold1);
   font-style:italic;
+  animation:pulse 1.5s infinite;
+}
+@keyframes pulse{
+  0%, 100%{opacity:1;}
+  50%{opacity:0.7;}
 }
 
 /* Feature Bar */
@@ -241,6 +272,7 @@ header h1{
   padding:15px;
   background:rgba(0,0,0,.7);
   border-bottom:1px solid var(--border);
+  backdrop-filter:blur(10px);
 }
 .featureBtn{
   background:rgba(255,255,255,.1);
@@ -251,16 +283,19 @@ header h1{
   text-align:center;
   font-weight:600;
   cursor:pointer;
-  transition:all 0.2s ease;
+  transition:all 0.3s ease;
   min-width:140px;
+  backdrop-filter:blur(5px);
 }
 .featureBtn:hover{
   background:rgba(255,255,255,.15);
-  transform:translateY(-2px);
+  transform:translateY(-3px);
+  box-shadow:0 5px 15px rgba(0,0,0,.2);
 }
 .featureBtn.active{
   background:rgba(255,215,0,.2);
   border-color:var(--gold1);
+  box-shadow:0 0 20px rgba(255,215,0,.3);
 }
 
 /* Footer - Floating 2cm from bottom */
@@ -290,6 +325,13 @@ footer{
   min-height:50px;
   font-family:inherit;
   max-height:120px;
+  transition:all 0.3s ease;
+}
+#prompt:focus{
+  outline:none;
+  border-color:var(--gold1);
+  background:rgba(255,255,255,.12);
+  box-shadow:0 0 10px rgba(255,215,0,.2);
 }
 button.send{
   background:linear-gradient(45deg,var(--gold1),var(--gold2));
@@ -299,11 +341,16 @@ button.send{
   font-weight:800;
   color:#141000;
   cursor:pointer;
-  transition:transform 0.2s ease;
+  transition:all 0.3s ease;
   height:50px;
+  box-shadow:0 4px 12px rgba(255,215,0,.3);
 }
 button.send:hover{
-  transform:scale(1.05);
+  transform:translateY(-2px);
+  box-shadow:0 6px 20px rgba(255,215,0,.4);
+}
+button.send:active{
+  transform:translateY(0);
 }
 
 /* Custom Instructions Modal */
@@ -319,9 +366,10 @@ button.send:hover{
   justify-content:center;
   z-index:1000;
   display:none;
+  backdrop-filter:blur(5px);
 }
 .modal-content{
-  background:rgba(0,0,0,.9);
+  background:rgba(0,0,0,.95);
   border:2px solid var(--gold1);
   border-radius:20px;
   padding:30px;
@@ -329,11 +377,18 @@ button.send:hover{
   width:90%;
   max-height:80vh;
   overflow-y:auto;
+  box-shadow:0 20px 60px rgba(0,0,0,.5);
+  animation:modalSlideIn 0.3s ease;
+}
+@keyframes modalSlideIn{
+  from{opacity:0;transform:scale(0.9);}
+  to{opacity:1;transform:scale(1);}
 }
 .modal-content h3{
   color:var(--gold1);
   margin:0 0 15px 0;
   text-align:center;
+  font-size:24px;
 }
 .modal-textarea{
   width:100%;
@@ -346,6 +401,12 @@ button.send:hover{
   font-family:inherit;
   resize:vertical;
   margin-bottom:15px;
+  transition:all 0.3s ease;
+}
+.modal-textarea:focus{
+  outline:none;
+  border-color:var(--gold1);
+  background:rgba(255,255,255,.12);
 }
 .modal-buttons{
   display:flex;
@@ -358,17 +419,23 @@ button.send:hover{
   border-radius:8px;
   font-weight:600;
   cursor:pointer;
-  transition:all 0.2s ease;
+  transition:all 0.3s ease;
 }
 .modal-btn.save{
   background:var(--gold1);
   color:#141000;
+  box-shadow:0 4px 12px rgba(255,215,0,.3);
+}
+.modal-btn.save:hover{
+  transform:translateY(-2px);
+  box-shadow:0 6px 20px rgba(255,215,0,.4);
 }
 .modal-btn.cancel{
   background:rgba(255,255,255,.1);
   color:#fff;
 }
-.modal-btn:hover{
+.modal-btn.cancel:hover{
+  background:rgba(255,255,255,.2);
   transform:translateY(-2px);
 }
 
@@ -391,11 +458,20 @@ button.send:hover{
   #featureBar{
     flex-wrap:wrap;
     gap:8px;
+    padding:10px;
   }
   .featureBtn{
     min-width:120px;
     padding:10px 15px;
     font-size:14px;
+  }
+  .lockBox{
+    margin:20px;
+    padding:30px 20px;
+  }
+  .modal-content{
+    margin:20px;
+    padding:20px;
   }
 }
 </style>
@@ -408,7 +484,7 @@ button.send:hover{
     <button class="custom-instructions-btn" id="customInstructionsBtn">⚙️ Custom Instructions</button>
   </div>
   <div class="chats-list" id="chatsList">
-    <!-- Chat items will be loaded here -->
+    <div style="color:#888; text-align:center; padding:20px;">Loading chats...</div>
   </div>
 </div>
 
@@ -433,6 +509,7 @@ button.send:hover{
       <p>This premium feature costs <b style="color:var(--gold1);">20 G</b> for 30 days access</p>
       <p>Unlock advanced conversations with GPT-4o, image generation, and smart features</p>
       <button class="lockBtn" id="unlockBtn">Activate for 20 G</button>
+      <div id="unlockStatus" style="margin-top:15px;font-size:14px;"></div>
     </div>
   </div>
 
@@ -478,8 +555,6 @@ button.send:hover{
   </div>
 </div>
 
-// Replace the entire <script> section with this fixed version:
-
 <script>
 // Global variables
 let currentChat = null;
@@ -498,9 +573,11 @@ const promptInput = document.getElementById('prompt');
 const userBalance = document.getElementById('userBalance');
 const instructionsModal = document.getElementById('instructionsModal');
 const instructionsText = document.getElementById('instructionsText');
+const unlockStatus = document.getElementById('unlockStatus');
 
 // Initialize
 document.addEventListener('DOMContentLoaded', function() {
+    console.log("Initializing Advanced Chat...");
     checkSubscriptionStatus();
     loadCustomInstructions();
     setupEventListeners();
@@ -508,6 +585,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Event Listeners
 function setupEventListeners() {
+    console.log("Setting up event listeners...");
+    
     document.getElementById('toggleSidebar').addEventListener('click', toggleSidebar);
     document.getElementById('newChat').addEventListener('click', createNewChat);
     document.getElementById('unlockBtn').addEventListener('click', unlockAdvancedChat);
@@ -534,6 +613,8 @@ function setupEventListeners() {
             hideInstructionsModal();
         }
     });
+    
+    console.log("Event listeners setup complete");
 }
 
 // Sidebar toggle
@@ -544,61 +625,125 @@ function toggleSidebar() {
 // Subscription check
 async function checkSubscriptionStatus() {
     try {
-        const response = await fetch("/api/advanced-ai-status", { credentials: "include" });
-        const data = await response.json();
+        console.log("Checking subscription status...");
+        const response = await fetch("/api/advanced-ai-status", { 
+            credentials: "include",
+            headers: {
+                'Cache-Control': 'no-cache'
+            }
+        });
         
-        userBalance.textContent = `G: ${data.balance ?? "--"}`;
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log("Subscription status:", data);
+        
+        userBalance.textContent = `G: ${data.balance ?? "0"}`;
         
         if (!data.active) {
             // Show lock screen
+            console.log("Feature locked - showing lock screen");
             lockedScreen.style.display = "flex";
             chatArea.style.display = "none";
             featureBar.style.display = "none";
             footer.style.display = "none";
         } else {
             // Remove lock completely - show full chatbot interface
+            console.log("Feature unlocked - showing chatbot interface");
             lockedScreen.style.display = "none";
             chatArea.style.display = "block";
             featureBar.style.display = "flex";
             footer.style.display = "block";
-            loadChats();
+            await loadChats();
         }
     } catch (error) {
         console.error("Status check failed:", error);
         lockedScreen.style.display = "flex";
+        userBalance.textContent = "G: Error";
     }
 }
 
-// Unlock advanced chat
+// Unlock advanced chat - FIXED VERSION
 async function unlockAdvancedChat() {
+    const unlockBtn = document.getElementById('unlockBtn');
+    const originalText = unlockBtn.textContent;
+    
     try {
+        console.log("Attempting to unlock Advanced AI...");
+        unlockBtn.disabled = true;
+        unlockBtn.textContent = "Processing...";
+        unlockStatus.textContent = "⏳ Processing your request...";
+        unlockStatus.style.color = "#ffd700";
+
         const response = await fetch("/api/subscribe-advanced-ai", {
             method: "POST",
+            headers: {
+                'Content-Type': 'application/json',
+            },
             credentials: "include"
         });
-        const data = await response.json();
+
+        console.log("Unlock response status:", response.status);
         
-        if (data.success) {
-            alert("✅ Advanced Chat activated for 30 days!");
-            checkSubscriptionStatus(); // Refresh the interface
-        } else {
-            alert("❌ " + (data.error || "Activation failed"));
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
         }
+
+        const data = await response.json();
+        console.log("Unlock response data:", data);
+
+        if (data.success) {
+            unlockStatus.textContent = "✅ Success! Unlocking Advanced AI...";
+            unlockStatus.style.color = "#90ee90";
+            
+            // Wait a moment then refresh the interface
+            setTimeout(() => {
+                checkSubscriptionStatus();
+            }, 1500);
+            
+        } else {
+            throw new Error(data.error || "Activation failed");
+        }
+        
     } catch (error) {
-        alert("❌ Error: " + error.message);
+        console.error("Unlock error:", error);
+        unlockStatus.textContent = "❌ " + error.message;
+        unlockStatus.style.color = "#ff6b6b";
+        unlockBtn.disabled = false;
+        unlockBtn.textContent = originalText;
+        
+        // Reset status message after 5 seconds
+        setTimeout(() => {
+            unlockStatus.textContent = "";
+        }, 5000);
     }
 }
 
 // Chat Management
 async function loadChats() {
     try {
-        const response = await fetch("/api/projects", { credentials: "include" });
+        console.log("Loading chats...");
+        const response = await fetch("/api/projects", { 
+            credentials: "include",
+            headers: {
+                'Cache-Control': 'no-cache'
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const data = await response.json();
+        console.log("Chats loaded:", data);
         
         chatsList.innerHTML = "";
         
-        if (!data.projects?.length) {
-            chatsList.innerHTML = '<div style="color:#888; text-align:center; padding:20px;">No chats yet</div>';
+        if (!data.projects || !data.projects.length) {
+            chatsList.innerHTML = '<div style="color:#888; text-align:center; padding:20px;">No chats yet. Create your first chat!</div>';
             return;
         }
         
@@ -606,7 +751,7 @@ async function loadChats() {
             const chatItem = document.createElement('div');
             chatItem.className = 'chat-item';
             chatItem.innerHTML = `
-                <div style="font-weight:600;">${project.name}</div>
+                <div style="font-weight:600;">${project.name || 'Unnamed Chat'}</div>
                 <div class="chat-preview">${project.description || 'No messages yet'}</div>
                 <div style="margin-top:5px; display:flex; justify-content:space-between; align-items:center;">
                     <small style="color:#666;">${new Date(project.created_at).toLocaleDateString()}</small>
@@ -624,34 +769,44 @@ async function loadChats() {
         });
     } catch (error) {
         console.error("Failed to load chats:", error);
+        chatsList.innerHTML = '<div style="color:#ff6b6b; text-align:center; padding:20px;">Error loading chats</div>';
     }
 }
 
 async function createNewChat() {
     const chatName = prompt("Enter chat name:", `Chat ${new Date().toLocaleDateString()}`);
-    if (!chatName) return;
+    if (!chatName || chatName.trim() === '') return;
     
     try {
+        console.log("Creating new chat:", chatName);
         const response = await fetch("/api/projects/create", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { 
+                "Content-Type": "application/json" 
+            },
             credentials: "include",
-            body: JSON.stringify({ name: chatName, description: "New chat" })
+            body: JSON.stringify({ 
+                name: chatName.trim(), 
+                description: "New chat" 
+            })
         });
         
-        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
         
-        if (data.success) {
-            await loadChats(); // Wait for chats to reload
-            if (data.project) {
-                openChat(data.project);
-            }
+        const data = await response.json();
+        console.log("Create chat response:", data);
+        
+        if (data.success && data.project) {
+            await loadChats();
+            openChat(data.project);
         } else {
-            alert("Failed to create chat: " + (data.error || "Unknown error"));
+            throw new Error(data.error || "Failed to create chat");
         }
     } catch (error) {
         console.error("Create chat error:", error);
-        alert("Failed to create chat: " + error.message);
+        alert("❌ Failed to create chat: " + error.message);
     }
 }
 
@@ -661,10 +816,13 @@ async function openChat(project) {
         return;
     }
     
+    console.log("Opening chat:", project.id, project.name);
     currentChat = project.id;
     
     // Update active chat UI
-    document.querySelectorAll('.chat-item').forEach(item => item.classList.remove('active'));
+    document.querySelectorAll('.chat-item').forEach(item => {
+        item.classList.remove('active');
+    });
     
     // Find and activate the clicked chat item
     const chatItems = document.querySelectorAll('.chat-item');
@@ -675,28 +833,38 @@ async function openChat(project) {
         }
     }
     
+    // Close sidebar on mobile
+    if (window.innerWidth <= 768) {
+        sidebar.classList.remove('active');
+    }
+    
     // Load chat messages
     await loadChatMessages(project.id);
 }
 
 async function loadChatMessages(chatId) {
     try {
-        const response = await fetch(`/api/chat/${chatId}`, { credentials: "include" });
+        console.log("Loading messages for chat:", chatId);
+        const response = await fetch(`/api/chat/${chatId}`, { 
+            credentials: "include",
+            headers: {
+                'Cache-Control': 'no-cache'
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const data = await response.json();
+        console.log("Messages loaded:", data);
         
         chatArea.innerHTML = "";
         chatHistory = [];
         
-        if (data.messages?.length) {
+        if (data.messages && data.messages.length) {
             data.messages.forEach(message => {
                 addMessageToChat(message.sender, message.content, false);
-                // Keep last 5 messages for context
-                if (chatHistory.length < 5) {
-                    chatHistory.push({
-                        role: message.sender === 'ai' ? 'assistant' : 'user',
-                        content: message.content
-                    });
-                }
             });
         } else {
             addMessageToChat('ai', 'Welcome to your new chat! Start by sending a message.', false);
@@ -710,13 +878,18 @@ async function loadChatMessages(chatId) {
 }
 
 async function deleteChat(chatId) {
-    if (!confirm("Are you sure you want to delete this chat?")) return;
+    if (!confirm("Are you sure you want to delete this chat? This action cannot be undone.")) return;
     
     try {
+        console.log("Deleting chat:", chatId);
         const response = await fetch(`/api/projects/${chatId}`, {
             method: "DELETE",
             credentials: "include"
         });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
         
         const data = await response.json();
         
@@ -728,11 +901,11 @@ async function deleteChat(chatId) {
                 chatArea.innerHTML = '<div class="msg ai"><small>GoldenSpaceAI</small>Select or create a chat to start messaging.</div>';
             }
         } else {
-            alert("Failed to delete chat: " + (data.error || "Unknown error"));
+            throw new Error(data.error || "Failed to delete chat");
         }
     } catch (error) {
         console.error("Delete chat error:", error);
-        alert("Failed to delete chat: " + error.message);
+        alert("❌ Failed to delete chat: " + error.message);
     }
 }
 
@@ -767,16 +940,23 @@ async function sendMessage() {
             custom_instructions: customInstructions
         };
         
-        console.log("Sending request:", requestBody);
+        console.log("Sending request to /chat-advanced-ai:", requestBody);
         
         const response = await fetch("/chat-advanced-ai", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { 
+                "Content-Type": "application/json" 
+            },
             credentials: "include",
             body: JSON.stringify(requestBody)
         });
         
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const data = await response.json();
+        console.log("AI Response:", data);
         
         // Remove thinking message and add actual response
         thinkingMsg.remove();
@@ -784,8 +964,10 @@ async function sendMessage() {
         if (data.imageUrl) {
             // Handle image response
             addMessageToChat('ai', `![Generated Image](${data.imageUrl})`, true);
+        } else if (data.reply) {
+            addMessageToChat('ai', data.reply, true);
         } else {
-            addMessageToChat('ai', data.reply || data.error || "No response received", true);
+            addMessageToChat('ai', "No response received from AI", true);
         }
         
         // Reset mode after use
@@ -862,11 +1044,11 @@ async function saveInstructions() {
     customInstructions = instructionsText.value.trim();
     
     try {
-        // Save to localStorage for now
+        // Save to localStorage
         localStorage.setItem('goldenspace_custom_instructions', customInstructions);
         
         hideInstructionsModal();
-        alert('✅ Custom instructions saved!');
+        alert('✅ Custom instructions saved! The AI will now follow these guidelines.');
     } catch (error) {
         alert('❌ Failed to save instructions: ' + error.message);
     }
@@ -887,6 +1069,9 @@ function autoResizeTextarea() {
 
 // Initialize textarea resize
 promptInput.addEventListener('input', autoResizeTextarea);
+
+// Add some console logging for debugging
+console.log("Advanced Chat interface loaded successfully");
 </script>
 </body>
 </html>

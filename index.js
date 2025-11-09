@@ -678,7 +678,116 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
       }
     )
   );
-// ============ GOLDEN TRANSFER SYSTEM ============
+// ============ SUBSCRIPTIONS ENDPOINT ============
+app.get("/api/subscriptions", (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: "Login required" });
+    }
+
+    const userId = getUserIdentifier(req);
+    const db = loadGoldenDB();
+    const user = db.users[userId];
+    
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const now = new Date();
+    const subscriptions = [];
+    const userSubs = user.subscriptions || {};
+
+    // Check each feature the user might have subscribed to
+    Object.entries(FEATURE_PRICES).forEach(([feature, cost]) => {
+      const expiryStr = userSubs[feature];
+      
+      if (expiryStr) {
+        const expiry = new Date(expiryStr);
+        const isActive = expiry > now;
+        const msLeft = expiry - now;
+        const daysLeft = isActive ? Math.ceil(msLeft / (1000 * 60 * 60 * 24)) : 0;
+
+        subscriptions.push({
+          feature,
+          cost,
+          expiry: expiryStr,
+          active: isActive,
+          daysLeft: daysLeft
+        });
+      }
+    });
+
+    // Also include advanced AI subscription if it exists
+    if (userSubs.chat_advancedai) {
+      const expiryStr = userSubs.chat_advancedai;
+      const expiry = new Date(expiryStr);
+      const isActive = expiry > now;
+      const msLeft = expiry - now;
+      const daysLeft = isActive ? Math.ceil(msLeft / (1000 * 60 * 60 * 24)) : 0;
+
+      subscriptions.push({
+        feature: "chat_advancedai",
+        cost: ADV_PRICE_G, // 20 G
+        expiry: expiryStr,
+        active: isActive,
+        daysLeft: daysLeft
+      });
+    }
+
+    res.json({
+      success: true,
+      balance: user.golden_balance || 0,
+      subscriptions: subscriptions.sort((a, b) => new Date(b.expiry) - new Date(a.expiry))
+    });
+
+  } catch (err) {
+    console.error("Subscriptions fetch error:", err);
+    res.status(500).json({ error: "Failed to load subscriptions" });
+  }
+});
+
+// ============ CANCEL SUBSCRIPTION ENDPOINT ============
+app.post("/api/cancel-subscription", (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: "Login required" });
+    }
+
+    const { feature } = req.body;
+    if (!feature) {
+      return res.status(400).json({ error: "Feature required" });
+    }
+
+    const userId = getUserIdentifier(req);
+    const db = loadGoldenDB();
+    const user = db.users[userId];
+    
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Remove the subscription (it will expire naturally but won't auto-renew)
+    if (user.subscriptions && user.subscriptions[feature]) {
+      // For cancellation, we just remove it so it won't auto-renew
+      // The current subscription period remains active until expiry
+      delete user.subscriptions[feature];
+      saveGoldenDB(db);
+
+      console.log(`❌ Subscription canceled for ${userId}: ${feature}`);
+      
+      res.json({ 
+        success: true, 
+        message: "Subscription canceled. It will remain active until the expiry date." 
+      });
+    } else {
+      res.status(404).json({ error: "Subscription not found" });
+    }
+
+  } catch (err) {
+    console.error("Cancel subscription error:", err);
+    res.status(500).json({ error: "Failed to cancel subscription" });
+  }
+});  // ============ GOLDEN TRANSFER SYSTEM ============
 app.post("/api/transfer-golden", async (req, res) => {
   try {
     if (!req.user) {

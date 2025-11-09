@@ -498,38 +498,72 @@ app.use((req, _res, next) => {
   next();
 });
 
-// ============ ADVANCED AI INTEGRATION ============
+// ======== ADVANCED CHAT (one-price monthly) ========
+const ADV_PRICE_G = 20;
+const IMG_LIMIT_PER_MONTH = 20;
+
+function monthKey(d = new Date()) {
+  return d.toISOString().slice(0, 7); // "YYYY-MM"
+}
+
+// Activate / renew Advanced Chat for 1 month (costs 20 G)
 app.post("/api/subscribe-advanced-ai", (req, res) => {
-  if (!req.user)
-    return res.status(401).json({ error: "Login required" });
-  const { plan } = req.body;
-  if (!["plus", "pro"].includes(plan))
-    return res.status(400).json({ error: "Invalid plan" });
+  if (!req.user) return res.status(401).json({ error: "Login required" });
 
   const db = loadGoldenDB();
   const id = getUserIdentifier(req);
   const user = db.users[id];
-  if (!user)
-    return res.status(404).json({ error: "User not found" });
+  if (!user) return res.status(404).json({ error: "User not found" });
+
+  // normalize fields
+  user.subscriptions = user.subscriptions || {};
+  user.usage = user.usage || {};
+  user.usage.images = user.usage.images || { month: monthKey(), used: 0 };
+  if (user.usage.images.month !== monthKey()) {
+    user.usage.images = { month: monthKey(), used: 0 }; // reset quota on new month
+  }
 
   const now = new Date();
+  const currentExpiryStr = user.subscriptions.chat_advancedai || null;
+  const currentExpiry = currentExpiryStr ? new Date(currentExpiryStr) : null;
+
+  // If still active, don't charge again—just return current sub
+  if (currentExpiry && currentExpiry > now) {
+    return res.json({
+      success: true,
+      alreadyActive: true,
+      expires_at: currentExpiry.toISOString(),
+      newBalance: user.golden_balance || 0,
+      images_left: IMG_LIMIT_PER_MONTH - (user.usage.images.used || 0),
+    });
+  }
+
+  // Charge 20 G to start/renew this month
+  const bal = Number(user.golden_balance || 0);
+  if (bal < ADV_PRICE_G) {
+    return res.status(402).json({ error: "Not enough Golden (20 G required)" });
+  }
+
   const expiry = new Date(now);
   expiry.setMonth(now.getMonth() + 1);
 
-  user.subscriptions = user.subscriptions || {};
+  user.golden_balance = bal - ADV_PRICE_G;
   user.subscriptions.chat_advancedai = expiry.toISOString();
-  user.subscriptions.chat_advancedai_plan = plan;
+
+  // When paying for a new month, reset image quota
+  user.usage.images = { month: monthKey(), used: 0 };
 
   saveGoldenDB(db);
 
   res.json({
     success: true,
-    subscription: { plan, expires_at: expiry.toISOString() },
-    newBalance: user.golden_balance || 0,
+    expires_at: expiry.toISOString(),
+    newBalance: user.golden_balance,
+    images_left: IMG_LIMIT_PER_MONTH,
   });
 });
 
-// ---------- Advanced AI status ----------
+// ---------- Advanced Chat status ----------
 app.get("/api/advanced-ai-status", (req, res) => {
   if (!req.user) return res.json({ active: false, loggedIn: false });
 
@@ -538,9 +572,16 @@ app.get("/api/advanced-ai-status", (req, res) => {
   const user = db.users[id];
   if (!user) return res.json({ active: false, loggedIn: true });
 
+  // normalize usage bucket
+  user.usage = user.usage || {};
+  user.usage.images = user.usage.images || { month: monthKey(), used: 0 };
+  if (user.usage.images.month !== monthKey()) {
+    user.usage.images = { month: monthKey(), used: 0 };
+    saveGoldenDB(db);
+  }
+
   const now = new Date();
   const expiryStr = user.subscriptions?.chat_advancedai || null;
-  const plan = user.subscriptions?.chat_advancedai_plan || null;
 
   let active = false;
   let expires_at = null;
@@ -558,7 +599,6 @@ app.get("/api/advanced-ai-status", (req, res) => {
     } else {
       // auto-clean expired
       delete user.subscriptions.chat_advancedai;
-      delete user.subscriptions.chat_advancedai_plan;
       saveGoldenDB(db);
     }
   }
@@ -567,15 +607,52 @@ app.get("/api/advanced-ai-status", (req, res) => {
   res.json({
     loggedIn: true,
     active,
-    plan: active ? plan : null,
     expires_at,
     days_left,
     remaining_hours,
-    balance: user.golden_balance || 0,
+    balance: Number(user.golden_balance || 0),
+    images_left: IMG_LIMIT_PER_MONTH - Number(user.usage.images.used || 0),
+    img_limit: IMG_LIMIT_PER_MONTH,
+    monthly_price_g: ADV_PRICE_G,
   });
 });
+//=================chat memory by supabase==============
+app.post("/api/createChat", async (req, res) => {
+  const user = req.session.user;
+  if (!user) return res.json({ success:false, error:"Not logged in" });
 
+  const month = new Date().toISOString().slice(0,7); // e.g. 2025-11
+  const { data: existing } = await supabase
+    .from("chats")
+    .select("*")
+    .eq("user_id", user.id)
+    .eq("month", month)
+    .maybeSingle();
 
+  if (existing) return res.json({ success:true, already:true });
+
+  const { data: userData } = await supabase
+    .from("users")
+    .select("golden_balance")
+    .eq("id", user.id)
+    .single();
+
+  if (userData.golden_balance < 20)
+    return res.json({ success:false, error:"Not enough G" });
+
+  await supabase
+    .from("users")
+    .update({ golden_balance: userData.golden_balance - 20 })
+    .eq("id", user.id);
+
+  await supabase.from("chats").insert({
+    user_id: user.id,
+    cost: 20,
+    month
+  });
+
+  res.json({ success:true });
+});
 // ---------- AUTH (Google / GitHub) ----------
 const SITE_BASE_URL =
   "https://goldenspaceai.space";
@@ -843,7 +920,7 @@ app.post("/chat-free-ai", async (req, res) => {
     res.status(500).json({ error: e.message });
   }
 });
-// ========== ADVANCED CHAT AI (Supabase + Golden Integration) ==========
+// ========== ADVANCED CHAT AI (Supabase + Golden Integration, One-Price System) ==========
 app.post("/chat-advanced-ai", requireFeature("chat_advancedai"), upload.single("image"), async (req, res) => {
   let filePath = req.file?.path;
   try {
@@ -854,146 +931,116 @@ app.post("/chat-advanced-ai", requireFeature("chat_advancedai"), upload.single("
     const user = db.users[userId];
     if (!user) return res.status(404).json({ error: "User not found" });
 
-    const { model: requestedModel, q: prompt, project_id } = req.body;
+    const { q: prompt, project_id, mode } = req.body;
     if (!prompt) return res.status(400).json({ error: "Missing prompt" });
 
-    // 🔐 Step 1: Check subscription plan
-    const plan = user.subscriptions?.chat_advancedai_plan || "free";
-    const expiry = user.subscriptions?.chat_advancedai_expiry;
+    // 🔐 1. Check active subscription
+    const expiryStr = user.subscriptions?.chat_advancedai || null;
     const now = new Date();
-    if (!expiry || new Date(expiry) < now) {
-      return res.status(403).json({ error: "Subscription expired" });
+    if (!expiryStr || new Date(expiryStr) < now)
+      return res.status(403).json({ error: "Advanced Chat is locked. Please activate for 20 G." });
+
+    // 🧮 2. Prepare models
+    let model = "gpt-5-nano";
+    if (mode === "pro") model = "gpt-5"; // “Pro Thinking” button
+    const IMG_LIMIT_PER_MONTH = 20;
+
+    // 🧾 3. Enforce monthly image limit
+    user.usage = user.usage || {};
+    user.usage.images = user.usage.images || { month: now.toISOString().slice(0, 7), used: 0 };
+    if (user.usage.images.month !== now.toISOString().slice(0, 7)) {
+      user.usage.images = { month: now.toISOString().slice(0, 7), used: 0 }; // reset each month
+      saveGoldenDB(db);
     }
 
-    let model = "gpt-4o-mini";
-    let imageLimit = 0;
-    if (plan === "plus") {
-      model = requestedModel === "gpt-5-nano" ? "gpt-5-nano" : "gpt-4o-mini";
-      imageLimit = 20;
-    } else if (plan === "pro") {
-      model = requestedModel === "gpt-5" ? "gpt-5" : requestedModel || "gpt-4o";
-      imageLimit = Infinity;
-    }
-
-    // 🧮 Step 2: Handle image usage limit
-    if (requestedModel === "gpt-image-1") {
-      const { data: count, error: countErr } = await supabase
-        .from("messages")
-        .select("id", { count: "exact" })
-        .eq("sender", "ai")
-        .eq("chat_id", project_id)
-        .like("content", "%Image generated:%");
-
-      if (!countErr && count.length >= imageLimit && plan !== "pro") {
-        return res.status(403).json({ error: "Image limit reached for this month." });
+    // 🎨 4. Handle image generation
+    if (mode === "image") {
+      if (user.usage.images.used >= IMG_LIMIT_PER_MONTH) {
+        return res.status(403).json({ error: "You’ve reached your 20-image monthly limit." });
       }
+
+      const img = await openai.images.generate({
+        model: "dall-e-3",
+        prompt,
+        size: "1024x1024",
+        n: 1
+      });
+      const imageUrl = img.data[0].url;
+
+      user.usage.images.used++;
+      saveGoldenDB(db);
+
+      await supabase.from("messages").insert([
+        { chat_id: project_id, sender: "ai", content: `Image generated: ${imageUrl}` }
+      ]);
+
+      return res.json({
+        reply: `![Generated Image](${imageUrl})`,
+        imageUrl,
+        model: "dall-e-3"
+      });
     }
 
-    // 🧠 Step 3: Load context (last 30 messages)
-    const { data: history, error: histErr } = await supabase
+    // 🧠 5. Load chat history (last 30 msgs)
+    const { data: history } = await supabase
       .from("messages")
       .select("sender, content")
       .eq("chat_id", project_id)
       .order("timestamp", { ascending: true })
       .limit(30);
 
-    const contextMessages = !histErr && history?.length
-      ? history.map(m => ({
-          role: m.sender === "ai" ? "assistant" : "user",
-          content: m.content
-        }))
-      : [];
+    const context = (history || []).map(m => ({
+      role: m.sender === "ai" ? "assistant" : "user",
+      content: m.content
+    }));
 
-    // 🧾 Step 4: Add user message (and optional image)
-    let newMessage;
-    if (filePath) {
-      const b64 = fs.readFileSync(filePath).toString("base64");
-      const mime = req.file.mimetype || "image/png";
-      newMessage = {
-        role: "user",
-        content: [
-          { type: "text", text: prompt },
-          { type: "image_url", image_url: { url: `data:${mime};base64,${b64}` } }
-        ]
-      };
-    } else {
-      newMessage = { role: "user", content: prompt };
-    }
+    const newMsg = { role: "user", content: prompt };
+    const conversation = [...context, newMsg];
 
-    const conversation = [...contextMessages, newMessage];
+    // 💾 6. Save user message
+    await supabase.from("messages").insert([{ chat_id: project_id, sender: userId, content: prompt }]);
 
-    // 💾 Step 5: Save user's message
-    await supabase.from("messages").insert([
-      { chat_id: project_id, sender: userId, content: prompt }
-    ]);
-
-    // 🎨 Step 6: Handle image generation
-    if (requestedModel === "gpt-image-1") {
-      try {
-        const img = await openai.images.generate({
-          model: "dall-e-3",
-          prompt,
-          size: "1024x1024",
-          n: 1
-        });
-        const imageUrl = img.data[0].url;
-
-        await supabase.from("messages").insert([
-          { chat_id: project_id, sender: "ai", content: `Image generated: ${imageUrl}` }
-        ]);
-
-        return res.json({
-          reply: `![Generated Image](${imageUrl})`,
-          imageUrl,
-          model: "dall-e-3"
-        });
-      } catch (err) {
-        console.error("DALL-E error:", err);
-        return res.status(500).json({ error: "Image generation failed" });
-      }
-    }
-
-    // 🤖 Step 7: Get AI reply
+    // 🤖 7. Get AI reply
     const completion = await openai.chat.completions.create({
       model,
       messages: conversation,
       max_tokens: 2000,
       temperature: 0.7
     });
+
     const reply = completion.choices?.[0]?.message?.content || "No reply.";
 
-    // 💾 Step 8: Save AI message
-    await supabase.from("messages").insert([
-      { chat_id: project_id, sender: "ai", content: reply }
-    ]);
+    // 💾 8. Save AI reply
+    await supabase.from("messages").insert([{ chat_id: project_id, sender: "ai", content: reply }]);
 
-    // ⚙️ Step 9: Trim to last 30 messages
+    // ⚙️ 9. Trim chat to 30 messages
     const { data: allMsgs } = await supabase
       .from("messages")
       .select("id")
       .eq("chat_id", project_id)
       .order("timestamp", { ascending: false });
-
     if (allMsgs?.length > 30) {
       const extra = allMsgs.slice(30).map(m => m.id);
       await supabase.from("messages").delete().in("id", extra);
     }
 
-    // 💰 Step 10: Deduct Golden monthly if not done
-    const lastPaid = user.subscriptions?.chat_advancedai_lastPaid || null;
-    if (!lastPaid || new Date(lastPaid).getMonth() !== now.getMonth()) {
-      const cost = plan === "pro" ? 40 : 20;
-      if ((user.golden_balance || 0) >= cost) {
-        user.golden_balance -= cost;
+    // 💰 10. Ensure monthly 20 G charge (renew if month changed)
+    const lastPaid = user.subscriptions.chat_advancedai_lastPaid || null;
+    const currentMonth = now.toISOString().slice(0, 7);
+    const lastPaidMonth = lastPaid ? new Date(lastPaid).toISOString().slice(0, 7) : null;
+
+    if (lastPaidMonth !== currentMonth) {
+      if ((user.golden_balance || 0) >= 20) {
+        user.golden_balance -= 20;
         user.subscriptions.chat_advancedai_lastPaid = now.toISOString();
         saveGoldenDB(db);
       } else {
-        return res.status(402).json({ error: "Insufficient Golden to renew subscription." });
+        return res.status(402).json({ error: "Insufficient Golden to renew your 20 G monthly access." });
       }
     }
 
-    // ✅ Step 11: Send response
-    res.json({ reply, model, plan });
+    // ✅ 11. Return reply
+    res.json({ reply, model });
 
   } catch (e) {
     console.error("Advanced AI error:", e);

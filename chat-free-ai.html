@@ -1,283 +1,169 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GoldenSpaceAI Assistant</title>
-    <style>
-        :root {
-            --bg-dark: #0a0e15;
-            --text-primary: #E2E8F0;
-            --text-secondary: #94A3B8;
-            --gold-accent: #f6c64a;
-            --gold-glow: rgba(246, 198, 74, 0.15);
-            --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        }
-
-        * { box-sizing: border-box; }
-
-        body {
-            font-family: var(--font-main);
-            background-color: var(--bg-dark);
-            background-image: linear-gradient(rgba(10, 14, 21, 0.8), rgba(10, 14, 21, 0.9)), url('https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?q=80&w=2071&auto=format&fit=crop');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-            color: var(--text-primary);
-            margin: 0;
-            height: 100vh;
-            width: 100vw;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        /* --- Chat Log --- */
-        .chat-log {
-            flex: 1;
-            padding: 2rem;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .welcome-header {
-            text-align: center;
-            margin: auto 0;
-            padding-bottom: 5vh;
-        }
-        .welcome-header h1 {
-            font-size: 2.5rem;
-            color: var(--gold-accent);
-            margin: 0;
-            text-shadow: 0 0 20px var(--gold-glow);
-        }
-        .welcome-header p {
-            font-size: 1.2rem;
-            color: var(--text-secondary);
-        }
-
-        .chat-message {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-            max-width: 800px;
-            align-self: flex-start;
-            background-color: rgba(16, 24, 40, 0.6);
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(246, 198, 74, 0.1);
-            border-radius: 12px;
-            padding: 1rem;
-        }
-        .user-message {
-            align-self: flex-end;
-            flex-direction: row-reverse;
-            background-color: rgba(10, 14, 21, 0.7);
-        }
-        .chat-message .avatar {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background-color: #0a0e15;
-            flex-shrink: 0;
-            display: grid;
-            place-items: center;
-            font-size: 1.2rem;
-            border: 1px solid rgba(246, 198, 74, 0.2);
-        }
-        .ai-message .avatar {
-            border-color: var(--gold-accent);
-            box-shadow: 0 0 20px var(--gold-glow);
-        }
-        .message-content p { margin: 0; line-height: 1.7; white-space: pre-wrap; }
-
-        /* --- Input Area --- */
-        .chat-input-area {
-            padding: 1.5rem;
-            width: 100%;
-            max-width: 850px;
-            margin: 0 auto;
-        }
-        .fancy-input-wrapper {
-            position: relative;
-            display: flex;
-            align-items: center;
-            padding: 0.75rem 0;
-            border-top: 2px solid var(--gold-accent);
-            border-bottom: 2px solid var(--gold-accent);
-            transition: all 0.2s ease;
-        }
-        .fancy-input-wrapper::before,
-        .fancy-input-wrapper::after {
-            content: '';
-            position: absolute;
-            width: 24px;
-            height: 48px;
-            border: 2px solid var(--gold-accent);
-            top: 50%;
-            transform: translateY(-50%);
-        }
-        .fancy-input-wrapper::before {
-            left: 0;
-            border-right: none;
-            border-radius: 24px 0 0 24px;
-        }
-        .fancy-input-wrapper::after {
-            right: 0;
-            border-left: none;
-            border-radius: 0 24px 24px 0;
-        }
-
-        #chat-input {
-            flex: 1;
-            background-color: transparent;
-            color: var(--text-primary);
-            border: none;
-            outline: none;
-            padding: 0.5rem 2rem;
-            font-size: 1.2rem;
-            resize: none;
-            overflow-y: hidden;
-            line-height: 1.5;
-        }
-        #send-btn {
-            background: none;
-            border: none;
-            color: var(--gold-accent);
-            cursor: pointer;
-            padding: 0.5rem 2rem;
-            transition: transform 0.2s;
-        }
-        #send-btn:hover { transform: scale(1.1); }
-        #send-btn:disabled { color: var(--text-secondary); cursor: not-allowed; }
-
-        /* --- Floating Buttons --- */
-        .floating-buttons {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            z-index: 1000;
-        }
-        .floating-buttons a {
-            text-decoration: none;
-            color: var(--bg-dark);
-            background-color: var(--gold-accent);
-            border-radius: 12px;
-            padding: 10px 20px;
-            font-weight: 600;
-            box-shadow: 0 0 10px var(--gold-glow);
-            transition: all 0.2s ease;
-        }
-        .floating-buttons a:hover {
-            transform: scale(1.05);
-            box-shadow: 0 0 20px var(--gold-glow);
-        }
-
-        @media (max-width: 900px) {
-            .chat-log, .chat-input-area { padding: 1rem; }
-            .welcome-header h1 { font-size: 1.8rem; }
-        }
-    </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>GoldenSpaceAI • Free Chat</title>
+<style>
+:root{
+  --gold1:#ffd700;--gold2:#ffed4e;--border:rgba(255,255,255,.15);
+}
+*{box-sizing:border-box;}
+body{
+  margin:0;font-family:"Segoe UI",Roboto,sans-serif;color:#fff;
+  background:#000 url("https://images.unsplash.com/photo-1462331940025-496dfbfc7564?q=80&w=2400&auto=format&fit=crop")
+  center/cover fixed no-repeat;min-height:100vh;display:flex;flex-direction:column;overflow-x:hidden;
+}
+header{
+  position:fixed;top:0;left:0;right:0;z-index:10;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 16px;background:rgba(0,0,0,.7);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--border);
+}
+header .logo{
+  width:34px;height:34px;border-radius:50%;
+  background:conic-gradient(from 200deg,var(--gold1),var(--gold2),#b89200,var(--gold1));
+  box-shadow:0 0 10px rgba(255,215,0,.4);
+}
+header h1{margin:0;font-size:18px;color:var(--gold1);font-weight:900;}
+nav a{
+  color:var(--gold1);
+  text-decoration:none;
+  margin-left:14px;
+  font-weight:600;
+}
+nav a:hover{text-decoration:underline;}
+#chatContainer{
+  display:flex;flex:1;margin-top:60px;
+}
+.sidebar{
+  width:250px;flex-shrink:0;
+  background:rgba(0,0,0,.85);
+  border-right:1px solid var(--border);
+  height:calc(100vh - 60px);
+  display:flex;flex-direction:column;
+  padding:14px;overflow-y:auto;
+}
+.sidebar h3{margin:0 0 10px;color:var(--gold1);}
+#customInstr{
+  width:100%;min-height:60px;border-radius:8px;
+  border:1px solid rgba(255,255,255,.2);
+  background:rgba(255,255,255,.07);color:#fff;
+  padding:6px 8px;margin-bottom:10px;font-size:13px;
+}
+.newChatBtn{
+  background:linear-gradient(45deg,var(--gold1),var(--gold2));
+  color:#141000;font-weight:800;border:none;border-radius:10px;padding:8px;margin-bottom:10px;
+  cursor:pointer;
+}
+.chatItem{
+  background:rgba(255,255,255,.08);
+  border:1px solid transparent;
+  border-radius:8px;
+  margin-bottom:6px;
+  padding:8px;
+  cursor:pointer;
+}
+.chatItem.active{border-color:var(--gold1);background:rgba(255,215,0,.1);}
+.chatItem:hover{border-color:var(--gold2);}
+.deleteBtn{float:right;color:#f55;cursor:pointer;font-size:13px;}
+#chatArea{
+  flex:1;overflow-y:auto;padding:20px 12px 180px;
+}
+.msg{
+  max-width:750px;margin:10px auto;
+  padding:12px 16px;border-radius:12px;
+  border:1px solid var(--border);backdrop-filter:blur(6px);
+  word-wrap:break-word;
+}
+.msg.user{background:linear-gradient(180deg,rgba(255,215,0,.12),rgba(255,215,0,.08));}
+.msg.ai{background:rgba(15,15,30,.6);}
+.msg small{display:block;font-size:.75rem;opacity:.6;margin-bottom:3px;}
+footer{
+  position:fixed;
+  bottom:10px; /* lifted ~1cm higher */
+  left:0;right:0;
+  background:rgba(0,0,0,.75);backdrop-filter:blur(12px);
+  border-top:1px solid var(--border);
+  padding:10px 8px;display:none;
+}
+#composer{display:flex;gap:10px;max-width:900px;margin:auto;}
+#prompt{
+  flex:1;resize:none;border-radius:10px;
+  border:1px solid rgba(255,255,255,.2);
+  background:rgba(255,255,255,.08);color:#fff;
+  padding:10px 14px;min-height:45px;
+}
+button.send{
+  background:linear-gradient(45deg,var(--gold1),var(--gold2));
+  border:none;border-radius:10px;padding:0 16px;
+  font-weight:800;color:#141000;cursor:pointer;
+}
+@media(max-width:768px){
+  #chatContainer{flex-direction:column;}
+  .sidebar{width:100%;height:auto;border-right:none;border-bottom:1px solid var(--border);}
+}
+</style>
 </head>
 <body>
+<header>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <div class="logo"></div>
+    <h1>GoldenSpaceAI</h1>
+  </div>
+  <nav>
+    <a href="/">Home</a>
+    <a href="plans.html">Pricing</a>
+  </nav>
+</header>
 
-    <!-- Floating Navigation Buttons -->
-    <div class="floating-buttons">
-        <a href="index.html">🏠 Home</a>
-        <a href="buy-golden.html">💰 Pricing</a>
-    </div>
+<div id="chatContainer">
+  <aside class="sidebar" id="chatMenu">
+    <h3>Custom Instructions</h3>
+    <textarea id="customInstr" placeholder="Describe how the AI should respond..."></textarea>
+    <button class="newChatBtn" id="newChat">＋ New Chat</button>
+    <div id="chatItems">Loading chats…</div>
+  </aside>
 
-    <main class="chat-log" id="chat-log">
-        <div class="welcome-header" id="welcome-header">
-            <h1>GoldenSpaceAI Assistant</h1>
-            <p>I am powered by Gemini. Ask me anything about the cosmos.</p>
-        </div>
-    </main>
-    
-    <footer class="chat-input-area">
-        <form id="chat-form">
-            <div class="fancy-input-wrapper">
-                <textarea id="chat-input" placeholder="Ask a question..." rows="1" required></textarea>
-                <button id="send-btn" type="submit" title="Send Message">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="22" y1="2" x2="11" y2="13"></line>
-                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                    </svg>
-                </button>
-            </div>
-        </form>
-    </footer>
+  <main id="chatArea">
+    <div class="msg ai"><small>GoldenSpaceAI</small>Welcome to your free chat.</div>
+  </main>
+</div>
 
-    <script>
-        const chatForm = document.getElementById('chat-form');
-        const chatInput = document.getElementById('chat-input');
-        const sendBtn = document.getElementById('send-btn');
-        const chatLog = document.getElementById('chat-log');
-        const welcomeHeader = document.getElementById('welcome-header');
+<footer>
+  <div id="composer">
+    <textarea id="prompt" placeholder="Type your message…"></textarea>
+    <button class="send" id="sendBtn">Send</button>
+  </div>
+</footer>
 
-        function appendMessage(sender, text) {
-            if (welcomeHeader) welcomeHeader.style.display = 'none';
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `chat-message ${sender}-message`;
-            const avatar = sender === 'user' ? '🧑‍🚀' : '✨';
-            const p = document.createElement('p');
-            p.textContent = text;
-            messageDiv.innerHTML = `<div class="avatar">${avatar}</div><div class="message-content"></div>`;
-            messageDiv.querySelector('.message-content').appendChild(p);
-            chatLog.appendChild(messageDiv);
-            chatLog.scrollTop = chatLog.scrollHeight;
-        }
+<script>
+const chatArea=document.getElementById("chatArea");
+const promptEl=document.getElementById("prompt");
 
-        async function submitQuery(question) {
-            if (!question) return;
-            appendMessage('user', question);
-            chatInput.value = '';
-            chatInput.style.height = 'auto';
-            sendBtn.disabled = true;
-            
-            const aiMessagePlaceholder = document.createElement('div');
-            aiMessagePlaceholder.className = 'chat-message ai-message';
-            aiMessagePlaceholder.innerHTML = `<div class="avatar">✨</div><div class="message-content"><p>...</p></div>`;
-            chatLog.appendChild(aiMessagePlaceholder);
-            chatLog.scrollTop = chatLog.scrollHeight;
-
-            try {
-                const response = await fetch('/chat-free-ai', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ question })
-                });
-                if (!response.ok) throw new Error('Network response failed.');
-                const data = await response.json();
-                aiMessagePlaceholder.querySelector('.message-content p').textContent =
-                    data.reply || data.answer || "No reply received.";
-            } catch (error) {
-                aiMessagePlaceholder.querySelector('.message-content p').textContent = 'Sorry, an error occurred.';
-                console.error('Error:', error);
-            } finally {
-                sendBtn.disabled = false;
-            }
-        }
-
-        chatForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            submitQuery(chatInput.value.trim());
-        });
-
-        chatInput.addEventListener('input', () => {
-            chatInput.style.height = 'auto';
-            chatInput.style.height = (chatInput.scrollHeight) + 'px';
-        });
-
-        chatInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                chatForm.requestSubmit();
-            }
-        });
-    </script>
+document.getElementById("sendBtn").onclick=async()=>{
+  const text=promptEl.value.trim();
+  if(!text)return;
+  addMsg("user",text);
+  promptEl.value="";
+  addMsg("ai","Thinking…");
+  try{
+    const r=await fetch("/chat-free",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"include",body:JSON.stringify({q:text})});
+    const j=await r.json();
+    replaceLastAI(j.reply||j.error||"[No reply]");
+  }catch(e){replaceLastAI("Error: "+e.message);}
+};
+function addMsg(role,txt){
+  const d=document.createElement("div");
+  d.className="msg "+role;
+  d.innerHTML=`<small>${role==="ai"?"GoldenSpaceAI":"You"}</small>${txt}`;
+  chatArea.appendChild(d);
+  chatArea.scrollTop=chatArea.scrollHeight;
+}
+function replaceLastAI(txt){
+  const m=[...document.querySelectorAll(".msg.ai")].pop();
+  if(m)m.innerHTML=`<small>GoldenSpaceAI</small>${txt}`;
+}
+</script>
 </body>
 </html>

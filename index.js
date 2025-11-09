@@ -25,12 +25,6 @@ async function ensureUserInDB(email, name) {
 async function addGoldenToUser(email, amount) {
   await supabase.rpc('increment_balance', { user_email: email, amount_to_add: amount });
 }
-await supabase.from('subscriptions').insert([{
-  user_id: userId,
-  feature: 'AI access',
-  expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-}]);
-
 // ============ ENV & APP ============
 dotenv.config();
 const app = express();

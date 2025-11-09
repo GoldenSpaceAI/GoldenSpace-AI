@@ -43,19 +43,22 @@ body{
   color:#141000;
   font-weight:800;
   cursor:pointer;
-  margin-bottom:15px;
+  margin-bottom:10px;
 }
-.custom-instructions{
+.custom-instructions-btn{
   width:100%;
   padding:10px;
-  background:rgba(255,255,255,.08);
+  background:rgba(255,255,255,.1);
   border:1px solid var(--border);
   border-radius:8px;
-  color:#fff;
-  font-size:12px;
-  resize:vertical;
-  min-height:60px;
+  color:var(--gold1);
+  font-weight:600;
+  cursor:pointer;
   margin-bottom:15px;
+  transition:all 0.2s ease;
+}
+.custom-instructions-btn:hover{
+  background:rgba(255,255,255,.15);
 }
 .chats-list{
   flex:1;
@@ -86,6 +89,18 @@ body{
   overflow:hidden;
   text-overflow:ellipsis;
 }
+.delete-btn{
+  float:right;
+  color:#ff5555;
+  cursor:pointer;
+  font-size:12px;
+  padding:2px 6px;
+  border-radius:4px;
+}
+.delete-btn:hover{
+  background:rgba(255,85,85,.2);
+}
+
 /* Main Content */
 #main-content{
   flex:1;
@@ -128,10 +143,11 @@ header h1{
   cursor:pointer;
   margin-left:10px;
 }
-/* Lock Screen */
+
+/* Lock Screen - Completely removed when unlocked */
 #locked{
   flex:1;
-  display:none;
+  display:flex;
   align-items:center;
   justify-content:center;
   background:rgba(0,0,0,.8);
@@ -139,7 +155,6 @@ header h1{
 }
 .lockBox{
   background:rgba(0,0,0,.9);
-  backdrop-filter:blur(15px);
   padding:40px 30px;
   border:2px solid var(--gold1);
   border-radius:20px;
@@ -171,6 +186,7 @@ header h1{
 .lockBtn:hover{
   transform:scale(1.05);
 }
+
 /* Chat Area */
 #chatArea{
   flex:1;
@@ -216,6 +232,7 @@ header h1{
   color:var(--gold1);
   font-style:italic;
 }
+
 /* Feature Bar */
 #featureBar{
   display:none;
@@ -241,18 +258,19 @@ header h1{
   background:rgba(255,255,255,.15);
   transform:translateY(-2px);
 }
-.featureBtn.pro-thinking{
-  background:linear-gradient(45deg,#8b5cf6,#a855f7);
-  color:white;
-  border-color:#8b5cf6;
+.featureBtn.active{
+  background:rgba(255,215,0,.2);
+  border-color:var(--gold1);
 }
-/* Footer */
+
+/* Footer - Floating 2cm from bottom */
 footer{
   background:rgba(0,0,0,.75);
   backdrop-filter:blur(12px);
   border-top:1px solid var(--border);
   padding:20px;
   display:none;
+  margin-top:auto;
 }
 #composer{
   display:flex;
@@ -271,6 +289,7 @@ footer{
   padding:12px 16px;
   min-height:50px;
   font-family:inherit;
+  max-height:120px;
 }
 button.send{
   background:linear-gradient(45deg,var(--gold1),var(--gold2));
@@ -281,10 +300,78 @@ button.send{
   color:#141000;
   cursor:pointer;
   transition:transform 0.2s ease;
+  height:50px;
 }
 button.send:hover{
   transform:scale(1.05);
 }
+
+/* Custom Instructions Modal */
+.modal-overlay{
+  position:fixed;
+  top:0;
+  left:0;
+  right:0;
+  bottom:0;
+  background:rgba(0,0,0,.8);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:1000;
+  display:none;
+}
+.modal-content{
+  background:rgba(0,0,0,.9);
+  border:2px solid var(--gold1);
+  border-radius:20px;
+  padding:30px;
+  max-width:500px;
+  width:90%;
+  max-height:80vh;
+  overflow-y:auto;
+}
+.modal-content h3{
+  color:var(--gold1);
+  margin:0 0 15px 0;
+  text-align:center;
+}
+.modal-textarea{
+  width:100%;
+  height:200px;
+  background:rgba(255,255,255,.08);
+  border:1px solid var(--border);
+  border-radius:10px;
+  color:#fff;
+  padding:15px;
+  font-family:inherit;
+  resize:vertical;
+  margin-bottom:15px;
+}
+.modal-buttons{
+  display:flex;
+  gap:10px;
+  justify-content:flex-end;
+}
+.modal-btn{
+  padding:10px 20px;
+  border:none;
+  border-radius:8px;
+  font-weight:600;
+  cursor:pointer;
+  transition:all 0.2s ease;
+}
+.modal-btn.save{
+  background:var(--gold1);
+  color:#141000;
+}
+.modal-btn.cancel{
+  background:rgba(255,255,255,.1);
+  color:#fff;
+}
+.modal-btn:hover{
+  transform:translateY(-2px);
+}
+
 /* Mobile Responsive */
 @media(max-width:768px){
   #sidebar{
@@ -293,12 +380,22 @@ button.send:hover{
     top:0;
     height:100vh;
     z-index:1000;
+    width:280px;
   }
   #sidebar.active{
     left:0;
   }
   .menuBtn{
     display:block;
+  }
+  #featureBar{
+    flex-wrap:wrap;
+    gap:8px;
+  }
+  .featureBtn{
+    min-width:120px;
+    padding:10px 15px;
+    font-size:14px;
   }
 }
 </style>
@@ -308,7 +405,7 @@ button.send:hover{
 <div id="sidebar">
   <div class="sidebar-header">
     <button class="new-chat-btn" id="newChat">＋ New Chat</button>
-    <textarea class="custom-instructions" id="customInstructions" placeholder="Custom instructions for AI (e.g., 'Always respond in Spanish', 'Be concise', etc.)"></textarea>
+    <button class="custom-instructions-btn" id="customInstructionsBtn">⚙️ Custom Instructions</button>
   </div>
   <div class="chats-list" id="chatsList">
     <!-- Chat items will be loaded here -->
@@ -333,8 +430,8 @@ button.send:hover{
     <div class="lockBox">
       <div style="font-size:60px;margin-bottom:20px;">🔒</div>
       <h2>Advanced Chat Locked</h2>
-      <p>This premium feature costs <b style="color:var(--gold1);">20 G</b> per month</p>
-      <p>Unlock unlimited advanced conversations with GPT-5 and image generation capabilities</p>
+      <p>This premium feature costs <b style="color:var(--gold1);">20 G</b> for 30 days access</p>
+      <p>Unlock advanced conversations with GPT-4o, image generation, and smart features</p>
       <button class="lockBtn" id="unlockBtn">Activate for 20 G</button>
     </div>
   </div>
@@ -343,25 +440,42 @@ button.send:hover{
   <div id="featureBar">
     <div class="featureBtn" id="genImage">🖼️ Generate Image</div>
     <div class="featureBtn" id="studyLearn">📚 Study & Learn</div>
-    <div class="featureBtn pro-thinking" id="proThinking">🚀 Pro Thinking (GPT-5)</div>
+    <div class="featureBtn" id="proThinking">🚀 Advanced Thinking</div>
   </div>
 
   <!-- Chat Area -->
   <div id="chatArea">
     <div class="msg ai">
       <small>GoldenSpaceAI</small>
-      Welcome to Advanced Chat! You have access to GPT-5, image generation, and smart features. 
+      Welcome to Advanced Chat! You have access to GPT-4o, image generation, and smart features. 
       Start by typing a message or using the feature buttons above.
     </div>
   </div>
 
-  <!-- Footer -->
+  <!-- Footer - Floating 2cm from bottom -->
   <footer>
     <div id="composer">
       <textarea id="prompt" placeholder="Type your message…" rows="1"></textarea>
       <button class="send" id="sendBtn">Send</button>
     </div>
   </footer>
+</div>
+
+<!-- Custom Instructions Modal -->
+<div class="modal-overlay" id="instructionsModal">
+  <div class="modal-content">
+    <h3>Custom Instructions</h3>
+    <textarea class="modal-textarea" id="instructionsText" placeholder="Tell the AI how to behave. Examples:
+• Always respond in Spanish
+• Be concise and to the point  
+• Explain concepts like I'm a beginner
+• Use formal language
+• Include examples in your answers"></textarea>
+    <div class="modal-buttons">
+      <button class="modal-btn cancel" id="cancelInstructions">Cancel</button>
+      <button class="modal-btn save" id="saveInstructions">Save Instructions</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -377,9 +491,11 @@ const chatsList = document.getElementById('chatsList');
 const chatArea = document.getElementById('chatArea');
 const lockedScreen = document.getElementById('locked');
 const featureBar = document.getElementById('featureBar');
-const footer = document.getElementById('footer');
+const footer = document.querySelector('footer');
 const promptInput = document.getElementById('prompt');
 const userBalance = document.getElementById('userBalance');
+const instructionsModal = document.getElementById('instructionsModal');
+const instructionsText = document.getElementById('instructionsText');
 
 // Initialize
 document.addEventListener('DOMContentLoaded', function() {
@@ -397,8 +513,9 @@ function setupEventListeners() {
   document.getElementById('genImage').addEventListener('click', () => activateFeature('image'));
   document.getElementById('studyLearn').addEventListener('click', () => activateFeature('study'));
   document.getElementById('proThinking').addEventListener('click', () => activateFeature('pro'));
-  
-  document.getElementById('customInstructions').addEventListener('change', saveCustomInstructions);
+  document.getElementById('customInstructionsBtn').addEventListener('click', showInstructionsModal);
+  document.getElementById('saveInstructions').addEventListener('click', saveInstructions);
+  document.getElementById('cancelInstructions').addEventListener('click', hideInstructionsModal);
   
   promptInput.addEventListener('keypress', function(e) {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -407,9 +524,13 @@ function setupEventListeners() {
     }
   });
 
-  promptInput.addEventListener('input', function() {
-    this.style.height = 'auto';
-    this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+  promptInput.addEventListener('input', autoResizeTextarea);
+  
+  // Close modal when clicking outside
+  instructionsModal.addEventListener('click', function(e) {
+    if (e.target === instructionsModal) {
+      hideInstructionsModal();
+    }
   });
 }
 
@@ -427,11 +548,13 @@ async function checkSubscriptionStatus() {
     userBalance.textContent = `G: ${data.balance ?? "--"}`;
     
     if (!data.active) {
+      // Show lock screen
       lockedScreen.style.display = "flex";
       chatArea.style.display = "none";
       featureBar.style.display = "none";
       footer.style.display = "none";
     } else {
+      // Remove lock completely - show full chatbot interface
       lockedScreen.style.display = "none";
       chatArea.style.display = "block";
       featureBar.style.display = "flex";
@@ -454,8 +577,8 @@ async function unlockAdvancedChat() {
     const data = await response.json();
     
     if (data.success) {
-      alert("✅ Advanced Chat activated successfully!");
-      location.reload();
+      alert("✅ Advanced Chat activated for 30 days!");
+      checkSubscriptionStatus(); // Refresh the interface
     } else {
       alert("❌ " + (data.error || "Activation failed"));
     }
@@ -485,7 +608,7 @@ async function loadChats() {
         <div class="chat-preview">${project.description || 'No messages yet'}</div>
         <div style="margin-top:5px; display:flex; justify-content:space-between; align-items:center;">
           <small style="color:#666;">${new Date(project.created_at).toLocaleDateString()}</small>
-          <span class="delete-btn" style="color:#ff5555; cursor:pointer; font-size:12px;">✕</span>
+          <span class="delete-btn" title="Delete chat">✕</span>
         </div>
       `;
       
@@ -562,6 +685,7 @@ async function loadChatMessages(chatId) {
     chatArea.scrollTop = chatArea.scrollHeight;
   } catch (error) {
     console.error("Failed to load messages:", error);
+    addMessageToChat('ai', 'Error loading messages. Please try again.', false);
   }
 }
 
@@ -587,7 +711,17 @@ async function deleteChat(chatId) {
 // Message Handling
 async function sendMessage() {
   const message = promptInput.value.trim();
-  if (!message || !currentChat) return;
+  if (!message) {
+    alert("Please enter a message");
+    return;
+  }
+  
+  if (!currentChat) {
+    alert("Please create or select a chat first");
+    return;
+  }
+  
+  console.log("Sending message:", message, "to chat:", currentChat, "mode:", currentMode);
   
   // Add user message to chat
   addMessageToChat('user', message, true);
@@ -600,11 +734,12 @@ async function sendMessage() {
   try {
     const requestBody = {
       q: message,
-      project_id: currentChat,
+      chat_id: currentChat,
       mode: currentMode,
-      custom_instructions: customInstructions,
-      chat_history: chatHistory
+      custom_instructions: customInstructions
     };
+    
+    console.log("Sending request:", requestBody);
     
     const response = await fetch("/chat-advanced-ai", {
       method: "POST",
@@ -627,6 +762,7 @@ async function sendMessage() {
     
     // Reset mode after use
     currentMode = "normal";
+    resetFeatureButtons();
     
   } catch (error) {
     thinkingMsg.remove();
@@ -650,56 +786,81 @@ function addMessageToChat(sender, content, saveToHistory = false) {
   chatArea.appendChild(messageDiv);
   chatArea.scrollTop = chatArea.scrollHeight;
   
-  // Save to chat history (last 5 messages)
-  if (saveToHistory && sender === 'user') {
-    chatHistory.push({ role: 'user', content: content });
-    if (chatHistory.length > 5) chatHistory.shift();
-  }
-  
   return messageDiv;
 }
 
 // Feature Management
 function activateFeature(feature) {
+  // Reset all buttons first
+  resetFeatureButtons();
+  
   switch(feature) {
     case 'image':
       currentMode = 'image';
+      document.getElementById('genImage').classList.add('active');
       alert('🖼️ Image generation activated! Your next message will generate an image.');
       break;
     case 'study':
       currentMode = 'study';
+      document.getElementById('studyLearn').classList.add('active');
       alert('📚 Study mode activated! AI will provide detailed explanations.');
       break;
     case 'pro':
       currentMode = 'pro';
-      alert('🚀 Pro Thinking (GPT-5) activated! Your next message will use advanced reasoning.');
+      document.getElementById('proThinking').classList.add('active');
+      alert('🚀 Advanced Thinking activated! Your next message will use enhanced reasoning.');
       break;
   }
-  
-  // Highlight active feature
-  document.querySelectorAll('.featureBtn').forEach(btn => btn.style.opacity = '1');
-  event.currentTarget.style.opacity = '0.8';
 }
 
-// Custom Instructions
+function resetFeatureButtons() {
+  document.querySelectorAll('.featureBtn').forEach(btn => {
+    btn.classList.remove('active');
+  });
+}
+
+// Custom Instructions Management
+function showInstructionsModal() {
+  instructionsText.value = customInstructions;
+  instructionsModal.style.display = 'flex';
+}
+
+function hideInstructionsModal() {
+  instructionsModal.style.display = 'none';
+}
+
+async function saveInstructions() {
+  customInstructions = instructionsText.value.trim();
+  
+  try {
+    // Save to localStorage for now
+    localStorage.setItem('goldenspace_custom_instructions', customInstructions);
+    
+    // TODO: Save to Supabase when user system is ready
+    // await saveInstructionsToSupabase(customInstructions);
+    
+    hideInstructionsModal();
+    alert('✅ Custom instructions saved!');
+  } catch (error) {
+    alert('❌ Failed to save instructions: ' + error.message);
+  }
+}
+
 function loadCustomInstructions() {
   const saved = localStorage.getItem('goldenspace_custom_instructions');
   if (saved) {
-    document.getElementById('customInstructions').value = saved;
     customInstructions = saved;
   }
 }
 
-function saveCustomInstructions() {
-  customInstructions = document.getElementById('customInstructions').value;
-  localStorage.setItem('goldenspace_custom_instructions', customInstructions);
-}
-
 // Auto-resize textarea
-promptInput.addEventListener('input', function() {
+function autoResizeTextarea() {
   this.style.height = 'auto';
   this.style.height = Math.min(this.scrollHeight, 120) + 'px';
-});
+}
+
+// Initialize textarea resize
+promptInput.addEventListener('input', autoResizeTextarea);
 </script>
 </body>
 </html>

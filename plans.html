@@ -4,67 +4,73 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Buy Golden Tokens | GoldenSpaceAI</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   body {
     margin: 0;
     font-family: "Poppins", sans-serif;
     color: #fff;
-    background: radial-gradient(circle at top, #0a0a1a 0%, #000 100%);
-    background-image: url("https://images.unsplash.com/photo-1454789548928-9efd52dc4031?auto=format&fit=crop&w=1950&q=80");
-    background-size: cover;
-    background-position: center;
+    background: radial-gradient(circle at 20% 20%, #111827, #000);
     background-attachment: fixed;
     min-height: 100vh;
   }
+
   header {
     text-align: center;
-    padding: 40px 20px 10px;
+    padding: 80px 20px 40px;
   }
+
   h1 {
     color: #ffd65a;
-    font-size: 2.8rem;
-    letter-spacing: 1px;
+    font-size: 3rem;
+    margin: 0;
   }
+
   p.subtitle {
-    color: #ccc;
-    font-size: 1rem;
+    color: #bbb;
+    font-size: 1.1rem;
+    max-width: 700px;
+    margin: 10px auto 0;
   }
+
   .plans {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 30px;
-    padding: 40px 20px 60px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 25px;
+    padding: 60px 10%;
   }
+
   .plan {
-    background: rgba(15,15,25,0.9);
-    border: 1px solid rgba(255, 214, 90, 0.6);
+    background: rgba(25, 25, 40, 0.9);
+    border: 1px solid rgba(255, 214, 90, 0.3);
     border-radius: 16px;
-    width: 260px;
     padding: 25px;
     text-align: center;
-    box-shadow: 0 0 20px rgba(255, 214, 90, 0.1);
-    transition: transform 0.3s, box-shadow 0.3s;
+    transition: transform 0.25s, box-shadow 0.25s;
   }
+
   .plan:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 0 25px rgba(255, 214, 90, 0.4);
+    transform: translateY(-8px);
+    box-shadow: 0 0 20px rgba(255, 214, 90, 0.3);
   }
+
   .plan h2 {
-    margin: 0;
-    color: #fff;
-    font-size: 1.4rem;
+    font-size: 1.5rem;
+    margin-bottom: 5px;
   }
+
   .price {
     font-size: 1.3rem;
     color: #ffd65a;
-    margin: 10px 0;
+    margin-bottom: 8px;
   }
+
   .bonus {
     color: #7aff7a;
     font-size: 0.9rem;
     margin-bottom: 10px;
   }
+
   button {
     background: linear-gradient(90deg, #ffd65a, #ffcc33);
     border: none;
@@ -73,90 +79,113 @@
     color: #000;
     font-weight: 600;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: all 0.3s;
   }
-  button:hover { background: #ffe177; }
+
+  button:hover {
+    background: #ffe177;
+    transform: scale(1.05);
+  }
 
   footer {
     text-align: center;
-    padding: 25px;
-    color: #999;
-    font-size: 0.85rem;
+    padding: 40px;
+    font-size: 0.9rem;
+    color: #aaa;
     border-top: 1px solid rgba(255,255,255,0.1);
+    background: rgba(0,0,0,0.6);
   }
 
-  /* modal */
+  /* Modal */
   .modal {
     position: fixed;
     inset: 0;
     display: none;
-    background: rgba(0,0,0,0.85);
     align-items: center;
     justify-content: center;
+    background: rgba(0,0,0,0.8);
+    z-index: 1000;
   }
+
   .modal-content {
     background: #111;
-    padding: 25px;
-    border-radius: 12px;
-    width: 320px;
+    padding: 25px 30px;
+    border-radius: 14px;
+    width: 90%;
+    max-width: 400px;
     color: #fff;
-    text-align: left;
     border: 1px solid #ffd65a;
-    box-shadow: 0 0 20px rgba(255, 214, 90, 0.3);
+    box-shadow: 0 0 25px rgba(255, 214, 90, 0.25);
   }
+
   .close {
     float: right;
-    color: #999;
+    color: #aaa;
+    font-size: 1.3rem;
     cursor: pointer;
-    font-size: 1.2rem;
   }
+
+  .close:hover { color: #fff; }
+
+  label {
+    display: block;
+    margin-top: 15px;
+    margin-bottom: 5px;
+    color: #ddd;
+    font-size: 0.9rem;
+  }
+
   select, input {
     width: 100%;
-    padding: 8px;
+    padding: 10px;
     background: #000;
     color: #fff;
-    border: 1px solid #555;
+    border: 1px solid #444;
     border-radius: 6px;
-    margin-top: 10px;
+    font-family: inherit;
   }
+
   .copied {
-    text-align: center;
     color: #7aff7a;
     font-size: 0.9rem;
-    margin-top: 5px;
+    text-align: center;
+    margin-top: 6px;
     display: none;
   }
+
 </style>
 </head>
 <body>
 <header>
   <h1>Buy Golden Tokens</h1>
-  <p class="subtitle">Use any major crypto to buy Golden. 1 Golden = $1 USD.<br>
-  All payments are verified on-chain — Golden is added automatically after confirmation.</p>
+  <p class="subtitle">
+    Use any major crypto to buy Golden. 1 Golden = $1 USD.<br>
+    All payments are verified on-chain — Golden is added automatically after confirmation.
+  </p>
 </header>
 
 <div class="plans">
   <div class="plan">
     <h2>20 Golden</h2>
     <div class="price">$5</div>
-    <button onclick="openModal(5,20)">Purchase</button>
+    <button onclick="openModal(5, 20)">Purchase</button>
   </div>
   <div class="plan">
     <h2>40 Golden</h2>
     <div class="price">$10</div>
-    <button onclick="openModal(10,40)">Purchase</button>
+    <button onclick="openModal(10, 40)">Purchase</button>
   </div>
   <div class="plan">
     <h2>100 Golden</h2>
     <div class="price">$20</div>
     <div class="bonus">Save $5</div>
-    <button onclick="openModal(20,100)">Purchase</button>
+    <button onclick="openModal(20, 100)">Purchase</button>
   </div>
   <div class="plan">
     <h2>200 Golden</h2>
     <div class="price">$40</div>
     <div class="bonus">Save $10</div>
-    <button onclick="openModal(40,200)">Purchase</button>
+    <button onclick="openModal(40, 200)">Purchase</button>
   </div>
 </div>
 
@@ -165,7 +194,7 @@
     <span class="close" onclick="closeModal()">&times;</span>
     <h3 id="modalTitle"></h3>
     <p id="modalDetails"></p>
-    <label>Select Crypto:</label>
+    <label for="cryptoSelect">Select Crypto:</label>
     <select id="cryptoSelect" onchange="showAddress()">
       <option value="">Choose coin...</option>
       <option value="BTC">Bitcoin (BTC)</option>
@@ -187,28 +216,28 @@
 </div>
 
 <footer>
-  ©️ 2025 GoldenSpaceAI. All payments are operated by blockchain. Please allow up to 1 business day after on-chain confirmation.
+  ©️ 2025 GoldenSpaceAI — All blockchain payments are securely verified. Please allow up to 1 business day after on-chain confirmation.
 </footer>
 
 <script>
 let modal = document.getElementById('cryptoModal');
 let selectedPrice = 0, selectedGolden = 0;
 
-function openModal(price, golden){
+function openModal(price, golden) {
   selectedPrice = price;
   selectedGolden = golden;
   document.getElementById('modalTitle').innerText = `Purchase ${golden} Golden`;
   document.getElementById('modalDetails').innerText = `Total: $${price}`;
   modal.style.display = 'flex';
 }
-function closeModal(){ modal.style.display = 'none'; }
+function closeModal() { modal.style.display = 'none'; }
 
-async function showAddress(){
+async function showAddress() {
   const coin = document.getElementById('cryptoSelect').value;
   const walletBox = document.getElementById('walletBox');
   const walletInput = document.getElementById('walletAddress');
   const amountBox = document.getElementById('amountBox');
-  if(!coin){ walletBox.style.display='none'; return; }
+  if (!coin) { walletBox.style.display = 'none'; return; }
 
   const wallets = {
     BTC: "bc1qz5wtz2d329xsm7gcs9e3jwls9supg2fk2hkxtd",
@@ -245,14 +274,12 @@ async function showAddress(){
   }
 }
 
-function copyAddress(){
+function copyAddress() {
   const walletInput = document.getElementById('walletAddress');
-  walletInput.select();
-  walletInput.setSelectionRange(0, 99999);
-  document.execCommand("copy");
+  navigator.clipboard.writeText(walletInput.value);
   const msg = document.getElementById('copiedMsg');
   msg.style.display = 'block';
-  setTimeout(()=> msg.style.display='none', 2000);
+  setTimeout(() => msg.style.display = 'none', 2000);
 }
 </script>
 </body>

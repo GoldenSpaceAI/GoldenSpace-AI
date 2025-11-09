@@ -245,6 +245,8 @@ app.post("/api/projects/create", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+//================================================================================PART 2 INDEX.JS PART 2 INDEX.JS ============================================================
+
 // ============ SESSION CONFIGURATION ============
 const sessionConfig = {
   secret: process.env.SESSION_SECRET || "super-secret-key-change-in-production",
@@ -576,8 +578,7 @@ app.get("/api/advanced-ai-status", (req, res) => {
 
 // ---------- AUTH (Google / GitHub) ----------
 const SITE_BASE_URL =
-  process.env.BASE_URL || "https://goldenspaceai.space"; // set BASE_URL in env for dev/prod
-
+  "https://goldenspaceai.space";
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
   passport.use(
     new GoogleStrategy(

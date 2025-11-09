@@ -22,34 +22,48 @@ body{
   flex-direction:column;
 }
 header{
-  position:fixed;
-  top:0;left:0;right:0;
+  position:fixed;top:0;left:0;right:0;
   background:rgba(0,0,0,.7);
   backdrop-filter:blur(10px);
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
+  display:flex;align-items:center;justify-content:space-between;
   padding:10px 16px;
   border-bottom:1px solid var(--border);
   z-index:10;
 }
 header .logo{
-  width:34px;height:34px;
-  border-radius:50%;
+  width:34px;height:34px;border-radius:50%;
   background:conic-gradient(from 200deg,var(--gold1),var(--gold2),#b89200,var(--gold1));
   box-shadow:0 0 10px rgba(255,215,0,.4);
 }
 header h1{margin:0;font-size:18px;color:var(--gold1);font-weight:900;}
+#userBalance{font-size:14px;color:#ddd;}
+#locked,#chatArea{flex:1;display:none;padding-top:80px;}
+#locked{
+  align-items:center;justify-content:center;flex-direction:column;text-align:center;
+}
+.lockBox{
+  background:rgba(0,0,0,.7);
+  backdrop-filter:blur(10px);
+  padding:30px 20px;
+  border:1px solid var(--border);
+  border-radius:16px;
+  max-width:360px;margin:auto;
+}
+.lockBox h2{color:var(--gold1);margin-top:0;}
+.lockBtn{
+  background:linear-gradient(45deg,var(--gold1),var(--gold2));
+  border:none;border-radius:12px;
+  padding:12px 18px;font-weight:800;
+  color:#141000;cursor:pointer;
+  margin-top:15px;
+}
 #chatArea{
-  flex:1;
   overflow-y:auto;
   padding:80px 12px 180px;
 }
 .msg{
-  max-width:750px;
-  margin:10px auto;
-  padding:12px 16px;
-  border-radius:12px;
+  max-width:750px;margin:10px auto;
+  padding:12px 16px;border-radius:12px;
   border:1px solid var(--border);
   backdrop-filter:blur(6px);
   word-wrap:break-word;
@@ -58,64 +72,40 @@ header h1{margin:0;font-size:18px;color:var(--gold1);font-weight:900;}
 .msg.ai{background:rgba(15,15,30,.6);}
 .msg small{display:block;font-size:.75rem;opacity:.6;margin-bottom:3px;}
 footer{
-  position:fixed;
-  bottom:0;left:0;right:0;
+  position:fixed;bottom:0;left:0;right:0;
   background:rgba(0,0,0,.75);
   backdrop-filter:blur(12px);
   border-top:1px solid var(--border);
-  padding:10px 8px;
+  padding:10px 8px;display:none;
 }
-#composer{
-  display:flex;
-  gap:10px;
-  max-width:900px;
-  margin:auto;
-}
+#composer{display:flex;gap:10px;max-width:900px;margin:auto;}
 #prompt{
-  flex:1;
-  resize:none;
+  flex:1;resize:none;
   border-radius:10px;
   border:1px solid rgba(255,255,255,.2);
   background:rgba(255,255,255,.08);
-  color:#fff;
-  padding:10px 14px;
-  min-height:45px;
+  color:#fff;padding:10px 14px;min-height:45px;
 }
-button{
+button.send{
   background:linear-gradient(45deg,var(--gold1),var(--gold2));
-  border:none;
-  border-radius:10px;
-  padding:0 16px;
-  font-weight:800;
-  color:#141000;
-  cursor:pointer;
+  border:none;border-radius:10px;padding:0 16px;
+  font-weight:800;color:#141000;cursor:pointer;
 }
 #featureBar{
-  position:fixed;
-  bottom:70px;
-  left:0;right:0;
-  display:flex;
-  justify-content:center;
-  gap:10px;
-  flex-wrap:wrap;
-  padding:6px;
+  position:fixed;bottom:70px;left:0;right:0;
+  display:flex;justify-content:center;gap:10px;
+  flex-wrap:wrap;padding:6px;display:none;
 }
 .featureBtn{
-  flex:1 1 30%;
-  min-width:110px;
+  flex:1 1 30%;min-width:110px;
   background:rgba(255,255,255,.08);
   border:1px solid var(--border);
-  border-radius:12px;
-  color:var(--gold1);
-  padding:10px;
-  text-align:center;
-  font-weight:600;
+  border-radius:12px;color:var(--gold1);
+  padding:10px;text-align:center;font-weight:600;
   cursor:pointer;
 }
 .featureBtn:hover{background:rgba(255,255,255,.15);}
-@media(max-width:768px){
-  #featureBar{bottom:80px;}
-}
+@media(max-width:768px){#featureBar{bottom:80px;}}
 </style>
 </head>
 <body>
@@ -125,8 +115,17 @@ button{
   <span id="userBalance">G: —</span>
 </header>
 
+<div id="locked">
+  <div class="lockBox">
+    <h2>🔒 Advanced Chat Locked</h2>
+    <p>This feature costs <b>20 G</b> per month.<br>
+    Unlock full access to GPT-5 reasoning, images (20/month), and study tools.</p>
+    <button class="lockBtn" id="unlockBtn">Activate for 20 G</button>
+  </div>
+</div>
+
 <div id="chatArea">
-  <div class="msg ai"><small>GoldenSpaceAI</small>Welcome to your advanced chat. Each month costs <b>20 G</b> to keep this AI active.</div>
+  <div class="msg ai"><small>GoldenSpaceAI</small>Welcome to your advanced chat. You’re now active this month.</div>
 </div>
 
 <div id="featureBar">
@@ -138,34 +137,47 @@ button{
 <footer>
   <div id="composer">
     <textarea id="prompt" placeholder="Type your message…"></textarea>
-    <button id="sendBtn">Send</button>
+    <button class="send" id="sendBtn">Send</button>
   </div>
 </footer>
 
 <script>
-const chatArea=document.getElementById("chatArea");
-const promptEl=document.getElementById("prompt");
 const balanceEl=document.getElementById("userBalance");
+const lockScreen=document.getElementById("locked");
+const chatScreen=document.getElementById("chatArea");
+const footer=document.querySelector("footer");
+const features=document.getElementById("featureBar");
+const promptEl=document.getElementById("prompt");
 
-async function loadProfile(){
+async function checkStatus(){
   try{
-    const res=await fetch("/api/profile",{credentials:"include"});
-    const data=await res.json();
-    balanceEl.textContent="G: "+data.golden_balance;
-  }catch(e){balanceEl.textContent="G: --";}
+    const r=await fetch("/api/advanced-ai-status",{credentials:"include"});
+    const j=await r.json();
+    balanceEl.textContent="G: "+(j.balance ?? "--");
+
+    if(!j.active){
+      lockScreen.style.display="flex";
+    }else{
+      chatScreen.style.display="block";
+      footer.style.display="block";
+      features.style.display="flex";
+    }
+  }catch(e){
+    lockScreen.style.display="flex";
+  }
 }
 
-// create or renew monthly chat
-async function startChatMonth(){
+document.getElementById("unlockBtn").onclick=async()=>{
   try{
-    const res=await fetch("/api/createChat",{method:"POST",credentials:"include"});
-    const data=await res.json();
-    if(!data.success) alert(data.error||"Could not start chat");
-    else loadProfile();
-  }catch(e){console.error(e);}
-}
+    const r=await fetch("/api/subscribe-advanced-ai",{method:"POST",credentials:"include"});
+    const j=await r.json();
+    if(j.success){
+      alert("Activated! You can now chat.");
+      location.reload();
+    }else alert(j.error||"Could not activate.");
+  }catch(e){alert("Error: "+e.message);}
+};
 
-// basic send
 async function sendMessage(){
   const text=promptEl.value.trim();
   if(!text)return;
@@ -182,8 +194,8 @@ function addMsg(role,txt){
   const d=document.createElement("div");
   d.className="msg "+role;
   d.innerHTML=`<small>${role==="ai"?"GoldenSpaceAI":"You"}</small>${txt}`;
-  chatArea.appendChild(d);
-  chatArea.scrollTop=chatArea.scrollHeight;
+  chatScreen.appendChild(d);
+  chatScreen.scrollTop=chatScreen.scrollHeight;
 }
 function replaceLastAI(txt){
   const m=[...document.querySelectorAll(".msg.ai")].pop();
@@ -199,14 +211,13 @@ document.getElementById("studyLearn").onclick=()=>sendFeature("study");
 async function sendFeature(type){
   let msg="";
   if(type==="image")msg="Generate an image for my last message.";
-  if(type==="pro")msg="Answer using advanced reasoning (GPT-5).";
-  if(type==="study")msg="Explain the previous topic step-by-step for a student.";
+  if(type==="pro")msg="Use advanced reasoning (GPT-5).";
+  if(type==="study")msg="Explain the previous topic step-by-step like for a student.";
   addMsg("user",msg);
   await sendMessage();
 }
 
-loadProfile();
-startChatMonth();
+checkStatus();
 </script>
 </body>
 </html>

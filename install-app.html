@@ -12,43 +12,50 @@
       color: #FFD700;
       font-family: "Poppins", sans-serif;
       text-align: center;
-      padding: 50px;
+      padding: 60px 20px;
     }
-    .container {
-      max-width: 400px;
-      margin: 0 auto;
+    img {
+      width: 150px;
+      border-radius: 20px;
+      margin-bottom: 30px;
     }
     h1 {
       font-size: 2em;
-      margin-bottom: 20px;
+      margin-bottom: 15px;
     }
-    button {
+    p {
+      font-size: 1.1em;
+      margin-bottom: 30px;
+      color: #FFD700;
+    }
+    #installApp {
       background-color: #FFD700;
       color: #000;
       border: none;
-      padding: 15px 30px;
-      border-radius: 10px;
+      padding: 15px 35px;
+      border-radius: 12px;
       font-size: 1em;
+      font-weight: bold;
       cursor: pointer;
       transition: 0.3s;
+      display: none;
     }
-    button:hover {
+    #installApp:hover {
       background-color: #e6c200;
     }
-    img {
-      width: 120px;
-      margin-bottom: 25px;
-      border-radius: 20px;
+    .note {
+      margin-top: 40px;
+      font-size: 0.9em;
+      color: #888;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <img src="/icon5.png" alt="GoldenSpaceAI Logo">
-    <h1>Install GoldenSpaceAI</h1>
-    <p>Get instant access to all 11 AI tools right from your device.</p>
-    <button id="installApp">Install Now</button>
-  </div>
+  <img src="icon5.png" alt="GoldenSpaceAI Logo">
+  <h1>Install GoldenSpaceAI</h1>
+  <p>Get instant access to all 11 AI tools right from your device.</p>
+  <button id="installApp">Install App</button>
+  <div class="note">If you don't see the button, open this page in Chrome or Edge.</div>
 
   <script>
     // Register service worker
@@ -58,7 +65,6 @@
 
     let deferredPrompt;
     const installBtn = document.getElementById("installApp");
-    installBtn.style.display = "none";
 
     window.addEventListener("beforeinstallprompt", (e) => {
       e.preventDefault();
@@ -71,7 +77,7 @@
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
       if (outcome === "accepted") {
-        alert("GoldenSpaceAI has been installed!");
+        alert("GoldenSpaceAI has been installed successfully!");
       }
       deferredPrompt = null;
     });

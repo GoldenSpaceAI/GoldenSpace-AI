@@ -478,6 +478,8 @@ button.send:hover{
   </div>
 </div>
 
+// Replace the entire <script> section with this fixed version:
+
 <script>
 // Global variables
 let currentChat = null;
@@ -499,364 +501,388 @@ const instructionsText = document.getElementById('instructionsText');
 
 // Initialize
 document.addEventListener('DOMContentLoaded', function() {
-  checkSubscriptionStatus();
-  loadCustomInstructions();
-  setupEventListeners();
+    checkSubscriptionStatus();
+    loadCustomInstructions();
+    setupEventListeners();
 });
 
 // Event Listeners
 function setupEventListeners() {
-  document.getElementById('toggleSidebar').addEventListener('click', toggleSidebar);
-  document.getElementById('newChat').addEventListener('click', createNewChat);
-  document.getElementById('unlockBtn').addEventListener('click', unlockAdvancedChat);
-  document.getElementById('sendBtn').addEventListener('click', sendMessage);
-  document.getElementById('genImage').addEventListener('click', () => activateFeature('image'));
-  document.getElementById('studyLearn').addEventListener('click', () => activateFeature('study'));
-  document.getElementById('proThinking').addEventListener('click', () => activateFeature('pro'));
-  document.getElementById('customInstructionsBtn').addEventListener('click', showInstructionsModal);
-  document.getElementById('saveInstructions').addEventListener('click', saveInstructions);
-  document.getElementById('cancelInstructions').addEventListener('click', hideInstructionsModal);
-  
-  promptInput.addEventListener('keypress', function(e) {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
-  });
+    document.getElementById('toggleSidebar').addEventListener('click', toggleSidebar);
+    document.getElementById('newChat').addEventListener('click', createNewChat);
+    document.getElementById('unlockBtn').addEventListener('click', unlockAdvancedChat);
+    document.getElementById('sendBtn').addEventListener('click', sendMessage);
+    document.getElementById('genImage').addEventListener('click', () => activateFeature('image'));
+    document.getElementById('studyLearn').addEventListener('click', () => activateFeature('study'));
+    document.getElementById('proThinking').addEventListener('click', () => activateFeature('pro'));
+    document.getElementById('customInstructionsBtn').addEventListener('click', showInstructionsModal);
+    document.getElementById('saveInstructions').addEventListener('click', saveInstructions);
+    document.getElementById('cancelInstructions').addEventListener('click', hideInstructionsModal);
+    
+    promptInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    });
 
-  promptInput.addEventListener('input', autoResizeTextarea);
-  
-  // Close modal when clicking outside
-  instructionsModal.addEventListener('click', function(e) {
-    if (e.target === instructionsModal) {
-      hideInstructionsModal();
-    }
-  });
+    promptInput.addEventListener('input', autoResizeTextarea);
+    
+    // Close modal when clicking outside
+    instructionsModal.addEventListener('click', function(e) {
+        if (e.target === instructionsModal) {
+            hideInstructionsModal();
+        }
+    });
 }
 
 // Sidebar toggle
 function toggleSidebar() {
-  sidebar.classList.toggle('active');
+    sidebar.classList.toggle('active');
 }
 
 // Subscription check
 async function checkSubscriptionStatus() {
-  try {
-    const response = await fetch("/api/advanced-ai-status", { credentials: "include" });
-    const data = await response.json();
-    
-    userBalance.textContent = `G: ${data.balance ?? "--"}`;
-    
-    if (!data.active) {
-      // Show lock screen
-      lockedScreen.style.display = "flex";
-      chatArea.style.display = "none";
-      featureBar.style.display = "none";
-      footer.style.display = "none";
-    } else {
-      // Remove lock completely - show full chatbot interface
-      lockedScreen.style.display = "none";
-      chatArea.style.display = "block";
-      featureBar.style.display = "flex";
-      footer.style.display = "block";
-      loadChats();
+    try {
+        const response = await fetch("/api/advanced-ai-status", { credentials: "include" });
+        const data = await response.json();
+        
+        userBalance.textContent = `G: ${data.balance ?? "--"}`;
+        
+        if (!data.active) {
+            // Show lock screen
+            lockedScreen.style.display = "flex";
+            chatArea.style.display = "none";
+            featureBar.style.display = "none";
+            footer.style.display = "none";
+        } else {
+            // Remove lock completely - show full chatbot interface
+            lockedScreen.style.display = "none";
+            chatArea.style.display = "block";
+            featureBar.style.display = "flex";
+            footer.style.display = "block";
+            loadChats();
+        }
+    } catch (error) {
+        console.error("Status check failed:", error);
+        lockedScreen.style.display = "flex";
     }
-  } catch (error) {
-    console.error("Status check failed:", error);
-    lockedScreen.style.display = "flex";
-  }
 }
 
 // Unlock advanced chat
 async function unlockAdvancedChat() {
-  try {
-    const response = await fetch("/api/subscribe-advanced-ai", {
-      method: "POST",
-      credentials: "include"
-    });
-    const data = await response.json();
-    
-    if (data.success) {
-      alert("✅ Advanced Chat activated for 30 days!");
-      checkSubscriptionStatus(); // Refresh the interface
-    } else {
-      alert("❌ " + (data.error || "Activation failed"));
+    try {
+        const response = await fetch("/api/subscribe-advanced-ai", {
+            method: "POST",
+            credentials: "include"
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+            alert("✅ Advanced Chat activated for 30 days!");
+            checkSubscriptionStatus(); // Refresh the interface
+        } else {
+            alert("❌ " + (data.error || "Activation failed"));
+        }
+    } catch (error) {
+        alert("❌ Error: " + error.message);
     }
-  } catch (error) {
-    alert("❌ Error: " + error.message);
-  }
 }
 
 // Chat Management
 async function loadChats() {
-  try {
-    const response = await fetch("/api/projects", { credentials: "include" });
-    const data = await response.json();
-    
-    chatsList.innerHTML = "";
-    
-    if (!data.projects?.length) {
-      chatsList.innerHTML = '<div style="color:#888; text-align:center; padding:20px;">No chats yet</div>';
-      return;
+    try {
+        const response = await fetch("/api/projects", { credentials: "include" });
+        const data = await response.json();
+        
+        chatsList.innerHTML = "";
+        
+        if (!data.projects?.length) {
+            chatsList.innerHTML = '<div style="color:#888; text-align:center; padding:20px;">No chats yet</div>';
+            return;
+        }
+        
+        data.projects.forEach(project => {
+            const chatItem = document.createElement('div');
+            chatItem.className = 'chat-item';
+            chatItem.innerHTML = `
+                <div style="font-weight:600;">${project.name}</div>
+                <div class="chat-preview">${project.description || 'No messages yet'}</div>
+                <div style="margin-top:5px; display:flex; justify-content:space-between; align-items:center;">
+                    <small style="color:#666;">${new Date(project.created_at).toLocaleDateString()}</small>
+                    <span class="delete-btn" title="Delete chat">✕</span>
+                </div>
+            `;
+            
+            chatItem.querySelector('.delete-btn').addEventListener('click', (e) => {
+                e.stopPropagation();
+                deleteChat(project.id);
+            });
+            
+            chatItem.addEventListener('click', () => openChat(project));
+            chatsList.appendChild(chatItem);
+        });
+    } catch (error) {
+        console.error("Failed to load chats:", error);
     }
-    
-    data.projects.forEach(project => {
-      const chatItem = document.createElement('div');
-      chatItem.className = 'chat-item';
-      chatItem.innerHTML = `
-        <div style="font-weight:600;">${project.name}</div>
-        <div class="chat-preview">${project.description || 'No messages yet'}</div>
-        <div style="margin-top:5px; display:flex; justify-content:space-between; align-items:center;">
-          <small style="color:#666;">${new Date(project.created_at).toLocaleDateString()}</small>
-          <span class="delete-btn" title="Delete chat">✕</span>
-        </div>
-      `;
-      
-      chatItem.querySelector('.delete-btn').addEventListener('click', (e) => {
-        e.stopPropagation();
-        deleteChat(project.id);
-      });
-      
-      chatItem.addEventListener('click', () => openChat(project));
-      chatsList.appendChild(chatItem);
-    });
-  } catch (error) {
-    console.error("Failed to load chats:", error);
-  }
 }
 
 async function createNewChat() {
-  const chatName = prompt("Enter chat name:", `Chat ${new Date().toLocaleDateString()}`);
-  if (!chatName) return;
-  
-  try {
-    const response = await fetch("/api/projects/create", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ name: chatName, description: "New chat" })
-    });
+    const chatName = prompt("Enter chat name:", `Chat ${new Date().toLocaleDateString()}`);
+    if (!chatName) return;
     
-    const data = await response.json();
-    
-    if (data.success) {
-      loadChats();
-      openChat(data.project);
+    try {
+        const response = await fetch("/api/projects/create", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ name: chatName, description: "New chat" })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            await loadChats(); // Wait for chats to reload
+            if (data.project) {
+                openChat(data.project);
+            }
+        } else {
+            alert("Failed to create chat: " + (data.error || "Unknown error"));
+        }
+    } catch (error) {
+        console.error("Create chat error:", error);
+        alert("Failed to create chat: " + error.message);
     }
-  } catch (error) {
-    alert("Failed to create chat: " + error.message);
-  }
 }
 
 async function openChat(project) {
-  currentChat = project.id;
-  
-  // Update active chat UI
-  document.querySelectorAll('.chat-item').forEach(item => item.classList.remove('active'));
-  event.currentTarget.classList.add('active');
-  
-  // Load chat messages
-  await loadChatMessages(project.id);
+    if (!project || !project.id) {
+        console.error("Invalid project:", project);
+        return;
+    }
+    
+    currentChat = project.id;
+    
+    // Update active chat UI
+    document.querySelectorAll('.chat-item').forEach(item => item.classList.remove('active'));
+    
+    // Find and activate the clicked chat item
+    const chatItems = document.querySelectorAll('.chat-item');
+    for (let item of chatItems) {
+        if (item.textContent.includes(project.name)) {
+            item.classList.add('active');
+            break;
+        }
+    }
+    
+    // Load chat messages
+    await loadChatMessages(project.id);
 }
 
 async function loadChatMessages(chatId) {
-  try {
-    const response = await fetch(`/api/chat/${chatId}`, { credentials: "include" });
-    const data = await response.json();
-    
-    chatArea.innerHTML = "";
-    chatHistory = [];
-    
-    if (data.messages?.length) {
-      data.messages.forEach(message => {
-        addMessageToChat(message.sender, message.content, false);
-        // Keep last 5 messages for context
-        if (chatHistory.length < 5) {
-          chatHistory.push({
-            role: message.sender === 'ai' ? 'assistant' : 'user',
-            content: message.content
-          });
+    try {
+        const response = await fetch(`/api/chat/${chatId}`, { credentials: "include" });
+        const data = await response.json();
+        
+        chatArea.innerHTML = "";
+        chatHistory = [];
+        
+        if (data.messages?.length) {
+            data.messages.forEach(message => {
+                addMessageToChat(message.sender, message.content, false);
+                // Keep last 5 messages for context
+                if (chatHistory.length < 5) {
+                    chatHistory.push({
+                        role: message.sender === 'ai' ? 'assistant' : 'user',
+                        content: message.content
+                    });
+                }
+            });
+        } else {
+            addMessageToChat('ai', 'Welcome to your new chat! Start by sending a message.', false);
         }
-      });
-    } else {
-      addMessageToChat('ai', 'Welcome to your new chat! Start by sending a message.', false);
+        
+        chatArea.scrollTop = chatArea.scrollHeight;
+    } catch (error) {
+        console.error("Failed to load messages:", error);
+        addMessageToChat('ai', 'Error loading messages. Please try again.', false);
     }
-    
-    chatArea.scrollTop = chatArea.scrollHeight;
-  } catch (error) {
-    console.error("Failed to load messages:", error);
-    addMessageToChat('ai', 'Error loading messages. Please try again.', false);
-  }
 }
 
 async function deleteChat(chatId) {
-  if (!confirm("Are you sure you want to delete this chat?")) return;
-  
-  try {
-    await fetch(`/api/projects/${chatId}`, {
-      method: "DELETE",
-      credentials: "include"
-    });
-    loadChats();
+    if (!confirm("Are you sure you want to delete this chat?")) return;
     
-    if (currentChat === chatId) {
-      currentChat = null;
-      chatArea.innerHTML = '<div class="msg ai"><small>GoldenSpaceAI</small>Select or create a chat to start messaging.</div>';
+    try {
+        const response = await fetch(`/api/projects/${chatId}`, {
+            method: "DELETE",
+            credentials: "include"
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            await loadChats();
+            
+            if (currentChat === chatId) {
+                currentChat = null;
+                chatArea.innerHTML = '<div class="msg ai"><small>GoldenSpaceAI</small>Select or create a chat to start messaging.</div>';
+            }
+        } else {
+            alert("Failed to delete chat: " + (data.error || "Unknown error"));
+        }
+    } catch (error) {
+        console.error("Delete chat error:", error);
+        alert("Failed to delete chat: " + error.message);
     }
-  } catch (error) {
-    alert("Failed to delete chat: " + error.message);
-  }
 }
 
 // Message Handling
 async function sendMessage() {
-  const message = promptInput.value.trim();
-  if (!message) {
-    alert("Please enter a message");
-    return;
-  }
-  
-  if (!currentChat) {
-    alert("Please create or select a chat first");
-    return;
-  }
-  
-  console.log("Sending message:", message, "to chat:", currentChat, "mode:", currentMode);
-  
-  // Add user message to chat
-  addMessageToChat('user', message, true);
-  promptInput.value = "";
-  promptInput.style.height = 'auto';
-  
-  // Show thinking indicator
-  const thinkingMsg = addMessageToChat('ai', '<span class="thinking">Thinking...</span>', true);
-  
-  try {
-    const requestBody = {
-      q: message,
-      chat_id: currentChat,
-      mode: currentMode,
-      custom_instructions: customInstructions
-    };
-    
-    console.log("Sending request:", requestBody);
-    
-    const response = await fetch("/chat-advanced-ai", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify(requestBody)
-    });
-    
-    const data = await response.json();
-    
-    // Remove thinking message and add actual response
-    thinkingMsg.remove();
-    
-    if (data.imageUrl) {
-      // Handle image response
-      addMessageToChat('ai', `![Generated Image](${data.imageUrl})`, true);
-    } else {
-      addMessageToChat('ai', data.reply || data.error || "No response received", true);
+    const message = promptInput.value.trim();
+    if (!message) {
+        alert("Please enter a message");
+        return;
     }
     
-    // Reset mode after use
-    currentMode = "normal";
-    resetFeatureButtons();
+    if (!currentChat) {
+        alert("Please create or select a chat first");
+        return;
+    }
     
-  } catch (error) {
-    thinkingMsg.remove();
-    addMessageToChat('ai', "Error: " + error.message, true);
-  }
+    console.log("Sending message:", message, "to chat:", currentChat, "mode:", currentMode);
+    
+    // Add user message to chat
+    addMessageToChat('user', message, true);
+    promptInput.value = "";
+    promptInput.style.height = 'auto';
+    
+    // Show thinking indicator
+    const thinkingMsg = addMessageToChat('ai', '<span class="thinking">Thinking...</span>', true);
+    
+    try {
+        const requestBody = {
+            q: message,
+            chat_id: currentChat,
+            mode: currentMode,
+            custom_instructions: customInstructions
+        };
+        
+        console.log("Sending request:", requestBody);
+        
+        const response = await fetch("/chat-advanced-ai", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify(requestBody)
+        });
+        
+        const data = await response.json();
+        
+        // Remove thinking message and add actual response
+        thinkingMsg.remove();
+        
+        if (data.imageUrl) {
+            // Handle image response
+            addMessageToChat('ai', `![Generated Image](${data.imageUrl})`, true);
+        } else {
+            addMessageToChat('ai', data.reply || data.error || "No response received", true);
+        }
+        
+        // Reset mode after use
+        currentMode = "normal";
+        resetFeatureButtons();
+        
+    } catch (error) {
+        console.error("Send message error:", error);
+        thinkingMsg.remove();
+        addMessageToChat('ai', "Error: " + error.message, true);
+    }
 }
 
 function addMessageToChat(sender, content, saveToHistory = false) {
-  const messageDiv = document.createElement('div');
-  messageDiv.className = `msg ${sender}`;
-  
-  // Handle image URLs in content
-  let formattedContent = content;
-  const imageMatch = content.match(/!\[.*?\]\((.*?)\)/);
-  if (imageMatch) {
-    formattedContent = content.replace(/!\[.*?\]\((.*?)\)/, 
-      `<img src="${imageMatch[1]}" alt="Generated image" onload="this.scrollIntoView({behavior: 'smooth'})">`);
-  }
-  
-  messageDiv.innerHTML = `<small>${sender === 'ai' ? 'GoldenSpaceAI' : 'You'}</small>${formattedContent}`;
-  chatArea.appendChild(messageDiv);
-  chatArea.scrollTop = chatArea.scrollHeight;
-  
-  return messageDiv;
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `msg ${sender}`;
+    
+    // Handle image URLs in content
+    let formattedContent = content;
+    const imageMatch = content.match(/!\[.*?\]\((.*?)\)/);
+    if (imageMatch) {
+        formattedContent = content.replace(/!\[.*?\]\((.*?)\)/, 
+            `<img src="${imageMatch[1]}" alt="Generated image" onload="this.scrollIntoView({behavior: 'smooth'})">`);
+    }
+    
+    messageDiv.innerHTML = `<small>${sender === 'ai' ? 'GoldenSpaceAI' : 'You'}</small>${formattedContent}`;
+    chatArea.appendChild(messageDiv);
+    chatArea.scrollTop = chatArea.scrollHeight;
+    
+    return messageDiv;
 }
 
 // Feature Management
 function activateFeature(feature) {
-  // Reset all buttons first
-  resetFeatureButtons();
-  
-  switch(feature) {
-    case 'image':
-      currentMode = 'image';
-      document.getElementById('genImage').classList.add('active');
-      alert('🖼️ Image generation activated! Your next message will generate an image.');
-      break;
-    case 'study':
-      currentMode = 'study';
-      document.getElementById('studyLearn').classList.add('active');
-      alert('📚 Study mode activated! AI will provide detailed explanations.');
-      break;
-    case 'pro':
-      currentMode = 'pro';
-      document.getElementById('proThinking').classList.add('active');
-      alert('🚀 Advanced Thinking activated! Your next message will use enhanced reasoning.');
-      break;
-  }
+    // Reset all buttons first
+    resetFeatureButtons();
+    
+    switch(feature) {
+        case 'image':
+            currentMode = 'image';
+            document.getElementById('genImage').classList.add('active');
+            alert('🖼️ Image generation activated! Your next message will generate an image.');
+            break;
+        case 'study':
+            currentMode = 'study';
+            document.getElementById('studyLearn').classList.add('active');
+            alert('📚 Study mode activated! AI will provide detailed explanations.');
+            break;
+        case 'pro':
+            currentMode = 'pro';
+            document.getElementById('proThinking').classList.add('active');
+            alert('🚀 Advanced Thinking activated! Your next message will use enhanced reasoning.');
+            break;
+    }
 }
 
 function resetFeatureButtons() {
-  document.querySelectorAll('.featureBtn').forEach(btn => {
-    btn.classList.remove('active');
-  });
+    document.querySelectorAll('.featureBtn').forEach(btn => {
+        btn.classList.remove('active');
+    });
 }
 
 // Custom Instructions Management
 function showInstructionsModal() {
-  instructionsText.value = customInstructions;
-  instructionsModal.style.display = 'flex';
+    instructionsText.value = customInstructions;
+    instructionsModal.style.display = 'flex';
 }
 
 function hideInstructionsModal() {
-  instructionsModal.style.display = 'none';
+    instructionsModal.style.display = 'none';
 }
 
 async function saveInstructions() {
-  customInstructions = instructionsText.value.trim();
-  
-  try {
-    // Save to localStorage for now
-    localStorage.setItem('goldenspace_custom_instructions', customInstructions);
+    customInstructions = instructionsText.value.trim();
     
-    // TODO: Save to Supabase when user system is ready
-    // await saveInstructionsToSupabase(customInstructions);
-    
-    hideInstructionsModal();
-    alert('✅ Custom instructions saved!');
-  } catch (error) {
-    alert('❌ Failed to save instructions: ' + error.message);
-  }
+    try {
+        // Save to localStorage for now
+        localStorage.setItem('goldenspace_custom_instructions', customInstructions);
+        
+        hideInstructionsModal();
+        alert('✅ Custom instructions saved!');
+    } catch (error) {
+        alert('❌ Failed to save instructions: ' + error.message);
+    }
 }
 
 function loadCustomInstructions() {
-  const saved = localStorage.getItem('goldenspace_custom_instructions');
-  if (saved) {
-    customInstructions = saved;
-  }
+    const saved = localStorage.getItem('goldenspace_custom_instructions');
+    if (saved) {
+        customInstructions = saved;
+    }
 }
 
 // Auto-resize textarea
 function autoResizeTextarea() {
-  this.style.height = 'auto';
-  this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+    this.style.height = 'auto';
+    this.style.height = Math.min(this.scrollHeight, 120) + 'px';
 }
 
 // Initialize textarea resize

@@ -14,6 +14,22 @@ import axios from "axios";
 import multer from "multer";
 import fs from "fs";
 import { createClient } from "@supabase/supabase-js";
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+//===========connect to supabase============
+async function ensureUserInDB(email, name) {
+  const { data: existing } = await supabase.from('users').select('*').eq('email', email).single();
+  if (!existing) {
+    await supabase.from('users').insert([{ email, name, golden_balance: 0 }]);
+  }
+}
+async function addGoldenToUser(email, amount) {
+  await supabase.rpc('increment_balance', { user_email: email, amount_to_add: amount });
+}
+await supabase.from('subscriptions').insert([{
+  user_id: userId,
+  feature: 'AI access',
+  expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+}]);
 // ============ ENV & APP ============
 dotenv.config();
 const app = express();

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Install GoldenSpaceAI</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#FFD700">
+  <style>
+    body {
+      background-color: #000;
+      color: #FFD700;
+      font-family: "Poppins", sans-serif;
+      text-align: center;
+      padding: 50px;
+    }
+    .container {
+      max-width: 400px;
+      margin: 0 auto;
+    }
+    h1 {
+      font-size: 2em;
+      margin-bottom: 20px;
+    }
+    button {
+      background-color: #FFD700;
+      color: #000;
+      border: none;
+      padding: 15px 30px;
+      border-radius: 10px;
+      font-size: 1em;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    button:hover {
+      background-color: #e6c200;
+    }
+    img {
+      width: 120px;
+      margin-bottom: 25px;
+      border-radius: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <img src="/icon5.png" alt="GoldenSpaceAI Logo">
+    <h1>Install GoldenSpaceAI</h1>
+    <p>Get instant access to all 11 AI tools right from your device.</p>
+    <button id="installApp">Install Now</button>
+  </div>
+
+  <script>
+    // Register service worker
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/service-worker.js");
+    }
+
+    let deferredPrompt;
+    const installBtn = document.getElementById("installApp");
+    installBtn.style.display = "none";
+
+    window.addEventListener("beforeinstallprompt", (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      installBtn.style.display = "inline-block";
+    });
+
+    installBtn.addEventListener("click", async () => {
+      installBtn.style.display = "none";
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === "accepted") {
+        alert("GoldenSpaceAI has been installed!");
+      }
+      deferredPrompt = null;
+    });
+  </script>
+</body>
+</html>

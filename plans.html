@@ -1,237 +1,201 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Golden Tokens • GoldenSpaceAI</title>
-  <link rel="icon" href="/favicon.ico" />
-  <style>
-    :root {
-      --gold: #f6c64a;
-      --gold2: #eb8b36;
-      --bg: #070b14;
-      --card: rgba(15, 23, 40, 0.9);
-      --text: #eaf1ff;
-      --muted: #b8c3dc;
-      --border: #1f2b45;
-      --radius: 18px;
-    }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Buy Golden Tokens | GoldenSpaceAI</title>
+<style>
+  body {
+    font-family: "Inter", sans-serif;
+    background: radial-gradient(circle at top, #0a0a1a 0%, #000 100%);
+    background-image: url("space-bg.jpg");
+    background-size: cover;
+    color: #f6c64a;
+    margin: 0;
+    text-align: center;
+  }
+  h1 {
+    margin-top: 60px;
+    font-size: 2.8em;
+    color: #ffd973;
+  }
+  p { color: #ccc; margin-bottom: 40px; }
+  .plans {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 25px;
+    padding: 0 20px;
+  }
+  .plan {
+    background: rgba(0, 0, 0, 0.7);
+    border: 1px solid #f6c64a;
+    border-radius: 16px;
+    width: 240px;
+    padding: 25px;
+    transition: transform 0.25s;
+  }
+  .plan:hover { transform: translateY(-8px); }
+  .plan h2 { color: #fff; margin-bottom: 5px; }
+  .price { font-size: 1.3em; margin-bottom: 8px; }
+  .bonus { color: #7eff7e; font-size: 0.9em; margin-bottom: 15px; }
+  button {
+    background: #f6c64a;
+    border: none;
+    color: #000;
+    font-weight: 600;
+    border-radius: 10px;
+    padding: 10px 20px;
+    cursor: pointer;
+  }
+  button:hover { background: #ffe07a; }
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    }
-
-    body {
-      background: linear-gradient(180deg, rgba(7, 11, 20, 0.8), rgba(7, 11, 20, 0.95)),
-        url("https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?q=80&w=1920&auto=format&fit=crop") center/cover fixed no-repeat;
-      color: var(--text);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 25px 8%;
-    }
-
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-weight: 900;
-      font-size: 24px;
-      color: var(--gold);
-    }
-
-    .logo-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: radial-gradient(circle at 30% 30%, #ffd86a, #f6c64a 50%, #eb8b36 90%);
-      box-shadow: 0 0 10px rgba(246, 198, 74, 0.7);
-    }
-
-    .back-btn {
-      text-decoration: none;
-      color: var(--muted);
-      border: 1px solid var(--border);
-      padding: 10px 18px;
-      border-radius: 12px;
-      transition: 0.3s;
-    }
-    .back-btn:hover {
-      background: rgba(255, 255, 255, 0.05);
-      color: var(--text);
-    }
-
-    .hero {
-      text-align: center;
-      margin: 50px 0 30px;
-    }
-
-    .hero h1 {
-      font-size: 3rem;
-      font-weight: 900;
-      background: linear-gradient(135deg, var(--gold), var(--gold2));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      margin-bottom: 12px;
-    }
-
-    .hero p {
-      color: var(--muted);
-      font-size: 1.1rem;
-    }
-
-    .plans {
-      display: flex;
-      justify-content: center;
-      gap: 40px;
-      flex-wrap: wrap;
-      margin: 40px auto 70px;
-      width: 90%;
-      max-width: 1100px;
-    }
-
-    .plan {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      text-align: center;
-      width: 300px;
-      padding: 40px 30px;
-      transition: 0.3s;
-      backdrop-filter: blur(8px);
-    }
-
-    .plan:hover {
-      transform: translateY(-6px);
-      box-shadow: 0 15px 40px rgba(246, 198, 74, 0.25);
-    }
-
-    .plan h2 {
-      color: var(--gold);
-      font-size: 2rem;
-      margin-bottom: 10px;
-    }
-
-    .plan .price {
-      font-size: 2rem;
-      font-weight: 800;
-      margin-bottom: 10px;
-    }
-
-    .plan small {
-      color: var(--muted);
-      font-size: 0.95rem;
-    }
-
-    .plan a {
-      display: inline-block;
-      margin-top: 25px;
-      padding: 14px 26px;
-      background: linear-gradient(135deg, var(--gold), var(--gold2));
-      color: #1c1500;
-      font-weight: 700;
-      border-radius: 12px;
-      text-decoration: none;
-      box-shadow: 0 10px 26px rgba(246, 198, 74, 0.25);
-      transition: all 0.3s;
-    }
-
-    .plan a:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 15px 35px rgba(246, 198, 74, 0.4);
-    }
-
-    .notice {
-      max-width: 750px;
-      margin: 0 auto 60px;
-      text-align: center;
-      color: var(--muted);
-      font-size: 0.95rem;
-      line-height: 1.6;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid var(--border);
-      padding: 25px;
-      border-radius: 12px;
-    }
-
-    .notice strong {
-      color: var(--gold);
-    }
-
-    footer {
-      text-align: center;
-      padding: 25px 0;
-      color: var(--muted);
-      border-top: 1px solid var(--border);
-      font-size: 0.9rem;
-    }
-
-    @media (max-width: 768px) {
-      .hero h1 {
-        font-size: 2.2rem;
-      }
-      .plan {
-        width: 90%;
-      }
-    }
-  </style>
+  /* modal */
+  .modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.8);
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-content {
+    background: #111;
+    border: 1px solid #f6c64a;
+    border-radius: 14px;
+    padding: 25px;
+    width: 320px;
+    text-align: left;
+    color: #fff;
+  }
+  select, input {
+    width: 100%;
+    margin-top: 10px;
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px solid #555;
+    background: #000;
+    color: #fff;
+  }
+  .close {
+    float: right;
+    color: #999;
+    cursor: pointer;
+    font-size: 1.2em;
+  }
+</style>
 </head>
 <body>
-  <header>
-    <div class="logo"><span class="logo-dot"></span> GoldenSpaceAI</div>
-    <a href="/index.html" class="back-btn">← Back to Home</a>
-  </header>
+<h1>Buy Golden Tokens</h1>
+<p>Use any major crypto to buy Golden. 1 Golden = $1 USD.  
+All payments are verified on-chain — Golden is added automatically after confirmation.</p>
 
-  <section class="hero">
-    <h1>Buy Golden Tokens</h1>
-    <p>Use any cryptocurrency to purchase Golden Tokens. 1 Golden = $1 USD</p>
-  </section>
-
-  <section class="plans">
-    <div class="plan">
-      <h2>15 Golden</h2>
-      <p class="price">$15</p>
-      <small>Full crypto support</small><br />
-      <a href="https://nowpayments.io/payment/?iid=5804556996" target="_blank">💳 Purchase Now</a>
-    </div>
-
-    <div class="plan">
-      <h2>25 Golden</h2>
-      <p class="price">$20</p>
-      <small>Instant AI access</small><br />
-      <a href="https://nowpayments.io/payment?iid=5821025976" target="_blank">💳 Purchase Now</a>
-    </div>
-
-    <div class="plan">
-      <h2>50 Golden</h2>
-      <p class="price">$40</p>
-      <small>Lifetime Golden credit</small><br />
-      <a href="https://nowpayments.io/payment/?iid=6276643485" target="_blank">💳 Purchase Now</a>
-    </div>
-  </section>
-
-  <div class="notice">
-    ⚠️ <strong>Important Notice:</strong><br />
-    All payments are securely operated by <b>NOWPayments</b>.<br />
-    After your transaction is confirmed, your Golden Tokens will be added to your account within <b>one business day</b> due to manual verification.<br /><br />
-    Please make sure you send the correct amount using a supported crypto wallet.
+<div class="plans">
+  <div class="plan">
+    <h2>20 Golden</h2>
+    <div class="price">$5</div>
+    <button onclick="openModal(5,20)">Purchase</button>
   </div>
+  <div class="plan">
+    <h2>40 Golden</h2>
+    <div class="price">$10</div>
+    <button onclick="openModal(10,40)">Purchase</button>
+  </div>
+  <div class="plan">
+    <h2>100 Golden</h2>
+    <div class="price">$20</div>
+    <div class="bonus">Save $5</div>
+    <button onclick="openModal(20,100)">Purchase</button>
+  </div>
+  <div class="plan">
+    <h2>200 Golden</h2>
+    <div class="price">$40</div>
+    <div class="bonus">Save $10</div>
+    <button onclick="openModal(40,200)">Purchase</button>
+  </div>
+</div>
 
-  <footer>
-    ©️ <span id="year"></span> GoldenSpaceAI • All rights reserved.
-  </footer>
+<div id="cryptoModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal()">&times;</span>
+    <h3 id="modalTitle">Buy Golden</h3>
+    <p id="modalDetails"></p>
+    <label>Select Crypto:</label>
+    <select id="cryptoSelect" onchange="showAddress()">
+      <option value="">Choose coin...</option>
+      <option value="BTC">Bitcoin (BTC)</option>
+      <option value="ETH">Ethereum (ETH)</option>
+      <option value="USDT">Tether (USDT)</option>
+      <option value="USDC">USD Coin (USDC)</option>
+      <option value="BNB">BNB</option>
+      <option value="TRX">TRON (TRX)</option>
+      <option value="SOL">Solana (SOL)</option>
+      <option value="DOGE">Dogecoin (DOGE)</option>
+    </select>
+    <div id="walletBox" style="margin-top:15px;display:none;">
+      <p><b>Send to this wallet:</b></p>
+      <input type="text" id="walletAddress" readonly />
+      <p id="amountBox"></p>
+    </div>
+  </div>
+</div>
 
-  <script>
-    document.getElementById("year").textContent = new Date().getFullYear();
-  </script>
+<script>
+let modal = document.getElementById('cryptoModal');
+let selectedPrice = 0, selectedGolden = 0;
+
+function openModal(price, golden){
+  selectedPrice = price;
+  selectedGolden = golden;
+  document.getElementById('modalTitle').innerText = `Purchase ${golden} Golden`;
+  document.getElementById('modalDetails').innerText = `Total: $${price}`;
+  modal.style.display = 'flex';
+}
+function closeModal(){ modal.style.display = 'none'; }
+
+async function showAddress(){
+  const coin = document.getElementById('cryptoSelect').value;
+  const walletBox = document.getElementById('walletBox');
+  const walletInput = document.getElementById('walletAddress');
+  const amountBox = document.getElementById('amountBox');
+
+  if(!coin){ walletBox.style.display='none'; return; }
+
+  const wallets = {
+    BTC: "bc1qz5wtz2d329xsm7gcs9e3jwls9supg2fk2hkxtd",
+    ETH: "0x8BEaCb38dF916F6644F81cA0De18C1F4996d32Ea",
+    USDT: "TCN6eVtHFNtPAJNfebgGGm8c2h71NWYY9P",
+    USDC: "0x34ad986d7c5bc118294281c654a17d67f1841140e9abfafd411703eda7be9c48",
+    BNB: "0x8BEaCb38dF916F6644F81cA0De18C1F4996d32Ea",
+    TRX: "TCN6eVtHFNtPAJNfebgGGm8c2h71NWYY9P",
+    SOL: "8vdM8myEj4pAXZZK6WCV1WkSGvmzLgteDv5qCCYcR2NW",
+    DOGE: "DAfXZW2f9wJD4fBMwekb8iVKfQMAdyNCVV"
+  };
+
+  walletInput.value = wallets[coin];
+  walletBox.style.display = 'block';
+
+  // fetch live price
+  try {
+    const res = await fetch('/api/crypto-prices');
+    const data = await res.json();
+    const prices = {
+      BTC: data.bitcoin.usd,
+      ETH: data.ethereum.usd,
+      USDT: data.tether.usd,
+      USDC: data['usd-coin'].usd,
+      BNB: data.binancecoin.usd,
+      TRX: data.tron.usd,
+      SOL: data.solana.usd,
+      DOGE: data.dogecoin.usd
+    };
+    const coinPrice = prices[coin];
+    const amount = (selectedPrice / coinPrice).toFixed(6);
+    amountBox.innerHTML = `Amount to send: <b>${amount} ${coin}</b>`;
+  } catch {
+    amountBox.innerText = "Could not fetch live price.";
+  }
+}
+</script>
 </body>
 </html>

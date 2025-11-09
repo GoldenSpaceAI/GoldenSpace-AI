@@ -539,213 +539,327 @@
       </p>
     </div>
   </div>
-
-  <script>
+<script>
     // Global state
     let userData = null;
     let cryptoPrices = {};
     const GOLDEN_PACKAGES = {
-      60: { priceUSD: 15, popular: false },
-      100: { priceUSD: 20, popular: true },
-      200: { priceUSD: 40, popular: false }
+        60: { priceUSD: 15, popular: false },
+        100: { priceUSD: 20, popular: true },
+        200: { priceUSD: 40, popular: false }
+    };
+
+    // Fallback prices in case API fails
+    const FALLBACK_PRICES = {
+        bitcoin: { usd: 43450.32 },
+        ethereum: { usd: 2380.15 },
+        tether: { usd: 1.00 },
+        'usd-coin': { usd: 1.00 },
+        binancecoin: { usd: 305.67 },
+        tron: { usd: 0.1056 },
+        solana: { usd: 102.45 },
+        dogecoin: { usd: 0.0856 }
     };
 
     // Initialize
     document.addEventListener('DOMContentLoaded', function() {
-      checkUserStatus();
-      loadPlans();
-      loadCryptoPrices();
-      
-      // Auto-refresh prices every 30 seconds
-      setInterval(loadCryptoPrices, 30000);
+        console.log("Initializing GoldenSpaceAI Plans...");
+        checkUserStatus();
+        loadPlans();
+        loadCryptoPrices();
+        
+        // Auto-refresh prices every 30 seconds
+        setInterval(loadCryptoPrices, 30000);
     });
 
     // Check user login status
     async function checkUserStatus() {
-      try {
-        const response = await fetch('/api/me', {
-          credentials: 'include',
-          headers: {
-            'Cache-Control': 'no-cache'
-          }
-        });
-        
-        if (response.ok) {
-          userData = await response.json();
-          updateUserInfo();
-        } else {
-          showLoginPrompt();
+        try {
+            console.log("Checking user status...");
+            const response = await fetch('/api/me', {
+                credentials: 'include',
+                headers: {
+                    'Cache-Control': 'no-cache'
+                }
+            });
+            
+            if (response.ok) {
+                userData = await response.json();
+                console.log("User data:", userData);
+                updateUserInfo();
+            } else {
+                console.log("User not logged in");
+                showLoginPrompt();
+            }
+        } catch (error) {
+            console.error('Failed to check user status:', error);
+            showLoginPrompt();
         }
-      } catch (error) {
-        console.error('Failed to check user status:', error);
-        showLoginPrompt();
-      }
     }
 
     function updateUserInfo() {
-      const userInfo = document.getElementById('userInfo');
-      if (userData.loggedIn) {
-        userInfo.innerHTML = `
-          <div class="user-welcome">Welcome back, <strong>${userData.user.name}</strong>!</div>
-          <div class="user-balance">
-            <i class="fas fa-coins"></i>
-            ${userData.balance} Golden
-          </div>
-        `;
-      } else {
-        showLoginPrompt();
-      }
+        const userInfo = document.getElementById('userInfo');
+        if (userData.loggedIn) {
+            userInfo.innerHTML = `
+                <div class="user-welcome">Welcome back, <strong>${userData.user.name}</strong>!</div>
+                <div class="user-balance">
+                    <i class="fas fa-coins"></i>
+                    ${userData.balance || 0} Golden
+                </div>
+            `;
+        } else {
+            showLoginPrompt();
+        }
     }
 
     function showLoginPrompt() {
-      const userInfo = document.getElementById('userInfo');
-      userInfo.innerHTML = `
-        <div class="login-prompt">
-          <i class="fas fa-exclamation-triangle"></i>
-          Please <a href="/login-signup.html" style="color: var(--gold); text-decoration: none; font-weight: 700;">log in</a> to purchase Golden tokens
-        </div>
-      `;
+        const userInfo = document.getElementById('userInfo');
+        userInfo.innerHTML = `
+            <div class="login-prompt">
+                <i class="fas fa-exclamation-triangle"></i>
+                Please <a href="/login-signup.html" style="color: var(--gold); text-decoration: none; font-weight: 700;">log in</a> to purchase Golden tokens
+            </div>
+        `;
     }
 
     // Load and display plans
     function loadPlans() {
-      const plansGrid = document.getElementById('plansGrid');
-      const plansHTML = Object.entries(GOLDEN_PACKAGES).map(([goldenAmount, packageInfo]) => {
-        const isPopular = packageInfo.popular;
-        const usdPrice = packageInfo.priceUSD;
-        
-        return `
-          <div class="plan-card ${isPopular ? 'popular' : ''}">
-            ${isPopular ? '<div class="popular-badge">Most Popular</div>' : ''}
-            <div class="plan-icon">
-              <i class="fas fa-${goldenAmount >= 100 ? 'crown' : 'star'}"></i>
-            </div>
-            <h3 class="plan-name">${goldenAmount} Golden</h3>
-            <p class="plan-description">Perfect for ${goldenAmount >= 100 ? 'power users' : goldenAmount >= 60 ? 'regular users' : 'getting started'}</p>
+        const plansGrid = document.getElementById('plansGrid');
+        const plansHTML = Object.entries(GOLDEN_PACKAGES).map(([goldenAmount, packageInfo]) => {
+            const isPopular = packageInfo.popular;
+            const usdPrice = packageInfo.priceUSD;
             
-            <div class="plan-price">${goldenAmount}G</div>
-            <div class="plan-usd-price" id="usdPrice${goldenAmount}">$${usdPrice} USD</div>
-            
-            <ul class="plan-features">
-              <li><i class="fas fa-check"></i> Advanced AI Access</li>
-              <li><i class="fas fa-check"></i> Image Generation</li>
-              <li><i class="fas fa-check"></i> Priority Support</li>
-              ${goldenAmount >= 100 ? '<li><i class="fas fa-check"></i> All Features Unlocked</li>' : ''}
-            </ul>
-            
-            <button class="buy-btn" onclick="purchaseGolden(${goldenAmount}, ${usdPrice})" 
-                    ${!userData?.loggedIn ? 'disabled' : ''}>
-              <i class="fas fa-bolt"></i>
-              Buy Now
-            </button>
-          </div>
-        `;
-      }).join('');
+            return `
+                <div class="plan-card ${isPopular ? 'popular' : ''}">
+                    ${isPopular ? '<div class="popular-badge">Most Popular</div>' : ''}
+                    <div class="plan-icon">
+                        <i class="fas fa-${goldenAmount >= 100 ? 'crown' : 'star'}"></i>
+                    </div>
+                    <h3 class="plan-name">${goldenAmount} Golden</h3>
+                    <p class="plan-description">Perfect for ${goldenAmount >= 100 ? 'power users' : goldenAmount >= 60 ? 'regular users' : 'getting started'}</p>
+                    
+                    <div class="plan-price">${goldenAmount}G</div>
+                    <div class="plan-usd-price" id="usdPrice${goldenAmount}">$${usdPrice} USD</div>
+                    
+                    <ul class="plan-features">
+                        <li><i class="fas fa-check"></i> Advanced AI Access</li>
+                        <li><i class="fas fa-check"></i> Image Generation</li>
+                        <li><i class="fas fa-check"></i> Priority Support</li>
+                        ${goldenAmount >= 100 ? '<li><i class="fas fa-check"></i> All Features Unlocked</li>' : ''}
+                    </ul>
+                    
+                    <button class="buy-btn" onclick="purchaseGolden(${goldenAmount}, ${usdPrice})" 
+                            ${!userData?.loggedIn ? 'disabled' : ''}>
+                        <i class="fas fa-bolt"></i>
+                        Buy Now
+                    </button>
+                </div>
+            `;
+        }).join('');
 
-      plansGrid.innerHTML = plansHTML;
+        plansGrid.innerHTML = plansHTML;
     }
 
-    // Load crypto prices
+    // Load crypto prices with enhanced error handling
     async function loadCryptoPrices() {
-      const cryptoGrid = document.getElementById('cryptoGrid');
-      cryptoGrid.classList.add('loading');
-      
-      try {
-        const response = await fetch('/api/crypto-prices', {
-          headers: {
-            'Cache-Control': 'no-cache'
-          }
-        });
+        const cryptoGrid = document.getElementById('cryptoGrid');
+        const refreshBtn = document.querySelector('.refresh-btn');
         
-        if (response.ok) {
-          cryptoPrices = await response.json();
-          updateCryptoDisplay();
-          updateUSDConversion();
-        } else {
-          throw new Error('Failed to fetch prices');
+        cryptoGrid.classList.add('loading');
+        refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+        refreshBtn.disabled = true;
+
+        try {
+            console.log("Fetching crypto prices...");
+            const response = await fetch('/api/crypto-prices', {
+                headers: {
+                    'Cache-Control': 'no-cache',
+                    'Pragma': 'no-cache'
+                }
+            });
+            
+            console.log("Response status:", response.status);
+            
+            if (response.ok) {
+                cryptoPrices = await response.json();
+                console.log("Crypto prices received:", cryptoPrices);
+                updateCryptoDisplay();
+                updateUSDConversion();
+                showSuccessMessage();
+            } else {
+                throw new Error(`API returned status: ${response.status}`);
+            }
+        } catch (error) {
+            console.error('Failed to load crypto prices:', error);
+            console.log('Using fallback prices...');
+            
+            // Use fallback prices
+            cryptoPrices = FALLBACK_PRICES;
+            updateCryptoDisplay();
+            updateUSDConversion();
+            showErrorMessage();
+        } finally {
+            cryptoGrid.classList.remove('loading');
+            refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
+            refreshBtn.disabled = false;
         }
-      } catch (error) {
-        console.error('Failed to load crypto prices:', error);
-        cryptoGrid.innerHTML = `
-          <div style="grid-column: 1 / -1; text-align: center; color: var(--text-secondary);">
-            <i class="fas fa-exclamation-triangle"></i>
-            Unable to load live prices
-          </div>
-        `;
-      } finally {
-        cryptoGrid.classList.remove('loading');
-      }
     }
 
     function updateCryptoDisplay() {
-      const cryptoGrid = document.getElementById('cryptoGrid');
-      const cryptos = [
-        { id: 'bitcoin', symbol: 'BTC', name: 'Bitcoin' },
-        { id: 'ethereum', symbol: 'ETH', name: 'Ethereum' },
-        { id: 'tether', symbol: 'USDT', name: 'Tether' },
-        { id: 'usd-coin', symbol: 'USDC', name: 'USD Coin' },
-        { id: 'binancecoin', symbol: 'BNB', name: 'BNB' },
-        { id: 'tron', symbol: 'TRX', name: 'TRON' },
-        { id: 'solana', symbol: 'SOL', name: 'Solana' },
-        { id: 'dogecoin', symbol: 'DOGE', name: 'Dogecoin' }
-      ];
+        const cryptoGrid = document.getElementById('cryptoGrid');
+        const cryptos = [
+            { id: 'bitcoin', symbol: 'BTC', name: 'Bitcoin' },
+            { id: 'ethereum', symbol: 'ETH', name: 'Ethereum' },
+            { id: 'tether', symbol: 'USDT', name: 'Tether' },
+            { id: 'usd-coin', symbol: 'USDC', name: 'USD Coin' },
+            { id: 'binancecoin', symbol: 'BNB', name: 'BNB' },
+            { id: 'tron', symbol: 'TRX', name: 'TRON' },
+            { id: 'solana', symbol: 'SOL', name: 'Solana' },
+            { id: 'dogecoin', symbol: 'DOGE', name: 'Dogecoin' }
+        ];
 
-      const cryptoHTML = cryptos.map(crypto => {
-        const price = cryptoPrices[crypto.id]?.usd;
-        if (!price) return '';
+        const cryptoHTML = cryptos.map(crypto => {
+            const priceData = cryptoPrices[crypto.id];
+            if (!priceData || !priceData.usd) {
+                return `
+                    <div class="crypto-item">
+                        <div class="crypto-name">${crypto.name} (${crypto.symbol})</div>
+                        <div class="crypto-price" style="color: var(--text-muted);">--</div>
+                        <div class="crypto-change" style="color: var(--text-muted);">
+                            <i class="fas fa-minus"></i>
+                            N/A
+                        </div>
+                    </div>
+                `;
+            }
 
-        const formattedPrice = price < 1 ? price.toFixed(4) : price.toFixed(2);
-        
-        return `
-          <div class="crypto-item">
-            <div class="crypto-name">${crypto.name} (${crypto.symbol})</div>
-            <div class="crypto-price">$${formattedPrice}</div>
-            <div class="crypto-change positive">
-              <i class="fas fa-arrow-up"></i>
-              Live
-            </div>
-          </div>
-        `;
-      }).join('');
+            const price = priceData.usd;
+            const formattedPrice = price < 1 ? price.toFixed(4) : 
+                                  price < 10 ? price.toFixed(3) : 
+                                  price.toFixed(2);
+            
+            return `
+                <div class="crypto-item">
+                    <div class="crypto-name">${crypto.name} (${crypto.symbol})</div>
+                    <div class="crypto-price">$${formattedPrice}</div>
+                    <div class="crypto-change positive">
+                        <i class="fas fa-circle"></i>
+                        Live
+                    </div>
+                </div>
+            `;
+        }).join('');
 
-      cryptoGrid.innerHTML = cryptoHTML;
+        cryptoGrid.innerHTML = cryptoHTML;
     }
 
     function updateUSDConversion() {
-      // Update USD prices based on current crypto rates
-      Object.entries(GOLDEN_PACKAGES).forEach(([goldenAmount, packageInfo]) => {
-        const usdElement = document.getElementById(`usdPrice${goldenAmount}`);
-        if (usdElement) {
-          usdElement.textContent = `$${packageInfo.priceUSD} USD`;
+        // Update USD prices based on current crypto rates
+        Object.entries(GOLDEN_PACKAGES).forEach(([goldenAmount, packageInfo]) => {
+            const usdElement = document.getElementById(`usdPrice${goldenAmount}`);
+            if (usdElement) {
+                usdElement.textContent = `$${packageInfo.priceUSD} USD`;
+                
+                // Show crypto equivalent prices if we have Bitcoin data
+                if (cryptoPrices.bitcoin && cryptoPrices.bitcoin.usd) {
+                    const btcPrice = (packageInfo.priceUSD / cryptoPrices.bitcoin.usd).toFixed(6);
+                    usdElement.innerHTML += `<br><small style="color: var(--text-muted); font-size: 0.8rem;">≈ ${btcPrice} BTC</small>`;
+                }
+            }
+        });
+    }
+
+    function showSuccessMessage() {
+        // Briefly show success indicator
+        const refreshBtn = document.querySelector('.refresh-btn');
+        const originalHTML = refreshBtn.innerHTML;
+        
+        refreshBtn.innerHTML = '<i class="fas fa-check"></i> Updated!';
+        refreshBtn.style.color = 'var(--success)';
+        
+        setTimeout(() => {
+            refreshBtn.innerHTML = originalHTML;
+            refreshBtn.style.color = '';
+        }, 2000);
+    }
+
+    function showErrorMessage() {
+        const cryptoGrid = document.getElementById('cryptoGrid');
+        const existingItems = cryptoGrid.querySelectorAll('.crypto-item');
+        
+        if (existingItems.length === 0) {
+            cryptoGrid.innerHTML = `
+                <div style="grid-column: 1 / -1; text-align: center; padding: 20px;">
+                    <div style="color: var(--warning); font-size: 2rem; margin-bottom: 10px;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div style="color: var(--text-secondary); margin-bottom: 10px;">
+                        Using demo prices
+                    </div>
+                    <div style="color: var(--text-muted); font-size: 0.9rem;">
+                        Live prices will resume when connection is available
+                    </div>
+                </div>
+            `;
         }
-      });
     }
 
     // Purchase function
     async function purchaseGolden(goldenAmount, usdPrice) {
-      if (!userData?.loggedIn) {
-        alert('Please log in to purchase Golden tokens.');
-        return;
-      }
+        if (!userData?.loggedIn) {
+            alert('Please log in to purchase Golden tokens.');
+            window.location.href = '/login-signup.html';
+            return;
+        }
 
-      // Redirect to payment page with parameters
-      window.location.href = `/payment.html?amount=${goldenAmount}&price=${usdPrice}`;
+        // Show purchase confirmation
+        const confirmed = confirm(`Purchase ${goldenAmount} Golden for $${usdPrice}?\n\nYou will be redirected to the payment page.`);
+        
+        if (confirmed) {
+            // Redirect to payment page with parameters
+            window.location.href = `/payment.html?amount=${goldenAmount}&price=${usdPrice}`;
+        }
     }
+
+    // Test the API endpoint directly
+    async function testCryptoAPI() {
+        console.log("Testing crypto API endpoint...");
+        try {
+            const response = await fetch('/api/crypto-prices');
+            console.log("Test response status:", response.status);
+            if (response.ok) {
+                const data = await response.json();
+                console.log("Test API data:", data);
+                return true;
+            } else {
+                console.log("Test failed with status:", response.status);
+                return false;
+            }
+        } catch (error) {
+            console.log("Test API error:", error);
+            return false;
+        }
+    }
+
+    // Run test on load
+    setTimeout(() => {
+        testCryptoAPI();
+    }, 1000);
 
     // Add some visual effects
     document.addEventListener('mousemove', function(e) {
-      const cards = document.querySelectorAll('.plan-card');
-      cards.forEach(card => {
-        const rect = card.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        
-        if (x > 0 && x < rect.width && y > 0 && y < rect.height) {
-          card.style.setProperty('--mouse-x', `${x}px`);
-          card.style.setProperty('--mouse-y', `${y}px`);
-        }
-      });
+        const cards = document.querySelectorAll('.plan-card');
+        cards.forEach(card => {
+            const rect = card.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            if (x > 0 && x < rect.width && y > 0 && y < rect.height) {
+                card.style.setProperty('--mouse-x', `${x}px`);
+                card.style.setProperty('--mouse-y', `${y}px`);
+            }
+        });
     });
-  </script>
-</body>
+</script>  
+   </body>
 </html>

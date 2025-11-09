@@ -11,13 +11,15 @@
     font-family: "Poppins", sans-serif;
     color: #fff;
     background: radial-gradient(circle at 20% 20%, #111827, #000);
+    background-image: url("https://images.unsplash.com/photo-1462331940025-496dfbfc7564?auto=format&fit=crop&w=1950&q=80");
+    background-size: cover;
     background-attachment: fixed;
-    min-height: 100vh;
+    overflow-x: hidden;
   }
 
   header {
     text-align: center;
-    padding: 80px 20px 40px;
+    padding: 70px 20px 20px;
   }
 
   h1 {
@@ -38,6 +40,7 @@
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
     gap: 25px;
     padding: 60px 10%;
+    transition: opacity 0.6s ease, transform 0.6s ease;
   }
 
   .plan {
@@ -54,22 +57,11 @@
     box-shadow: 0 0 20px rgba(255, 214, 90, 0.3);
   }
 
-  .plan h2 {
-    font-size: 1.5rem;
-    margin-bottom: 5px;
-  }
+  .plan h2 { font-size: 1.5rem; margin-bottom: 5px; }
 
-  .price {
-    font-size: 1.3rem;
-    color: #ffd65a;
-    margin-bottom: 8px;
-  }
+  .price { font-size: 1.3rem; color: #ffd65a; margin-bottom: 8px; }
 
-  .bonus {
-    color: #7aff7a;
-    font-size: 0.9rem;
-    margin-bottom: 10px;
-  }
+  .bonus { color: #7aff7a; font-size: 0.9rem; margin-bottom: 10px; }
 
   button {
     background: linear-gradient(90deg, #ffd65a, #ffcc33);
@@ -82,9 +74,15 @@
     transition: all 0.3s;
   }
 
-  button:hover {
+  button:hover:not(:disabled) {
     background: #ffe177;
     transform: scale(1.05);
+  }
+
+  button:disabled {
+    background: #555;
+    color: #aaa;
+    cursor: not-allowed;
   }
 
   footer {
@@ -96,43 +94,45 @@
     background: rgba(0,0,0,0.6);
   }
 
-  /* Modal */
-  .modal {
-    position: fixed;
-    inset: 0;
+  .login-warning {
+    text-align: center;
+    color: #ff8080;
+    font-size: 1rem;
+    font-weight: 600;
+    margin-top: -20px;
+  }
+
+  /* Payment page */
+  .payment-page {
     display: none;
-    align-items: center;
-    justify-content: center;
-    background: rgba(0,0,0,0.8);
-    z-index: 1000;
+    opacity: 0;
+    transform: translateY(50px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+    text-align: center;
+    padding: 80px 20px;
+    max-width: 600px;
+    margin: auto;
   }
 
-  .modal-content {
-    background: #111;
-    padding: 25px 30px;
-    border-radius: 14px;
-    width: 90%;
-    max-width: 400px;
-    color: #fff;
-    border: 1px solid #ffd65a;
-    box-shadow: 0 0 25px rgba(255, 214, 90, 0.25);
+  .payment-page.active {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
   }
 
-  .close {
-    float: right;
-    color: #aaa;
-    font-size: 1.3rem;
-    cursor: pointer;
+  .payment-card {
+    background: rgba(20, 20, 35, 0.9);
+    border: 1px solid rgba(255, 214, 90, 0.3);
+    border-radius: 16px;
+    padding: 30px;
+    text-align: left;
   }
-
-  .close:hover { color: #fff; }
 
   label {
     display: block;
     margin-top: 15px;
     margin-bottom: 5px;
     color: #ddd;
-    font-size: 0.9rem;
   }
 
   select, input {
@@ -142,17 +142,22 @@
     color: #fff;
     border: 1px solid #444;
     border-radius: 6px;
-    font-family: inherit;
   }
 
   .copied {
     color: #7aff7a;
     font-size: 0.9rem;
-    text-align: center;
     margin-top: 6px;
     display: none;
   }
 
+  .back-btn {
+    display: inline-block;
+    margin-top: 30px;
+    color: #ffd65a;
+    cursor: pointer;
+    font-weight: 600;
+  }
 </style>
 </head>
 <body>
@@ -162,39 +167,39 @@
     Use any major crypto to buy Golden. 1 Golden = $1 USD.<br>
     All payments are verified on-chain — Golden is added automatically after confirmation.
   </p>
+  <p id="userInfo" class="login-warning"></p>
 </header>
 
-<div class="plans">
+<section id="plansSection" class="plans">
   <div class="plan">
     <h2>20 Golden</h2>
     <div class="price">$5</div>
-    <button onclick="openModal(5, 20)">Purchase</button>
+    <button onclick="goToPayment(5,20)" id="btn20">Purchase</button>
   </div>
   <div class="plan">
     <h2>40 Golden</h2>
     <div class="price">$10</div>
-    <button onclick="openModal(10, 40)">Purchase</button>
+    <button onclick="goToPayment(10,40)" id="btn40">Purchase</button>
   </div>
   <div class="plan">
     <h2>100 Golden</h2>
     <div class="price">$20</div>
     <div class="bonus">Save $5</div>
-    <button onclick="openModal(20, 100)">Purchase</button>
+    <button onclick="goToPayment(20,100)" id="btn100">Purchase</button>
   </div>
   <div class="plan">
     <h2>200 Golden</h2>
     <div class="price">$40</div>
     <div class="bonus">Save $10</div>
-    <button onclick="openModal(40, 200)">Purchase</button>
+    <button onclick="goToPayment(40,200)" id="btn200">Purchase</button>
   </div>
-</div>
+</section>
 
-<div id="cryptoModal" class="modal">
-  <div class="modal-content">
-    <span class="close" onclick="closeModal()">&times;</span>
-    <h3 id="modalTitle"></h3>
-    <p id="modalDetails"></p>
-    <label for="cryptoSelect">Select Crypto:</label>
+<section id="paymentPage" class="payment-page">
+  <div class="payment-card">
+    <h2 id="paymentTitle">Payment Details</h2>
+    <p id="paymentDetails"></p>
+    <label>Select Crypto:</label>
     <select id="cryptoSelect" onchange="showAddress()">
       <option value="">Choose coin...</option>
       <option value="BTC">Bitcoin (BTC)</option>
@@ -212,25 +217,58 @@
       <div class="copied" id="copiedMsg">Copied to clipboard</div>
       <p id="amountBox"></p>
     </div>
+    <p class="back-btn" onclick="goBack()">← Back to plans</p>
   </div>
-</div>
+</section>
 
 <footer>
-  ©️ 2025 GoldenSpaceAI — All blockchain payments are securely verified. Please allow up to 1 business day after on-chain confirmation.
+  ©️ 2025 GoldenSpaceAI — Blockchain payments verified automatically after confirmation.
 </footer>
 
 <script>
-let modal = document.getElementById('cryptoModal');
+let loggedIn = false;
 let selectedPrice = 0, selectedGolden = 0;
 
-function openModal(price, golden) {
+async function checkLogin() {
+  try {
+    const res = await fetch('/api/me');
+    const data = await res.json();
+    if (data.loggedIn) {
+      loggedIn = true;
+      document.getElementById('userInfo').innerHTML = 
+        `Welcome, <b>${data.user.name}</b> — Balance: <span style="color:#ffd65a">${data.balance}G</span>`;
+    } else {
+      loggedIn = false;
+      document.getElementById('userInfo').innerHTML = '⚠ Please log in to buy Golden tokens.';
+      disablePurchaseButtons();
+    }
+  } catch (err) {
+    console.error('Login check failed:', err);
+    disablePurchaseButtons();
+  }
+}
+
+function disablePurchaseButtons() {
+  document.querySelectorAll('button').forEach(btn => btn.disabled = true);
+}
+
+function goToPayment(price, golden) {
+  if (!loggedIn) return alert('Please log in to purchase Golden.');
   selectedPrice = price;
   selectedGolden = golden;
-  document.getElementById('modalTitle').innerText = `Purchase ${golden} Golden`;
-  document.getElementById('modalDetails').innerText = `Total: $${price}`;
-  modal.style.display = 'flex';
+  document.getElementById('plansSection').style.display = 'none';
+  const payPage = document.getElementById('paymentPage');
+  payPage.classList.add('active');
+  document.getElementById('paymentTitle').innerText = `Purchase ${golden} Golden`;
+  document.getElementById('paymentDetails').innerText = `Total: $${price}`;
 }
-function closeModal() { modal.style.display = 'none'; }
+
+function goBack() {
+  document.getElementById('paymentPage').classList.remove('active');
+  setTimeout(() => {
+    document.getElementById('plansSection').style.display = 'grid';
+  }, 300);
+}
 
 async function showAddress() {
   const coin = document.getElementById('cryptoSelect').value;
@@ -281,6 +319,8 @@ function copyAddress() {
   msg.style.display = 'block';
   setTimeout(() => msg.style.display = 'none', 2000);
 }
+
+checkLogin();
 </script>
 </body>
 </html>

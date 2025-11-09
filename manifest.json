@@ -1,0 +1,21 @@
+{
+  "name": "GoldenSpaceAI",
+  "short_name": "GoldenAI",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#FFD700",
+  "description": "GoldenSpaceAI — Unlock 11 AI tools with Golden credits.",
+  "icons": [
+    {
+      "src": "/icon5.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon5.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

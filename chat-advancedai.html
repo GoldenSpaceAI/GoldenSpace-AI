@@ -8,7 +8,6 @@
 :root {
   --gold1:#ffd700;
   --gold2:#ffed4e;
-  --bg-dark:#050510;
   --border:rgba(255,255,255,.15);
 }
 *{box-sizing:border-box;}
@@ -20,6 +19,7 @@ body{
   min-height:100vh;
   display:flex;
   flex-direction:column;
+  overflow-x:hidden;
 }
 header{
   position:fixed;top:0;left:0;right:0;
@@ -37,6 +37,11 @@ header .logo{
 }
 header h1{margin:0;font-size:18px;color:var(--gold1);font-weight:900;}
 #userBalance{font-size:14px;color:#ddd;}
+.menuBtn{
+  background:none;border:none;color:var(--gold1);
+  font-size:24px;font-weight:bold;cursor:pointer;
+  margin-left:10px;
+}
 #locked,#chatArea{flex:1;display:none;padding-top:80px;}
 #locked{
   align-items:center;justify-content:center;flex-direction:column;text-align:center;
@@ -105,21 +110,58 @@ button.send{
   cursor:pointer;
 }
 .featureBtn:hover{background:rgba(255,255,255,.15);}
-@media(max-width:768px){#featureBar{bottom:80px;}}
+#chatMenu{
+  position:fixed;top:0;right:-280px;
+  width:260px;height:100%;
+  background:rgba(0,0,0,.9);
+  border-left:1px solid var(--border);
+  transition:right .3s ease;
+  z-index:20;padding:70px 14px 20px;
+  display:flex;flex-direction:column;
+}
+#chatMenu.active{right:0;}
+#chatMenu h3{color:var(--gold1);margin:0 0 10px;font-size:17px;}
+.chatItem{
+  background:rgba(255,255,255,.08);
+  border:1px solid transparent;
+  border-radius:8px;
+  margin-bottom:6px;
+  padding:8px;
+  cursor:pointer;
+}
+.chatItem.active{border-color:var(--gold1);background:rgba(255,215,0,.1);}
+.chatItem:hover{border-color:var(--gold2);}
+.deleteBtn{float:right;color:#f55;cursor:pointer;font-size:13px;}
+.newChatBtn{
+  background:linear-gradient(45deg,var(--gold1),var(--gold2));
+  color:#141000;font-weight:800;
+  border:none;border-radius:10px;padding:8px;margin-bottom:10px;
+}
+.closeMenu{
+  position:absolute;top:10px;right:12px;
+  background:none;border:none;color:#fff;font-size:24px;cursor:pointer;
+}
+@media(max-width:768px){
+  #chatMenu{width:100%;right:-100%;}
+}
 </style>
 </head>
 <body>
 <header>
-  <div class="logo"></div>
-  <h1>GoldenSpaceAI</h1>
-  <span id="userBalance">G: —</span>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <div class="logo"></div>
+    <h1>GoldenSpaceAI</h1>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px;">
+    <span id="userBalance">G: —</span>
+    <button class="menuBtn" id="openMenu">☰</button>
+  </div>
 </header>
 
 <div id="locked">
   <div class="lockBox">
     <h2>🔒 Advanced Chat Locked</h2>
-    <p>This feature costs <b>20 G</b> per month.<br>
-    Unlock full access to GPT-5 reasoning, images (20/month), and study tools.</p>
+    <p>This feature costs <b>20 G</b> per month.<br>Once paid, you can acess image generation, chating with gpt5 and acess advanced memory.</p>
     <button class="lockBtn" id="unlockBtn">Activate for 20 G</button>
   </div>
 </div>
@@ -130,7 +172,6 @@ button.send{
 
 <div id="featureBar">
   <div class="featureBtn" id="genImage">🖼️ Generate Image</div>
-  <div class="featureBtn" id="proThink">🤖 Pro Thinking</div>
   <div class="featureBtn" id="studyLearn">📚 Study & Learn</div>
 </div>
 
@@ -141,78 +182,142 @@ button.send{
   </div>
 </footer>
 
+<div id="chatMenu">
+  <button class="closeMenu" id="closeMenu">✕</button>
+  <h3>Your Chats</h3>
+  <button class="newChatBtn" id="newChat">＋ New Chat</button>
+  <div id="chatItems">Loading chats…</div>
+</div>
+
 <script>
 const balanceEl=document.getElementById("userBalance");
 const lockScreen=document.getElementById("locked");
-const chatScreen=document.getElementById("chatArea");
+const chatArea=document.getElementById("chatArea");
 const footer=document.querySelector("footer");
 const features=document.getElementById("featureBar");
 const promptEl=document.getElementById("prompt");
+const chatMenu=document.getElementById("chatMenu");
+let currentChat=null;
 
+// Toggle menu
+document.getElementById("openMenu").onclick=()=>chatMenu.classList.add("active");
+document.getElementById("closeMenu").onclick=()=>chatMenu.classList.remove("active");
+
+// Check subscription
 async function checkStatus(){
   try{
     const r=await fetch("/api/advanced-ai-status",{credentials:"include"});
     const j=await r.json();
     balanceEl.textContent="G: "+(j.balance ?? "--");
-
-    if(!j.active){
-      lockScreen.style.display="flex";
-    }else{
-      chatScreen.style.display="block";
+    if(!j.active) lockScreen.style.display="flex";
+    else{
+      lockScreen.style.display="none";
+      chatArea.style.display="block";
       footer.style.display="block";
       features.style.display="flex";
+      loadChats();
     }
-  }catch(e){
-    lockScreen.style.display="flex";
-  }
+  }catch(e){lockScreen.style.display="flex";}
 }
 
 document.getElementById("unlockBtn").onclick=async()=>{
   try{
     const r=await fetch("/api/subscribe-advanced-ai",{method:"POST",credentials:"include"});
     const j=await r.json();
-    if(j.success){
-      alert("Activated! You can now chat.");
-      location.reload();
-    }else alert(j.error||"Could not activate.");
+    if(j.success){alert("Activated!");location.reload();}
+    else alert(j.error||"Could not activate.");
   }catch(e){alert("Error: "+e.message);}
 };
 
+// Chat management
+async function loadChats(){
+  const r=await fetch("/api/projects",{credentials:"include"});
+  const j=await r.json();
+  const box=document.getElementById("chatItems");
+  box.innerHTML="";
+  if(!j.projects?.length){box.innerHTML="<p style='color:#888'>No chats yet.</p>";return;}
+  j.projects.forEach(p=>{
+    const div=document.createElement("div");
+    div.className="chatItem";
+    div.textContent=p.name;
+    const del=document.createElement("span");
+    del.className="deleteBtn";
+    del.textContent="✕";
+    del.onclick=async(e)=>{
+      e.stopPropagation();
+      await fetch(`/api/projects/${p.id}`,{method:"DELETE",credentials:"include"});
+      loadChats();
+    };
+    div.appendChild(del);
+    div.onclick=()=>openChat(p.id,div);
+    box.appendChild(div);
+  });
+}
+
+document.getElementById("newChat").onclick=async()=>{
+  const name=prompt("Chat name:");
+  if(!name)return;
+  await fetch("/api/projects",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"include",body:JSON.stringify({name})});
+  loadChats();
+};
+
+async function openChat(id,el){
+  document.querySelectorAll(".chatItem").forEach(i=>i.classList.remove("active"));
+  el.classList.add("active");
+  chatMenu.classList.remove("active");
+  currentChat=id;
+  chatArea.innerHTML="";
+  const r=await fetch(`/api/messages?project_id=${id}`,{credentials:"include"});
+  const j=await r.json();
+  if(!j.messages?.length){
+    chatArea.innerHTML="<div class='msg ai'><small>GoldenSpaceAI</small>New chat started.</div>";
+    return;
+  }
+  j.messages.forEach(m=>addMsg(m.sender==="ai"?"ai":"user",m.content));
+}
+
+// Messaging
+document.getElementById("sendBtn").onclick=sendMessage;
 async function sendMessage(){
   const text=promptEl.value.trim();
-  if(!text)return;
+  if(!text||!currentChat)return;
   addMsg("user",text);
   promptEl.value="";
   addMsg("ai","Thinking…");
   try{
-    const r=await fetch("/chat-advanced-ai",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"include",body:JSON.stringify({q:text})});
+    const r=await fetch("/chat-advanced-ai",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      credentials:"include",
+      body:JSON.stringify({q:text,project_id:currentChat})
+    });
     const j=await r.json();
-    replaceLastAI(j.reply||"[No reply]");
+    replaceLastAI(j.reply || j.error || "[No reply]");
   }catch(e){replaceLastAI("Error: "+e.message);}
 }
+
+// UI helpers
 function addMsg(role,txt){
   const d=document.createElement("div");
   d.className="msg "+role;
   d.innerHTML=`<small>${role==="ai"?"GoldenSpaceAI":"You"}</small>${txt}`;
-  chatScreen.appendChild(d);
-  chatScreen.scrollTop=chatScreen.scrollHeight;
+  chatArea.appendChild(d);
+  chatArea.scrollTop=chatArea.scrollHeight;
 }
 function replaceLastAI(txt){
   const m=[...document.querySelectorAll(".msg.ai")].pop();
   if(m)m.innerHTML=`<small>GoldenSpaceAI</small>${txt}`;
 }
-document.getElementById("sendBtn").onclick=sendMessage;
 
-// feature buttons
+// Feature buttons
 document.getElementById("genImage").onclick=()=>sendFeature("image");
-document.getElementById("proThink").onclick=()=>sendFeature("pro");
 document.getElementById("studyLearn").onclick=()=>sendFeature("study");
 
 async function sendFeature(type){
+  if(!currentChat)return alert("Open or create a chat first.");
   let msg="";
   if(type==="image")msg="Generate an image for my last message.";
-  if(type==="pro")msg="Use advanced reasoning (GPT-5).";
-  if(type==="study")msg="Explain the previous topic step-by-step like for a student.";
+  if(type==="study")msg="Explain the previous topic step-by-step.";
   addMsg("user",msg);
   await sendMessage();
 }

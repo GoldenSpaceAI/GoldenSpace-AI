@@ -11,90 +11,39 @@
   --bg-dark:#050510;
   --border:rgba(255,255,255,.15);
 }
+*{box-sizing:border-box;}
 body{
   margin:0;
   font-family:"Segoe UI",Roboto,sans-serif;
   color:#fff;
-  background:url("https://images.unsplash.com/photo-1462331940025-496dfbfc7564?q=80&w=2400&auto=format&fit=crop")
-    center/cover fixed no-repeat var(--bg-dark);
+  background:#000 url("https://images.unsplash.com/photo-1462331940025-496dfbfc7564?q=80&w=2400&auto=format&fit=crop") center/cover fixed no-repeat;
   min-height:100vh;
   display:flex;
+  flex-direction:column;
 }
-.sidebar{
-  width:280px;
-  background:rgba(0,0,0,.8);
-  backdrop-filter:blur(10px);
-  border-right:1px solid var(--border);
-  padding:80px 16px 20px;
-  box-sizing:border-box;
-  overflow-y:auto;
-}
-.brand{
+header{
   position:fixed;
-  top:0;
-  left:0;
-  right:0;
-  height:60px;
+  top:0;left:0;right:0;
   background:rgba(0,0,0,.7);
   backdrop-filter:blur(10px);
   display:flex;
   align-items:center;
   justify-content:space-between;
-  padding:0 20px;
+  padding:10px 16px;
   border-bottom:1px solid var(--border);
   z-index:10;
 }
-.brand .logo{
-  width:32px;height:32px;
+header .logo{
+  width:34px;height:34px;
   border-radius:50%;
   background:conic-gradient(from 200deg,var(--gold1),var(--gold2),#b89200,var(--gold1));
   box-shadow:0 0 10px rgba(255,215,0,.4);
 }
-.brand span{
-  font-weight:900;
-  font-size:20px;
-  color:var(--gold1);
-}
-.brand .user{
-  font-size:14px;
-  color:#ccc;
-}
-.chat-list h3{
-  margin-top:0;
-  font-weight:800;
-  font-size:15px;
-  color:var(--gold2);
-}
-.chat-item{
-  padding:10px;
-  border-radius:8px;
-  margin-bottom:6px;
-  cursor:pointer;
-  background:rgba(255,255,255,.05);
-  border:1px solid transparent;
-}
-.chat-item:hover{background:rgba(255,255,255,.1);}
-.chat-item.active{
-  border-color:var(--gold1);
-  background:rgba(255,215,0,.1);
-}
-.new-chat{
-  width:100%;
-  margin-bottom:14px;
-  padding:10px;
-  font-weight:800;
-  border:none;
-  border-radius:10px;
-  background:linear-gradient(45deg,var(--gold1),var(--gold2));
-  color:#141000;
-  cursor:pointer;
-}
-main{
+header h1{margin:0;font-size:18px;color:var(--gold1);font-weight:900;}
+#chatArea{
   flex:1;
-  display:flex;
-  flex-direction:column;
-  padding:80px 20px 140px;
   overflow-y:auto;
+  padding:80px 12px 180px;
 }
 .msg{
   max-width:750px;
@@ -103,161 +52,161 @@ main{
   border-radius:12px;
   border:1px solid var(--border);
   backdrop-filter:blur(6px);
+  word-wrap:break-word;
 }
-.msg.ai{background:rgba(15,15,30,.6);}
 .msg.user{background:linear-gradient(180deg,rgba(255,215,0,.12),rgba(255,215,0,.08));}
+.msg.ai{background:rgba(15,15,30,.6);}
 .msg small{display:block;font-size:.75rem;opacity:.6;margin-bottom:3px;}
 footer{
   position:fixed;
-  bottom:0;left:280px;right:0;
-  background:rgba(0,0,0,.65);
+  bottom:0;left:0;right:0;
+  background:rgba(0,0,0,.75);
+  backdrop-filter:blur(12px);
   border-top:1px solid var(--border);
-  backdrop-filter:blur(10px);
-  padding:14px 0;
+  padding:10px 8px;
 }
-.composer{
-  width:min(900px,94%);
-  margin:auto;
+#composer{
   display:flex;
   gap:10px;
+  max-width:900px;
+  margin:auto;
 }
-textarea{
+#prompt{
   flex:1;
   resize:none;
-  min-height:50px;
   border-radius:10px;
   border:1px solid rgba(255,255,255,.2);
   background:rgba(255,255,255,.08);
   color:#fff;
   padding:10px 14px;
+  min-height:45px;
 }
-button.send{
+button{
   background:linear-gradient(45deg,var(--gold1),var(--gold2));
   border:none;
   border-radius:10px;
-  padding:0 18px;
+  padding:0 16px;
   font-weight:800;
-  cursor:pointer;
   color:#141000;
+  cursor:pointer;
 }
-.subscribe-btn{
-  display:block;
-  margin:20px auto;
-  background:linear-gradient(45deg,var(--gold1),var(--gold2));
-  color:#141000;
-  font-weight:900;
-  padding:12px 20px;
-  border:none;
+#featureBar{
+  position:fixed;
+  bottom:70px;
+  left:0;right:0;
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  flex-wrap:wrap;
+  padding:6px;
+}
+.featureBtn{
+  flex:1 1 30%;
+  min-width:110px;
+  background:rgba(255,255,255,.08);
+  border:1px solid var(--border);
   border-radius:12px;
+  color:var(--gold1);
+  padding:10px;
+  text-align:center;
+  font-weight:600;
   cursor:pointer;
+}
+.featureBtn:hover{background:rgba(255,255,255,.15);}
+@media(max-width:768px){
+  #featureBar{bottom:80px;}
 }
 </style>
 </head>
 <body>
-<div class="brand">
+<header>
   <div class="logo"></div>
-  <span>GoldenSpaceAI</span>
-  <div class="user" id="userName">Welcome</div>
+  <h1>GoldenSpaceAI</h1>
+  <span id="userBalance">G: —</span>
+</header>
+
+<div id="chatArea">
+  <div class="msg ai"><small>GoldenSpaceAI</small>Welcome to your advanced chat. Each month costs <b>20 G</b> to keep this AI active.</div>
 </div>
 
-<div class="sidebar">
-  <button class="new-chat" id="newChat">＋ New Chat</button>
-  <div class="chat-list" id="chatList">
-    <h3>Your Chats</h3>
-    <div id="chatItems">Loading...</div>
-  </div>
-  <button class="subscribe-btn" onclick="showPlans()">Subscribe to a Plan</button>
+<div id="featureBar">
+  <div class="featureBtn" id="genImage">🖼️ Generate Image</div>
+  <div class="featureBtn" id="proThink">🤖 Pro Thinking</div>
+  <div class="featureBtn" id="studyLearn">📚 Study & Learn</div>
 </div>
-
-<main id="chat">
-  <div class="msg ai">
-    <small>GoldenSpaceAI</small>
-    Welcome! Choose a chat on the left or start a new one.<br>
-    Unlock <b>Plus</b> or <b>Pro</b> plans for GPT-5, image generation, and deep memory.
-  </div>
-</main>
 
 <footer>
-  <div class="composer">
-    <textarea id="prompt" placeholder="Type your message..."></textarea>
-    <button class="send" id="sendBtn">Send</button>
+  <div id="composer">
+    <textarea id="prompt" placeholder="Type your message…"></textarea>
+    <button id="sendBtn">Send</button>
   </div>
 </footer>
 
 <script>
-const chatBox=document.getElementById("chat");
-const chatItems=document.getElementById("chatItems");
-const userNameEl=document.getElementById("userName");
-let currentChat=null;
-let userName="User";
-async function loadUser(){
+const chatArea=document.getElementById("chatArea");
+const promptEl=document.getElementById("prompt");
+const balanceEl=document.getElementById("userBalance");
+
+async function loadProfile(){
   try{
-    const r=await fetch("/api/profile",{credentials:"include"}).then(r=>r.json());
-    if(r.name)userName=r.name;
-    userNameEl.textContent="Welcome, "+userName;
-  }catch{userNameEl.textContent="Welcome";}
+    const res=await fetch("/api/profile",{credentials:"include"});
+    const data=await res.json();
+    balanceEl.textContent="G: "+data.golden_balance;
+  }catch(e){balanceEl.textContent="G: --";}
 }
-async function loadChats(){
+
+// create or renew monthly chat
+async function startChatMonth(){
   try{
-    const r=await fetch("/api/projects",{credentials:"include"}).then(r=>r.json());
-    chatItems.innerHTML="";
-    if(!r.projects?.length){
-      chatItems.innerHTML="<p style='color:#aaa'>No chats yet.</p>";
-      return;
-    }
-    r.projects.forEach(p=>{
-      const div=document.createElement("div");
-      div.className="chat-item";
-      div.textContent=p.name;
-      div.onclick=()=>openChat(p.id,div);
-      chatItems.appendChild(div);
-    });
-  }catch(e){chatItems.textContent="Error loading chats";}
+    const res=await fetch("/api/createChat",{method:"POST",credentials:"include"});
+    const data=await res.json();
+    if(!data.success) alert(data.error||"Could not start chat");
+    else loadProfile();
+  }catch(e){console.error(e);}
 }
-function openChat(id,el){
-  document.querySelectorAll(".chat-item").forEach(i=>i.classList.remove("active"));
-  el.classList.add("active");
-  currentChat=id;
-  chatBox.innerHTML="";
-  loadMessages(id);
-}
-async function loadMessages(id){
-  const r=await fetch(`/api/messages?project_id=${id}`,{credentials:"include"}).then(r=>r.json());
-  if(!r.messages?.length){chatBox.innerHTML="<div class='msg ai'>New chat started.</div>";return;}
-  r.messages.forEach(m=>addMsg(m.sender==="ai"?"ai":"user",m.content));
+
+// basic send
+async function sendMessage(){
+  const text=promptEl.value.trim();
+  if(!text)return;
+  addMsg("user",text);
+  promptEl.value="";
+  addMsg("ai","Thinking…");
+  try{
+    const r=await fetch("/chat-advanced-ai",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"include",body:JSON.stringify({q:text})});
+    const j=await r.json();
+    replaceLastAI(j.reply||"[No reply]");
+  }catch(e){replaceLastAI("Error: "+e.message);}
 }
 function addMsg(role,txt){
-  const m=document.createElement("div");
-  m.className="msg "+role;
-  m.innerHTML=`<small>${role==="ai"?"GoldenSpaceAI":userName}</small>${txt}`;
-  chatBox.appendChild(m);
-  chatBox.scrollTop=chatBox.scrollHeight;
+  const d=document.createElement("div");
+  d.className="msg "+role;
+  d.innerHTML=`<small>${role==="ai"?"GoldenSpaceAI":"You"}</small>${txt}`;
+  chatArea.appendChild(d);
+  chatArea.scrollTop=chatArea.scrollHeight;
 }
-document.getElementById("newChat").onclick=async()=>{
-  const name=prompt("Name your new chat/project:");
-  if(!name)return;
-  const r=await fetch("/api/projects",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"include",body:JSON.stringify({name})}).then(r=>r.json());
-  if(r.success){loadChats();}else alert("Failed to create chat.");
-};
+function replaceLastAI(txt){
+  const m=[...document.querySelectorAll(".msg.ai")].pop();
+  if(m)m.innerHTML=`<small>GoldenSpaceAI</small>${txt}`;
+}
 document.getElementById("sendBtn").onclick=sendMessage;
-async function sendMessage(){
-  const text=document.getElementById("prompt").value.trim();
-  if(!text||!currentChat)return;
-  addMsg("user",text);
-  document.getElementById("prompt").value="";
-  const s=document.createElement("div");s.className="msg ai";s.innerHTML="Thinking...";chatBox.appendChild(s);
-  try{
-    const fd=new FormData();
-    fd.append("q",text);
-    fd.append("chat_id",currentChat);
-    const r=await fetch("/chat-advanced-ai",{method:"POST",body:fd,credentials:"include"}).then(r=>r.json());
-    chatBox.removeChild(s);
-    addMsg("ai",r.reply||"[No reply]");
-  }catch(e){chatBox.removeChild(s);addMsg("ai","Error: "+e.message);}
+
+// feature buttons
+document.getElementById("genImage").onclick=()=>sendFeature("image");
+document.getElementById("proThink").onclick=()=>sendFeature("pro");
+document.getElementById("studyLearn").onclick=()=>sendFeature("study");
+
+async function sendFeature(type){
+  let msg="";
+  if(type==="image")msg="Generate an image for my last message.";
+  if(type==="pro")msg="Answer using advanced reasoning (GPT-5).";
+  if(type==="study")msg="Explain the previous topic step-by-step for a student.";
+  addMsg("user",msg);
+  await sendMessage();
 }
-function showPlans(){window.location="/subscriptions.html";}
-loadUser();
-loadChats();
+
+loadProfile();
+startChatMonth();
 </script>
 </body>
 </html>

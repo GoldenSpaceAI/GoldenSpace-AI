@@ -678,8 +678,110 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
       }
     )
   );
+// ============ GOLDEN TRANSFER SYSTEM ============
+app.post("/api/transfer-golden", async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: "Login required" });
+    }
 
-  app.get(
+    const { recipientEmail, amount } = req.body;
+    
+    // Validate input
+    if (!recipientEmail || !amount || amount <= 0) {
+      return res.status(400).json({ error: "Valid recipient email and amount required" });
+    }
+
+    const senderId = getUserIdentifier(req);
+    const db = loadGoldenDB();
+    
+    // Check sender
+    const sender = db.users[senderId];
+    if (!sender) {
+      return res.status(404).json({ error: "Sender account not found" });
+    }
+
+    // Calculate fee and total
+    const fee = Math.ceil(amount * 0.05); // 5% fee
+    const totalCost = amount + fee;
+    const senderBalance = Number(sender.golden_balance || 0);
+
+    // Check if sender has enough balance
+    if (senderBalance < totalCost) {
+      return res.status(400).json({ 
+        error: `Insufficient balance. Need ${totalCost}G (${amount}G + ${fee}G fee), but only have ${senderBalance}G` 
+      });
+    }
+
+    // Find recipient by email
+    const recipientEntry = Object.entries(db.users).find(([_, user]) => 
+      user.email && user.email.toLowerCase() === recipientEmail.toLowerCase()
+    );
+
+    if (!recipientEntry) {
+      return res.status(404).json({ error: "Recipient not found in our system" });
+    }
+
+    const [recipientId, recipient] = recipientEntry;
+
+    // Prevent self-transfer
+    if (senderId === recipientId) {
+      return res.status(400).json({ error: "Cannot transfer to yourself" });
+    }
+
+    // Update balances
+    sender.golden_balance = senderBalance - totalCost;
+    recipient.golden_balance = Number(recipient.golden_balance || 0) + amount;
+
+    // Add transaction records
+    const timestamp = new Date().toISOString();
+    
+    // Sender transaction
+    sender.transactions = sender.transactions || [];
+    sender.transactions.push({
+      type: "transfer_out",
+      amount: -totalCost,
+      recipient: recipientEmail,
+      net_amount: -amount,
+      fee: fee,
+      previous_balance: senderBalance,
+      new_balance: sender.golden_balance,
+      timestamp: timestamp
+    });
+
+    // Recipient transaction
+    recipient.transactions = recipient.transactions || [];
+    recipient.transactions.push({
+      type: "transfer_in",
+      amount: amount,
+      sender: sender.email,
+      previous_balance: recipient.golden_balance - amount,
+      new_balance: recipient.golden_balance,
+      timestamp: timestamp
+    });
+
+    // Update stats
+    sender.total_golden_spent = (sender.total_golden_spent || 0) + totalCost;
+    recipient.total_golden_earned = (recipient.total_golden_earned || 0) + amount;
+
+    saveGoldenDB(db);
+
+    console.log(`💰 Transfer: ${sender.email} → ${recipientEmail} (${amount}G + ${fee}G fee)`);
+
+    res.json({
+      success: true,
+      message: `Successfully transferred ${amount}G to ${recipientEmail}`,
+      amount: amount,
+      fee: fee,
+      totalCost: totalCost,
+      newBalance: sender.golden_balance
+    });
+
+  } catch (err) {
+    console.error("Transfer error:", err);
+    res.status(500).json({ error: "Internal server error during transfer" });
+  }
+});  app.get(
     "/auth/google",
     passport.authenticate("google", {
       scope: ["profile", "email"],

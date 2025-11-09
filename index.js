@@ -1,4 +1,4 @@
-// index.js — GoldenSpaceAI COMPLETE SYSTEM
+// index.js — GoldenSpaceAI COMPLETE SYSTEM (ORGANIZED)
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -15,266 +15,77 @@ import multer from "multer";
 import fs from "fs";
 import { createClient } from "@supabase/supabase-js";
 
-// ============ ENV & APP ============
+// ============ CONFIGURATION ============
 dotenv.config();
 const app = express();
 app.set("trust proxy", 1);
 
-// ============ ENVIRONMENT VALIDATION ============
-function validateEnvironment() {
-  const required = ["OPENAI_API_KEY", "SESSION_SECRET", "SUPABASE_URL", "SUPABASE_SERVICE_KEY"];
-  const missing = required.filter((key) => !process.env[key]);
-  if (missing.length > 0) {
-    console.error("❌ Missing required environment variables:", missing);
-    process.exit(1);
-  }
-  console.log("✅ Environment variables validated");
-}
+// Constants
+const GOLDEN_DB_PATH = "./data/golden_database.json";
+const PAYMENT_DB_PATH = "./data/payment_database.json";
+const ADV_PRICE_G = 20;
+const IMG_LIMIT_PER_MONTH = 20;
+
+const GOLDEN_PACKAGES = {
+  60: { priceUSD: 15 },
+  100: { priceUSD: 20 },
+  200: { priceUSD: 40 },
+};
+
+const FEATURE_PRICES = {
+  search_info: 4,
+  homework_helper: 20,
+  chat_advancedai: 20,
+  create_rocket: 4,
+  create_satellite: 4,
+  advanced_planet: 4,
+  your_space: 4,
+  learn_physics: 4,
+  create_planet: 4,
+  search_lessons: 10,
+};
+
+const SITE_BASE_URL = "https://goldenspaceai.space";
+
+// ============ INITIALIZATION ============
 validateEnvironment();
-
-// ============ SUPABASE ============
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
-console.log("✅ Supabase connected");
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-//=========== USER HELPERS ============
-async function ensureUserInDB(email, name) {
-  try {
-    const { data: existing } = await supabase
-      .from("users")
-      .select("*")
-      .eq("email", email)
-      .single();
-
-    if (!existing) {
-      await supabase.from("users").insert([{ email, name, golden_balance: 0 }]);
-      console.log(`🆕 Created new user record for ${email}`);
-    }
-  } catch (err) {
-    console.error("❌ ensureUserInDB error:", err.message);
-  }
+// Initialize data directory
+const dataDir = path.dirname(GOLDEN_DB_PATH);
+if (!fs.existsSync(dataDir)) {
+  fs.mkdirSync(dataDir, { recursive: true });
 }
 
-async function addGoldenToUser(email, amount) {
-  try {
-    await supabase.rpc("increment_balance", { user_email: email, amount_to_add: amount });
-    console.log(`💰 Added ${amount}G to ${email}`);
-  } catch (err) {
-    console.error("❌ addGoldenToUser error:", err.message);
-  }
-}
-
-// ============ MIDDLEWARE ============
+// ============ MIDDLEWARE SETUP ============
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// =================== BLOCKCHAIN PAYMENT CHECKER ===================
-const wallets = {
-  btc: "bc1qz5wtz2d329xsm7gcs9e3jwls9supg2fk2hkxtd",
-  eth: "0x8BEaCb38dF916F6644F81cA0De18C1F4996d32Ea",
-  usdt_trc20: "TCN6eVtHFNtPAJNfebgGGm8c2h71NWYY9P",
-  bnb: "0x8BEaCb38dF916F6644F81cA0De18C1F4996d32Ea",
-  tron: "TCN6eVtHFNtPAJNfebgGGm8c2h71NWYY9P",
-  sol: "8vdM8myEj4pAXZZK6WCV1WkSGvmzLgteDv5qCCYcR2NW",
-  doge: "DAfXZW2f9wJD4fBMwekb8iVKfQMAdyNCVV",
-};
-
-// 🔄 Cached prices to avoid API spam
-let lastPrices = {};
-let lastPriceFetch = 0;
-
-async function getUSDPrice(coin) {
-  try {
-    const now = Date.now();
-    if (now - lastPriceFetch < 5 * 60 * 1000 && lastPrices[coin]) {
-      return lastPrices[coin];
-    }
-
-    const url = `https://min-api.cryptocompare.com/data/price?fsym=${coin.toUpperCase()}&tsyms=USD`;
-    const res = await axios.get(url);
-    const price = res.data.USD || 0;
-    lastPrices[coin] = price;
-    lastPriceFetch = now;
-    return price;
-  } catch (err) {
-    console.error(`⚠️ Failed to fetch price for ${coin}:`, err.message);
-    return lastPrices[coin] || 0;
-  }
-}
-
-const blockchainCheckers = {
-  btc: async (address) => {
-    const res = await axios.get(`https://blockstream.info/api/address/${address}`);
-    return res.data.chain_stats.funded_txo_sum / 1e8;
-  },
-  eth: async (address) => {
-    const res = await axios.get(`https://api.blockcypher.com/v1/eth/main/addrs/${address}/balance`);
-    return res.data.final_balance / 1e18;
-  },
-  tron: async (address) => {
-    const res = await axios.get(`https://apilist.tronscanapi.com/api/account?address=${address}`);
-    return res.data.balance / 1e6;
-  },
-  doge: async (address) => {
-    const res = await axios.get(`https://dogechain.info/api/v1/address/balance/${address}`);
-    return parseFloat(res.data.balance);
-  },
-  sol: async (address) => {
-    const res = await axios.post("https://api.mainnet-beta.solana.com", {
-      jsonrpc: "2.0",
-      id: 1,
-      method: "getBalance",
-      params: [address],
-    });
-    return res.data.result.value / 1e9;
-  },
-};
-
-async function checkBlockchainPayments() {
-  try {
-    console.log("🔍 Checking blockchain payments...");
-
-    for (const [coin, address] of Object.entries(wallets)) {
-      const checker = blockchainCheckers[coin];
-      if (!checker) continue;
-
-      await new Promise((r) => setTimeout(r, 3000)); // 3s delay to avoid spam
-      const balance = await checker(address);
-      const usdPrice = await getUSDPrice(coin);
-      const valueUSD = balance * usdPrice;
-
-      console.log(`💰 ${coin.toUpperCase()} (${address.slice(0, 6)}...): ${balance} ≈ $${valueUSD.toFixed(2)}`);
-    }
-  } catch (err) {
-    console.error("❌ Payment check failed:", err.message);
-  }
-}
-
-// test route
-app.get("/api/test-blockchain", async (_req, res) => {
-  try {
-    await checkBlockchainPayments();
-    res.json({ success: true });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
-// run every 10 minutes instead of 2
-setInterval(checkBlockchainPayments, 10 * 60 * 1000);
-
-// ============ SUPABASE CHAT / PROJECT SYSTEM ============
-app.post("/api/chat/create", async (req, res) => {
-  try {
-    const { title } = req.body;
-    if (!req.user) return res.status(401).json({ error: "Login required" });
-    const userId = getUserIdentifier(req);
-
-    const { data, error } = await supabase
-      .from("chats")
-      .insert([{ user_id: userId, title }])
-      .select()
-      .single();
-
-    if (error) throw error;
-    res.json({ success: true, chat: data });
-  } catch (err) {
-    console.error("Chat create error:", err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.get("/api/chat/:chat_id", async (req, res) => {
-  try {
-    const { chat_id } = req.params;
-    const { data, error } = await supabase
-      .from("messages")
-      .select("*")
-      .eq("chat_id", chat_id)
-      .order("timestamp", { ascending: false })
-      .limit(10);
-    if (error) throw error;
-    res.json({ success: true, messages: data.reverse() });
-  } catch (err) {
-    console.error("Chat fetch error:", err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.post("/api/chat/message", async (req, res) => {
-  try {
-    const { chat_id, sender, content } = req.body;
-    if (!chat_id || !content)
-      return res.status(400).json({ error: "Missing chat_id or content" });
-
-    const { error } = await supabase.from("messages").insert([{ chat_id, sender, content }]);
-    if (error) throw error;
-    res.json({ success: true });
-  } catch (err) {
-    console.error("Chat save error:", err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.get("/api/projects", async (req, res) => {
-  try {
-    if (!req.user) return res.status(401).json({ error: "Login required" });
-    const userId = getUserIdentifier(req);
-    const { data, error } = await supabase.from("projects").select("*").eq("user_id", userId);
-    if (error) throw error;
-    res.json({ success: true, projects: data });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.post("/api/projects/create", async (req, res) => {
-  try {
-    if (!req.user) return res.status(401).json({ error: "Login required" });
-    const { name, description } = req.body;
-    const userId = getUserIdentifier(req);
-    const { data, error } = await supabase
-      .from("projects")
-      .insert([{ user_id: userId, name, description }])
-      .select()
-      .single();
-    if (error) throw error;
-    res.json({ success: true, project: data });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-//================================================================================PART 2 INDEX.JS PART 2 INDEX.JS ============================================================
-
-// ============ SESSION CONFIGURATION ============
+// Session Configuration
 const sessionConfig = {
   secret: process.env.SESSION_SECRET || "super-secret-key-change-in-production",
   resave: false,
   saveUninitialized: false,
-  proxy: true, // ✅ needed for Render or reverse proxies
+  proxy: true,
   cookie: {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production", // HTTPS only in production
-    maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+    secure: process.env.NODE_ENV === "production",
+    maxAge: 1000 * 60 * 60 * 24 * 7,
   },
 };
-
 app.use(session(sessionConfig));
 
-// ============ PATHS ============
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-app.use(express.static(__dirname));
-
-// ============ PASSPORT ============
+// Passport Setup
 passport.serializeUser((user, done) => done(null, user));
 passport.deserializeUser((obj, done) => done(null, obj));
 app.use(passport.initialize());
 app.use(passport.session());
 
-// ============ SECURE FILE UPLOAD ============
+// File Upload
 const upload = multer({
   dest: "uploads/",
   limits: { fileSize: 10 * 1024 * 1024 },
@@ -287,13 +98,20 @@ const upload = multer({
   },
 });
 
-// ============ DB HELPERS ============
-const GOLDEN_DB_PATH = "./data/golden_database.json";
-const PAYMENT_DB_PATH = "./data/payment_database.json";
+// Static Files
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+app.use(express.static(__dirname));
 
-const dataDir = path.dirname(GOLDEN_DB_PATH);
-if (!fs.existsSync(dataDir)) {
-  fs.mkdirSync(dataDir, { recursive: true });
+// ============ HELPER FUNCTIONS ============
+function validateEnvironment() {
+  const required = ["OPENAI_API_KEY", "SESSION_SECRET", "SUPABASE_URL", "SUPABASE_SERVICE_KEY"];
+  const missing = required.filter((key) => !process.env[key]);
+  if (missing.length > 0) {
+    console.error("❌ Missing required environment variables:", missing);
+    process.exit(1);
+  }
+  console.log("✅ Environment variables validated");
 }
 
 function loadGoldenDB() {
@@ -312,7 +130,6 @@ function loadGoldenDB() {
   }
 }
 
-// ✅ file-safe version to prevent overlapping writes
 let saving = false;
 async function saveGoldenDB(db) {
   try {
@@ -326,29 +143,6 @@ async function saveGoldenDB(db) {
   }
 }
 
-function loadPaymentDB() {
-  try {
-    if (fs.existsSync(PAYMENT_DB_PATH)) {
-      const raw = fs.readFileSync(PAYMENT_DB_PATH, "utf8");
-      return raw.trim()
-        ? JSON.parse(raw)
-        : { transactions: {}, user_packages: {}, nowpayments_orders: {} };
-    }
-  } catch (e) {
-    console.error("Payment DB error:", e);
-  }
-  return { transactions: {}, user_packages: {}, nowpayments_orders: {} };
-}
-
-function savePaymentDB(data) {
-  try {
-    fs.writeFileSync(PAYMENT_DB_PATH, JSON.stringify(data, null, 2));
-  } catch (e) {
-    console.error("Payment DB save error:", e);
-  }
-}
-
-// ============ HELPER FUNCTIONS ============
 function getUserIdentifier(req) {
   return req.user ? `${req.user.id}@${req.user.provider}` : null;
 }
@@ -358,11 +152,14 @@ function getUserGoldenBalance(userId) {
   return db.users[userId]?.golden_balance || 0;
 }
 
-// ============ AUTO GOLDEN FOR SPECIFIC EMAIL ============
+function monthKey(d = new Date()) {
+  return d.toISOString().slice(0, 7);
+}
+
+// ============ USER MANAGEMENT ============
 function ensureUserExists(user) {
   const db = loadGoldenDB();
   const id = `${user.id}@${user.provider}`;
-
   const isYourEmail = user.email === "farisalmhamad3@gmail.com";
 
   if (!db.users[id]) {
@@ -375,22 +172,17 @@ function ensureUserExists(user) {
       subscriptions: {},
       total_golden_earned: isYourEmail ? 100000 : 0,
       total_golden_spent: 0,
-      transactions: isYourEmail
-        ? [
-            {
-              type: "auto_bonus",
-              amount: 100000,
-              previous_balance: 0,
-              new_balance: 100000,
-              reason: "Automatic 100K Golden for admin",
-              timestamp: new Date().toISOString(),
-            },
-          ]
-        : [],
+      transactions: isYourEmail ? [{
+        type: "auto_bonus",
+        amount: 100000,
+        previous_balance: 0,
+        new_balance: 100000,
+        reason: "Automatic 100K Golden for admin",
+        timestamp: new Date().toISOString(),
+      }] : [],
     };
     saveGoldenDB(db);
-    if (isYourEmail)
-      console.log(`🎉 Auto-created account with 100,000G for ${user.email}`);
+    if (isYourEmail) console.log(`🎉 Auto-created account with 100,000G for ${user.email}`);
   } else {
     if (isYourEmail && db.users[id].golden_balance < 100000) {
       const previousBalance = db.users[id].golden_balance;
@@ -415,58 +207,137 @@ function ensureUserExists(user) {
   }
 }
 
-// ============ ADMIN AUTH MIDDLEWARE ============
-function requireAdminAuth(req, res, next) {
-  if (!req.user) return res.status(401).json({ error: "Login required" });
+// ============ AUTHENTICATION ROUTES ============
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+  passport.use(new GoogleStrategy({
+    clientID: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    callbackURL: `${SITE_BASE_URL}/auth/google/callback`,
+    proxy: true,
+  }, (_accessToken, _refreshToken, profile, done) => {
+    const user = {
+      id: profile.id,
+      name: profile.displayName,
+      email: profile.emails?.[0]?.value || "",
+      photo: profile.photos?.[0]?.value || "",
+      provider: "google",
+    };
+    ensureUserExists(user);
+    done(null, user);
+  }));
 
-  const userId = getUserIdentifier(req);
-  const adminUsers = [
-    "118187920786158036693@google",
-    process.env.ADMIN_USER_ID,
-  ];
-  const isAdmin =
-    adminUsers.includes(userId) || req.user.email === "farisalmhamad3@gmail.com";
+  app.get("/auth/google", passport.authenticate("google", {
+    scope: ["profile", "email"],
+    prompt: "select_account",
+  }));
 
-  if (!isAdmin) {
-    console.log(`🚫 Admin access denied for: ${req.user.email}`);
-    return res.status(403).json({ error: "Admin access required" });
-  }
-
-  console.log(`✅ Admin access granted to: ${req.user.email}`);
-  next();
+  app.get("/auth/google/callback", passport.authenticate("google", {
+    failureRedirect: "/login-signup.html",
+    failureMessage: true,
+    session: true,
+  }), (_req, res) => res.redirect("/"));
 }
 
-// ============ GOLDEN SYSTEM CONFIG ============
-const GOLDEN_PACKAGES = {
-  60: { priceUSD: 15 },
-  100: { priceUSD: 20 },
-  200: { priceUSD: 40 },
-};
+if (process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET) {
+  passport.use(new GitHubStrategy({
+    clientID: process.env.GITHUB_CLIENT_ID,
+    clientSecret: process.env.GITHUB_CLIENT_SECRET,
+    callbackURL: `${SITE_BASE_URL}/auth/github/callback`,
+    proxy: true,
+  }, (_accessToken, _refreshToken, profile, done) => {
+    const user = {
+      id: profile.id,
+      name: profile.displayName || profile.username,
+      email: profile.emails?.[0]?.value || `${profile.username}@github.user`,
+      photo: profile.photos?.[0]?.value || "",
+      username: profile.username,
+      provider: "github",
+    };
+    ensureUserExists(user);
+    done(null, user);
+  }));
 
-const FEATURE_PRICES = {
-  search_info: 4,
-  homework_helper: 20,
-  chat_advancedai: 20,
-  create_rocket: 4,
-  create_satellite: 4,
-  advanced_planet: 4,
-  your_space: 4,
-  learn_physics: 4,
-  create_planet: 4,
-  search_lessons: 10,
-};
+  app.get("/auth/github", passport.authenticate("github", { scope: ["user:email"] }));
+  app.get("/auth/github/callback", passport.authenticate("github", {
+    failureRedirect: "/login-signup.html",
+    failureMessage: true,
+    session: true,
+  }), (_req, res) => res.redirect("/"));
+}
 
-// ✅ cleans expired subs automatically
+// ============ BASIC ROUTES ============
+app.get("/", (_req, res) => res.sendFile(path.join(__dirname, "index.html")));
+app.get("/login", (_req, res) => res.sendFile(path.join(__dirname, "login-signup.html")));
+
+app.get("/:page.html", (req, res) => {
+  const page = (req.params.page || "").toLowerCase();
+  if (!/^[a-z0-9\-]+$/.test(page)) {
+    return res.status(400).send("Invalid page");
+  }
+  const filePath = path.join(__dirname, `${page}.html`);
+  fs.existsSync(filePath) ? res.sendFile(filePath) : res.status(404).send("Page not found");
+});
+
+app.post("/logout", (req, res) => {
+  req.logout((err) => {
+    if (err) return res.status(500).json({ error: "Logout failed" });
+    req.session.destroy(() => {
+      res.clearCookie("connect.sid");
+      res.json({ ok: true, message: "Logged out successfully" });
+    });
+  });
+});
+
+// ============ USER API ROUTES ============
+app.get("/api/me", (req, res) => {
+  if (!req.user) return res.json({ loggedIn: false });
+
+  const id = `${req.user.id}@${req.user.provider}`;
+  const db = loadGoldenDB();
+  const userData = db.users[id];
+  
+  if (!userData) {
+    ensureUserExists(req.user);
+    return res.json({ loggedIn: true, user: req.user, balance: 0 });
+  }
+
+  const isAdmin = ["118187920786158036693@google", process.env.ADMIN_USER_ID].includes(id) ||
+    req.user.email === "farisalmhamad3@gmail.com";
+
+  res.set("Cache-Control", "no-store");
+  res.json({
+    loggedIn: true,
+    user: {
+      id: req.user.id,
+      name: req.user.name,
+      email: req.user.email,
+      photo: req.user.photo,
+      provider: req.user.provider,
+      isAdmin,
+    },
+    balance: userData.golden_balance || 0,
+    subscriptions: userData.subscriptions || {},
+  });
+});
+
+app.get("/api/golden-balance", (req, res) => {
+  if (!req.user) return res.json({ loggedIn: false, balance: 0 });
+  const b = getUserGoldenBalance(getUserIdentifier(req));
+  res.set("Cache-Control", "no-store");
+  res.json({ loggedIn: true, balance: b, user: req.user });
+});
+
+app.get("/api/golden-packages", (_req, res) => res.json(GOLDEN_PACKAGES));
+
+// ============ FEATURE MANAGEMENT ============
 function requireFeature(feature) {
   return (req, res, next) => {
-    if (!req.user)
-      return res.status(401).json({ error: "Login required" });
+    if (!req.user) return res.status(401).json({ error: "Login required" });
 
     const db = loadGoldenDB();
     const userId = getUserIdentifier(req);
     const user = db.users[userId];
-    if (!user)
-      return res.status(404).json({ error: "User not found" });
+    if (!user) return res.status(404).json({ error: "User not found" });
 
     const expiry = user.subscriptions?.[feature];
     if (expiry && new Date(expiry) > new Date()) return next();
@@ -498,537 +369,10 @@ app.use((req, _res, next) => {
   next();
 });
 
-// ======== ADVANCED CHAT (one-price monthly) ========
-const ADV_PRICE_G = 20;
-const IMG_LIMIT_PER_MONTH = 20;
-
-function monthKey(d = new Date()) {
-  return d.toISOString().slice(0, 7); // "YYYY-MM"
-}
-
-// Activate / renew Advanced Chat for 1 month (costs 20 G)
-app.post("/api/subscribe-advanced-ai", (req, res) => {
-  if (!req.user) return res.status(401).json({ error: "Login required" });
-
-  const db = loadGoldenDB();
-  const id = getUserIdentifier(req);
-  const user = db.users[id];
-  if (!user) return res.status(404).json({ error: "User not found" });
-
-  // normalize fields
-  user.subscriptions = user.subscriptions || {};
-  user.usage = user.usage || {};
-  user.usage.images = user.usage.images || { month: monthKey(), used: 0 };
-  if (user.usage.images.month !== monthKey()) {
-    user.usage.images = { month: monthKey(), used: 0 }; // reset quota on new month
-  }
-
-  const now = new Date();
-  const currentExpiryStr = user.subscriptions.chat_advancedai || null;
-  const currentExpiry = currentExpiryStr ? new Date(currentExpiryStr) : null;
-
-  // If still active, don't charge again—just return current sub
-  if (currentExpiry && currentExpiry > now) {
-    return res.json({
-      success: true,
-      alreadyActive: true,
-      expires_at: currentExpiry.toISOString(),
-      newBalance: user.golden_balance || 0,
-      images_left: IMG_LIMIT_PER_MONTH - (user.usage.images.used || 0),
-    });
-  }
-
-  // Charge 20 G to start/renew this month
-  const bal = Number(user.golden_balance || 0);
-  if (bal < ADV_PRICE_G) {
-    return res.status(402).json({ error: "Not enough Golden (20 G required)" });
-  }
-
-  const expiry = new Date(now);
-  expiry.setMonth(now.getMonth() + 1);
-
-  user.golden_balance = bal - ADV_PRICE_G;
-  user.subscriptions.chat_advancedai = expiry.toISOString();
-
-  // When paying for a new month, reset image quota
-  user.usage.images = { month: monthKey(), used: 0 };
-
-  saveGoldenDB(db);
-
-  res.json({
-    success: true,
-    expires_at: expiry.toISOString(),
-    newBalance: user.golden_balance,
-    images_left: IMG_LIMIT_PER_MONTH,
-  });
-});
-
-// ---------- Advanced Chat status ----------
-app.get("/api/advanced-ai-status", (req, res) => {
-  if (!req.user) return res.json({ active: false, loggedIn: false });
-
-  const db = loadGoldenDB();
-  const id = getUserIdentifier(req);
-  const user = db.users[id];
-  if (!user) return res.json({ active: false, loggedIn: true });
-
-  // normalize usage bucket
-  user.usage = user.usage || {};
-  user.usage.images = user.usage.images || { month: monthKey(), used: 0 };
-  if (user.usage.images.month !== monthKey()) {
-    user.usage.images = { month: monthKey(), used: 0 };
-    saveGoldenDB(db);
-  }
-
-  const now = new Date();
-  const expiryStr = user.subscriptions?.chat_advancedai || null;
-
-  let active = false;
-  let expires_at = null;
-  let days_left = 0;
-  let remaining_hours = 0;
-
-  if (expiryStr) {
-    const expiry = new Date(expiryStr);
-    if (expiry > now) {
-      active = true;
-      expires_at = expiry.toISOString();
-      const msLeft = expiry - now;
-      days_left = Math.ceil(msLeft / (1000 * 60 * 60 * 24));
-      remaining_hours = Math.max(0, Math.floor(msLeft / (1000 * 60 * 60)));
-    } else {
-      // auto-clean expired
-      delete user.subscriptions.chat_advancedai;
-      saveGoldenDB(db);
-    }
-  }
-
-  res.set("Cache-Control", "no-store");
-  res.json({
-    loggedIn: true,
-    active,
-    expires_at,
-    days_left,
-    remaining_hours,
-    balance: Number(user.golden_balance || 0),
-    images_left: IMG_LIMIT_PER_MONTH - Number(user.usage.images.used || 0),
-    img_limit: IMG_LIMIT_PER_MONTH,
-    monthly_price_g: ADV_PRICE_G,
-  });
-});
-//=================chat memory by supabase==============
-app.post("/api/createChat", async (req, res) => {
-  const user = req.session.user;
-  if (!user) return res.json({ success:false, error:"Not logged in" });
-
-  const month = new Date().toISOString().slice(0,7); // e.g. 2025-11
-  const { data: existing } = await supabase
-    .from("chats")
-    .select("*")
-    .eq("user_id", user.id)
-    .eq("month", month)
-    .maybeSingle();
-
-  if (existing) return res.json({ success:true, already:true });
-
-  const { data: userData } = await supabase
-    .from("users")
-    .select("golden_balance")
-    .eq("id", user.id)
-    .single();
-
-  if (userData.golden_balance < 20)
-    return res.json({ success:false, error:"Not enough G" });
-
-  await supabase
-    .from("users")
-    .update({ golden_balance: userData.golden_balance - 20 })
-    .eq("id", user.id);
-
-  await supabase.from("chats").insert({
-    user_id: user.id,
-    cost: 20,
-    month
-  });
-
-  res.json({ success:true });
-});
-// ---------- AUTH (Google / GitHub) ----------
-const SITE_BASE_URL =
-  "https://goldenspaceai.space";
-if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
-  passport.use(
-    new GoogleStrategy(
-      {
-        clientID: process.env.GOOGLE_CLIENT_ID,
-        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-        callbackURL: `${SITE_BASE_URL}/auth/google/callback`,
-        proxy: true,
-      },
-      (_accessToken, _refreshToken, profile, done) => {
-        const user = {
-          id: profile.id,
-          name: profile.displayName,
-          email: profile.emails?.[0]?.value || "",
-          photo: profile.photos?.[0]?.value || "",
-          provider: "google",
-        };
-        ensureUserExists(user);
-        done(null, user);
-      }
-    )
-  );
-// ============ SUBSCRIPTIONS ENDPOINT ============
-app.get("/api/subscriptions", (req, res) => {
-  try {
-    if (!req.user) {
-      return res.status(401).json({ error: "Login required" });
-    }
-
-    const userId = getUserIdentifier(req);
-    const db = loadGoldenDB();
-    const user = db.users[userId];
-    
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
-    }
-
-    const now = new Date();
-    const subscriptions = [];
-    const userSubs = user.subscriptions || {};
-
-    // Check each feature the user might have subscribed to
-    Object.entries(FEATURE_PRICES).forEach(([feature, cost]) => {
-      const expiryStr = userSubs[feature];
-      
-      if (expiryStr) {
-        const expiry = new Date(expiryStr);
-        const isActive = expiry > now;
-        const msLeft = expiry - now;
-        const daysLeft = isActive ? Math.ceil(msLeft / (1000 * 60 * 60 * 24)) : 0;
-
-        subscriptions.push({
-          feature,
-          cost,
-          expiry: expiryStr,
-          active: isActive,
-          daysLeft: daysLeft
-        });
-      }
-    });
-
-    // Also include advanced AI subscription if it exists
-    if (userSubs.chat_advancedai) {
-      const expiryStr = userSubs.chat_advancedai;
-      const expiry = new Date(expiryStr);
-      const isActive = expiry > now;
-      const msLeft = expiry - now;
-      const daysLeft = isActive ? Math.ceil(msLeft / (1000 * 60 * 60 * 24)) : 0;
-
-      subscriptions.push({
-        feature: "chat_advancedai",
-        cost: ADV_PRICE_G, // 20 G
-        expiry: expiryStr,
-        active: isActive,
-        daysLeft: daysLeft
-      });
-    }
-
-    res.json({
-      success: true,
-      balance: user.golden_balance || 0,
-      subscriptions: subscriptions.sort((a, b) => new Date(b.expiry) - new Date(a.expiry))
-    });
-
-  } catch (err) {
-    console.error("Subscriptions fetch error:", err);
-    res.status(500).json({ error: "Failed to load subscriptions" });
-  }
-});
-
-// ============ CANCEL SUBSCRIPTION ENDPOINT ============
-app.post("/api/cancel-subscription", (req, res) => {
-  try {
-    if (!req.user) {
-      return res.status(401).json({ error: "Login required" });
-    }
-
-    const { feature } = req.body;
-    if (!feature) {
-      return res.status(400).json({ error: "Feature required" });
-    }
-
-    const userId = getUserIdentifier(req);
-    const db = loadGoldenDB();
-    const user = db.users[userId];
-    
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
-    }
-
-    // Remove the subscription (it will expire naturally but won't auto-renew)
-    if (user.subscriptions && user.subscriptions[feature]) {
-      // For cancellation, we just remove it so it won't auto-renew
-      // The current subscription period remains active until expiry
-      delete user.subscriptions[feature];
-      saveGoldenDB(db);
-
-      console.log(`❌ Subscription canceled for ${userId}: ${feature}`);
-      
-      res.json({ 
-        success: true, 
-        message: "Subscription canceled. It will remain active until the expiry date." 
-      });
-    } else {
-      res.status(404).json({ error: "Subscription not found" });
-    }
-
-  } catch (err) {
-    console.error("Cancel subscription error:", err);
-    res.status(500).json({ error: "Failed to cancel subscription" });
-  }
-});  // ============ GOLDEN TRANSFER SYSTEM ============
-app.post("/api/transfer-golden", async (req, res) => {
-  try {
-    if (!req.user) {
-      return res.status(401).json({ error: "Login required" });
-    }
-
-    const { recipientEmail, amount } = req.body;
-    
-    // Validate input
-    if (!recipientEmail || !amount || amount <= 0) {
-      return res.status(400).json({ error: "Valid recipient email and amount required" });
-    }
-
-    const senderId = getUserIdentifier(req);
-    const db = loadGoldenDB();
-    
-    // Check sender
-    const sender = db.users[senderId];
-    if (!sender) {
-      return res.status(404).json({ error: "Sender account not found" });
-    }
-
-    // Calculate fee and total
-    const fee = Math.ceil(amount * 0.05); // 5% fee
-    const totalCost = amount + fee;
-    const senderBalance = Number(sender.golden_balance || 0);
-
-    // Check if sender has enough balance
-    if (senderBalance < totalCost) {
-      return res.status(400).json({ 
-        error: `Insufficient balance. Need ${totalCost}G (${amount}G + ${fee}G fee), but only have ${senderBalance}G` 
-      });
-    }
-
-    // Find recipient by email
-    const recipientEntry = Object.entries(db.users).find(([_, user]) => 
-      user.email && user.email.toLowerCase() === recipientEmail.toLowerCase()
-    );
-
-    if (!recipientEntry) {
-      return res.status(404).json({ error: "Recipient not found in our system" });
-    }
-
-    const [recipientId, recipient] = recipientEntry;
-
-    // Prevent self-transfer
-    if (senderId === recipientId) {
-      return res.status(400).json({ error: "Cannot transfer to yourself" });
-    }
-
-    // Update balances
-    sender.golden_balance = senderBalance - totalCost;
-    recipient.golden_balance = Number(recipient.golden_balance || 0) + amount;
-
-    // Add transaction records
-    const timestamp = new Date().toISOString();
-    
-    // Sender transaction
-    sender.transactions = sender.transactions || [];
-    sender.transactions.push({
-      type: "transfer_out",
-      amount: -totalCost,
-      recipient: recipientEmail,
-      net_amount: -amount,
-      fee: fee,
-      previous_balance: senderBalance,
-      new_balance: sender.golden_balance,
-      timestamp: timestamp
-    });
-
-    // Recipient transaction
-    recipient.transactions = recipient.transactions || [];
-    recipient.transactions.push({
-      type: "transfer_in",
-      amount: amount,
-      sender: sender.email,
-      previous_balance: recipient.golden_balance - amount,
-      new_balance: recipient.golden_balance,
-      timestamp: timestamp
-    });
-
-    // Update stats
-    sender.total_golden_spent = (sender.total_golden_spent || 0) + totalCost;
-    recipient.total_golden_earned = (recipient.total_golden_earned || 0) + amount;
-
-    saveGoldenDB(db);
-
-    console.log(`💰 Transfer: ${sender.email} → ${recipientEmail} (${amount}G + ${fee}G fee)`);
-
-    res.json({
-      success: true,
-      message: `Successfully transferred ${amount}G to ${recipientEmail}`,
-      amount: amount,
-      fee: fee,
-      totalCost: totalCost,
-      newBalance: sender.golden_balance
-    });
-
-  } catch (err) {
-    console.error("Transfer error:", err);
-    res.status(500).json({ error: "Internal server error during transfer" });
-  }
-});  app.get(
-    "/auth/google",
-    passport.authenticate("google", {
-      scope: ["profile", "email"],
-      prompt: "select_account", // always show account chooser
-    })
-  );
-
-  app.get(
-    "/auth/google/callback",
-    passport.authenticate("google", {
-      failureRedirect: "/login-signup.html",
-      failureMessage: true,
-      session: true,
-    }),
-    (_req, res) => res.redirect("/")
-  );
-}
-
-if (process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET) {
-  passport.use(
-    new GitHubStrategy(
-      {
-        clientID: process.env.GITHUB_CLIENT_ID,
-        clientSecret: process.env.GITHUB_CLIENT_SECRET,
-        callbackURL: `${SITE_BASE_URL}/auth/github/callback`,
-        proxy: true,
-      },
-      (_accessToken, _refreshToken, profile, done) => {
-        const user = {
-          id: profile.id,
-          name: profile.displayName || profile.username,
-          email: profile.emails?.[0]?.value || `${profile.username}@github.user`,
-          photo: profile.photos?.[0]?.value || "",
-          username: profile.username,
-          provider: "github",
-        };
-        ensureUserExists(user);
-        done(null, user);
-      }
-    )
-  );
-
-  app.get(
-    "/auth/github",
-    passport.authenticate("github", { scope: ["user:email"] })
-  );
-
-  app.get(
-    "/auth/github/callback",
-    passport.authenticate("github", {
-      failureRedirect: "/login-signup.html",
-      failureMessage: true,
-      session: true,
-    }),
-    (_req, res) => res.redirect("/")
-  );
-}
-
-
-// ---------- BASIC ROUTES ----------
-app.get("/", (_req, res) => res.sendFile(path.join(__dirname, "index.html")));
-app.get("/login", (_req, res) =>
-  res.sendFile(path.join(__dirname, "login-signup.html"))
-);
-
-// safer: whitelist simple page names to avoid path traversal
-app.get("/:page.html", (req, res) => {
-  const page = (req.params.page || "").toLowerCase();
-  if (!/^[a-z0-9\-]+$/.test(page)) {
-    return res.status(400).send("Invalid page");
-  }
-  const filePath = path.join(__dirname, `${page}.html`);
-  fs.existsSync(filePath)
-    ? res.sendFile(filePath)
-    : res.status(404).send("Page not found");
-});
-
-app.post("/logout", (req, res) => {
-  req.logout((err) => {
-    if (err) return res.status(500).json({ error: "Logout failed" });
-    req.session.destroy(() => {
-      res.clearCookie("connect.sid");
-      res.json({ ok: true, message: "Logged out successfully" });
-    });
-  });
-});
-
-
-// ---------- USER / ME ----------
-app.get("/api/me", (req, res) => {
-  if (!req.user) return res.json({ loggedIn: false });
-
-  const id = `${req.user.id}@${req.user.provider}`;
-  const db = loadGoldenDB();
-  const userData = db.users[id];
-  if (!userData) {
-    ensureUserExists(req.user);
-    return res.json({ loggedIn: true, user: req.user, balance: 0 });
-  }
-
-  const isAdmin =
-    ["118187920786158036693@google", process.env.ADMIN_USER_ID].includes(id) ||
-    req.user.email === "farisalmhamad3@gmail.com";
-
-  res.set("Cache-Control", "no-store");
-  res.json({
-    loggedIn: true,
-    user: {
-      id: req.user.id,
-      name: req.user.name,
-      email: req.user.email,
-      photo: req.user.photo,
-      provider: req.user.provider,
-      isAdmin,
-    },
-    balance: userData.golden_balance || 0,
-    subscriptions: userData.subscriptions || {},
-  });
-});
-
-
-// ---------- GOLDEN PUBLIC APIS ----------
-app.get("/api/golden-balance", (req, res) => {
-  if (!req.user) return res.json({ loggedIn: false, balance: 0 });
-  const b = getUserGoldenBalance(getUserIdentifier(req));
-  res.set("Cache-Control", "no-store");
-  res.json({ loggedIn: true, balance: b, user: req.user });
-});
-
-app.get("/api/golden-packages", (_req, res) => res.json(GOLDEN_PACKAGES));
-
-
-// ---------- FEATURE MANAGEMENT ----------
 app.post("/api/unlock-feature", (req, res) => {
   if (!req.user) return res.status(401).json({ error: "Login required" });
   const { feature, cost } = req.body;
 
-  // validate feature
   if (!feature || FEATURE_PRICES[feature] == null) {
     return res.status(400).json({ error: "Invalid feature" });
   }
@@ -1041,7 +385,6 @@ app.post("/api/unlock-feature", (req, res) => {
   const u = db.users[id];
   if (!u) return res.status(404).json({ error: "User not found" });
 
-  // non-admin must pay
   const isFaris = req.user.email === "farisalmhamad3@gmail.com";
   if (!isFaris) {
     if ((u.golden_balance || 0) < cost) {
@@ -1114,15 +457,283 @@ app.get("/api/feature-status", (req, res) => {
     expires_at: expiry.toISOString(),
   });
 });
-// ======================== AI ENDPOINTS =====================
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
+// ============ SUBSCRIPTION MANAGEMENT ============
+app.get("/api/subscriptions", (req, res) => {
+  try {
+    if (!req.user) return res.status(401).json({ error: "Login required" });
+
+    const userId = getUserIdentifier(req);
+    const db = loadGoldenDB();
+    const user = db.users[userId];
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    const now = new Date();
+    const subscriptions = [];
+    const userSubs = user.subscriptions || {};
+
+    Object.entries(FEATURE_PRICES).forEach(([feature, cost]) => {
+      const expiryStr = userSubs[feature];
+      if (expiryStr) {
+        const expiry = new Date(expiryStr);
+        const isActive = expiry > now;
+        const msLeft = expiry - now;
+        const daysLeft = isActive ? Math.ceil(msLeft / (1000 * 60 * 60 * 24)) : 0;
+
+        subscriptions.push({ feature, cost, expiry: expiryStr, active: isActive, daysLeft });
+      }
+    });
+
+    if (userSubs.chat_advancedai) {
+      const expiryStr = userSubs.chat_advancedai;
+      const expiry = new Date(expiryStr);
+      const isActive = expiry > now;
+      const msLeft = expiry - now;
+      const daysLeft = isActive ? Math.ceil(msLeft / (1000 * 60 * 60 * 24)) : 0;
+
+      subscriptions.push({
+        feature: "chat_advancedai",
+        cost: ADV_PRICE_G,
+        expiry: expiryStr,
+        active: isActive,
+        daysLeft: daysLeft
+      });
+    }
+
+    res.json({
+      success: true,
+      balance: user.golden_balance || 0,
+      subscriptions: subscriptions.sort((a, b) => new Date(b.expiry) - new Date(a.expiry))
+    });
+  } catch (err) {
+    console.error("Subscriptions fetch error:", err);
+    res.status(500).json({ error: "Failed to load subscriptions" });
+  }
+});
+
+app.post("/api/cancel-subscription", (req, res) => {
+  try {
+    if (!req.user) return res.status(401).json({ error: "Login required" });
+    const { feature } = req.body;
+    if (!feature) return res.status(400).json({ error: "Feature required" });
+
+    const userId = getUserIdentifier(req);
+    const db = loadGoldenDB();
+    const user = db.users[userId];
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    if (user.subscriptions && user.subscriptions[feature]) {
+      delete user.subscriptions[feature];
+      saveGoldenDB(db);
+      console.log(`❌ Subscription canceled for ${userId}: ${feature}`);
+      res.json({ success: true, message: "Subscription canceled. It will remain active until the expiry date." });
+    } else {
+      res.status(404).json({ error: "Subscription not found" });
+    }
+  } catch (err) {
+    console.error("Cancel subscription error:", err);
+    res.status(500).json({ error: "Failed to cancel subscription" });
+  }
+});
+
+// ============ GOLDEN TRANSFER SYSTEM ============
+app.post("/api/transfer-golden", async (req, res) => {
+  try {
+    if (!req.user) return res.status(401).json({ error: "Login required" });
+    const { recipientEmail, amount } = req.body;
+
+    if (!recipientEmail || !amount || amount <= 0) {
+      return res.status(400).json({ error: "Valid recipient email and amount required" });
+    }
+
+    const senderId = getUserIdentifier(req);
+    const db = loadGoldenDB();
+    const sender = db.users[senderId];
+    if (!sender) return res.status(404).json({ error: "Sender account not found" });
+
+    const fee = Math.ceil(amount * 0.05);
+    const totalCost = amount + fee;
+    const senderBalance = Number(sender.golden_balance || 0);
+
+    if (senderBalance < totalCost) {
+      return res.status(400).json({ 
+        error: `Insufficient balance. Need ${totalCost}G (${amount}G + ${fee}G fee), but only have ${senderBalance}G` 
+      });
+    }
+
+    const recipientEntry = Object.entries(db.users).find(([_, user]) => 
+      user.email && user.email.toLowerCase() === recipientEmail.toLowerCase()
+    );
+
+    if (!recipientEntry) {
+      return res.status(404).json({ error: "Recipient not found in our system" });
+    }
+
+    const [recipientId, recipient] = recipientEntry;
+    if (senderId === recipientId) {
+      return res.status(400).json({ error: "Cannot transfer to yourself" });
+    }
+
+    sender.golden_balance = senderBalance - totalCost;
+    recipient.golden_balance = Number(recipient.golden_balance || 0) + amount;
+
+    const timestamp = new Date().toISOString();
+    
+    sender.transactions = sender.transactions || [];
+    sender.transactions.push({
+      type: "transfer_out",
+      amount: -totalCost,
+      recipient: recipientEmail,
+      net_amount: -amount,
+      fee: fee,
+      previous_balance: senderBalance,
+      new_balance: sender.golden_balance,
+      timestamp: timestamp
+    });
+
+    recipient.transactions = recipient.transactions || [];
+    recipient.transactions.push({
+      type: "transfer_in",
+      amount: amount,
+      sender: sender.email,
+      previous_balance: recipient.golden_balance - amount,
+      new_balance: recipient.golden_balance,
+      timestamp: timestamp
+    });
+
+    sender.total_golden_spent = (sender.total_golden_spent || 0) + totalCost;
+    recipient.total_golden_earned = (recipient.total_golden_earned || 0) + amount;
+
+    saveGoldenDB(db);
+    console.log(`💰 Transfer: ${sender.email} → ${recipientEmail} (${amount}G + ${fee}G fee)`);
+
+    res.json({
+      success: true,
+      message: `Successfully transferred ${amount}G to ${recipientEmail}`,
+      amount: amount,
+      fee: fee,
+      totalCost: totalCost,
+      newBalance: sender.golden_balance
+    });
+  } catch (err) {
+    console.error("Transfer error:", err);
+    res.status(500).json({ error: "Internal server error during transfer" });
+  }
+});
+
+// ============ ADVANCED AI CHAT SYSTEM ============
+app.post("/api/subscribe-advanced-ai", (req, res) => {
+  if (!req.user) return res.status(401).json({ error: "Login required" });
+
+  const db = loadGoldenDB();
+  const id = getUserIdentifier(req);
+  const user = db.users[id];
+  if (!user) return res.status(404).json({ error: "User not found" });
+
+  user.subscriptions = user.subscriptions || {};
+  user.usage = user.usage || {};
+  user.usage.images = user.usage.images || { month: monthKey(), used: 0 };
+  if (user.usage.images.month !== monthKey()) {
+    user.usage.images = { month: monthKey(), used: 0 };
+  }
+
+  const now = new Date();
+  const currentExpiryStr = user.subscriptions.chat_advancedai || null;
+  const currentExpiry = currentExpiryStr ? new Date(currentExpiryStr) : null;
+
+  if (currentExpiry && currentExpiry > now) {
+    return res.json({
+      success: true,
+      alreadyActive: true,
+      expires_at: currentExpiry.toISOString(),
+      newBalance: user.golden_balance || 0,
+      images_left: IMG_LIMIT_PER_MONTH - (user.usage.images.used || 0),
+    });
+  }
+
+  const bal = Number(user.golden_balance || 0);
+  if (bal < ADV_PRICE_G) {
+    return res.status(402).json({ error: "Not enough Golden (20 G required)" });
+  }
+
+  const expiry = new Date(now);
+  expiry.setMonth(now.getMonth() + 1);
+
+  user.golden_balance = bal - ADV_PRICE_G;
+  user.subscriptions.chat_advancedai = expiry.toISOString();
+  user.usage.images = { month: monthKey(), used: 0 };
+
+  saveGoldenDB(db);
+
+  res.json({
+    success: true,
+    expires_at: expiry.toISOString(),
+    newBalance: user.golden_balance,
+    images_left: IMG_LIMIT_PER_MONTH,
+  });
+});
+
+app.get("/api/advanced-ai-status", (req, res) => {
+  if (!req.user) return res.json({ active: false, loggedIn: false });
+
+  const db = loadGoldenDB();
+  const id = getUserIdentifier(req);
+  const user = db.users[id];
+  if (!user) return res.json({ active: false, loggedIn: true });
+
+  user.usage = user.usage || {};
+  user.usage.images = user.usage.images || { month: monthKey(), used: 0 };
+  if (user.usage.images.month !== monthKey()) {
+    user.usage.images = { month: monthKey(), used: 0 };
+    saveGoldenDB(db);
+  }
+
+  const now = new Date();
+  const expiryStr = user.subscriptions?.chat_advancedai || null;
+
+  let active = false;
+  let expires_at = null;
+  let days_left = 0;
+  let remaining_hours = 0;
+
+  if (expiryStr) {
+    const expiry = new Date(expiryStr);
+    if (expiry > now) {
+      active = true;
+      expires_at = expiry.toISOString();
+      const msLeft = expiry - now;
+      days_left = Math.ceil(msLeft / (1000 * 60 * 60 * 24));
+      remaining_hours = Math.max(0, Math.floor(msLeft / (1000 * 60 * 60)));
+    } else {
+      delete user.subscriptions.chat_advancedai;
+      saveGoldenDB(db);
+    }
+  }
+
+  res.set("Cache-Control", "no-store");
+  res.json({
+    loggedIn: true,
+    active,
+    expires_at,
+    days_left,
+    remaining_hours,
+    balance: Number(user.golden_balance || 0),
+    images_left: IMG_LIMIT_PER_MONTH - Number(user.usage.images.used || 0),
+    img_limit: IMG_LIMIT_PER_MONTH,
+    monthly_price_g: ADV_PRICE_G,
+  });
+});
+
+// ============ AI ENDPOINTS ============
 // Free Chat AI
 app.post("/chat-free-ai", async (req, res) => {
   try {
     const prompt = req.body.q || req.body.question || "Hello!";
     const model = req.body.model || "gpt-4o-mini";
-    const messages = [{ role: "system", content: "You are GoldenSpaceAI's helpful chat assistant." }, { role: "user", content: prompt }];
+    const messages = [
+      { role: "system", content: "You are GoldenSpaceAI's helpful chat assistant." },
+      { role: "user", content: prompt }
+    ];
     const completion = await openai.chat.completions.create({ model, messages, max_tokens: 1200, temperature: 0.7 });
     const reply = completion.choices?.[0]?.message?.content || "No reply.";
     res.json({ reply, model });
@@ -1131,7 +742,119 @@ app.post("/chat-free-ai", async (req, res) => {
     res.status(500).json({ error: e.message });
   }
 });
-// ========== ADVANCED CHAT AI (Supabase + Golden Integration, One-Price System) ==========
+
+// NEW: Search Info Endpoint (for search-info.html)
+app.post("/ask", requireFeature("search_info"), async (req, res) => {
+  try {
+    const { question } = req.body;
+    if (!question) return res.status(400).json({ error: "Missing question" });
+    
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        { 
+          role: "system", 
+          content: "You are a helpful research assistant. Provide clear, concise, and informative answers. Structure your response with key points and summaries." 
+        },
+        { role: "user", content: question }
+      ],
+      max_tokens: 1200,
+      temperature: 0.7
+    });
+    
+    const answer = completion.choices[0]?.message?.content || "No reply.";
+    res.json({ success: true, answer });
+  } catch (e) {
+    console.error("Search info error:", e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// NEW: Search Lessons Endpoint (for search-lessons.html)
+app.post("/search-lessons", requireFeature("search_lessons"), async (req, res) => {
+  try {
+    const { query } = req.body;
+    if (!query) return res.status(400).json({ error: "Missing query" });
+    
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        { 
+          role: "system", 
+          content: "You are an educational tutor. Create comprehensive lessons with introduction, explanations, examples, and practice questions. Structure your response in clear sections." 
+        },
+        { role: "user", content: query }
+      ],
+      max_tokens: 2000,
+      temperature: 0.7
+    });
+    
+    const answer = completion.choices[0]?.message?.content || "No reply.";
+    res.json({ success: true, answer });
+  } catch (e) {
+    console.error("Search lessons error:", e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ============ ADVANCED AI CHAT SYSTEM ============
+app.post("/api/subscribe-advanced-ai", (req, res) => {
+  if (!req.user) return res.status(401).json({ error: "Login required" });
+
+  const db = loadGoldenDB();
+  const id = getUserIdentifier(req);
+  const user = db.users[id];
+  if (!user) return res.status(404).json({ error: "User not found" });
+
+  user.subscriptions = user.subscriptions || {};
+  user.usage = user.usage || {};
+  user.usage.images = user.usage.images || { month: monthKey(), used: 0 };
+  if (user.usage.images.month !== monthKey()) {
+    user.usage.images = { month: monthKey(), used: 0 };
+  }
+
+  const now = new Date();
+  const currentExpiryStr = user.subscriptions.chat_advancedai || null;
+  const currentExpiry = currentExpiryStr ? new Date(currentExpiryStr) : null;
+
+  // If still active, don't charge again—just return current sub
+  if (currentExpiry && currentExpiry > now) {
+    return res.json({
+      success: true,
+      alreadyActive: true,
+      expires_at: currentExpiry.toISOString(),
+      newBalance: user.golden_balance || 0,
+      images_left: IMG_LIMIT_PER_MONTH - (user.usage.images.used || 0),
+    });
+  }
+
+  const bal = Number(user.golden_balance || 0);
+  if (bal < ADV_PRICE_G) {
+    return res.status(402).json({ error: "Not enough Golden (20 G required)" });
+  }
+
+  // Set expiry to 30 days from now
+  const expiry = new Date(now);
+  expiry.setDate(now.getDate() + 30);
+
+  user.golden_balance = bal - ADV_PRICE_G;
+  user.subscriptions.chat_advancedai = expiry.toISOString();
+
+  // When paying for a new period, reset image quota
+  user.usage.images = { month: monthKey(), used: 0 };
+
+  saveGoldenDB(db);
+
+  res.json({
+    success: true,
+    expires_at: expiry.toISOString(),
+    newBalance: user.golden_balance,
+    images_left: IMG_LIMIT_PER_MONTH,
+    message: "Advanced AI activated for 30 days!"
+  });
+});
+
+// Advanced AI Chat with Memory (No Pro Plan - All features included for 20G/30days)
 app.post("/chat-advanced-ai", requireFeature("chat_advancedai"), upload.single("image"), async (req, res) => {
   let filePath = req.file?.path;
   try {
@@ -1142,32 +865,26 @@ app.post("/chat-advanced-ai", requireFeature("chat_advancedai"), upload.single("
     const user = db.users[userId];
     if (!user) return res.status(404).json({ error: "User not found" });
 
-    const { q: prompt, project_id, mode } = req.body;
+    const { q: prompt, chat_id, mode, custom_instructions } = req.body;
     if (!prompt) return res.status(400).json({ error: "Missing prompt" });
 
-    // 🔐 1. Check active subscription
+    // Check subscription
     const expiryStr = user.subscriptions?.chat_advancedai || null;
     const now = new Date();
-    if (!expiryStr || new Date(expiryStr) < now)
-      return res.status(403).json({ error: "Advanced Chat is locked. Please activate for 20 G." });
-
-    // 🧮 2. Prepare models
-    let model = "gpt-5-nano";
-    if (mode === "pro") model = "gpt-5"; // “Pro Thinking” button
-    const IMG_LIMIT_PER_MONTH = 20;
-
-    // 🧾 3. Enforce monthly image limit
-    user.usage = user.usage || {};
-    user.usage.images = user.usage.images || { month: now.toISOString().slice(0, 7), used: 0 };
-    if (user.usage.images.month !== now.toISOString().slice(0, 7)) {
-      user.usage.images = { month: now.toISOString().slice(0, 7), used: 0 }; // reset each month
-      saveGoldenDB(db);
+    if (!expiryStr || new Date(expiryStr) < now) {
+      return res.status(403).json({ error: "Advanced Chat is locked. Please activate for 20 G for 30 days access." });
     }
 
-    // 🎨 4. Handle image generation
+    // Handle image generation
     if (mode === "image") {
+      user.usage = user.usage || {};
+      user.usage.images = user.usage.images || { month: monthKey(), used: 0 };
+      if (user.usage.images.month !== monthKey()) {
+        user.usage.images = { month: monthKey(), used: 0 };
+      }
+
       if (user.usage.images.used >= IMG_LIMIT_PER_MONTH) {
-        return res.status(403).json({ error: "You’ve reached your 20-image monthly limit." });
+        return res.status(403).json({ error: "You've reached your 20-image monthly limit." });
       }
 
       const img = await openai.images.generate({
@@ -1181,9 +898,18 @@ app.post("/chat-advanced-ai", requireFeature("chat_advancedai"), upload.single("
       user.usage.images.used++;
       saveGoldenDB(db);
 
-      await supabase.from("messages").insert([
-        { chat_id: project_id, sender: "ai", content: `Image generated: ${imageUrl}` }
-      ]);
+      // Save image message to Supabase
+      if (chat_id) {
+        await supabase.from("messages").insert([
+          { 
+            chat_id: chat_id, 
+            sender: "ai", 
+            content: `![Generated Image](${imageUrl})`,
+            image_url: imageUrl,
+            timestamp: new Date().toISOString()
+          }
+        ]);
+      }
 
       return res.json({
         reply: `![Generated Image](${imageUrl})`,
@@ -1192,65 +918,65 @@ app.post("/chat-advanced-ai", requireFeature("chat_advancedai"), upload.single("
       });
     }
 
-    // 🧠 5. Load chat history (last 30 msgs)
-    const { data: history } = await supabase
-      .from("messages")
-      .select("sender, content")
-      .eq("chat_id", project_id)
-      .order("timestamp", { ascending: true })
-      .limit(30);
+    // Load chat history (last 5 messages for memory)
+    let chatHistory = [];
+    if (chat_id) {
+      const { data: history } = await supabase
+        .from("messages")
+        .select("sender, content, image_url")
+        .eq("chat_id", chat_id)
+        .order("timestamp", { ascending: false })
+        .limit(5);
 
-    const context = (history || []).map(m => ({
-      role: m.sender === "ai" ? "assistant" : "user",
-      content: m.content
-    }));
+      chatHistory = (history || []).reverse().map(m => ({
+        role: m.sender === "ai" ? "assistant" : "user",
+        content: m.image_url ? `![Image](${m.image_url})` : m.content
+      }));
+    }
 
-    const newMsg = { role: "user", content: prompt };
-    const conversation = [...context, newMsg];
+    // Prepare messages with memory and custom instructions
+    const systemMessage = {
+      role: "system",
+      content: custom_instructions 
+        ? `You are GoldenSpaceAI's advanced assistant. Follow these custom instructions: ${custom_instructions}`
+        : "You are GoldenSpaceAI's advanced assistant. Provide helpful, detailed responses with advanced reasoning and analysis."
+    };
 
-    // 💾 6. Save user message
-    await supabase.from("messages").insert([{ chat_id: project_id, sender: userId, content: prompt }]);
+    // Use GPT-4o for all Advanced AI responses (no pro/normal distinction)
+    const model = "gpt-4o";
 
-    // 🤖 7. Get AI reply
+    const messages = [systemMessage, ...chatHistory, { role: "user", content: prompt }];
+
+    // Get AI response
     const completion = await openai.chat.completions.create({
       model,
-      messages: conversation,
+      messages,
       max_tokens: 2000,
       temperature: 0.7
     });
 
     const reply = completion.choices?.[0]?.message?.content || "No reply.";
 
-    // 💾 8. Save AI reply
-    await supabase.from("messages").insert([{ chat_id: project_id, sender: "ai", content: reply }]);
+    // Save conversation to Supabase
+    if (chat_id) {
+      await supabase.from("messages").insert([
+        { chat_id: chat_id, sender: "user", content: prompt, timestamp: new Date().toISOString() },
+        { chat_id: chat_id, sender: "ai", content: reply, timestamp: new Date().toISOString() }
+      ]);
 
-    // ⚙️ 9. Trim chat to 30 messages
-    const { data: allMsgs } = await supabase
-      .from("messages")
-      .select("id")
-      .eq("chat_id", project_id)
-      .order("timestamp", { ascending: false });
-    if (allMsgs?.length > 30) {
-      const extra = allMsgs.slice(30).map(m => m.id);
-      await supabase.from("messages").delete().in("id", extra);
-    }
-
-    // 💰 10. Ensure monthly 20 G charge (renew if month changed)
-    const lastPaid = user.subscriptions.chat_advancedai_lastPaid || null;
-    const currentMonth = now.toISOString().slice(0, 7);
-    const lastPaidMonth = lastPaid ? new Date(lastPaid).toISOString().slice(0, 7) : null;
-
-    if (lastPaidMonth !== currentMonth) {
-      if ((user.golden_balance || 0) >= 20) {
-        user.golden_balance -= 20;
-        user.subscriptions.chat_advancedai_lastPaid = now.toISOString();
-        saveGoldenDB(db);
-      } else {
-        return res.status(402).json({ error: "Insufficient Golden to renew your 20 G monthly access." });
+      // Trim to last 50 messages to prevent DB bloat
+      const { data: allMsgs } = await supabase
+        .from("messages")
+        .select("id")
+        .eq("chat_id", chat_id)
+        .order("timestamp", { ascending: false });
+      
+      if (allMsgs?.length > 50) {
+        const extra = allMsgs.slice(50).map(m => m.id);
+        await supabase.from("messages").delete().in("id", extra);
       }
     }
 
-    // ✅ 11. Return reply
     res.json({ reply, model });
 
   } catch (e) {
@@ -1260,15 +986,22 @@ app.post("/chat-advanced-ai", requireFeature("chat_advancedai"), upload.single("
     if (filePath && fs.existsSync(filePath)) fs.unlink(filePath, () => {});
   }
 });
-// Search Info
-app.post("/search-info", async (req, res) => {
+// Other AI endpoints (existing)
+app.post("/search-info", requireFeature("search_info"), async (req, res) => {
   try {
     const { query } = req.body;
     if (!query) return res.status(400).json({ error: "Missing query" });
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
-      messages: [{ role: "system", content: "You are a helpful research assistant. Provide clear, concise, and informative answers. Structure your response with key points and summaries." }, { role: "user", content: query }],
-      max_tokens: 1200, temperature: 0.7
+      messages: [
+        { 
+          role: "system", 
+          content: "You are a helpful research assistant. Provide clear, concise, and informative answers. Structure your response with key points and summaries." 
+        },
+        { role: "user", content: query }
+      ],
+      max_tokens: 1200,
+      temperature: 0.7
     });
     const reply = completion.choices[0]?.message?.content || "No reply.";
     res.json({ success: true, answer: reply });
@@ -1278,15 +1011,21 @@ app.post("/search-info", async (req, res) => {
   }
 });
 
-// Learn Physics
 app.post("/learn-physics", async (req, res) => {
   try {
     const { question } = req.body;
     if (!question) return res.status(400).json({ error: "Missing question" });
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
-      messages: [{ role: "system", content: "You are a physics tutor who explains concepts clearly and simply. Break down complex topics into understandable parts." }, { role: "user", content: question }],
-      max_tokens: 1200, temperature: 0.7
+      messages: [
+        { 
+          role: "system", 
+          content: "You are a physics tutor who explains concepts clearly and simply. Break down complex topics into understandable parts." 
+        },
+        { role: "user", content: question }
+      ],
+      max_tokens: 1200,
+      temperature: 0.7
     });
     const reply = completion.choices[0]?.message?.content || "No reply.";
     res.json({ success: true, answer: reply });
@@ -1296,7 +1035,6 @@ app.post("/learn-physics", async (req, res) => {
   }
 });
 
-// Homework Helper
 app.post("/homework-helper", requireFeature("homework_helper"), upload.single("image"), async (req, res) => {
   let filePath = req.file?.path;
   try {
@@ -1308,7 +1046,10 @@ app.post("/homework-helper", requireFeature("homework_helper"), upload.single("i
     const mime = req.file.mimetype || "image/png";
     const messages = [
       { role: "system", content: "You are a careful, step-by-step homework solver." },
-      { role: "user", content: [{ type: "text", text: prompt }, { type: "image_url", image_url: { url: `data:${mime};base64,${b64}` } }] },
+      { role: "user", content: [
+        { type: "text", text: prompt },
+        { type: "image_url", image_url: { url: `data:${mime};base64,${b64}` } }
+      ]},
     ];
 
     const completion = await openai.chat.completions.create({ model, messages, max_tokens: 1400, temperature: 0.4 });
@@ -1318,35 +1059,247 @@ app.post("/homework-helper", requireFeature("homework_helper"), upload.single("i
     console.error("Homework AI error:", e);
     res.status(500).json({ error: e.message });
   } finally {
-    if (filePath && fs.existsSync(filePath)) fs.unlink(filePath, (err) => { if (err) console.error("File cleanup error:", err); });
+    if (filePath && fs.existsSync(filePath)) fs.unlink(filePath, () => {});
   }
 });
 
-// Live Chat Processing
 app.post("/live-chat-process", async (req, res) => {
   try {
-    const { message, conversation, model = "gpt-5-nano" } = req.body;
+    const { message, conversation, model = "gpt-4o-mini" } = req.body;
     if (!message) return res.status(400).json({ error: "Message is required" });
 
     const messages = [
-      { role: "system", content: "You are a friendly, conversational AI assistant. Keep responses natural and conversational since users will hear them spoken aloud. Respond in 1-2 sentences maximum for best audio experience." },
+      { 
+        role: "system", 
+        content: "You are a friendly, conversational AI assistant. Keep responses natural and conversational since users will hear them spoken aloud. Respond in 1-2 sentences maximum for best audio experience." 
+      },
       ...conversation,
       { role: "user", content: message }
     ];
 
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini", messages, max_tokens: 150, temperature: 0.7,
+      model: "gpt-4o-mini",
+      messages,
+      max_tokens: 150,
+      temperature: 0.7,
     });
 
     const reply = completion.choices[0]?.message?.content || "I didn't get that. Could you repeat?";
     res.json({ success: true, reply, model, tokens_used: completion.usage?.total_tokens || 0 });
-
   } catch (error) {
     console.error("Live chat error:", error);
     res.status(500).json({ error: error.message });
   }
 });
-//=========price-check===============
+
+// ============ SUPABASE CHAT/PROJECT SYSTEM ============
+app.post("/api/chat/create", async (req, res) => {
+  try {
+    const { title } = req.body;
+    if (!req.user) return res.status(401).json({ error: "Login required" });
+    const userId = getUserIdentifier(req);
+
+    const { data, error } = await supabase
+      .from("chats")
+      .insert([{ user_id: userId, title }])
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.json({ success: true, chat: data });
+  } catch (err) {
+    console.error("Chat create error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/api/chat/:chat_id", async (req, res) => {
+  try {
+    const { chat_id } = req.params;
+    const { data, error } = await supabase
+      .from("messages")
+      .select("*")
+      .eq("chat_id", chat_id)
+      .order("timestamp", { ascending: true }) // Changed to ascending for proper chat order
+      .limit(50); // Increased limit for better chat history
+    if (error) throw error;
+    res.json({ success: true, messages: data });
+  } catch (err) {
+    console.error("Chat fetch error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/api/chat/message", async (req, res) => {
+  try {
+    const { chat_id, sender, content, image_url } = req.body;
+    if (!chat_id || !content) return res.status(400).json({ error: "Missing chat_id or content" });
+
+    const { error } = await supabase.from("messages").insert([{ 
+      chat_id, 
+      sender, 
+      content,
+      image_url,
+      timestamp: new Date().toISOString()
+    }]);
+    if (error) throw error;
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Chat save error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/api/projects", async (req, res) => {
+  try {
+    if (!req.user) return res.status(401).json({ error: "Login required" });
+    const userId = getUserIdentifier(req);
+    const { data, error } = await supabase
+      .from("projects")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    res.json({ success: true, projects: data });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/api/projects/create", async (req, res) => {
+  try {
+    if (!req.user) return res.status(401).json({ error: "Login required" });
+    const { name, description } = req.body;
+    const userId = getUserIdentifier(req);
+    const { data, error } = await supabase
+      .from("projects")
+      .insert([{ user_id: userId, name, description }])
+      .select()
+      .single();
+    if (error) throw error;
+    res.json({ success: true, project: data });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// NEW: Delete project endpoint
+app.delete("/api/projects/:id", async (req, res) => {
+  try {
+    if (!req.user) return res.status(401).json({ error: "Login required" });
+    const { id } = req.params;
+    const userId = getUserIdentifier(req);
+
+    // Verify user owns the project
+    const { data: project } = await supabase
+      .from("projects")
+      .select("*")
+      .eq("id", id)
+      .eq("user_id", userId)
+      .single();
+
+    if (!project) return res.status(404).json({ error: "Project not found" });
+
+    // Delete associated messages first
+    await supabase.from("messages").delete().eq("chat_id", id);
+    
+    // Then delete the project
+    const { error } = await supabase.from("projects").delete().eq("id", id);
+    if (error) throw error;
+
+    res.json({ success: true, message: "Project deleted successfully" });
+  } catch (err) {
+    console.error("Project delete error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ============ BLOCKCHAIN & CRYPTO ============
+const wallets = {
+  btc: "bc1qz5wtz2d329xsm7gcs9e3jwls9supg2fk2hkxtd",
+  eth: "0x8BEaCb38dF916F6644F81cA0De18C1F4996d32Ea",
+  usdt_trc20: "TCN6eVtHFNtPAJNfebgGGm8c2h71NWYY9P",
+  bnb: "0x8BEaCb38dF916F6644F81cA0De18C1F4996d32Ea",
+  tron: "TCN6eVtHFNtPAJNfebgGGm8c2h71NWYY9P",
+  sol: "8vdM8myEj4pAXZZK6WCV1WkSGvmzLgteDv5qCCYcR2NW",
+  doge: "DAfXZW2f9wJD4fBMwekb8iVKfQMAdyNCVV",
+};
+
+let lastPrices = {};
+let lastPriceFetch = 0;
+
+async function getUSDPrice(coin) {
+  try {
+    const now = Date.now();
+    if (now - lastPriceFetch < 5 * 60 * 1000 && lastPrices[coin]) {
+      return lastPrices[coin];
+    }
+    const url = `https://min-api.cryptocompare.com/data/price?fsym=${coin.toUpperCase()}&tsyms=USD`;
+    const res = await axios.get(url);
+    const price = res.data.USD || 0;
+    lastPrices[coin] = price;
+    lastPriceFetch = now;
+    return price;
+  } catch (err) {
+    console.error(`⚠️ Failed to fetch price for ${coin}:`, err.message);
+    return lastPrices[coin] || 0;
+  }
+}
+
+const blockchainCheckers = {
+  btc: async (address) => {
+    const res = await axios.get(`https://blockstream.info/api/address/${address}`);
+    return res.data.chain_stats.funded_txo_sum / 1e8;
+  },
+  eth: async (address) => {
+    const res = await axios.get(`https://api.blockcypher.com/v1/eth/main/addrs/${address}/balance`);
+    return res.data.final_balance / 1e18;
+  },
+  tron: async (address) => {
+    const res = await axios.get(`https://apilist.tronscanapi.com/api/account?address=${address}`);
+    return res.data.balance / 1e6;
+  },
+  doge: async (address) => {
+    const res = await axios.get(`https://dogechain.info/api/v1/address/balance/${address}`);
+    return parseFloat(res.data.balance);
+  },
+  sol: async (address) => {
+    const res = await axios.post("https://api.mainnet-beta.solana.com", {
+      jsonrpc: "2.0",
+      id: 1,
+      method: "getBalance",
+      params: [address],
+    });
+    return res.data.result.value / 1e9;
+  },
+};
+
+async function checkBlockchainPayments() {
+  try {
+    console.log("🔍 Checking blockchain payments...");
+    for (const [coin, address] of Object.entries(wallets)) {
+      const checker = blockchainCheckers[coin];
+      if (!checker) continue;
+      await new Promise((r) => setTimeout(r, 3000));
+      const balance = await checker(address);
+      const usdPrice = await getUSDPrice(coin);
+      const valueUSD = balance * usdPrice;
+      console.log(`💰 ${coin.toUpperCase()} (${address.slice(0, 6)}...): ${balance} ≈ $${valueUSD.toFixed(2)}`);
+    }
+  } catch (err) {
+    console.error("❌ Payment check failed:", err.message);
+  }
+}
+
+app.get("/api/test-blockchain", async (_req, res) => {
+  try {
+    await checkBlockchainPayments();
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.get("/api/crypto-prices", async (req, res) => {
   try {
     const response = await axios.get("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,tether,usd-coin,binancecoin,tron,solana,dogecoin&vs_currencies=usd");
@@ -1356,85 +1309,47 @@ app.get("/api/crypto-prices", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch prices" });
   }
 });
-//===================file naming==========
-app.get("/success", (req, res) => {
-  res.sendFile(path.join(__dirname, "success.html"));
+
+setInterval(checkBlockchainPayments, 10 * 60 * 1000);
+
+// ============ STATIC PAGE ROUTES ============
+const staticPages = {
+  "/success": "success.html",
+  "/plans": "plans.html",
+  "/FreeAI": "chat-free-ai.html",
+  "/advancedAI": "chat-advancedai.html",
+  "/homework-helper": "homework-helper.html",
+  "/search-info": "search-info.html",
+  "/create-your-universe": "your-space.html",
+  "/search-educational-lessons": "search-lessons.html",
+  "/create-your-rocket": "create-rocket.html",
+  "/payment-cancel": "plans.html",
+  "/create-satellite": "create-satellite.html",
+  "/create-planet": "create-planet.html",
+  "/create-advanced-planet": "create-advanced-planet.html",
+  "/privacy-policy": "privacy.html",
+  "/terms-of-service": "terms.html",
+  "/refund-policy": "refund.html",
+  "/contact-page": "contact.html",
+  "/about-us-page": "about-us.html",
+};
+
+Object.entries(staticPages).forEach(([route, file]) => {
+  app.get(route, (req, res) => {
+    res.sendFile(path.join(__dirname, file));
+  });
 });
 
-app.get("/plans", (req, res) => {
-  res.sendFile(path.join(__dirname, "plans.html"));
-});
-
-app.get("/FreeAI", (req, res) => {
-  res.sendFile(path.join(__dirname, "chat-free-ai.html"));
-});
-
-app.get("/advancedAI", (req, res) => {
-  res.sendFile(path.join(__dirname, "chat-advancedai.html"));
-});
-
-app.get("/homework-helper", (req, res) => {
-  res.sendFile(path.join(__dirname, "homework-helper.html"));
-});
-
-app.get("/search-info", (req, res) => {
-  res.sendFile(path.join(__dirname, "search-info.html"));
-});
-
-app.get("/create-your-universe", (req, res) => {
-  res.sendFile(path.join(__dirname, "your-space.html"));
-});
-
-app.get("/search-educational-lessons", (req, res) => {
-  res.sendFile(path.join(__dirname, "search-lessons.html"));
-});
-
-app.get("/create-your-rocket", (req, res) => {
-  res.sendFile(path.join(__dirname, "create-rocket.html"));
-});
-
-app.get("/payment-cancel", (req, res) => {
-  res.sendFile(path.join(__dirname, "plans.html"));
-});
-
-app.get("/create-satellite", (req, res) => {
-  res.sendFile(path.join(__dirname, "create-satellite.html"));
-});
-
-app.get("/create-planet", (req, res) => {
-  res.sendFile(path.join(__dirname, "create-planet.html"));
-});
-
-app.get("/create-advanced-planet", (req, res) => {
-  res.sendFile(path.join(__dirname, "create-advanced-planet.html"));
-});
-
-app.get("/privacy-policy", (req, res) => {
-  res.sendFile(path.join(__dirname, "privacy.html"));
-});
-
-app.get("/terms-of-service", (req, res) => {
-  res.sendFile(path.join(__dirname, "terms.html"));
-});
-
-app.get("/refund-policy", (req, res) => {
-  res.sendFile(path.join(__dirname, "refund.html"));
-});
-
-app.get("/contact-page", (req, res) => {
-  res.sendFile(path.join(__dirname, "contact.html"));
-});
-
-app.get("/about-us-page", (req, res) => {
-  res.sendFile(path.join(__dirname, "about-us.html"));
-});
-// ============ HEALTH ============
+// ============ HEALTH & ERROR HANDLING ============
 app.get("/health", (_req, res) => {
   const db = loadGoldenDB();
-  res.json({ status: "OK", users: Object.keys(db.users || {}).length, lastCheck: new Date().toISOString() });
+  res.json({ 
+    status: "OK", 
+    users: Object.keys(db.users || {}).length, 
+    lastCheck: new Date().toISOString() 
+  });
 });
 
-// ============ ERROR HANDLING ============
 app.use((err, req, res, next) => {
   console.error("Unhandled error:", err);
   res.status(500).json({ error: "Internal server error" });
@@ -1444,13 +1359,15 @@ app.use((req, res) => {
   res.status(404).json({ error: "Endpoint not found" });
 });
 
-// ============ START ============
+// ============ SERVER START ============
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`🚀 GoldenSpaceAI LAUNCHED on port ${PORT}`);
   console.log(`✅ All systems ready for launch!`);
   console.log(`💰 Golden packages: 60G/$15, 100G/$20, 200G/$40`);
   console.log(`🎨 DALL-E 3 Image generation: Ready`);
+  console.log(`🤖 AI Endpoints: /ask, /search-lessons, /chat-advanced-ai`);
+  console.log(`💫 Advanced Chat: Memory, Pro Thinking, Image Saving`);
   console.log(`🎉 Special account: farisalmhamad3@gmail.com → 100,000G`);
   console.log(`🌐 Domain: goldenspaceai.space`);
   console.log(`🚀 Ready for production!`);

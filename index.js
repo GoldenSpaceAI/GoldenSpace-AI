@@ -14,7 +14,7 @@ import axios from "axios";
 import multer from "multer";
 import fs from "fs";
 import { createClient } from "@supabase/supabase-js";
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+
 //===========connect to supabase============
 async function ensureUserInDB(email, name) {
   const { data: existing } = await supabase.from('users').select('*').eq('email', email).single();
@@ -30,6 +30,7 @@ await supabase.from('subscriptions').insert([{
   feature: 'AI access',
   expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
 }]);
+
 // ============ ENV & APP ============
 dotenv.config();
 const app = express();
@@ -58,6 +59,82 @@ app.use(cors({ origin: true, credentials: true }));
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+// =================== BLOCKCHAIN PAYMENT CHECKER ===================
+const wallets = {
+  btc: "bc1qz5wtz2d329xsm7gcs9e3jwls9supg2fk2hkxtd",
+  eth: "0x8BEaCb38dF916F6644F81cA0De18C1F4996d32Ea",
+  usdt_trc20: "TCN6eVtHFNtPAJNfebgGGm8c2h71NWYY9P",
+  bnb: "0x8BEaCb38dF916F6644F81cA0De18C1F4996d32Ea",
+  tron: "TCN6eVtHFNtPAJNfebgGGm8c2h71NWYY9P",
+  sol: "8vdM8myEj4pAXZZK6WCV1WkSGvmzLgteDv5qCCYcR2NW",
+  doge: "DAfXZW2f9wJD4fBMwekb8iVKfQMAdyNCVV"
+};
+
+async function getUSDPrice(coin) {
+  const url = `https://api.coingecko.com/api/v3/simple/price?ids=${coin}&vs_currencies=usd`;
+  const res = await axios.get(url);
+  return res.data[coin]?.usd || 0;
+}
+
+const blockchainCheckers = {
+  btc: async (address) => {
+    const res = await axios.get(`https://blockstream.info/api/address/${address}`);
+    return res.data.chain_stats.funded_txo_sum / 1e8;
+  },
+  eth: async (address) => {
+    const res = await axios.get(`https://api.blockcypher.com/v1/eth/main/addrs/${address}/balance`);
+    return res.data.final_balance / 1e18;
+  },
+  tron: async (address) => {
+    const res = await axios.get(`https://apilist.tronscanapi.com/api/account?address=${address}`);
+    return res.data.balance / 1e6;
+  },
+  doge: async (address) => {
+    const res = await axios.get(`https://dogechain.info/api/v1/address/balance/${address}`);
+    return parseFloat(res.data.balance);
+  },
+  sol: async (address) => {
+    const res = await axios.post("https://api.mainnet-beta.solana.com", {
+      jsonrpc: "2.0",
+      id: 1,
+      method: "getBalance",
+      params: [address]
+    });
+    return res.data.result.value / 1e9;
+  }
+};
+
+async function checkBlockchainPayments() {
+  try {
+    console.log("🔍 Checking blockchain payments...");
+
+    for (const [coin, address] of Object.entries(wallets)) {
+      const checker = blockchainCheckers[coin];
+      if (!checker) continue;
+      const balance = await checker(address);
+      const usdPrice = await getUSDPrice(coin);
+      const valueUSD = balance * usdPrice;
+
+      console.log(`💰 ${coin.toUpperCase()} (${address.slice(0, 6)}...): ${balance} ≈ $${valueUSD.toFixed(2)}`);
+    }
+  } catch (err) {
+    console.error("❌ Payment check failed:", err.message);
+  }
+}
+
+// test route
+app.get("/api/test-blockchain", async (_req, res) => {
+  try {
+    await checkBlockchainPayments();
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// run every 5 minutes
+setInterval(checkBlockchainPayments, 2 * 60 * 1000);
+
 // ============ SUPABASE CHAT / PROJECT SYSTEM ============
 app.post("/api/chat/create", async (req, res) => {
   try {

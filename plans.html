@@ -4,323 +4,748 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Buy Golden Tokens | GoldenSpaceAI</title>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
-  body {
+  :root {
+    --gold: #FFD700;
+    --gold-light: #FFED4E;
+    --gold-dark: #E6C200;
+    --bg-dark: #0A0F1C;
+    --bg-card: #111827;
+    --bg-card-hover: #1F2937;
+    --text-primary: #F3F4F6;
+    --text-secondary: #9CA3AF;
+    --text-muted: #6B7280;
+    --success: #10B981;
+    --warning: #F59E0B;
+    --error: #EF4444;
+    --border: #374151;
+  }
+
+  * {
     margin: 0;
-    font-family: "Poppins", sans-serif;
-    color: #fff;
-    background: radial-gradient(circle at 20% 20%, #111827, #000);
-    background-image: url("https://images.unsplash.com/photo-1462331940025-496dfbfc7564?auto=format&fit=crop&w=1950&q=80");
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg-dark);
+    color: var(--text-primary);
+    line-height: 1.6;
+    min-height: 100vh;
+    background-image: 
+      radial-gradient(circle at 20% 30%, rgba(255, 215, 0, 0.05) 0%, transparent 50%),
+      radial-gradient(circle at 80% 70%, rgba(255, 215, 0, 0.03) 0%, transparent 50%),
+      url("https://images.unsplash.com/photo-1462331940025-496dfbfc7564?auto=format&fit=crop&w=1950&q=80");
     background-size: cover;
     background-attachment: fixed;
-    overflow-x: hidden;
+    background-position: center;
   }
 
-  header {
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+
+  /* Header */
+  .header {
     text-align: center;
-    padding: 70px 20px 20px;
+    padding: 80px 20px 40px;
+    background: linear-gradient(135deg, rgba(10, 15, 28, 0.9) 0%, rgba(17, 24, 39, 0.7) 100%);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
   }
 
-  h1 {
-    color: #ffd65a;
-    font-size: 3rem;
-    margin: 0;
+  .logo {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--gold);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
   }
 
-  p.subtitle {
-    color: #bbb;
-    font-size: 1.1rem;
-    max-width: 700px;
-    margin: 10px auto 0;
+  .logo i {
+    font-size: 2.2rem;
   }
 
-  .plans {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 25px;
-    padding: 60px 10%;
-    transition: opacity 0.6s ease, transform 0.6s ease;
+  .header h1 {
+    font-size: 3.5rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--gold), var(--gold-light));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 16px;
   }
 
-  .plan {
-    background: rgba(25, 25, 40, 0.9);
-    border: 1px solid rgba(255, 214, 90, 0.3);
-    border-radius: 16px;
-    padding: 25px;
-    text-align: center;
-    transition: transform 0.25s, box-shadow 0.25s;
-  }
-
-  .plan:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 0 20px rgba(255, 214, 90, 0.3);
-  }
-
-  .plan h2 { font-size: 1.5rem; margin-bottom: 5px; }
-
-  .price { font-size: 1.3rem; color: #ffd65a; margin-bottom: 8px; }
-
-  .bonus { color: #7aff7a; font-size: 0.9rem; margin-bottom: 10px; }
-
-  button {
-    background: linear-gradient(90deg, #ffd65a, #ffcc33);
-    border: none;
-    border-radius: 10px;
-    padding: 10px 20px;
-    color: #000;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s;
-  }
-
-  button:hover:not(:disabled) {
-    background: #ffe177;
-    transform: scale(1.05);
-  }
-
-  button:disabled {
-    background: #555;
-    color: #aaa;
-    cursor: not-allowed;
-  }
-
-  footer {
-    text-align: center;
-    padding: 40px;
-    font-size: 0.9rem;
-    color: #aaa;
-    border-top: 1px solid rgba(255,255,255,0.1);
-    background: rgba(0,0,0,0.6);
-  }
-
-  .login-warning {
-    text-align: center;
-    color: #ff8080;
-    font-size: 1rem;
-    font-weight: 600;
-    margin-top: -20px;
-  }
-
-  /* Payment page */
-  .payment-page {
-    display: none;
-    opacity: 0;
-    transform: translateY(50px);
-    transition: opacity 0.6s ease, transform 0.6s ease;
-    text-align: center;
-    padding: 80px 20px;
+  .subtitle {
+    font-size: 1.25rem;
+    color: var(--text-secondary);
     max-width: 600px;
-    margin: auto;
+    margin: 0 auto 30px;
+    font-weight: 400;
   }
 
-  .payment-page.active {
-    display: block;
-    opacity: 1;
-    transform: translateY(0);
+  /* Steps */
+  .steps {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    margin: 40px auto;
+    max-width: 800px;
+    position: relative;
   }
 
-  .payment-card {
-    background: rgba(20, 20, 35, 0.9);
-    border: 1px solid rgba(255, 214, 90, 0.3);
-    border-radius: 16px;
-    padding: 30px;
+  .steps::before {
+    content: '';
+    position: absolute;
+    top: 24px;
+    left: 100px;
+    right: 100px;
+    height: 2px;
+    background: linear-gradient(90deg, var(--gold), transparent);
+    z-index: 1;
+  }
+
+  .step {
+    text-align: center;
+    z-index: 2;
+    position: relative;
+  }
+
+  .step-number {
+    width: 50px;
+    height: 50px;
+    background: var(--gold);
+    color: var(--bg-dark);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.25rem;
+    margin: 0 auto 12px;
+    border: 4px solid var(--bg-card);
+  }
+
+  .step-text {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+
+  /* Plans Grid */
+  .plans-section {
+    padding: 60px 20px;
+  }
+
+  .section-title {
+    text-align: center;
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 50px;
+    color: var(--text-primary);
+  }
+
+  .plans-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+    margin-bottom: 60px;
+  }
+
+  .plan-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 40px 30px;
+    text-align: center;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .plan-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--gold), var(--gold-light));
+  }
+
+  .plan-card:hover {
+    transform: translateY(-10px);
+    border-color: var(--gold);
+    box-shadow: 0 20px 40px rgba(255, 215, 0, 0.15);
+  }
+
+  .plan-card.popular {
+    border-color: var(--gold);
+    box-shadow: 0 10px 30px rgba(255, 215, 0, 0.1);
+  }
+
+  .popular-badge {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: var(--gold);
+    color: var(--bg-dark);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 700;
+  }
+
+  .plan-icon {
+    font-size: 3rem;
+    color: var(--gold);
+    margin-bottom: 20px;
+  }
+
+  .plan-name {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+    color: var(--text-primary);
+  }
+
+  .plan-description {
+    color: var(--text-secondary);
+    margin-bottom: 25px;
+    font-size: 0.95rem;
+  }
+
+  .plan-price {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--gold);
+    margin-bottom: 5px;
+  }
+
+  .plan-usd-price {
+    color: var(--text-secondary);
+    font-size: 1rem;
+    margin-bottom: 20px;
+  }
+
+  .plan-features {
+    list-style: none;
+    margin-bottom: 30px;
     text-align: left;
   }
 
-  label {
-    display: block;
-    margin-top: 15px;
-    margin-bottom: 5px;
-    color: #ddd;
+  .plan-features li {
+    padding: 8px 0;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
   }
 
-  select, input {
-    width: 100%;
-    padding: 10px;
-    background: #000;
-    color: #fff;
-    border: 1px solid #444;
-    border-radius: 6px;
-  }
-
-  .copied {
-    color: #7aff7a;
+  .plan-features li i {
+    color: var(--success);
     font-size: 0.9rem;
-    margin-top: 6px;
-    display: none;
   }
 
-  .back-btn {
-    display: inline-block;
-    margin-top: 30px;
-    color: #ffd65a;
+  .buy-btn {
+    width: 100%;
+    padding: 15px 20px;
+    background: linear-gradient(135deg, var(--gold), var(--gold-light));
+    color: var(--bg-dark);
+    border: none;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    font-weight: 700;
     cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .buy-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(255, 215, 0, 0.3);
+  }
+
+  .buy-btn:disabled {
+    background: var(--border);
+    color: var(--text-muted);
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+
+  /* Live Pricing */
+  .live-pricing {
+    background: var(--bg-card);
+    border-radius: 16px;
+    padding: 30px;
+    margin: 40px auto;
+    max-width: 800px;
+    border: 1px solid var(--border);
+  }
+
+  .live-pricing-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .live-pricing-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .live-pricing-title i {
+    color: var(--gold);
+  }
+
+  .refresh-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .refresh-btn:hover {
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+
+  .crypto-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+  }
+
+  .crypto-item {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 15px;
+    text-align: center;
+    transition: all 0.3s ease;
+  }
+
+  .crypto-item:hover {
+    background: rgba(255, 215, 0, 0.1);
+    border: 1px solid var(--gold);
+  }
+
+  .crypto-name {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 5px;
+  }
+
+  .crypto-price {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .crypto-change {
+    font-size: 0.8rem;
+    margin-top: 5px;
+  }
+
+  .positive {
+    color: var(--success);
+  }
+
+  .negative {
+    color: var(--error);
+  }
+
+  /* User Info */
+  .user-info {
+    text-align: center;
+    padding: 20px;
+    background: var(--bg-card);
+    border-radius: 12px;
+    margin: 30px auto;
+    max-width: 500px;
+    border: 1px solid var(--border);
+  }
+
+  .user-welcome {
+    font-size: 1.1rem;
+    margin-bottom: 10px;
+  }
+
+  .user-balance {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--gold);
+  }
+
+  .login-prompt {
+    color: var(--warning);
     font-weight: 600;
+  }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    padding: 40px 20px;
+    background: rgba(10, 15, 28, 0.9);
+    border-top: 1px solid var(--border);
+    margin-top: 60px;
+  }
+
+  .footer-text {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+  }
+
+  /* Loading States */
+  .loading {
+    opacity: 0.7;
+    pointer-events: none;
+  }
+
+  .pulse {
+    animation: pulse 1.5s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .header h1 {
+      font-size: 2.5rem;
+    }
+    
+    .steps {
+      flex-direction: column;
+      gap: 20px;
+    }
+    
+    .steps::before {
+      display: none;
+    }
+    
+    .plans-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .crypto-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
   }
 </style>
 </head>
 <body>
-<header>
-  <h1>Buy Golden Tokens</h1>
-  <p class="subtitle">
-    Use any major crypto to buy Golden. 1 Golden = $1 USD.<br>
-    All payments are verified on-chain — Golden is added automatically after confirmation.
-  </p>
-  <p id="userInfo" class="login-warning"></p>
-</header>
-
-<section id="plansSection" class="plans">
-  <div class="plan">
-    <h2>20 Golden</h2>
-    <div class="price">$5</div>
-    <button onclick="goToPayment(5,20)" id="btn20">Purchase</button>
-  </div>
-  <div class="plan">
-    <h2>40 Golden</h2>
-    <div class="price">$10</div>
-    <button onclick="goToPayment(10,40)" id="btn40">Purchase</button>
-  </div>
-  <div class="plan">
-    <h2>100 Golden</h2>
-    <div class="price">$20</div>
-    <div class="bonus">Save $5</div>
-    <button onclick="goToPayment(20,100)" id="btn100">Purchase</button>
-  </div>
-  <div class="plan">
-    <h2>200 Golden</h2>
-    <div class="price">$40</div>
-    <div class="bonus">Save $10</div>
-    <button onclick="goToPayment(40,200)" id="btn200">Purchase</button>
-  </div>
-</section>
-
-<section id="paymentPage" class="payment-page">
-  <div class="payment-card">
-    <h2 id="paymentTitle">Payment Details</h2>
-    <p id="paymentDetails"></p>
-    <label>Select Crypto:</label>
-    <select id="cryptoSelect" onchange="showAddress()">
-      <option value="">Choose coin...</option>
-      <option value="BTC">Bitcoin (BTC)</option>
-      <option value="ETH">Ethereum (ETH)</option>
-      <option value="USDT">Tether (USDT)</option>
-      <option value="USDC">USD Coin (USDC)</option>
-      <option value="BNB">BNB</option>
-      <option value="TRX">TRON (TRX)</option>
-      <option value="SOL">Solana (SOL)</option>
-      <option value="DOGE">Dogecoin (DOGE)</option>
-    </select>
-    <div id="walletBox" style="margin-top:15px;display:none;">
-      <p><b>Send to this wallet:</b></p>
-      <input type="text" id="walletAddress" readonly onclick="copyAddress()">
-      <div class="copied" id="copiedMsg">Copied to clipboard</div>
-      <p id="amountBox"></p>
+  <!-- Header -->
+  <div class="header">
+    <div class="container">
+      <div class="logo">
+        <i class="fas fa-rocket"></i>
+        GoldenSpaceAI
+      </div>
+      <h1>Buy Golden Tokens</h1>
+      <p class="subtitle">
+        Power your AI experience with Golden tokens. Simple pricing, instant access to premium features.
+      </p>
+      
+      <!-- Steps -->
+      <div class="steps">
+        <div class="step">
+          <div class="step-number">1</div>
+          <div class="step-text">Choose Package</div>
+        </div>
+        <div class="step">
+          <div class="step-number">2</div>
+          <div class="step-text">Pay with Crypto</div>
+        </div>
+        <div class="step">
+          <div class="step-number">3</div>
+          <div class="step-text">Instant Access</div>
+        </div>
+      </div>
     </div>
-    <p class="back-btn" onclick="goBack()">← Back to plans</p>
   </div>
-</section>
 
-<footer>
-  ©️ 2025 GoldenSpaceAI — Blockchain payments verified automatically after confirmation.
-</footer>
+  <!-- User Info -->
+  <div class="container">
+    <div class="user-info" id="userInfo">
+      <div class="login-prompt">
+        <i class="fas fa-info-circle"></i>
+        Please log in to purchase Golden tokens
+      </div>
+    </div>
+  </div>
 
-<script>
-let loggedIn = false;
-let selectedPrice = 0, selectedGolden = 0;
+  <!-- Plans Section -->
+  <section class="plans-section">
+    <div class="container">
+      <h2 class="section-title">Choose Your Package</h2>
+      
+      <div class="plans-grid" id="plansGrid">
+        <!-- Plans will be loaded dynamically -->
+      </div>
 
-async function checkLogin() {
-  try {
-    const res = await fetch('/api/me');
-    const data = await res.json();
-    if (data.loggedIn) {
-      loggedIn = true;
-      document.getElementById('userInfo').innerHTML = 
-        `Welcome, <b>${data.user.name}</b> — Balance: <span style="color:#ffd65a">${data.balance}G</span>`;
-    } else {
-      loggedIn = false;
-      document.getElementById('userInfo').innerHTML = '⚠ Please log in to buy Golden tokens.';
-      disablePurchaseButtons();
-    }
-  } catch (err) {
-    console.error('Login check failed:', err);
-    disablePurchaseButtons();
-  }
-}
+      <!-- Live Pricing -->
+      <div class="live-pricing">
+        <div class="live-pricing-header">
+          <h3 class="live-pricing-title">
+            <i class="fas fa-chart-line"></i>
+            Live Crypto Prices
+          </h3>
+          <button class="refresh-btn" onclick="loadCryptoPrices()">
+            <i class="fas fa-sync-alt"></i>
+            Refresh
+          </button>
+        </div>
+        <div class="crypto-grid" id="cryptoGrid">
+          <!-- Crypto prices will be loaded here -->
+        </div>
+      </div>
+    </div>
+  </section>
 
-function disablePurchaseButtons() {
-  document.querySelectorAll('button').forEach(btn => btn.disabled = true);
-}
+  <!-- Footer -->
+  <div class="footer">
+    <div class="container">
+      <p class="footer-text">
+        <i class="fas fa-shield-alt"></i>
+        Secure blockchain payments • Instant delivery • 24/7 support
+      </p>
+      <p class="footer-text">
+        © 2025 GoldenSpaceAI. All rights reserved.
+      </p>
+    </div>
+  </div>
 
-function goToPayment(price, golden) {
-  if (!loggedIn) return alert('Please log in to purchase Golden.');
-  selectedPrice = price;
-  selectedGolden = golden;
-  document.getElementById('plansSection').style.display = 'none';
-  const payPage = document.getElementById('paymentPage');
-  payPage.classList.add('active');
-  document.getElementById('paymentTitle').innerText = `Purchase ${golden} Golden`;
-  document.getElementById('paymentDetails').innerText = `Total: $${price}`;
-}
-
-function goBack() {
-  document.getElementById('paymentPage').classList.remove('active');
-  setTimeout(() => {
-    document.getElementById('plansSection').style.display = 'grid';
-  }, 300);
-}
-
-async function showAddress() {
-  const coin = document.getElementById('cryptoSelect').value;
-  const walletBox = document.getElementById('walletBox');
-  const walletInput = document.getElementById('walletAddress');
-  const amountBox = document.getElementById('amountBox');
-  if (!coin) { walletBox.style.display = 'none'; return; }
-
-  const wallets = {
-    BTC: "bc1qz5wtz2d329xsm7gcs9e3jwls9supg2fk2hkxtd",
-    ETH: "0x8BEaCb38dF916F6644F81cA0De18C1F4996d32Ea",
-    USDT: "TCN6eVtHFNtPAJNfebgGGm8c2h71NWYY9P",
-    USDC: "0x34ad986d7c5bc118294281c654a17d67f1841140e9abfafd411703eda7be9c48",
-    BNB: "0x8BEaCb38dF916F6644F81cA0De18C1F4996d32Ea",
-    TRX: "TCN6eVtHFNtPAJNfebgGGm8c2h71NWYY9P",
-    SOL: "8vdM8myEj4pAXZZK6WCV1WkSGvmzLgteDv5qCCYcR2NW",
-    DOGE: "DAfXZW2f9wJD4fBMwekb8iVKfQMAdyNCVV"
-  };
-
-  walletInput.value = wallets[coin];
-  walletBox.style.display = 'block';
-
-  try {
-    const res = await fetch('/api/crypto-prices');
-    const data = await res.json();
-    const prices = {
-      BTC: data.bitcoin.usd,
-      ETH: data.ethereum.usd,
-      USDT: data.tether.usd,
-      USDC: data['usd-coin'].usd,
-      BNB: data.binancecoin.usd,
-      TRX: data.tron.usd,
-      SOL: data.solana.usd,
-      DOGE: data.dogecoin.usd
+  <script>
+    // Global state
+    let userData = null;
+    let cryptoPrices = {};
+    const GOLDEN_PACKAGES = {
+      60: { priceUSD: 15, popular: false },
+      100: { priceUSD: 20, popular: true },
+      200: { priceUSD: 40, popular: false }
     };
-    const coinPrice = prices[coin];
-    const amount = (selectedPrice / coinPrice).toFixed(6);
-    amountBox.innerHTML = `Amount to send: <b>${amount} ${coin}</b>`;
-  } catch {
-    amountBox.innerText = "Could not fetch live price.";
-  }
-}
 
-function copyAddress() {
-  const walletInput = document.getElementById('walletAddress');
-  navigator.clipboard.writeText(walletInput.value);
-  const msg = document.getElementById('copiedMsg');
-  msg.style.display = 'block';
-  setTimeout(() => msg.style.display = 'none', 2000);
-}
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+      checkUserStatus();
+      loadPlans();
+      loadCryptoPrices();
+      
+      // Auto-refresh prices every 30 seconds
+      setInterval(loadCryptoPrices, 30000);
+    });
 
-checkLogin();
-</script>
+    // Check user login status
+    async function checkUserStatus() {
+      try {
+        const response = await fetch('/api/me', {
+          credentials: 'include',
+          headers: {
+            'Cache-Control': 'no-cache'
+          }
+        });
+        
+        if (response.ok) {
+          userData = await response.json();
+          updateUserInfo();
+        } else {
+          showLoginPrompt();
+        }
+      } catch (error) {
+        console.error('Failed to check user status:', error);
+        showLoginPrompt();
+      }
+    }
+
+    function updateUserInfo() {
+      const userInfo = document.getElementById('userInfo');
+      if (userData.loggedIn) {
+        userInfo.innerHTML = `
+          <div class="user-welcome">Welcome back, <strong>${userData.user.name}</strong>!</div>
+          <div class="user-balance">
+            <i class="fas fa-coins"></i>
+            ${userData.balance} Golden
+          </div>
+        `;
+      } else {
+        showLoginPrompt();
+      }
+    }
+
+    function showLoginPrompt() {
+      const userInfo = document.getElementById('userInfo');
+      userInfo.innerHTML = `
+        <div class="login-prompt">
+          <i class="fas fa-exclamation-triangle"></i>
+          Please <a href="/login-signup.html" style="color: var(--gold); text-decoration: none; font-weight: 700;">log in</a> to purchase Golden tokens
+        </div>
+      `;
+    }
+
+    // Load and display plans
+    function loadPlans() {
+      const plansGrid = document.getElementById('plansGrid');
+      const plansHTML = Object.entries(GOLDEN_PACKAGES).map(([goldenAmount, packageInfo]) => {
+        const isPopular = packageInfo.popular;
+        const usdPrice = packageInfo.priceUSD;
+        
+        return `
+          <div class="plan-card ${isPopular ? 'popular' : ''}">
+            ${isPopular ? '<div class="popular-badge">Most Popular</div>' : ''}
+            <div class="plan-icon">
+              <i class="fas fa-${goldenAmount >= 100 ? 'crown' : 'star'}"></i>
+            </div>
+            <h3 class="plan-name">${goldenAmount} Golden</h3>
+            <p class="plan-description">Perfect for ${goldenAmount >= 100 ? 'power users' : goldenAmount >= 60 ? 'regular users' : 'getting started'}</p>
+            
+            <div class="plan-price">${goldenAmount}G</div>
+            <div class="plan-usd-price" id="usdPrice${goldenAmount}">$${usdPrice} USD</div>
+            
+            <ul class="plan-features">
+              <li><i class="fas fa-check"></i> Advanced AI Access</li>
+              <li><i class="fas fa-check"></i> Image Generation</li>
+              <li><i class="fas fa-check"></i> Priority Support</li>
+              ${goldenAmount >= 100 ? '<li><i class="fas fa-check"></i> All Features Unlocked</li>' : ''}
+            </ul>
+            
+            <button class="buy-btn" onclick="purchaseGolden(${goldenAmount}, ${usdPrice})" 
+                    ${!userData?.loggedIn ? 'disabled' : ''}>
+              <i class="fas fa-bolt"></i>
+              Buy Now
+            </button>
+          </div>
+        `;
+      }).join('');
+
+      plansGrid.innerHTML = plansHTML;
+    }
+
+    // Load crypto prices
+    async function loadCryptoPrices() {
+      const cryptoGrid = document.getElementById('cryptoGrid');
+      cryptoGrid.classList.add('loading');
+      
+      try {
+        const response = await fetch('/api/crypto-prices', {
+          headers: {
+            'Cache-Control': 'no-cache'
+          }
+        });
+        
+        if (response.ok) {
+          cryptoPrices = await response.json();
+          updateCryptoDisplay();
+          updateUSDConversion();
+        } else {
+          throw new Error('Failed to fetch prices');
+        }
+      } catch (error) {
+        console.error('Failed to load crypto prices:', error);
+        cryptoGrid.innerHTML = `
+          <div style="grid-column: 1 / -1; text-align: center; color: var(--text-secondary);">
+            <i class="fas fa-exclamation-triangle"></i>
+            Unable to load live prices
+          </div>
+        `;
+      } finally {
+        cryptoGrid.classList.remove('loading');
+      }
+    }
+
+    function updateCryptoDisplay() {
+      const cryptoGrid = document.getElementById('cryptoGrid');
+      const cryptos = [
+        { id: 'bitcoin', symbol: 'BTC', name: 'Bitcoin' },
+        { id: 'ethereum', symbol: 'ETH', name: 'Ethereum' },
+        { id: 'tether', symbol: 'USDT', name: 'Tether' },
+        { id: 'usd-coin', symbol: 'USDC', name: 'USD Coin' },
+        { id: 'binancecoin', symbol: 'BNB', name: 'BNB' },
+        { id: 'tron', symbol: 'TRX', name: 'TRON' },
+        { id: 'solana', symbol: 'SOL', name: 'Solana' },
+        { id: 'dogecoin', symbol: 'DOGE', name: 'Dogecoin' }
+      ];
+
+      const cryptoHTML = cryptos.map(crypto => {
+        const price = cryptoPrices[crypto.id]?.usd;
+        if (!price) return '';
+
+        const formattedPrice = price < 1 ? price.toFixed(4) : price.toFixed(2);
+        
+        return `
+          <div class="crypto-item">
+            <div class="crypto-name">${crypto.name} (${crypto.symbol})</div>
+            <div class="crypto-price">$${formattedPrice}</div>
+            <div class="crypto-change positive">
+              <i class="fas fa-arrow-up"></i>
+              Live
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      cryptoGrid.innerHTML = cryptoHTML;
+    }
+
+    function updateUSDConversion() {
+      // Update USD prices based on current crypto rates
+      Object.entries(GOLDEN_PACKAGES).forEach(([goldenAmount, packageInfo]) => {
+        const usdElement = document.getElementById(`usdPrice${goldenAmount}`);
+        if (usdElement) {
+          usdElement.textContent = `$${packageInfo.priceUSD} USD`;
+        }
+      });
+    }
+
+    // Purchase function
+    async function purchaseGolden(goldenAmount, usdPrice) {
+      if (!userData?.loggedIn) {
+        alert('Please log in to purchase Golden tokens.');
+        return;
+      }
+
+      // Redirect to payment page with parameters
+      window.location.href = `/payment.html?amount=${goldenAmount}&price=${usdPrice}`;
+    }
+
+    // Add some visual effects
+    document.addEventListener('mousemove', function(e) {
+      const cards = document.querySelectorAll('.plan-card');
+      cards.forEach(card => {
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        
+        if (x > 0 && x < rect.width && y > 0 && y < rect.height) {
+          card.style.setProperty('--mouse-x', `${x}px`);
+          card.style.setProperty('--mouse-y', `${y}px`);
+        }
+      });
+    });
+  </script>
 </body>
 </html>

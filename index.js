@@ -15,16 +15,6 @@ import multer from "multer";
 import fs from "fs";
 import { createClient } from "@supabase/supabase-js";
 
-//===========connect to supabase============
-async function ensureUserInDB(email, name) {
-  const { data: existing } = await supabase.from('users').select('*').eq('email', email).single();
-  if (!existing) {
-    await supabase.from('users').insert([{ email, name, golden_balance: 0 }]);
-  }
-}
-async function addGoldenToUser(email, amount) {
-  await supabase.rpc('increment_balance', { user_email: email, amount_to_add: amount });
-}
 // ============ ENV & APP ============
 dotenv.config();
 const app = express();
@@ -32,27 +22,53 @@ app.set("trust proxy", 1);
 
 // ============ ENVIRONMENT VALIDATION ============
 function validateEnvironment() {
-  const required = ['OPENAI_API_KEY', 'SESSION_SECRET'];
-  const missing = required.filter(key => !process.env[key]);
-  
+  const required = ["OPENAI_API_KEY", "SESSION_SECRET", "SUPABASE_URL", "SUPABASE_SERVICE_KEY"];
+  const missing = required.filter((key) => !process.env[key]);
   if (missing.length > 0) {
-    console.error('❌ Missing required environment variables:', missing);
+    console.error("❌ Missing required environment variables:", missing);
     process.exit(1);
   }
-  
-  console.log('✅ Environment variables validated');
+  console.log("✅ Environment variables validated");
 }
 validateEnvironment();
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_KEY
-);
+
+// ============ SUPABASE ============
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
 console.log("✅ Supabase connected");
+
+//=========== USER HELPERS ============
+async function ensureUserInDB(email, name) {
+  try {
+    const { data: existing } = await supabase
+      .from("users")
+      .select("*")
+      .eq("email", email)
+      .single();
+
+    if (!existing) {
+      await supabase.from("users").insert([{ email, name, golden_balance: 0 }]);
+      console.log(`🆕 Created new user record for ${email}`);
+    }
+  } catch (err) {
+    console.error("❌ ensureUserInDB error:", err.message);
+  }
+}
+
+async function addGoldenToUser(email, amount) {
+  try {
+    await supabase.rpc("increment_balance", { user_email: email, amount_to_add: amount });
+    console.log(`💰 Added ${amount}G to ${email}`);
+  } catch (err) {
+    console.error("❌ addGoldenToUser error:", err.message);
+  }
+}
+
 // ============ MIDDLEWARE ============
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+
 // =================== BLOCKCHAIN PAYMENT CHECKER ===================
 const wallets = {
   btc: "bc1qz5wtz2d329xsm7gcs9e3jwls9supg2fk2hkxtd",
@@ -61,13 +77,30 @@ const wallets = {
   bnb: "0x8BEaCb38dF916F6644F81cA0De18C1F4996d32Ea",
   tron: "TCN6eVtHFNtPAJNfebgGGm8c2h71NWYY9P",
   sol: "8vdM8myEj4pAXZZK6WCV1WkSGvmzLgteDv5qCCYcR2NW",
-  doge: "DAfXZW2f9wJD4fBMwekb8iVKfQMAdyNCVV"
+  doge: "DAfXZW2f9wJD4fBMwekb8iVKfQMAdyNCVV",
 };
 
+// 🔄 Cached prices to avoid API spam
+let lastPrices = {};
+let lastPriceFetch = 0;
+
 async function getUSDPrice(coin) {
-  const url = `https://api.coingecko.com/api/v3/simple/price?ids=${coin}&vs_currencies=usd`;
-  const res = await axios.get(url);
-  return res.data[coin]?.usd || 0;
+  try {
+    const now = Date.now();
+    if (now - lastPriceFetch < 5 * 60 * 1000 && lastPrices[coin]) {
+      return lastPrices[coin];
+    }
+
+    const url = `https://min-api.cryptocompare.com/data/price?fsym=${coin.toUpperCase()}&tsyms=USD`;
+    const res = await axios.get(url);
+    const price = res.data.USD || 0;
+    lastPrices[coin] = price;
+    lastPriceFetch = now;
+    return price;
+  } catch (err) {
+    console.error(`⚠️ Failed to fetch price for ${coin}:`, err.message);
+    return lastPrices[coin] || 0;
+  }
 }
 
 const blockchainCheckers = {
@@ -92,10 +125,10 @@ const blockchainCheckers = {
       jsonrpc: "2.0",
       id: 1,
       method: "getBalance",
-      params: [address]
+      params: [address],
     });
     return res.data.result.value / 1e9;
-  }
+  },
 };
 
 async function checkBlockchainPayments() {
@@ -105,6 +138,8 @@ async function checkBlockchainPayments() {
     for (const [coin, address] of Object.entries(wallets)) {
       const checker = blockchainCheckers[coin];
       if (!checker) continue;
+
+      await new Promise((r) => setTimeout(r, 3000)); // 3s delay to avoid spam
       const balance = await checker(address);
       const usdPrice = await getUSDPrice(coin);
       const valueUSD = balance * usdPrice;
@@ -126,8 +161,8 @@ app.get("/api/test-blockchain", async (_req, res) => {
   }
 });
 
-// run every 5 minutes
-setInterval(checkBlockchainPayments, 2 * 60 * 1000);
+// run every 10 minutes instead of 2
+setInterval(checkBlockchainPayments, 10 * 60 * 1000);
 
 // ============ SUPABASE CHAT / PROJECT SYSTEM ============
 app.post("/api/chat/create", async (req, res) => {
@@ -173,9 +208,7 @@ app.post("/api/chat/message", async (req, res) => {
     if (!chat_id || !content)
       return res.status(400).json({ error: "Missing chat_id or content" });
 
-    const { error } = await supabase
-      .from("messages")
-      .insert([{ chat_id, sender, content }]);
+    const { error } = await supabase.from("messages").insert([{ chat_id, sender, content }]);
     if (error) throw error;
     res.json({ success: true });
   } catch (err) {
@@ -188,10 +221,7 @@ app.get("/api/projects", async (req, res) => {
   try {
     if (!req.user) return res.status(401).json({ error: "Login required" });
     const userId = getUserIdentifier(req);
-    const { data, error } = await supabase
-      .from("projects")
-      .select("*")
-      .eq("user_id", userId);
+    const { data, error } = await supabase.from("projects").select("*").eq("user_id", userId);
     if (error) throw error;
     res.json({ success: true, projects: data });
   } catch (err) {
@@ -215,18 +245,18 @@ app.post("/api/projects/create", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-
 // ============ SESSION CONFIGURATION ============
 const sessionConfig = {
   secret: process.env.SESSION_SECRET || "super-secret-key-change-in-production",
   resave: false,
   saveUninitialized: false,
+  proxy: true, // ✅ needed for Render or reverse proxies
   cookie: {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    maxAge: 1000 * 60 * 60 * 24 * 7,
-  }
+    secure: process.env.NODE_ENV === "production", // HTTPS only in production
+    maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+  },
 };
 
 app.use(session(sessionConfig));
@@ -247,12 +277,12 @@ const upload = multer({
   dest: "uploads/",
   limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) {
+    if (file.mimetype.startsWith("image/")) {
       cb(null, true);
     } else {
-      cb(new Error('Only image files are allowed'), false);
+      cb(new Error("Only image files are allowed"), false);
     }
-  }
+  },
 });
 
 // ============ DB HELPERS ============
@@ -280,13 +310,17 @@ function loadGoldenDB() {
   }
 }
 
-function saveGoldenDB(db) {
+// ✅ file-safe version to prevent overlapping writes
+let saving = false;
+async function saveGoldenDB(db) {
   try {
+    if (saving) return;
+    saving = true;
     fs.writeFileSync(GOLDEN_DB_PATH, JSON.stringify(db, null, 2));
-    return true;
   } catch (e) {
     console.error("DB save error:", e);
-    return false;
+  } finally {
+    saving = false;
   }
 }
 
@@ -294,7 +328,9 @@ function loadPaymentDB() {
   try {
     if (fs.existsSync(PAYMENT_DB_PATH)) {
       const raw = fs.readFileSync(PAYMENT_DB_PATH, "utf8");
-      return raw.trim() ? JSON.parse(raw) : { transactions: {}, user_packages: {}, nowpayments_orders: {} };
+      return raw.trim()
+        ? JSON.parse(raw)
+        : { transactions: {}, user_packages: {}, nowpayments_orders: {} };
     }
   } catch (e) {
     console.error("Payment DB error:", e);
@@ -324,9 +360,9 @@ function getUserGoldenBalance(userId) {
 function ensureUserExists(user) {
   const db = loadGoldenDB();
   const id = `${user.id}@${user.provider}`;
-  
+
   const isYourEmail = user.email === "farisalmhamad3@gmail.com";
-  
+
   if (!db.users[id]) {
     db.users[id] = {
       email: user.email,
@@ -337,24 +373,37 @@ function ensureUserExists(user) {
       subscriptions: {},
       total_golden_earned: isYourEmail ? 100000 : 0,
       total_golden_spent: 0,
-      transactions: isYourEmail ? [{
-        type: "auto_bonus", amount: 100000, previous_balance: 0, new_balance: 100000,
-        reason: "Automatic 100K Golden for admin", timestamp: new Date().toISOString(),
-      }] : [],
+      transactions: isYourEmail
+        ? [
+            {
+              type: "auto_bonus",
+              amount: 100000,
+              previous_balance: 0,
+              new_balance: 100000,
+              reason: "Automatic 100K Golden for admin",
+              timestamp: new Date().toISOString(),
+            },
+          ]
+        : [],
     };
     saveGoldenDB(db);
-    if (isYourEmail) console.log(`🎉 Auto-created account with 100,000G for ${user.email}`);
+    if (isYourEmail)
+      console.log(`🎉 Auto-created account with 100,000G for ${user.email}`);
   } else {
     if (isYourEmail && db.users[id].golden_balance < 100000) {
       const previousBalance = db.users[id].golden_balance;
       db.users[id].golden_balance = 100000;
       db.users[id].total_golden_earned = 100000;
-      
+
       if (previousBalance < 100000) {
         db.users[id].transactions = db.users[id].transactions || [];
         db.users[id].transactions.push({
-          type: "auto_fix", amount: 100000 - previousBalance, previous_balance: previousBalance,
-          new_balance: 100000, reason: "Auto-corrected to 100K Golden", timestamp: new Date().toISOString(),
+          type: "auto_fix",
+          amount: 100000 - previousBalance,
+          previous_balance: previousBalance,
+          new_balance: 100000,
+          reason: "Auto-corrected to 100K Golden",
+          timestamp: new Date().toISOString(),
         });
         console.log(`🔄 Auto-corrected balance to 100,000G for ${user.email}`);
       }
@@ -367,16 +416,20 @@ function ensureUserExists(user) {
 // ============ ADMIN AUTH MIDDLEWARE ============
 function requireAdminAuth(req, res, next) {
   if (!req.user) return res.status(401).json({ error: "Login required" });
-  
+
   const userId = getUserIdentifier(req);
-  const adminUsers = ["118187920786158036693@google", process.env.ADMIN_USER_ID];
-  const isAdmin = adminUsers.includes(userId) || req.user.email === "farisalmhamad3@gmail.com";
-  
+  const adminUsers = [
+    "118187920786158036693@google",
+    process.env.ADMIN_USER_ID,
+  ];
+  const isAdmin =
+    adminUsers.includes(userId) || req.user.email === "farisalmhamad3@gmail.com";
+
   if (!isAdmin) {
     console.log(`🚫 Admin access denied for: ${req.user.email}`);
     return res.status(403).json({ error: "Admin access required" });
   }
-  
+
   console.log(`✅ Admin access granted to: ${req.user.email}`);
   next();
 }
@@ -389,29 +442,44 @@ const GOLDEN_PACKAGES = {
 };
 
 const FEATURE_PRICES = {
-  search_info: 4, homework_helper: 20, chat_advancedai: 20,
-  create_rocket: 4, create_satellite: 4, advanced_planet: 4,
-  your_space: 4, learn_physics: 4, create_planet: 4, search_lessons: 10,
+  search_info: 4,
+  homework_helper: 20,
+  chat_advancedai: 20,
+  create_rocket: 4,
+  create_satellite: 4,
+  advanced_planet: 4,
+  your_space: 4,
+  learn_physics: 4,
+  create_planet: 4,
+  search_lessons: 10,
 };
 
+// ✅ cleans expired subs automatically
 function requireFeature(feature) {
   return (req, res, next) => {
-    if (!req.user) return res.status(401).json({ error: "Login required" });
-    
+    if (!req.user)
+      return res.status(401).json({ error: "Login required" });
+
     const db = loadGoldenDB();
     const userId = getUserIdentifier(req);
     const user = db.users[userId];
-    if (!user) return res.status(404).json({ error: "User not found" });
-    
-    const subscription = user.subscriptions?.[feature];
-    if (subscription && new Date(subscription) > new Date()) return next();
-    
+    if (!user)
+      return res.status(404).json({ error: "User not found" });
+
+    const expiry = user.subscriptions?.[feature];
+    if (expiry && new Date(expiry) > new Date()) return next();
+
+    if (expiry && new Date(expiry) <= new Date()) {
+      delete user.subscriptions[feature];
+      saveGoldenDB(db);
+    }
+
     const price = FEATURE_PRICES[feature];
-    if (!price) return res.status(400).json({ error: "Invalid feature" });
-    
-    return res.status(403).json({ 
-      error: "Feature locked", message: `This feature requires ${price} Golden`,
-      requiredGolden: price, userBalance: user.golden_balance || 0
+    return res.status(403).json({
+      error: "Feature locked",
+      message: `This feature requires ${price} Golden`,
+      requiredGolden: price,
+      userBalance: user.golden_balance || 0,
     });
   };
 }
@@ -427,20 +495,21 @@ app.use((req, _res, next) => {
   }
   next();
 });
-// ============ ADVANCED AI INTEGRATION (No extra billing logic) ============
 
-// Subscribe user to Plus or Pro
+// ============ ADVANCED AI INTEGRATION ============
 app.post("/api/subscribe-advanced-ai", (req, res) => {
-  if (!req.user) return res.status(401).json({ error: "Login required" });
+  if (!req.user)
+    return res.status(401).json({ error: "Login required" });
   const { plan } = req.body;
-  if (!["plus", "pro"].includes(plan)) return res.status(400).json({ error: "Invalid plan" });
+  if (!["plus", "pro"].includes(plan))
+    return res.status(400).json({ error: "Invalid plan" });
 
   const db = loadGoldenDB();
   const id = getUserIdentifier(req);
   const user = db.users[id];
-  if (!user) return res.status(404).json({ error: "User not found" });
+  if (!user)
+    return res.status(404).json({ error: "User not found" });
 
-  // Only tag the subscription — Golden deduction handled elsewhere
   const now = new Date();
   const expiry = new Date(now);
   expiry.setMonth(now.getMonth() + 1);
@@ -454,11 +523,11 @@ app.post("/api/subscribe-advanced-ai", (req, res) => {
   res.json({
     success: true,
     subscription: { plan, expires_at: expiry.toISOString() },
-    newBalance: user.golden_balance || 0
+    newBalance: user.golden_balance || 0,
   });
 });
 
-// Return current Advanced AI status
+// ---------- Advanced AI status ----------
 app.get("/api/advanced-ai-status", (req, res) => {
   if (!req.user) return res.json({ active: false, loggedIn: false });
 
@@ -468,78 +537,146 @@ app.get("/api/advanced-ai-status", (req, res) => {
   if (!user) return res.json({ active: false, loggedIn: true });
 
   const now = new Date();
-  const expiry = user.subscriptions?.chat_advancedai;
-  const plan = user.subscriptions?.chat_advancedai_plan;
+  const expiryStr = user.subscriptions?.chat_advancedai || null;
+  const plan = user.subscriptions?.chat_advancedai_plan || null;
 
-  const active = expiry && new Date(expiry) > now;
+  let active = false;
+  let expires_at = null;
+  let days_left = 0;
+  let remaining_hours = 0;
+
+  if (expiryStr) {
+    const expiry = new Date(expiryStr);
+    if (expiry > now) {
+      active = true;
+      expires_at = expiry.toISOString();
+      const msLeft = expiry - now;
+      days_left = Math.ceil(msLeft / (1000 * 60 * 60 * 24));
+      remaining_hours = Math.max(0, Math.floor(msLeft / (1000 * 60 * 60)));
+    } else {
+      // auto-clean expired
+      delete user.subscriptions.chat_advancedai;
+      delete user.subscriptions.chat_advancedai_plan;
+      saveGoldenDB(db);
+    }
+  }
+
+  res.set("Cache-Control", "no-store");
   res.json({
+    loggedIn: true,
     active,
     plan: active ? plan : null,
-    expires_at: expiry || null,
-    balance: user.golden_balance || 0
+    expires_at,
+    days_left,
+    remaining_hours,
+    balance: user.golden_balance || 0,
   });
 });
-// ============ AUTH ============
+
+
+// ---------- AUTH (Google / GitHub) ----------
+const SITE_BASE_URL =
+  process.env.BASE_URL || "https://goldenspaceai.space"; // set BASE_URL in env for dev/prod
+
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
-  const siteUrl = "https://goldenspaceai.space";
-  
-  passport.use(new GoogleStrategy({
-    clientID: process.env.GOOGLE_CLIENT_ID,
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: `${siteUrl}/auth/google/callback`,
-    proxy: true
-  }, (_accessToken, _refreshToken, profile, done) => {
-    const user = { 
-      id: profile.id, 
-      name: profile.displayName, 
-      email: profile.emails?.[0]?.value || "", 
-      photo: profile.photos?.[0]?.value || "", 
-      provider: "google" 
-    };
-    ensureUserExists(user); 
-    done(null, user);
-  }));
-  
-  app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
-  app.get("/auth/google/callback", passport.authenticate("google", { 
-    failureRedirect: "/login-signup.html" 
-  }), (_req, res) => res.redirect("/"));
+  passport.use(
+    new GoogleStrategy(
+      {
+        clientID: process.env.GOOGLE_CLIENT_ID,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+        callbackURL: `${SITE_BASE_URL}/auth/google/callback`,
+        proxy: true,
+      },
+      (_accessToken, _refreshToken, profile, done) => {
+        const user = {
+          id: profile.id,
+          name: profile.displayName,
+          email: profile.emails?.[0]?.value || "",
+          photo: profile.photos?.[0]?.value || "",
+          provider: "google",
+        };
+        ensureUserExists(user);
+        done(null, user);
+      }
+    )
+  );
+
+  app.get(
+    "/auth/google",
+    passport.authenticate("google", {
+      scope: ["profile", "email"],
+      prompt: "select_account", // always show account chooser
+    })
+  );
+
+  app.get(
+    "/auth/google/callback",
+    passport.authenticate("google", {
+      failureRedirect: "/login-signup.html",
+      failureMessage: true,
+      session: true,
+    }),
+    (_req, res) => res.redirect("/")
+  );
 }
 
 if (process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET) {
-  const siteUrl = "https://goldenspaceai.space";
-  
-  passport.use(new GitHubStrategy({
-    clientID: process.env.GITHUB_CLIENT_ID,
-    clientSecret: process.env.GITHUB_CLIENT_SECRET,
-    callbackURL: `${siteUrl}/auth/github/callback`,
-    proxy: true
-  }, (_accessToken, _refreshToken, profile, done) => {
-    const user = { 
-      id: profile.id, 
-      name: profile.displayName || profile.username, 
-      email: profile.emails?.[0]?.value || `${profile.username}@github.user`, 
-      photo: profile.photos?.[0]?.value || "", 
-      username: profile.username, 
-      provider: "github" 
-    };
-    ensureUserExists(user); 
-    done(null, user);
-  }));
-  
-  app.get("/auth/github", passport.authenticate("github", { scope: ["user:email"] }));
-  app.get("/auth/github/callback", passport.authenticate("github", { 
-    failureRedirect: "/login-signup.html" 
-  }), (_req, res) => res.redirect("/"));
+  passport.use(
+    new GitHubStrategy(
+      {
+        clientID: process.env.GITHUB_CLIENT_ID,
+        clientSecret: process.env.GITHUB_CLIENT_SECRET,
+        callbackURL: `${SITE_BASE_URL}/auth/github/callback`,
+        proxy: true,
+      },
+      (_accessToken, _refreshToken, profile, done) => {
+        const user = {
+          id: profile.id,
+          name: profile.displayName || profile.username,
+          email: profile.emails?.[0]?.value || `${profile.username}@github.user`,
+          photo: profile.photos?.[0]?.value || "",
+          username: profile.username,
+          provider: "github",
+        };
+        ensureUserExists(user);
+        done(null, user);
+      }
+    )
+  );
+
+  app.get(
+    "/auth/github",
+    passport.authenticate("github", { scope: ["user:email"] })
+  );
+
+  app.get(
+    "/auth/github/callback",
+    passport.authenticate("github", {
+      failureRedirect: "/login-signup.html",
+      failureMessage: true,
+      session: true,
+    }),
+    (_req, res) => res.redirect("/")
+  );
 }
 
-// ============ BASIC ROUTES ============
+
+// ---------- BASIC ROUTES ----------
 app.get("/", (_req, res) => res.sendFile(path.join(__dirname, "index.html")));
-app.get("/login", (_req, res) => res.sendFile(path.join(__dirname, "login-signup.html")));
+app.get("/login", (_req, res) =>
+  res.sendFile(path.join(__dirname, "login-signup.html"))
+);
+
+// safer: whitelist simple page names to avoid path traversal
 app.get("/:page.html", (req, res) => {
-  const page = req.params.page;
+  const page = (req.params.page || "").toLowerCase();
+  if (!/^[a-z0-9\-]+$/.test(page)) {
+    return res.status(400).send("Invalid page");
+  }
   const filePath = path.join(__dirname, `${page}.html`);
-  fs.existsSync(filePath) ? res.sendFile(filePath) : res.status(404).send("Page not found");
+  fs.existsSync(filePath)
+    ? res.sendFile(filePath)
+    : res.status(404).send("Page not found");
 });
 
 app.post("/logout", (req, res) => {
@@ -552,351 +689,142 @@ app.post("/logout", (req, res) => {
   });
 });
 
-// ============ USER / ME ============
+
+// ---------- USER / ME ----------
 app.get("/api/me", (req, res) => {
   if (!req.user) return res.json({ loggedIn: false });
+
   const id = `${req.user.id}@${req.user.provider}`;
   const db = loadGoldenDB();
   const userData = db.users[id];
-  if (!userData) { ensureUserExists(req.user); return res.json({ loggedIn: true, user: req.user, balance: 0 }); }
-  res.json({ loggedIn: true, user: req.user, balance: userData.golden_balance || 0, subscriptions: userData.subscriptions || {} });
+  if (!userData) {
+    ensureUserExists(req.user);
+    return res.json({ loggedIn: true, user: req.user, balance: 0 });
+  }
+
+  const isAdmin =
+    ["118187920786158036693@google", process.env.ADMIN_USER_ID].includes(id) ||
+    req.user.email === "farisalmhamad3@gmail.com";
+
+  res.set("Cache-Control", "no-store");
+  res.json({
+    loggedIn: true,
+    user: {
+      id: req.user.id,
+      name: req.user.name,
+      email: req.user.email,
+      photo: req.user.photo,
+      provider: req.user.provider,
+      isAdmin,
+    },
+    balance: userData.golden_balance || 0,
+    subscriptions: userData.subscriptions || {},
+  });
 });
 
-// ============ GOLDEN PUBLIC APIS ============
+
+// ---------- GOLDEN PUBLIC APIS ----------
 app.get("/api/golden-balance", (req, res) => {
   if (!req.user) return res.json({ loggedIn: false, balance: 0 });
   const b = getUserGoldenBalance(getUserIdentifier(req));
+  res.set("Cache-Control", "no-store");
   res.json({ loggedIn: true, balance: b, user: req.user });
 });
 
 app.get("/api/golden-packages", (_req, res) => res.json(GOLDEN_PACKAGES));
 
-// ============ FEATURE MANAGEMENT ============
+
+// ---------- FEATURE MANAGEMENT ----------
 app.post("/api/unlock-feature", (req, res) => {
   if (!req.user) return res.status(401).json({ error: "Login required" });
   const { feature, cost } = req.body;
-  if (!feature || FEATURE_PRICES[feature] !== cost) return res.status(400).json({ error: "Invalid feature or cost" });
-  
+
+  // validate feature
+  if (!feature || FEATURE_PRICES[feature] == null) {
+    return res.status(400).json({ error: "Invalid feature" });
+  }
+  if (FEATURE_PRICES[feature] !== Number(cost)) {
+    return res.status(400).json({ error: "Mismatched cost" });
+  }
+
   const db = loadGoldenDB();
   const id = getUserIdentifier(req);
   const u = db.users[id];
   if (!u) return res.status(404).json({ error: "User not found" });
-  
-  if (req.user.email !== "farisalmhamad3@gmail.com") {
-    if ((u.golden_balance || 0) < cost) return res.status(400).json({ error: "Not enough Golden" });
+
+  // non-admin must pay
+  const isFaris = req.user.email === "farisalmhamad3@gmail.com";
+  if (!isFaris) {
+    if ((u.golden_balance || 0) < cost) {
+      return res.status(400).json({ error: "Not enough Golden" });
+    }
     u.golden_balance -= cost;
     u.total_golden_spent = (u.total_golden_spent || 0) + cost;
   }
-  
-  const exp = new Date(); exp.setDate(exp.getDate() + 30);
+
+  const exp = new Date();
+  exp.setDate(exp.getDate() + 30);
   u.subscriptions = u.subscriptions || {};
   u.subscriptions[feature] = exp.toISOString();
+
   u.transactions = u.transactions || [];
-  u.transactions.push({ type: "unlock", amount: req.user.email === "farisalmhamad3@gmail.com" ? 0 : -cost, feature, timestamp: new Date().toISOString() });
+  u.transactions.push({
+    type: "unlock",
+    amount: isFaris ? 0 : -cost,
+    feature,
+    timestamp: new Date().toISOString(),
+  });
 
   saveGoldenDB(db);
-  res.json({ success: true, newBalance: u.golden_balance, freeUnlock: req.user.email === "farisalmhamad3@gmail.com" });
+  res.json({
+    success: true,
+    newBalance: u.golden_balance,
+    freeUnlock: isFaris,
+    expires_at: exp.toISOString(),
+  });
 });
 
 app.get("/api/feature-status", (req, res) => {
   if (!req.user) return res.status(401).json({ error: "Login required" });
   const { feature } = req.query;
-  if (!feature || !FEATURE_PRICES[feature]) return res.status(400).json({ error: "Invalid feature" });
+  if (!feature || FEATURE_PRICES[feature] == null) {
+    return res.status(400).json({ error: "Invalid feature" });
+  }
+
   const db = loadGoldenDB();
   const id = getUserIdentifier(req);
   const u = db.users[id];
-  if (!u?.subscriptions?.[feature]) return res.json({ feature, unlocked: false, price: FEATURE_PRICES[feature] });
-  const expiry = new Date(u.subscriptions[feature]);
-  if (expiry <= new Date()) { delete u.subscriptions[feature]; saveGoldenDB(db); return res.json({ feature, unlocked: false, price: FEATURE_PRICES[feature] }); }
-  const remainingHours = Math.max(0, Math.floor((expiry - new Date()) / (1000 * 60 * 60)));
-  res.json({ feature, unlocked: true, remainingHours, price: FEATURE_PRICES[feature] });
-});
 
-// ============ GOLDEN TRANSFER SYSTEM ============
-app.post("/api/transfer-golden", async (req, res) => {
-  try {
-    if (!req.user) return res.status(401).json({ error: "Login required" });
-    const { recipientEmail, amount } = req.body;
-    if (!recipientEmail || !amount || amount <= 0) return res.status(400).json({ error: "Valid recipient email and amount required" });
-
-    const db = loadGoldenDB();
-    const senderId = getUserIdentifier(req);
-    const sender = db.users[senderId];
-    if (!sender) return res.status(404).json({ error: "Sender account not found" });
-
-    const fee = Math.ceil(amount * 0.05);
-    const totalDeduction = amount + fee;
-    if (sender.golden_balance < totalDeduction) return res.status(400).json({ error: `Insufficient balance. Need ${totalDeduction}G (${amount}G + ${fee}G fee), but only have ${sender.golden_balance}G` });
-
-    let recipient = null, recipientId = null;
-    for (const [userId, user] of Object.entries(db.users)) {
-      if (user.email && user.email.toLowerCase() === recipientEmail.toLowerCase()) { recipient = user; recipientId = userId; break; }
-    }
-    if (!recipient) return res.status(404).json({ error: "Recipient not found" });
-    if (recipientId === senderId) return res.status(400).json({ error: "Cannot transfer Golden to yourself" });
-
-    const previousSenderBalance = sender.golden_balance;
-    const previousRecipientBalance = recipient.golden_balance;
-    sender.golden_balance -= totalDeduction;
-    sender.total_golden_spent = (sender.total_golden_spent || 0) + totalDeduction;
-    recipient.golden_balance += amount;
-    recipient.total_golden_earned = (recipient.total_golden_earned || 0) + amount;
-
-    sender.transactions = sender.transactions || [];
-    sender.transactions.push({ type: "transfer_out", amount: -totalDeduction, previous_balance: previousSenderBalance, new_balance: sender.golden_balance, recipient: recipientEmail, fee, net_amount: amount, timestamp: new Date().toISOString() });
-
-    recipient.transactions = recipient.transactions || [];
-    recipient.transactions.push({ type: "transfer_in", amount, previous_balance: previousRecipientBalance, new_balance: recipient.golden_balance, sender: sender.email, timestamp: new Date().toISOString() });
-
-    saveGoldenDB(db);
-    console.log(`✅ Golden transfer: ${sender.email} → ${recipient.email} | Amount: ${amount}G | Fee: ${fee}G`);
-
-    res.json({ success: true, message: `Successfully transferred ${amount}G to ${recipientEmail} (${fee}G fee applied)`, newBalance: sender.golden_balance, fee, totalDeduction });
-
-  } catch (error) {
-    console.error("Transfer Golden error:", error);
-    res.status(500).json({ error: "Transfer failed due to server error", details: error.message });
+  if (!u?.subscriptions?.[feature]) {
+    return res.json({
+      feature,
+      unlocked: false,
+      price: FEATURE_PRICES[feature],
+    });
   }
-});
-//=========================================================
-// ============ SUBSCRIPTION MANAGEMENT ====================
-app.get("/subscriptions.html", (req, res) =>
-  res.sendFile(path.join(__dirname, "subscriptions.html"))
-);
 
-// ✅ unified route name so frontend /api/subscriptions works
-app.get("/api/subscriptions", (req, res) => {
-  if (!req.user) return res.status(401).json({ error: "Login required" });
+  const expiry = new Date(u.subscriptions[feature]);
+  if (expiry <= new Date()) {
+    delete u.subscriptions[feature];
+    saveGoldenDB(db);
+    return res.json({
+      feature,
+      unlocked: false,
+      price: FEATURE_PRICES[feature],
+    });
+  }
 
-  const db = loadGoldenDB();
-  const id = getUserIdentifier(req);
-  const user = db.users[id];
-  if (!user)
-    return res.status(404).json({ error: "User not found" });
-
-  const now = new Date();
-  const subscriptions = Object.entries(user.subscriptions || {}).map(
-    ([feature, expiry]) => {
-      const exp = new Date(expiry);
-      const active = exp > now;
-      const daysLeft = Math.max(
-        0,
-        Math.ceil((exp - now) / (1000 * 60 * 60 * 24))
-      );
-      return {
-        feature,
-        cost: FEATURE_PRICES[feature] || 0,
-        expiry,
-        active,
-        daysLeft,
-        expired: !active
-      };
-    }
-  );
+  const msLeft = expiry - new Date();
+  const remainingHours = Math.max(0, Math.floor(msLeft / (1000 * 60 * 60)));
 
   res.json({
-    success: true,
-    subscriptions,
-    balance: user.golden_balance || 0
+    feature,
+    unlocked: true,
+    remainingHours,
+    price: FEATURE_PRICES[feature],
+    expires_at: expiry.toISOString(),
   });
 });
-
-// ✅ cancel subscription route unchanged but clarified
-app.post("/api/cancel-subscription", (req, res) => {
-  if (!req.user) return res.status(401).json({ error: "Login required" });
-
-  const { feature } = req.body;
-  if (!feature)
-    return res.status(400).json({ error: "Feature required" });
-
-  const db = loadGoldenDB();
-  const id = getUserIdentifier(req);
-  const user = db.users[id];
-
-  if (!user || !user.subscriptions)
-    return res
-      .status(404)
-      .json({ error: "User or subscription not found" });
-
-  delete user.subscriptions[feature];
-  saveGoldenDB(db);
-
-  res.json({
-    success: true,
-    message: `Subscription for ${feature} cancelled`
-  });
-});
-
-// ============ ADMIN ROUTES =================
-app.get("/admin-page-golden.html", (req, res) =>
-  res.sendFile(path.join(__dirname, "admin-page-golden.html"))
-);
-
-// 🧾 Fetch all users with totals
-app.get("/api/admin/all-users", requireAdminAuth, (_req, res) => {
-  const db = loadGoldenDB();
-  const users = Object.entries(db.users || {}).map(([userId, u]) => ({
-    userId,
-    name: u.name,
-    email: u.email,
-    golden_balance: u.golden_balance || 0,
-    total_golden_earned: u.total_golden_earned || 0,
-    total_golden_spent: u.total_golden_spent || 0,
-    created_at: u.created_at,
-    last_login: u.last_login,
-    provider: userId.split("@")[1],
-  }));
-
-  users.sort((a, b) => b.golden_balance - a.golden_balance);
-  const totalGolden = users.reduce((s, u) => s + (u.golden_balance || 0), 0);
-
-  res.json({
-    success: true,
-    users,
-    totalUsers: users.length,
-    totalGolden,
-  });
-});
-
-// 🔍 Search for specific user
-app.get("/api/admin/search-users", requireAdminAuth, (req, res) => {
-  const q = (req.query.query || "").toLowerCase();
-  const db = loadGoldenDB();
-
-  const results = Object.entries(db.users || {})
-    .filter(([id, u]) =>
-      id.toLowerCase().includes(q) ||
-      (u.email && u.email.toLowerCase().includes(q)) ||
-      (u.name && u.name.toLowerCase().includes(q))
-    )
-    .map(([userId, u]) => ({
-      userId,
-      name: u.name,
-      email: u.email,
-      golden_balance: u.golden_balance || 0,
-      total_golden_earned: u.total_golden_earned || 0,
-      total_golden_spent: u.total_golden_spent || 0,
-      created_at: u.created_at,
-      last_login: u.last_login,
-      provider: userId.split("@")[1],
-    }));
-
-  res.json({ success: true, users: results });
-});
-
-// ➕ Add Golden
-app.post("/api/admin/add-golden", requireAdminAuth, (req, res) => {
-  const { userId, amount, reason } = req.body;
-  const amt = Number(amount);
-  if (!userId || isNaN(amt) || amt <= 0)
-    return res.status(400).json({ error: "Valid user ID and positive amount required" });
-
-  const db = loadGoldenDB();
-  const u = db.users[userId];
-  if (!u) return res.status(404).json({ error: "User not found" });
-
-  const prev = u.golden_balance || 0;
-  u.golden_balance = prev + amt;
-  u.total_golden_earned = (u.total_golden_earned || 0) + amt;
-
-  u.transactions = u.transactions || [];
-  u.transactions.push({
-    type: "admin_add",
-    amount: amt,
-    previous_balance: prev,
-    new_balance: u.golden_balance,
-    reason: reason || "Admin adjustment",
-    timestamp: new Date().toISOString(),
-  });
-
-  saveGoldenDB(db);
-  res.json({
-    success: true,
-    message: `Added ${amt}G to ${u.email}`,
-    newBalance: u.golden_balance,
-  });
-});
-
-// ➖ Subtract Golden
-app.post("/api/admin/subtract-golden", requireAdminAuth, (req, res) => {
-  const { userId, amount, reason } = req.body;
-  const amt = Number(amount);
-  if (!userId || isNaN(amt) || amt <= 0)
-    return res.status(400).json({ error: "Valid user ID and positive amount required" });
-
-  const db = loadGoldenDB();
-  const u = db.users[userId];
-  if (!u) return res.status(404).json({ error: "User not found" });
-
-  const prev = u.golden_balance || 0;
-  if (prev < amt)
-    return res.status(400).json({ error: "Insufficient balance" });
-
-  u.golden_balance = prev - amt;
-  u.total_golden_spent = (u.total_golden_spent || 0) + amt;
-
-  u.transactions = u.transactions || [];
-  u.transactions.push({
-    type: "admin_subtract",
-    amount: -amt,
-    previous_balance: prev,
-    new_balance: u.golden_balance,
-    reason: reason || "Admin adjustment",
-    timestamp: new Date().toISOString(),
-  });
-
-  saveGoldenDB(db);
-  res.json({
-    success: true,
-    message: `Subtracted ${amt}G from ${u.email}`,
-    newBalance: u.golden_balance,
-  });
-});
-
-// ⚖️ Set Golden balance directly
-app.post("/api/admin/set-golden", requireAdminAuth, (req, res) => {
-  const { userId, balance, reason } = req.body;
-  const newBal = Number(balance);
-  if (!userId || isNaN(newBal) || newBal < 0)
-    return res.status(400).json({ error: "Valid user ID and non-negative balance required" });
-
-  const db = loadGoldenDB();
-  const u = db.users[userId];
-  if (!u) return res.status(404).json({ error: "User not found" });
-
-  const prev = u.golden_balance || 0;
-  u.golden_balance = newBal;
-
-  u.transactions = u.transactions || [];
-  u.transactions.push({
-    type: "admin_set",
-    amount: newBal - prev,
-    previous_balance: prev,
-    new_balance: newBal,
-    reason: reason || "Admin set balance",
-    timestamp: new Date().toISOString(),
-  });
-
-  saveGoldenDB(db);
-  res.json({
-    success: true,
-    message: `Set balance to ${newBal}G for ${u.email}`,
-    newBalance: u.golden_balance,
-  });
-});
-
-// 📜 User transaction history
-app.get("/api/admin/user-transactions/:userId", requireAdminAuth, (req, res) => {
-  const { userId } = req.params;
-  const db = loadGoldenDB();
-  const u = db.users[userId];
-  if (!u)
-    return res.status(404).json({ error: "User not found" });
-
-  res.json({ success: true, transactions: u.transactions || [] });
-});
-
-
 // ======================== AI ENDPOINTS =====================
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 

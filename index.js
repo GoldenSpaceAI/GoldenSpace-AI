@@ -742,29 +742,24 @@ const modelRoutes = [
   { path: "gemini2.5-pro", model: "gemini-2.5-pro" },
 ];
 
-// Shared generator
 for (const { path, model } of modelRoutes) {
   app.post(`/api/generate-${path}`, requireFeature("chat_advancedai"), async (req, res) => {
     try {
       const { messages, prompt } = req.body;
 
-      // --- Debug log before call
       console.log("➡️ Sending to OpenAI:", {
         endpoint: `/api/generate-${path}`,
         model,
-        has_max_completion_tokens: true,
         promptPreview: prompt?.slice(0, 100) || "(using messages array)"
       });
 
-      // --- GPT-5/4 call
       const completion = await openai.chat.completions.create({
         model,
         messages: messages || [{ role: "user", content: prompt }],
-        max_completion_tokens: 2000,
-        temperature: 0.7
+        max_completion_tokens: 2000
+        // temperature removed — GPT-5 doesn’t support custom temp yet
       });
 
-      // --- Debug response log
       console.log("✅ OpenAI response:", {
         model: completion.model,
         tokens: completion.usage,
@@ -794,21 +789,16 @@ app.get("/api/test-gpt5", async (req, res) => {
     console.log("🧪 Testing GPT-5 connectivity...");
     const completion = await openai.chat.completions.create({
       model: "gpt-5",
-      messages: [{ role: "user", content: "Say OK if GPT-5 is working." }],
+      messages: [{ role: "user", content: "Say OK if GPT-5 works fine." }],
       max_completion_tokens: 10
     });
-
     const msg = completion.choices?.[0]?.message?.content || "No reply.";
-    console.log("🧪 GPT-5 test success:", msg);
-
     res.json({ success: true, reply: msg, model: completion.model });
-
   } catch (err) {
     console.error("❌ Direct GPT-5 test error:", err);
     res.status(500).json({ success: false, error: err.message });
   }
 });
-
 
 // ============ IMAGE GENERATION ============
 

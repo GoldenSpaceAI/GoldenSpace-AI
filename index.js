@@ -733,7 +733,7 @@ app.get("/api/advanced-ai-status", (req, res) => {
 
 // ============ ADVANCED AI ENDPOINTS ============
 
-// Official model list (use real model IDs)
+// Official model list (real IDs)
 const modelRoutes = [
   { path: "gpt5", model: "gpt-5" },
   { path: "gpt5-mini", model: "gpt-5-mini" },
@@ -742,31 +742,73 @@ const modelRoutes = [
   { path: "gemini2.5-pro", model: "gemini-2.5-pro" },
 ];
 
+// Shared generator
 for (const { path, model } of modelRoutes) {
   app.post(`/api/generate-${path}`, requireFeature("chat_advancedai"), async (req, res) => {
     try {
       const { messages, prompt } = req.body;
 
+      // --- Debug log before call
+      console.log("➡️ Sending to OpenAI:", {
+        endpoint: `/api/generate-${path}`,
+        model,
+        has_max_completion_tokens: true,
+        promptPreview: prompt?.slice(0, 100) || "(using messages array)"
+      });
+
+      // --- GPT-5/4 call
       const completion = await openai.chat.completions.create({
         model,
         messages: messages || [{ role: "user", content: prompt }],
-        max_completion_tokens: 2000,   // ✅ fixed parameter
+        max_completion_tokens: 2000,
         temperature: 0.7
+      });
+
+      // --- Debug response log
+      console.log("✅ OpenAI response:", {
+        model: completion.model,
+        tokens: completion.usage,
+        textPreview: completion.choices?.[0]?.message?.content?.slice(0, 120)
       });
 
       const reply = completion.choices?.[0]?.message?.content || "No reply.";
 
       res.json({
+        success: true,
         text: reply,
         model,
         tokens_used: completion.usage?.total_tokens || 0
       });
+
     } catch (error) {
       console.error(`${path} generation error:`, error);
       res.status(500).json({ error: error.message });
     }
   });
 }
+
+// ============ DIRECT GPT-5 TEST ROUTE ============
+
+app.get("/api/test-gpt5", async (req, res) => {
+  try {
+    console.log("🧪 Testing GPT-5 connectivity...");
+    const completion = await openai.chat.completions.create({
+      model: "gpt-5",
+      messages: [{ role: "user", content: "Say OK if GPT-5 is working." }],
+      max_completion_tokens: 10
+    });
+
+    const msg = completion.choices?.[0]?.message?.content || "No reply.";
+    console.log("🧪 GPT-5 test success:", msg);
+
+    res.json({ success: true, reply: msg, model: completion.model });
+
+  } catch (err) {
+    console.error("❌ Direct GPT-5 test error:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 
 // ============ IMAGE GENERATION ============
 

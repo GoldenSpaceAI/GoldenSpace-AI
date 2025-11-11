@@ -633,15 +633,17 @@ app.post("/api/subscribe-advanced-ai", (req, res) => {
   user.subscriptions = user.subscriptions || {};
   user.usage = user.usage || {};
   user.usage.images = user.usage.images || { month: monthKey(), used: 0 };
+
   if (user.usage.images.month !== monthKey()) {
     user.usage.images = { month: monthKey(), used: 0 };
   }
 
   const now = new Date();
-  const currentExpiryStr = user.subscriptions.chat_advancedai || null;
-  const currentExpiry = currentExpiryStr ? new Date(currentExpiryStr) : null;
+  const currentExpiry = user.subscriptions.chat_advancedai
+    ? new Date(user.subscriptions.chat_advancedai)
+    : null;
 
-  // If still active, don't charge again—just return current sub
+  // still active? skip charging
   if (currentExpiry && currentExpiry > now) {
     return res.json({
       success: true,
@@ -657,17 +659,13 @@ app.post("/api/subscribe-advanced-ai", (req, res) => {
     return res.status(402).json({ error: "Not enough Golden (20 G required)" });
   }
 
-  // Set expiry to 30 days from now
   const expiry = new Date(now);
   expiry.setDate(now.getDate() + 30);
 
   user.golden_balance = bal - ADV_PRICE_G;
   user.subscriptions.chat_advancedai = expiry.toISOString();
-
-  // When paying for a new period, reset image quota
   user.usage.images = { month: monthKey(), used: 0 };
 
-  // Add transaction record
   user.transactions = user.transactions || [];
   user.transactions.push({
     type: "advanced_ai_subscription",
@@ -710,7 +708,6 @@ app.get("/api/advanced-ai-status", (req, res) => {
   let active = false;
   let expires_at = null;
   let days_left = 0;
-  let remaining_hours = 0;
 
   if (expiryStr) {
     const expiry = new Date(expiryStr);
@@ -719,7 +716,6 @@ app.get("/api/advanced-ai-status", (req, res) => {
       expires_at = expiry.toISOString();
       const msLeft = expiry - now;
       days_left = Math.ceil(msLeft / (1000 * 60 * 60 * 24));
-      remaining_hours = Math.max(0, Math.floor(msLeft / (1000 * 60 * 60)));
     } else {
       delete user.subscriptions.chat_advancedai;
       saveGoldenDB(db);
@@ -732,7 +728,6 @@ app.get("/api/advanced-ai-status", (req, res) => {
     active,
     expires_at,
     days_left,
-    remaining_hours,
     balance: Number(user.golden_balance || 0),
     images_left: IMG_LIMIT_PER_MONTH - Number(user.usage.images.used || 0),
     img_limit: IMG_LIMIT_PER_MONTH,
@@ -742,264 +737,103 @@ app.get("/api/advanced-ai-status", (req, res) => {
 
 // ============ ADVANCED AI ENDPOINTS ============
 
-// GPT-5 Model Endpoints
-app.post("/api/generate-gpt5", requireFeature("chat_advancedai"), async (req, res) => {
-  try {
-    const { messages, prompt } = req.body;
-    
-    const completion = await openai.chat.completions.create({
-      model: "gpt-5", // Using GPT-4o as GPT-5 equivalent
-      messages: messages || [{ role: "user", content: prompt }],
-      max_tokens: 2000,
-      temperature: 0.7
-    });
+// GPT-5 family + others
+const modelRoutes = [
+  { path: "gpt5", model: "gpt-5" },
+  { path: "gpt5-mini", model: "gpt-5-mini" },
+  { path: "gpt5-nano", model: "gpt-5-nano" },
+  { path: "gpt4.1", model: "gpt-4" },
+  { path: "gemini2.5-pro", model: "gpt-4" },
+];
 
-    const reply = completion.choices[0]?.message?.content || "No reply.";
-    
-    res.json({
-      text: reply,
-      model: "gpt-5",
-      tokens_used: completion.usage?.total_tokens || 0
-    });
-  } catch (error) {
-    console.error("GPT-5 generation error:", error);
-    res.status(500).json({ error: error.message });
-  }
-});
+for (const { path, model } of modelRoutes) {
+  app.post(`/api/generate-${path}`, requireFeature("chat_advancedai"), async (req, res) => {
+    try {
+      const { messages, prompt } = req.body;
+      const completion = await openai.chat.completions.create({
+        model,
+        messages: messages || [{ role: "user", content: prompt }],
+        max_tokens: 2000,
+        temperature: 0.7
+      });
 
-app.post("/api/generate-gpt5-mini", requireFeature("chat_advancedai"), async (req, res) => {
-  try {
-    const { messages, prompt } = req.body;
-    
-    const completion = await openai.chat.completions.create({
-      model: "gpt-5-mini", // Using GPT-4o-mini as GPT-5 Mini equivalent
-      messages: messages || [{ role: "user", content: prompt }],
-      max_tokens: 2000,
-      temperature: 0.7
-    });
+      const reply = completion.choices[0]?.message?.content || "No reply.";
+      res.json({
+        text: reply,
+        model: path,
+        tokens_used: completion.usage?.total_tokens || 0
+      });
+    } catch (error) {
+      console.error(`${path} generation error:`, error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+}
 
-    const reply = completion.choices[0]?.message?.content || "No reply.";
-    
-    res.json({
-      text: reply,
-      model: "gpt-5-mini",
-      tokens_used: completion.usage?.total_tokens || 0
-    });
-  } catch (error) {
-    console.error("GPT-5 Mini generation error:", error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.post("/api/generate-gpt5-nano", requireFeature("chat_advancedai"), async (req, res) => {
-  try {
-    const { messages, prompt } = req.body;
-    
-    const completion = await openai.chat.completions.create({
-      model: "gpt-5-nano", // Using GPT-3.5 as GPT-5 Nano equivalent
-      messages: messages || [{ role: "user", content: prompt }],
-      max_tokens: 2000,
-      temperature: 0.7
-    });
-
-    const reply = completion.choices[0]?.message?.content || "No reply.";
-    
-    res.json({
-      text: reply,
-      model: "gpt-5-nano",
-      tokens_used: completion.usage?.total_tokens || 0
-    });
-  } catch (error) {
-    console.error("GPT-5 Nano generation error:", error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Additional model endpoints
-app.post("/api/generate-gpt4.1", requireFeature("chat_advancedai"), async (req, res) => {
-  try {
-    const { messages, prompt } = req.body;
-    
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4",
-      messages: messages || [{ role: "user", content: prompt }],
-      max_tokens: 2000,
-      temperature: 0.7
-    });
-
-    const reply = completion.choices[0]?.message?.content || "No reply.";
-    
-    res.json({
-      text: reply,
-      model: "gpt-4.1",
-      tokens_used: completion.usage?.total_tokens || 0
-    });
-  } catch (error) {
-    console.error("GPT-4.1 generation error:", error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.post("/api/generate-gemini2.5-pro", requireFeature("chat_advancedai"), async (req, res) => {
-  try {
-    const { messages, prompt } = req.body;
-    
-    // Using GPT-4 as Gemini 2.5 Pro equivalent
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4",
-      messages: messages || [{ role: "user", content: prompt }],
-      max_tokens: 2000,
-      temperature: 0.7
-    });
-
-    const reply = completion.choices[0]?.message?.content || "No reply.";
-    
-    res.json({
-      text: reply,
-      model: "gemini2.5-pro",
-      tokens_used: completion.usage?.total_tokens || 0
-    });
-  } catch (error) {
-    console.error("Gemini 2.5 Pro generation error:", error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// DALL-E 3 Image Generation
+// DALL-E 3 Image Generation (Preview only, not saved)
 app.post("/api/generate-image", requireFeature("chat_advancedai"), async (req, res) => {
   try {
     const { prompt } = req.body;
-    if (!prompt) return res.status(400).json({ error: "Prompt is required" });
+    if (!prompt) return res.status(400).json({ error: "Prompt required" });
 
-    // Check user's image quota
     const db = loadGoldenDB();
-    const userId = getUserIdentifier(req);
-    const user = db.users[userId];
-    
+    const id = getUserIdentifier(req);
+    const user = db.users[id];
     if (!user) return res.status(404).json({ error: "User not found" });
-    
-    user.usage = user.usage || {};
-    user.usage.images = user.usage.images || { month: monthKey(), used: 0 };
-    
+
+    user.usage = user.usage || { images: { month: monthKey(), used: 0 } };
     if (user.usage.images.month !== monthKey()) {
       user.usage.images = { month: monthKey(), used: 0 };
     }
-    
-    if (user.usage.images.used >= IMG_LIMIT_PER_MONTH) {
-      return res.status(403).json({ error: "You've reached your monthly image generation limit (20 images)." });
-    }
 
-    // DALL-E 3 Image Generation with Preview Support
-app.post("/api/generate-image", requireFeature("chat_advancedai"), async (req, res) => {
-  try {
-    const { prompt } = req.body;
-    if (!prompt) return res.status(400).json({ error: "Prompt is required" });
-
-    // Check user's image quota
-    const db = loadGoldenDB();
-    const userId = getUserIdentifier(req);
-    const user = db.users[userId];
-    
-    if (!user) return res.status(404).json({ error: "User not found" });
-    
-    user.usage = user.usage || {};
-    user.usage.images = user.usage.images || { month: monthKey(), used: 0 };
-    
-    if (user.usage.images.month !== monthKey()) {
-      user.usage.images = { month: monthKey(), used: 0 };
-    }
-    
     if (user.usage.images.used >= IMG_LIMIT_PER_MONTH) {
-      return res.status(403).json({ 
-        error: `You've reached your monthly image generation limit (${IMG_LIMIT_PER_MONTH} images).` 
+      return res.status(403).json({
+        error: `Monthly image limit (${IMG_LIMIT_PER_MONTH}) reached.`
       });
     }
 
-    // Generate image
-    const imageResponse = await openai.images.generate({
+    const image = await openai.images.generate({
       model: "dall-e-3",
-      prompt: prompt,
+      prompt,
       size: "1024x1024",
-      quality: "standard",
       n: 1
     });
 
-    const imageUrl = imageResponse.data[0].url;
-
-    // Update image count
+    const imageUrl = image.data[0].url;
     user.usage.images.used++;
     saveGoldenDB(db);
 
-    // Add transaction record
-    user.transactions = user.transactions || [];
-    user.transactions.push({
-      type: "image_generation",
-      amount: 0,
-      image_prompt: prompt,
-      image_url: imageUrl,
-      timestamp: new Date().toISOString(),
-    });
-    saveGoldenDB(db);
-
-    // Return structured response for frontend preview
     res.json({
       success: true,
-      type: "image",
-      imageUrl: imageUrl,
-      prompt: prompt,
+      imageUrl,
+      prompt,
       model: "dall-e-3",
-      images_used: user.usage.images.used,
-      images_remaining: IMG_LIMIT_PER_MONTH - user.usage.images.used,
-      // HTML for direct preview (frontend can choose to use this or build their own)
-      html_preview: `
-        <div class="generated-image-container" style="margin: 15px 0; text-align: center;">
-          <img src="${imageUrl}" 
-               alt="Generated: ${prompt}" 
-               style="max-width: 100%; max-height: 500px; border-radius: 12px; border: 2px solid #FFD700; box-shadow: 0 4px 12px rgba(0,0,0,0.3);" 
-               onerror="this.style.display='none'" />
-          <div style="margin-top: 10px;">
-            <button onclick="window.open('${imageUrl}', '_blank')" 
-                    style="background: #FFD700; color: #0A0F1C; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-right: 8px;">
-              🔗 Open Image
-            </button>
-            <button onclick="downloadImage('${imageUrl}', '${prompt.replace(/[^a-z0-9]/gi, '_').substring(0, 30)}')" 
-                    style="background: #111827; color: #FFD700; border: 1px solid #FFD700; padding: 8px 16px; border-radius: 6px; cursor: pointer;">
-              💾 Download
-            </button>
-          </div>
-          <div style="margin-top: 8px; font-size: 12px; color: #9CA3AF;">
-            Prompt: "${prompt.length > 100 ? prompt.substring(0, 100) + '...' : prompt}"
-          </div>
-        </div>
-      `
+      preview_only: true
     });
-
   } catch (error) {
-    console.error("DALL-E 3 generation error:", error);
+    console.error("Image generation error:", error);
     res.status(500).json({ error: error.message });
   }
 });
-// Image Upload for Analysis
+
+// Upload (temporary preview, not stored)
 app.post("/api/upload-image", requireFeature("chat_advancedai"), upload.single("image"), async (req, res) => {
   try {
-    const file = req.file;
-    if (!file) return res.status(400).json({ error: "No image file provided" });
+    if (!req.file) return res.status(400).json({ error: "No file uploaded" });
 
-    // For now, we'll just return a success message
-    // In a real implementation, you'd process the image and return analysis
+    // return temp blob path for preview, but don’t persist
+    const tempPath = `/tmp-preview/${Date.now()}_${req.file.originalname}`;
     res.json({
       success: true,
-      message: "Image uploaded successfully",
-      filename: file.filename,
-      // In production, you'd want to store the image and return a URL
-      imageUrl: `/uploads/${file.filename}`
+      message: "Temporary preview created",
+      imageUrl: tempPath
     });
-
   } catch (error) {
-    console.error("Image upload error:", error);
+    console.error("Upload error:", error);
     res.status(500).json({ error: error.message });
   }
 });
+
 
 // ============ EXISTING AI ENDPOINTS ============
 // Free Chat AI

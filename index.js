@@ -630,9 +630,9 @@ app.post("/api/subscribe-advanced-ai", (req, res) => {
   const user = db.users[id];
   if (!user) return res.status(404).json({ error: "User not found" });
 
-  user.subscriptions = user.subscriptions || {};
-  user.usage = user.usage || {};
-  user.usage.images = user.usage.images || { month: monthKey(), used: 0 };
+  user.subscriptions ??= {};
+  user.usage ??= {};
+  user.usage.images ??= { month: monthKey(), used: 0 };
 
   if (user.usage.images.month !== monthKey()) {
     user.usage.images = { month: monthKey(), used: 0 };
@@ -666,7 +666,7 @@ app.post("/api/subscribe-advanced-ai", (req, res) => {
   user.subscriptions.chat_advancedai = expiry.toISOString();
   user.usage.images = { month: monthKey(), used: 0 };
 
-  user.transactions = user.transactions || [];
+  user.transactions ??= [];
   user.transactions.push({
     type: "advanced_ai_subscription",
     amount: -ADV_PRICE_G,
@@ -695,27 +695,23 @@ app.get("/api/advanced-ai-status", (req, res) => {
   const user = db.users[id];
   if (!user) return res.json({ active: false, loggedIn: true });
 
-  user.usage = user.usage || {};
-  user.usage.images = user.usage.images || { month: monthKey(), used: 0 };
+  user.usage ??= {};
+  user.usage.images ??= { month: monthKey(), used: 0 };
   if (user.usage.images.month !== monthKey()) {
     user.usage.images = { month: monthKey(), used: 0 };
     saveGoldenDB(db);
   }
 
   const now = new Date();
-  const expiryStr = user.subscriptions?.chat_advancedai || null;
-
-  let active = false;
-  let expires_at = null;
-  let days_left = 0;
+  const expiryStr = user.subscriptions?.chat_advancedai;
+  let active = false, expires_at = null, days_left = 0;
 
   if (expiryStr) {
     const expiry = new Date(expiryStr);
     if (expiry > now) {
       active = true;
       expires_at = expiry.toISOString();
-      const msLeft = expiry - now;
-      days_left = Math.ceil(msLeft / (1000 * 60 * 60 * 24));
+      days_left = Math.ceil((expiry - now) / (1000 * 60 * 60 * 24));
     } else {
       delete user.subscriptions.chat_advancedai;
       saveGoldenDB(db);
@@ -737,30 +733,32 @@ app.get("/api/advanced-ai-status", (req, res) => {
 
 // ============ ADVANCED AI ENDPOINTS ============
 
-// GPT-5 family + others
+// Official model list (use real model IDs)
 const modelRoutes = [
   { path: "gpt5", model: "gpt-5" },
   { path: "gpt5-mini", model: "gpt-5-mini" },
   { path: "gpt5-nano", model: "gpt-5-nano" },
-  { path: "gpt4.1", model: "gpt-4" },
-  { path: "gemini2.5-pro", model: "gpt-4" },
+  { path: "gpt4.1", model: "gpt-4.1" },
+  { path: "gemini2.5-pro", model: "gemini-2.5-pro" },
 ];
 
 for (const { path, model } of modelRoutes) {
   app.post(`/api/generate-${path}`, requireFeature("chat_advancedai"), async (req, res) => {
     try {
       const { messages, prompt } = req.body;
+
       const completion = await openai.chat.completions.create({
         model,
         messages: messages || [{ role: "user", content: prompt }],
-        max_tokens: 2000,
+        max_completion_tokens: 2000,   // ✅ fixed parameter
         temperature: 0.7
       });
 
-      const reply = completion.choices[0]?.message?.content || "No reply.";
+      const reply = completion.choices?.[0]?.message?.content || "No reply.";
+
       res.json({
         text: reply,
-        model: path,
+        model,
         tokens_used: completion.usage?.total_tokens || 0
       });
     } catch (error) {
@@ -770,7 +768,8 @@ for (const { path, model } of modelRoutes) {
   });
 }
 
-// DALL-E 3 Image Generation (Preview only, not saved)
+// ============ IMAGE GENERATION ============
+
 app.post("/api/generate-image", requireFeature("chat_advancedai"), async (req, res) => {
   try {
     const { prompt } = req.body;
@@ -781,7 +780,7 @@ app.post("/api/generate-image", requireFeature("chat_advancedai"), async (req, r
     const user = db.users[id];
     if (!user) return res.status(404).json({ error: "User not found" });
 
-    user.usage = user.usage || { images: { month: monthKey(), used: 0 } };
+    user.usage ??= { images: { month: monthKey(), used: 0 } };
     if (user.usage.images.month !== monthKey()) {
       user.usage.images = { month: monthKey(), used: 0 };
     }
@@ -816,12 +815,11 @@ app.post("/api/generate-image", requireFeature("chat_advancedai"), async (req, r
   }
 });
 
-// Upload (temporary preview, not stored)
+// ============ IMAGE UPLOAD (Preview Only) ============
 app.post("/api/upload-image", requireFeature("chat_advancedai"), upload.single("image"), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: "No file uploaded" });
 
-    // return temp blob path for preview, but don’t persist
     const tempPath = `/tmp-preview/${Date.now()}_${req.file.originalname}`;
     res.json({
       success: true,
@@ -833,8 +831,6 @@ app.post("/api/upload-image", requireFeature("chat_advancedai"), upload.single("
     res.status(500).json({ error: error.message });
   }
 });
-
-
 // ============ EXISTING AI ENDPOINTS ============
 // Free Chat AI
 app.post("/chat-free-ai", async (req, res) => {

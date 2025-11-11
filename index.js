@@ -748,7 +748,7 @@ app.post("/api/generate-gpt5", requireFeature("chat_advancedai"), async (req, re
     const { messages, prompt } = req.body;
     
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o", // Using GPT-4o as GPT-5 equivalent
+      model: "gpt-5", // Using GPT-4o as GPT-5 equivalent
       messages: messages || [{ role: "user", content: prompt }],
       max_tokens: 2000,
       temperature: 0.7
@@ -772,7 +772,7 @@ app.post("/api/generate-gpt5-mini", requireFeature("chat_advancedai"), async (re
     const { messages, prompt } = req.body;
     
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini", // Using GPT-4o-mini as GPT-5 Mini equivalent
+      model: "gpt-5-mini", // Using GPT-4o-mini as GPT-5 Mini equivalent
       messages: messages || [{ role: "user", content: prompt }],
       max_tokens: 2000,
       temperature: 0.7
@@ -796,7 +796,7 @@ app.post("/api/generate-gpt5-nano", requireFeature("chat_advancedai"), async (re
     const { messages, prompt } = req.body;
     
     const completion = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo", // Using GPT-3.5 as GPT-5 Nano equivalent
+      model: "gpt-5-nano", // Using GPT-3.5 as GPT-5 Nano equivalent
       messages: messages || [{ role: "user", content: prompt }],
       max_tokens: 2000,
       temperature: 0.7
@@ -889,6 +889,32 @@ app.post("/api/generate-image", requireFeature("chat_advancedai"), async (req, r
       return res.status(403).json({ error: "You've reached your monthly image generation limit (20 images)." });
     }
 
+    // DALL-E 3 Image Generation with Preview Support
+app.post("/api/generate-image", requireFeature("chat_advancedai"), async (req, res) => {
+  try {
+    const { prompt } = req.body;
+    if (!prompt) return res.status(400).json({ error: "Prompt is required" });
+
+    // Check user's image quota
+    const db = loadGoldenDB();
+    const userId = getUserIdentifier(req);
+    const user = db.users[userId];
+    
+    if (!user) return res.status(404).json({ error: "User not found" });
+    
+    user.usage = user.usage || {};
+    user.usage.images = user.usage.images || { month: monthKey(), used: 0 };
+    
+    if (user.usage.images.month !== monthKey()) {
+      user.usage.images = { month: monthKey(), used: 0 };
+    }
+    
+    if (user.usage.images.used >= IMG_LIMIT_PER_MONTH) {
+      return res.status(403).json({ 
+        error: `You've reached your monthly image generation limit (${IMG_LIMIT_PER_MONTH} images).` 
+      });
+    }
+
     // Generate image
     const imageResponse = await openai.images.generate({
       model: "dall-e-3",
@@ -915,11 +941,37 @@ app.post("/api/generate-image", requireFeature("chat_advancedai"), async (req, r
     });
     saveGoldenDB(db);
 
+    // Return structured response for frontend preview
     res.json({
       success: true,
+      type: "image",
       imageUrl: imageUrl,
+      prompt: prompt,
+      model: "dall-e-3",
       images_used: user.usage.images.used,
-      images_remaining: IMG_LIMIT_PER_MONTH - user.usage.images.used
+      images_remaining: IMG_LIMIT_PER_MONTH - user.usage.images.used,
+      // HTML for direct preview (frontend can choose to use this or build their own)
+      html_preview: `
+        <div class="generated-image-container" style="margin: 15px 0; text-align: center;">
+          <img src="${imageUrl}" 
+               alt="Generated: ${prompt}" 
+               style="max-width: 100%; max-height: 500px; border-radius: 12px; border: 2px solid #FFD700; box-shadow: 0 4px 12px rgba(0,0,0,0.3);" 
+               onerror="this.style.display='none'" />
+          <div style="margin-top: 10px;">
+            <button onclick="window.open('${imageUrl}', '_blank')" 
+                    style="background: #FFD700; color: #0A0F1C; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-right: 8px;">
+              🔗 Open Image
+            </button>
+            <button onclick="downloadImage('${imageUrl}', '${prompt.replace(/[^a-z0-9]/gi, '_').substring(0, 30)}')" 
+                    style="background: #111827; color: #FFD700; border: 1px solid #FFD700; padding: 8px 16px; border-radius: 6px; cursor: pointer;">
+              💾 Download
+            </button>
+          </div>
+          <div style="margin-top: 8px; font-size: 12px; color: #9CA3AF;">
+            Prompt: "${prompt.length > 100 ? prompt.substring(0, 100) + '...' : prompt}"
+          </div>
+        </div>
+      `
     });
 
   } catch (error) {
@@ -927,7 +979,6 @@ app.post("/api/generate-image", requireFeature("chat_advancedai"), async (req, r
     res.status(500).json({ error: error.message });
   }
 });
-
 // Image Upload for Analysis
 app.post("/api/upload-image", requireFeature("chat_advancedai"), upload.single("image"), async (req, res) => {
   try {

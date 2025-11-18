@@ -101,6 +101,9 @@
             cursor: pointer;
             transition: background 0.3s;
             font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .chat-item:hover {
@@ -109,6 +112,20 @@
 
         .chat-item.active {
             background: #3498db;
+        }
+
+        .chat-delete {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 4px 8px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .chat-delete:hover {
+            background: #c0392b;
         }
 
         /* Main Chat Area */
@@ -262,6 +279,12 @@
             font-style: italic;
             color: #7f8c8d;
         }
+
+        .empty-state {
+            text-align: center;
+            color: #7f8c8d;
+            padding: 40px 20px;
+        }
     </style>
 </head>
 <body>
@@ -283,7 +306,9 @@
             </button>
             
             <div class="chat-history" id="chatHistory">
-                <!-- Chat history will be populated here -->
+                <div class="empty-state" id="emptyState">
+                    No chats yet<br>Start a new conversation!
+                </div>
             </div>
         </div>
 
@@ -292,9 +317,9 @@
             <div class="chat-header">
                 <h2>Advanced AI Chat</h2>
                 <div class="model-selector">
-                    <button class="model-btn active" data-model="gpt-4.1">Friendly</button>
-                    <button class="model-btn" data-model="gpt-4">Thinking</button>
-                    <button class="model-btn" data-model="gpt-4-mini">Fast</button>
+                    <button class="model-btn active" data-model="pro">Friendly</button>
+                    <button class="model-btn" data-model="thinking">Thinking</button>
+                    <button class="model-btn" data-model="flash">Fast</button>
                 </div>
             </div>
 
@@ -332,7 +357,7 @@
             constructor() {
                 this.currentChatId = null;
                 this.chats = this.loadChats();
-                this.currentModel = 'gpt-4.1';
+                this.currentModel = 'pro';
                 this.isSubscribed = false;
                 this.user = null;
                 
@@ -356,7 +381,8 @@
                     modelButtons: document.querySelectorAll('.model-btn'),
                     subscriptionInfo: document.getElementById('subscriptionInfo'),
                     unlockBtn: document.getElementById('unlockBtn'),
-                    typingIndicator: document.getElementById('typingIndicator')
+                    typingIndicator: document.getElementById('typingIndicator'),
+                    emptyState: document.getElementById('emptyState')
                 };
             }
 
@@ -437,6 +463,20 @@
                 return chatId;
             }
 
+            deleteChat(chatId) {
+                if (this.chats[chatId]) {
+                    delete this.chats[chatId];
+                    this.saveChats();
+                    
+                    if (this.currentChatId === chatId) {
+                        this.currentChatId = null;
+                        this.renderMessages();
+                    }
+                    
+                    this.renderChatHistory();
+                }
+            }
+
             switchToChat(chatId) {
                 this.currentChatId = chatId;
                 this.renderMessages();
@@ -453,24 +493,38 @@
             renderChatHistory() {
                 this.elements.chatHistory.innerHTML = '';
                 
-                Object.values(this.chats)
-                    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-                    .forEach(chat => {
-                        const chatElement = document.createElement('div');
-                        chatElement.className = 'chat-item';
-                        chatElement.dataset.chatId = chat.id;
-                        chatElement.textContent = chat.title;
-                        
-                        if (chat.id === this.currentChatId) {
-                            chatElement.classList.add('active');
-                        }
-                        
-                        chatElement.addEventListener('click', () => {
+                const chatArray = Object.values(this.chats)
+                    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                
+                if (chatArray.length === 0) {
+                    this.elements.emptyState.style.display = 'block';
+                    return;
+                }
+                
+                this.elements.emptyState.style.display = 'none';
+                
+                chatArray.forEach(chat => {
+                    const chatElement = document.createElement('div');
+                    chatElement.className = 'chat-item';
+                    chatElement.dataset.chatId = chat.id;
+                    
+                    chatElement.innerHTML = `
+                        <span>${chat.title}</span>
+                        <button class="chat-delete" onclick="chatApp.deleteChat('${chat.id}')">×</button>
+                    `;
+                    
+                    if (chat.id === this.currentChatId) {
+                        chatElement.classList.add('active');
+                    }
+                    
+                    chatElement.addEventListener('click', (e) => {
+                        if (!e.target.classList.contains('chat-delete')) {
                             this.switchToChat(chat.id);
-                        });
-                        
-                        this.elements.chatHistory.appendChild(chatElement);
+                        }
                     });
+                    
+                    this.elements.chatHistory.appendChild(chatElement);
+                });
             }
 
             renderMessages() {
@@ -515,30 +569,15 @@
                 this.scrollToBottom();
 
                 try {
-                    // Determine which endpoint to use based on selected model
-                    let endpoint;
-                    switch (this.currentModel) {
-                        case 'gpt-4.1':
-                            endpoint = '/api/generate-pro';
-                            break;
-                        case 'gpt-4':
-                            endpoint = '/api/generate-thinking';
-                            break;
-                        case 'gpt-4-mini':
-                            endpoint = '/api/generate-flash';
-                            break;
-                        default:
-                            endpoint = '/api/generate-pro';
-                    }
-
+                    const endpoint = `/api/generate-${this.currentModel}`;
+                    
                     const response = await fetch(endpoint, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                         },
                         body: JSON.stringify({
-                            prompt: message,
-                            model: this.currentModel
+                            prompt: message
                         })
                     });
 
@@ -671,8 +710,9 @@
         }
 
         // Initialize the chat when page loads
+        let chatApp;
         document.addEventListener('DOMContentLoaded', () => {
-            new AdvancedAIChat();
+            chatApp = new AdvancedAIChat();
         });
     </script>
 </body>

@@ -726,8 +726,78 @@ app.post("/search-lessons", requireFeature("search_lessons"), async (req, res) =
     res.status(500).json({ error: e.message });
   }
 });
+// ======================================================
+// IMAGE GENERATION (DALL·E 3) — GoldenSpaceAI
+// NEW SYSTEM FOR generate-image.html
+// Safe to add anywhere in your index.js
+// ======================================================
 
-// Homework Helper
+// ============ PRICE PACKS (visible + editable) ============
+const IMAGE_PACKS = {
+  small: { images: 10, cost: 4 },   // 4G → 10 images
+  mega: { images: 27, cost: 10 }    // 10G → 27 images
+};
+
+console.log("📦 Loaded Image Packs:", IMAGE_PACKS);
+
+
+// ======================================================
+// DALL·E 3 IMAGE GENERATION API
+// Called by generate-image.html
+// ======================================================
+app.post("/api/generate-image", requireFeature("chat_advancedai"), async (req, res) => {
+  try {
+    const { prompt } = req.body;
+
+    if (!prompt) {
+      return res.status(400).json({
+        success: false,
+        error: "Prompt is required."
+      });
+    }
+
+    console.log("🎨 Generating Image With DALL·E 3:", prompt.slice(0, 80));
+
+    // Ask OpenAI for an image
+    const dalle = await openai.images.generate({
+      model: "dall-e-3",
+      prompt,
+      size: "1024x1024",
+      n: 1
+    });
+
+    const imageUrl = dalle.data[0].url;
+
+    console.log("🖼 Image Generated:", imageUrl);
+
+    // Return to frontend
+    res.json({
+      success: true,
+      imageUrl,
+      model: "dall-e-3",
+      preview_only: true
+    });
+
+  } catch (error) {
+    console.error("❌ Image Generation Error:", error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+
+// ======================================================
+// OPTIONAL ENDPOINT: Return pack pricing to frontend
+// front-end does not use this yet, but it's here for future
+// ======================================================
+app.get("/api/image-packs", (req, res) => {
+  res.json({
+    success: true,
+    packs: IMAGE_PACKS
+  });
+});// Homework Helper
 app.post("/homework-helper", requireFeature("homework_helper"), upload.single("image"), async (req, res) => {
   let filePath = req.file?.path;
   try {

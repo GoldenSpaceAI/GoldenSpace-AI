@@ -621,115 +621,119 @@ app.post("/api/transfer-golden", async (req, res) => {
   }
 });
 
-// ============ ADVANCED AI SUBSCRIPTION SYSTEM ============
-app.post("/api/subscribe-advanced-ai", (req, res) => {
-  if (!req.user) return res.status(401).json({ error: "Login required" });
+// =========================================
+// ADVANCED AI SUBSCRIPTION SYSTEM
+// =========================================
 
+const ADVANCED_AI_PRICE = 20;          // 20 Golden per month
+const ADVANCED_AI_DURATION = 30;       // 30 days
+
+// Helper: create date +30 days
+function addDays(days) {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  return d.toISOString();
+}
+
+// Helper: check if expired
+function isExpired(date) {
+  return new Date(date) < new Date();
+}
+
+// ===============================
+// 1. GET SUBSCRIPTION STATUS
+// ===============================
+app.get("/api/subscription-status", authUser, (req, res) => {
   const db = loadGoldenDB();
   const id = getUserIdentifier(req);
+
   const user = db.users[id];
   if (!user) return res.status(404).json({ error: "User not found" });
 
-  user.subscriptions ??= {};
-  user.usage ??= {};
-  user.usage.images ??= { month: monthKey(), used: 0 };
+  const sub = user.subscription?.advancedAI || null;
 
-  if (user.usage.images.month !== monthKey()) {
-    user.usage.images = { month: monthKey(), used: 0 };
-  }
-
-  const now = new Date();
-  const currentExpiry = user.subscriptions.chat_advancedai
-    ? new Date(user.subscriptions.chat_advancedai)
-    : null;
-
-  // still active? skip charging
-  if (currentExpiry && currentExpiry > now) {
-    return res.json({
-      success: true,
-      alreadyActive: true,
-      expires_at: currentExpiry.toISOString(),
-      newBalance: user.golden_balance || 0,
-      images_left: IMG_LIMIT_PER_MONTH - (user.usage.images.used || 0),
-    });
-  }
-
-  const bal = Number(user.golden_balance || 0);
-  if (bal < ADV_PRICE_G) {
-    return res.status(402).json({ error: "Not enough Golden (20 G required)" });
-  }
-
-  const expiry = new Date(now);
-  expiry.setDate(now.getDate() + 30);
-
-  user.golden_balance = bal - ADV_PRICE_G;
-  user.subscriptions.chat_advancedai = expiry.toISOString();
-  user.usage.images = { month: monthKey(), used: 0 };
-
-  user.transactions ??= [];
-  user.transactions.push({
-    type: "advanced_ai_subscription",
-    amount: -ADV_PRICE_G,
-    previous_balance: bal,
-    new_balance: user.golden_balance,
-    expires_at: expiry.toISOString(),
-    timestamp: new Date().toISOString(),
+  return res.json({
+    active: sub?.active || false,
+    autoRenew: sub?.autoRenew || false,
+    expires: sub?.expires || null,
+    balance: user.balance,
   });
+});
+
+
+// ===============================
+// 2. PURCHASE (activate subscription)
+// ===============================
+app.post("/api/subscribe-advanced-ai", authUser, (req, res) => {
+  const db = loadGoldenDB();
+  const id = getUserIdentifier(req);
+
+  const user = db.users[id];
+  if (!user) return res.status(404).json({ error: "User not found" });
+
+  if (user.balance < ADVANCED_AI_PRICE) {
+    return res.status(403).json({ error: "Not enough Golden." });
+  }
+
+  // Deduct Golden
+  user.balance -= ADVANCED_AI_PRICE;
+
+  // Activate subscription
+  user.subscription ??= {};
+  user.subscription.advancedAI = {
+    active: true,
+    autoRenew: true,
+    started: new Date().toISOString(),
+    expires: addDays(ADVANCED_AI_DURATION)
+  };
 
   saveGoldenDB(db);
 
-  res.json({
+  return res.json({
     success: true,
-    expires_at: expiry.toISOString(),
-    newBalance: user.golden_balance,
-    images_left: IMG_LIMIT_PER_MONTH,
-    message: "Advanced AI activated for 30 days!"
+    message: "Advanced AI unlocked for 30 days",
+    expires: user.subscription.advancedAI.expires
   });
 });
 
-app.get("/api/advanced-ai-status", (req, res) => {
-  if (!req.user) return res.json({ active: false, loggedIn: false });
 
+// ===============================
+// 3. AUTO-RENEWAL CRON JOB
+// Run this every time index.js runs OR every 24h if you want
+// ===============================
+function renewSubscriptions() {
   const db = loadGoldenDB();
-  const id = getUserIdentifier(req);
-  const user = db.users[id];
-  if (!user) return res.json({ active: false, loggedIn: true });
 
-  user.usage ??= {};
-  user.usage.images ??= { month: monthKey(), used: 0 };
-  if (user.usage.images.month !== monthKey()) {
-    user.usage.images = { month: monthKey(), used: 0 };
-    saveGoldenDB(db);
-  }
+  for (const id in db.users) {
+    const user = db.users[id];
+    const sub = user.subscription?.advancedAI;
 
-  const now = new Date();
-  const expiryStr = user.subscriptions?.chat_advancedai;
-  let active = false, expires_at = null, days_left = 0;
+    if (!sub) continue;
+    if (!sub.autoRenew) continue;
 
-  if (expiryStr) {
-    const expiry = new Date(expiryStr);
-    if (expiry > now) {
-      active = true;
-      expires_at = expiry.toISOString();
-      days_left = Math.ceil((expiry - now) / (1000 * 60 * 60 * 24));
-    } else {
-      delete user.subscriptions.chat_advancedai;
-      saveGoldenDB(db);
+    // If subscription expired → attempt renewal
+    if (isExpired(sub.expires)) {
+      if (user.balance >= ADVANCED_AI_PRICE) {
+        // deduct & renew
+        user.balance -= ADVANCED_AI_PRICE;
+        sub.active = true;
+        sub.expires = addDays(ADVANCED_AI_DURATION);
+        console.log(`🔄 Renewed Advanced AI for ${id}`);
+      } else {
+        // lock
+        sub.active = false;
+        console.log(`⛔ Not enough balance — Advanced AI locked for ${id}`);
+      }
     }
   }
 
-  res.set("Cache-Control", "no-store");
-  res.json({
-    loggedIn: true,
-    active,
-    expires_at,
-    days_left,
-    balance: Number(user.golden_balance || 0),
-    images_left: IMG_LIMIT_PER_MONTH - Number(user.usage.images.used || 0),
-    img_limit: IMG_LIMIT_PER_MONTH,
-    monthly_price_g: ADV_PRICE_G,
-  });
-});
+  saveGoldenDB(db);
+}
+
+// Call on startup
+renewSubscriptions();
+setInterval(renewSubscriptions, 1000 * 60 * 60 * 12); // every 12 hours
+// You can change to 24h if you want
 
 // ============ ADVANCED AI ENDPOINTS ============
 

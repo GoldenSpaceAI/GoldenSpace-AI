@@ -733,13 +733,11 @@ app.get("/api/advanced-ai-status", (req, res) => {
 
 // ============ ADVANCED AI ENDPOINTS ============
 
-// Official model list (real IDs)
+// NEW MODEL ROUTES → matches frontend
 const modelRoutes = [
-  { path: "gpt5", model: "gpt-5" },
-  { path: "gpt5-mini", model: "gpt-5-mini" },
-  { path: "gpt5-nano", model: "gpt-5-nano" },
-  { path: "gpt4.1", model: "gpt-4.1" },
-  { path: "gemini2.5-pro", model: "gemini-2.5-pro" },
+  { path: "pro", model: "gpt-4.1" },          // PRO button
+  { path: "flash", model: "gpt-5-nano" },     // FLASH button
+  { path: "thinking", model: "gpt-5" }        // THINKING button
 ];
 
 for (const { path, model } of modelRoutes) {
@@ -747,7 +745,7 @@ for (const { path, model } of modelRoutes) {
     try {
       const { messages, prompt } = req.body;
 
-      console.log("➡️ Sending to OpenAI:", {
+      console.log(`➡️ [${path}] Sending to OpenAI`, {
         endpoint: `/api/generate-${path}`,
         model,
         promptPreview: prompt?.slice(0, 100) || "(using messages array)"
@@ -757,16 +755,15 @@ for (const { path, model } of modelRoutes) {
         model,
         messages: messages || [{ role: "user", content: prompt }],
         max_completion_tokens: 2000
-        // temperature removed — GPT-5 doesn’t support custom temp yet
-      });
-
-      console.log("✅ OpenAI response:", {
-        model: completion.model,
-        tokens: completion.usage,
-        textPreview: completion.choices?.[0]?.message?.content?.slice(0, 120)
       });
 
       const reply = completion.choices?.[0]?.message?.content || "No reply.";
+
+      console.log(`✅ [${path}] Reply OK`, {
+        model: completion.model,
+        tokens_used: completion.usage?.total_tokens,
+        preview: reply.slice(0, 120)
+      });
 
       res.json({
         success: true,
@@ -781,88 +778,6 @@ for (const { path, model } of modelRoutes) {
     }
   });
 }
-
-// ============ DIRECT GPT-5 TEST ROUTE ============
-
-app.get("/api/test-gpt5", async (req, res) => {
-  try {
-    console.log("🧪 Testing GPT-5 connectivity...");
-    const completion = await openai.chat.completions.create({
-      model: "gpt-5",
-      messages: [{ role: "user", content: "Say OK if GPT-5 works fine." }],
-      max_completion_tokens: 10
-    });
-    const msg = completion.choices?.[0]?.message?.content || "No reply.";
-    res.json({ success: true, reply: msg, model: completion.model });
-  } catch (err) {
-    console.error("❌ Direct GPT-5 test error:", err);
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-// ============ IMAGE GENERATION ============
-
-app.post("/api/generate-image", requireFeature("chat_advancedai"), async (req, res) => {
-  try {
-    const { prompt } = req.body;
-    if (!prompt) return res.status(400).json({ error: "Prompt required" });
-
-    const db = loadGoldenDB();
-    const id = getUserIdentifier(req);
-    const user = db.users[id];
-    if (!user) return res.status(404).json({ error: "User not found" });
-
-    user.usage ??= { images: { month: monthKey(), used: 0 } };
-    if (user.usage.images.month !== monthKey()) {
-      user.usage.images = { month: monthKey(), used: 0 };
-    }
-
-    if (user.usage.images.used >= IMG_LIMIT_PER_MONTH) {
-      return res.status(403).json({
-        error: `Monthly image limit (${IMG_LIMIT_PER_MONTH}) reached.`
-      });
-    }
-
-    const image = await openai.images.generate({
-      model: "dall-e-3",
-      prompt,
-      size: "1024x1024",
-      n: 1
-    });
-
-    const imageUrl = image.data[0].url;
-    user.usage.images.used++;
-    saveGoldenDB(db);
-
-    res.json({
-      success: true,
-      imageUrl,
-      prompt,
-      model: "dall-e-3",
-      preview_only: true
-    });
-  } catch (error) {
-    console.error("Image generation error:", error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// ============ IMAGE UPLOAD (Preview Only) ============
-app.post("/api/upload-image", requireFeature("chat_advancedai"), upload.single("image"), async (req, res) => {
-  try {
-    if (!req.file) return res.status(400).json({ error: "No file uploaded" });
-
-    const tempPath = `/tmp-preview/${Date.now()}_${req.file.originalname}`;
-    res.json({
-      success: true,
-      message: "Temporary preview created",
-      imageUrl: tempPath
-    });
-  } catch (error) {
-    console.error("Upload error:", error);
-    res.status(500).json({ error: error.message });
-  }
-});
 // ============ EXISTING AI ENDPOINTS ============
 // Free Chat AI
 app.post("/chat-free-ai", async (req, res) => {

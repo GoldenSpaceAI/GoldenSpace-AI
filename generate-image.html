@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Image Generator | GoldenSpaceAI</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+:root {
+    --gold: #FFD700;
+    --gold-light: #FFF48A;
+    --bg-dark: #0A0F1C;
+    --bg-card: #111827;
+    --border: #2C3548;
+    --text: #E5E7EB;
+    --text-dim: #9CA3AF;
+}
+
+body {
+    margin: 0;
+    background: var(--bg-dark);
+    font-family: Inter, sans-serif;
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+/* HEADER */
+.header {
+    padding: 15px 20px;
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.credits {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid var(--border);
+    padding: 8px 14px;
+    border-radius: 12px;
+    color: var(--gold);
+    font-weight: bold;
+}
+
+.buy-btn {
+    background: var(--gold);
+    padding: 10px 16px;
+    border-radius: 10px;
+    color: #111;
+    cursor: pointer;
+    font-weight: bold;
+    border: none;
+}
+
+/* MAIN CONTENT */
+.container {
+    padding: 20px;
+    flex: 1;
+    overflow-y: auto;
+}
+
+.prompt-box {
+    width: 100%;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 15px;
+    border-radius: 10px;
+    color: var(--text);
+    resize: none;
+    height: 120px;
+    margin-bottom: 20px;
+}
+
+.generate-btn {
+    background: var(--gold);
+    border: none;
+    padding: 14px;
+    width: 100%;
+    border-radius: 12px;
+    color: #111;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+/* IMAGE PREVIEW */
+.image-box {
+    margin-top: 25px;
+    background: var(--bg-card);
+    border-radius: 12px;
+    padding: 15px;
+    border: 1px solid var(--border);
+}
+
+.image-box img {
+    width: 100%;
+    border-radius: 12px;
+    border: 2px solid var(--gold);
+}
+
+.open-btn {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 10px;
+    background: none;
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+/* BUY CREDITS MODAL */
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    display: none;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-box {
+    background: var(--bg-card);
+    padding: 25px;
+    width: 90%;
+    max-width: 400px;
+    border-radius: 16px;
+    border: 2px solid var(--gold);
+}
+
+.pack {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--border);
+    padding: 12px;
+    border-radius: 10px;
+    margin-bottom: 12px;
+    cursor: pointer;
+}
+
+.pack:hover {
+    border-color: var(--gold);
+}
+
+/* MOBILE FIX */
+@media(max-width: 600px) {
+    .prompt-box { height: 100px; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+    <h2>🎨 Image Generator</h2>
+    <div class="credits" id="creditDisplay">0 Images</div>
+    <button class="buy-btn" onclick="openModal()">Buy Credits</button>
+</div>
+
+<!-- CONTENT -->
+<div class="container">
+
+    <textarea id="promptInput" class="prompt-box" placeholder="Describe the image you want to generate..."></textarea>
+
+    <button class="generate-btn" onclick="generateImage()">Generate Image</button>
+
+    <div id="resultBox"></div>
+</div>
+
+<!-- MODAL -->
+<div class="modal" id="creditModal">
+    <div class="modal-box">
+        <h3 style="color: var(--gold); margin-bottom: 10px;">Buy Image Credits</h3>
+
+        <div class="pack" onclick="buyPack(10,4)">
+            <b>10 Images</b> — <span style="color: var(--gold);">4G</span>
+        </div>
+
+        <div class="pack" onclick="buyPack(27,10)">
+            <b>27 Images</b> — <span style="color: var(--gold);">10G</span>
+        </div>
+
+        <button class="buy-btn" style="width:100%; margin-top:15px;" onclick="closeModal()">Close</button>
+    </div>
+</div>
+
+<script>
+/* ======================================================
+    LOCAL STORAGE CREDIT SYSTEM
+====================================================== */
+function getCredits() {
+    return Number(localStorage.getItem("imgCredits") || "0");
+}
+
+function setCredits(v) {
+    localStorage.setItem("imgCredits", v);
+    updateCreditDisplay();
+}
+
+function updateCreditDisplay() {
+    document.getElementById("creditDisplay").innerText = `${getCredits()} Images`;
+}
+
+/* BUY PACK */
+function buyPack(images, cost) {
+    let bal = Number(localStorage.getItem("goldenBalance") || "0");
+
+    if (bal < cost) {
+        alert("Not enough Golden!");
+        return;
+    }
+
+    bal -= cost;
+    localStorage.setItem("goldenBalance", bal);
+
+    setCredits(getCredits() + images);
+
+    alert(`Purchased ${images} images!`);
+    closeModal();
+}
+
+/* MODAL CONTROL */
+function openModal() { document.getElementById("creditModal").style.display = "flex"; }
+function closeModal() { document.getElementById("creditModal").style.display = "none"; }
+
+/* ======================================================
+    GENERATE IMAGE FUNCTION
+====================================================== */
+async function generateImage() {
+    const prompt = document.getElementById("promptInput").value.trim();
+    const credits = getCredits();
+
+    if (!prompt) return alert("Enter a prompt first!");
+    if (credits <= 0) return alert("No credits left! Buy more.");
+
+    // Show placeholder
+    document.getElementById("resultBox").innerHTML = `
+        <div class="image-box">
+            <p>Generating image...</p>
+        </div>
+    `;
+
+    const res = await fetch("/api/generate-image", {
+        method:"POST",
+        headers: { "Content-Type":"application/json" },
+        body: JSON.stringify({ prompt })
+    });
+
+    const data = await res.json();
+    if (!data.success) return alert("Generation failed.");
+
+    // Decrease credits
+    setCredits(credits - 1);
+
+    // Show image
+    document.getElementById("resultBox").innerHTML = `
+        <div class="image-box">
+            <img src="${data.imageUrl}" alt="Generated Image">
+            <button class="open-btn" onclick="window.open('${data.imageUrl}', '_blank')">
+                Open Full Image
+            </button>
+        </div>
+    `;
+}
+
+/* INIT */
+updateCreditDisplay();
+</script>
+
+</body>
+</html>

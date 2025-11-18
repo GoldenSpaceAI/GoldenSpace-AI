@@ -25,6 +25,71 @@
             margin: 0 auto;
             background: white;
             box-shadow: 0 0 30px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        /* Lock Screen */
+        .lock-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            text-align: center;
+        }
+
+        .lock-icon {
+            font-size: 80px;
+            color: #f39c12;
+            margin-bottom: 20px;
+        }
+
+        .lock-title {
+            font-size: 32px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .lock-subtitle {
+            font-size: 18px;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+        }
+
+        .unlock-btn-large {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+        }
+
+        .unlock-btn-large:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
+        }
+
+        .golden-cost {
+            background: #f39c12;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            margin-top: 15px;
+            display: inline-block;
         }
 
         /* Sidebar Styles */
@@ -145,6 +210,12 @@
             align-items: center;
         }
 
+        .header-controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
         .model-selector {
             display: flex;
             gap: 10px;
@@ -165,6 +236,22 @@
             border-color: #3498db;
             background: #3498db;
             color: white;
+        }
+
+        .custom-instructions-btn {
+            background: #9b59b6;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+
+        .custom-instructions-btn:hover {
+            background: #8e44ad;
         }
 
         .chat-messages {
@@ -245,30 +332,6 @@
             cursor: not-allowed;
         }
 
-        .subscription-info {
-            background: #fff3cd;
-            border: 1px solid #ffeaa7;
-            border-radius: 8px;
-            padding: 15px;
-            margin: 20px;
-            text-align: center;
-        }
-
-        .unlock-btn {
-            background: #27ae60;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            margin-top: 10px;
-        }
-
-        .unlock-btn:hover {
-            background: #219a52;
-        }
-
         .typing-indicator {
             display: none;
             align-self: flex-start;
@@ -285,10 +348,102 @@
             color: #7f8c8d;
             padding: 40px 20px;
         }
+
+        /* Custom Instructions Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal h3 {
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+
+        .modal textarea {
+            width: 100%;
+            height: 120px;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            resize: vertical;
+            font-family: inherit;
+            margin-bottom: 20px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .modal-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .modal-cancel {
+            background: #95a5a6;
+            color: white;
+        }
+
+        .modal-save {
+            background: #3498db;
+            color: white;
+        }
+
+        .memory-indicator {
+            background: #e8f4fd;
+            border: 1px solid #3498db;
+            border-radius: 10px;
+            padding: 10px 15px;
+            margin: 10px 0;
+            font-size: 12px;
+            color: #2c3e50;
+            align-self: center;
+            max-width: 80%;
+            text-align: center;
+        }
+
+        .memory-indicator i {
+            color: #3498db;
+            margin-right: 5px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
+        <!-- Lock Screen -->
+        <div class="lock-screen" id="lockScreen">
+            <div class="lock-icon">🔒</div>
+            <div class="lock-title">Advanced AI Locked</div>
+            <div class="lock-subtitle">Unlock powerful AI with conversation memory and custom instructions</div>
+            <button class="unlock-btn-large" id="unlockBtnLarge">
+                Unlock Powerful AI
+            </button>
+            <div class="golden-cost">20 Golden / Month</div>
+        </div>
+
         <!-- Sidebar -->
         <div class="sidebar">
             <div class="sidebar-header">
@@ -316,37 +471,54 @@
         <div class="main-chat">
             <div class="chat-header">
                 <h2>Advanced AI Chat</h2>
-                <div class="model-selector">
-                    <button class="model-btn active" data-model="pro">Friendly</button>
-                    <button class="model-btn" data-model="thinking">Thinking</button>
-                    <button class="model-btn" data-model="flash">Fast</button>
+                <div class="header-controls">
+                    <div class="model-selector">
+                        <button class="model-btn active" data-model="pro">Friendly</button>
+                        <button class="model-btn" data-model="thinking">Thinking</button>
+                        <button class="model-btn" data-model="flash">Fast</button>
+                    </div>
+                    <button class="custom-instructions-btn" id="customInstructionsBtn">
+                        Custom Instructions
+                    </button>
                 </div>
-            </div>
-
-            <div class="subscription-info" id="subscriptionInfo" style="display: none;">
-                <p>Advanced AI Chat is locked. Unlock for 20G per month.</p>
-                <button class="unlock-btn" id="unlockBtn">Unlock Advanced AI</button>
             </div>
 
             <div class="chat-messages" id="chatMessages">
                 <div class="message ai-message">
-                    Welcome to Advanced AI Chat! Choose a model and start chatting.
+                    Welcome to Advanced AI Chat! This AI remembers our entire conversation and can follow custom instructions. Choose a model and start chatting!
                 </div>
             </div>
 
             <div class="typing-indicator" id="typingIndicator">
-                AI is typing...
+                AI is thinking...
             </div>
 
             <div class="chat-input-container">
                 <div class="chat-input">
                     <textarea 
                         id="messageInput" 
-                        placeholder="Type your message..." 
+                        placeholder="Type your message... (AI remembers conversation history)" 
                         rows="1"
-                        disabled
                     ></textarea>
-                    <button id="sendButton" disabled>Send</button>
+                    <button id="sendButton">Send</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Custom Instructions Modal -->
+        <div class="modal-overlay" id="instructionsModal">
+            <div class="modal">
+                <h3>Custom Instructions</h3>
+                <p style="margin-bottom: 15px; color: #7f8c8d; font-size: 14px;">
+                    Set custom instructions for how the AI should behave. This will be remembered for all conversations.
+                </p>
+                <textarea 
+                    id="customInstructionsInput" 
+                    placeholder="Example: Always respond in a professional tone. Be concise and factual. Use markdown formatting when helpful."
+                ></textarea>
+                <div class="modal-buttons">
+                    <button class="modal-btn modal-cancel" id="cancelInstructions">Cancel</button>
+                    <button class="modal-btn modal-save" id="saveInstructions">Save</button>
                 </div>
             </div>
         </div>
@@ -360,6 +532,7 @@
                 this.currentModel = 'pro';
                 this.isSubscribed = false;
                 this.user = null;
+                this.customInstructions = this.loadCustomInstructions();
                 
                 this.initializeElements();
                 this.checkAuth();
@@ -370,6 +543,7 @@
 
             initializeElements() {
                 this.elements = {
+                    lockScreen: document.getElementById('lockScreen'),
                     userAvatar: document.getElementById('userAvatar'),
                     userName: document.getElementById('userName'),
                     goldenBalance: document.getElementById('goldenBalance'),
@@ -379,10 +553,14 @@
                     messageInput: document.getElementById('messageInput'),
                     sendButton: document.getElementById('sendButton'),
                     modelButtons: document.querySelectorAll('.model-btn'),
-                    subscriptionInfo: document.getElementById('subscriptionInfo'),
-                    unlockBtn: document.getElementById('unlockBtn'),
+                    customInstructionsBtn: document.getElementById('customInstructionsBtn'),
+                    unlockBtnLarge: document.getElementById('unlockBtnLarge'),
                     typingIndicator: document.getElementById('typingIndicator'),
-                    emptyState: document.getElementById('emptyState')
+                    emptyState: document.getElementById('emptyState'),
+                    instructionsModal: document.getElementById('instructionsModal'),
+                    customInstructionsInput: document.getElementById('customInstructionsInput'),
+                    cancelInstructions: document.getElementById('cancelInstructions'),
+                    saveInstructions: document.getElementById('saveInstructions')
                 };
             }
 
@@ -419,18 +597,18 @@
                     this.isSubscribed = data.unlocked;
                     
                     if (this.isSubscribed) {
-                        this.elements.subscriptionInfo.style.display = 'none';
+                        this.elements.lockScreen.style.display = 'none';
                         this.elements.messageInput.disabled = false;
                         this.elements.sendButton.disabled = false;
-                        this.elements.messageInput.placeholder = 'Type your message...';
+                        this.elements.messageInput.placeholder = 'Type your message... (AI remembers conversation history)';
                     } else {
-                        this.elements.subscriptionInfo.style.display = 'block';
+                        this.elements.lockScreen.style.display = 'flex';
                         this.elements.messageInput.disabled = true;
                         this.elements.sendButton.disabled = true;
-                        this.elements.messageInput.placeholder = 'Unlock Advanced AI to chat...';
                     }
                 } catch (error) {
                     console.error('Subscription check failed:', error);
+                    this.elements.lockScreen.style.display = 'flex';
                 }
             }
 
@@ -446,6 +624,14 @@
                 localStorage.setItem('advancedAI_chats', JSON.stringify(this.chats));
             }
 
+            loadCustomInstructions() {
+                return localStorage.getItem('advancedAI_custom_instructions') || '';
+            }
+
+            saveCustomInstructions() {
+                localStorage.setItem('advancedAI_custom_instructions', this.customInstructions);
+            }
+
             createNewChat() {
                 const chatId = 'chat_' + Date.now();
                 this.chats[chatId] = {
@@ -453,7 +639,8 @@
                     title: 'New Chat',
                     messages: [],
                     createdAt: new Date().toISOString(),
-                    model: this.currentModel
+                    model: this.currentModel,
+                    customInstructions: this.customInstructions
                 };
                 
                 this.saveChats();
@@ -531,7 +718,7 @@
                 if (!this.currentChatId || !this.chats[this.currentChatId]) {
                     this.elements.chatMessages.innerHTML = `
                         <div class="message ai-message">
-                            Welcome to Advanced AI Chat! Choose a model and start chatting.
+                            Welcome to Advanced AI Chat! This AI remembers our entire conversation and can follow custom instructions. Choose a model and start chatting!
                         </div>
                     `;
                     return;
@@ -539,6 +726,14 @@
 
                 const chat = this.chats[this.currentChatId];
                 this.elements.chatMessages.innerHTML = '';
+                
+                // Show memory indicator if there are previous messages
+                if (chat.messages.length > 0) {
+                    const memoryIndicator = document.createElement('div');
+                    memoryIndicator.className = 'memory-indicator';
+                    memoryIndicator.innerHTML = '💭 <strong>AI Memory Active:</strong> I remember our previous conversation';
+                    this.elements.chatMessages.appendChild(memoryIndicator);
+                }
                 
                 chat.messages.forEach(message => {
                     const messageElement = document.createElement('div');
@@ -552,7 +747,7 @@
 
             async sendMessage() {
                 if (!this.isSubscribed) {
-                    alert('Please unlock Advanced AI first!');
+                    this.showLockScreen();
                     return;
                 }
 
@@ -570,6 +765,22 @@
 
                 try {
                     const endpoint = `/api/generate-${this.currentModel}`;
+                    const chat = this.chats[this.currentChatId];
+                    
+                    // Prepare messages array with conversation history
+                    const messages = [];
+                    
+                    // Add system message with custom instructions if available
+                    if (this.customInstructions) {
+                        messages.push({
+                            role: 'system',
+                            content: `You are GoldenSpaceAI's Advanced AI assistant. Follow these custom instructions: ${this.customInstructions}`
+                        });
+                    }
+                    
+                    // Add conversation history (last 10 messages to avoid token limits)
+                    const recentMessages = chat.messages.slice(-10);
+                    messages.push(...recentMessages);
                     
                     const response = await fetch(endpoint, {
                         method: 'POST',
@@ -577,6 +788,7 @@
                             'Content-Type': 'application/json',
                         },
                         body: JSON.stringify({
+                            messages: messages,
                             prompt: message
                         })
                     });
@@ -626,6 +838,10 @@
                 textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
             }
 
+            showLockScreen() {
+                this.elements.lockScreen.style.display = 'flex';
+            }
+
             async unlockAdvancedAI() {
                 try {
                     const response = await fetch('/api/unlock-feature', {
@@ -642,15 +858,48 @@
                     const data = await response.json();
 
                     if (data.success) {
-                        alert('Advanced AI unlocked successfully!');
-                        this.checkSubscription();
+                        // Update UI
+                        this.isSubscribed = true;
+                        this.elements.lockScreen.style.display = 'none';
+                        this.elements.messageInput.disabled = false;
+                        this.elements.sendButton.disabled = false;
                         this.elements.goldenBalance.textContent = `${data.newBalance}G`;
+                        
+                        // Show success message
+                        this.addMessage('assistant', 'Advanced AI unlocked! I now remember our conversations and can follow your custom instructions. How can I help you?');
+                        
                     } else {
                         alert('Failed to unlock: ' + (data.error || 'Unknown error'));
                     }
                 } catch (error) {
                     console.error('Unlock error:', error);
-                    alert('Error unlocking Advanced AI');
+                    alert('Error unlocking Advanced AI. Please try again.');
+                }
+            }
+
+            showCustomInstructionsModal() {
+                this.elements.customInstructionsInput.value = this.customInstructions;
+                this.elements.instructionsModal.style.display = 'flex';
+            }
+
+            hideCustomInstructionsModal() {
+                this.elements.instructionsModal.style.display = 'none';
+            }
+
+            saveCustomInstructions() {
+                this.customInstructions = this.elements.customInstructionsInput.value.trim();
+                this.saveCustomInstructions();
+                this.hideCustomInstructionsModal();
+                
+                // Update current chat if exists
+                if (this.currentChatId && this.chats[this.currentChatId]) {
+                    this.chats[this.currentChatId].customInstructions = this.customInstructions;
+                    this.saveChats();
+                }
+                
+                // Show confirmation
+                if (this.customInstructions) {
+                    this.addMessage('assistant', 'Custom instructions saved! I\'ll follow these guidelines in our conversation.');
                 }
             }
 
@@ -693,14 +942,39 @@
                 });
 
                 // Unlock button
-                this.elements.unlockBtn.addEventListener('click', () => {
+                this.elements.unlockBtnLarge.addEventListener('click', () => {
                     this.unlockAdvancedAI();
                 });
 
-                // Auto-create first chat if none exists
-                if (Object.keys(this.chats).length === 0) {
+                // Custom instructions button
+                this.elements.customInstructionsBtn.addEventListener('click', () => {
+                    if (!this.isSubscribed) {
+                        this.showLockScreen();
+                        return;
+                    }
+                    this.showCustomInstructionsModal();
+                });
+
+                // Modal events
+                this.elements.cancelInstructions.addEventListener('click', () => {
+                    this.hideCustomInstructionsModal();
+                });
+
+                this.elements.saveInstructions.addEventListener('click', () => {
+                    this.saveCustomInstructions();
+                });
+
+                // Close modal when clicking outside
+                this.elements.instructionsModal.addEventListener('click', (e) => {
+                    if (e.target === this.elements.instructionsModal) {
+                        this.hideCustomInstructionsModal();
+                    }
+                });
+
+                // Auto-create first chat if none exists and user is subscribed
+                if (this.isSubscribed && Object.keys(this.chats).length === 0) {
                     this.createNewChat();
-                } else {
+                } else if (this.isSubscribed && Object.keys(this.chats).length > 0) {
                     // Switch to most recent chat
                     const recentChat = Object.values(this.chats)
                         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0];

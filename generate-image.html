@@ -1,279 +1,779 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Image Generator | GoldenSpaceAI</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Image Generation - GoldenSpaceAI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-<style>
-:root {
-    --gold: #FFD700;
-    --gold-light: #FFF48A;
-    --bg-dark: #0A0F1C;
-    --bg-card: #111827;
-    --border: #2C3548;
-    --text: #E5E7EB;
-    --text-dim: #9CA3AF;
-}
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
 
-body {
-    margin: 0;
-    background: var(--bg-dark);
-    font-family: Inter, sans-serif;
-    color: var(--text);
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-}
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
 
-/* HEADER */
-.header {
-    padding: 15px 20px;
-    background: var(--bg-card);
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
+        .header {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+        }
 
-.balance-box {
-    background: rgba(255,255,255,0.05);
-    border: 1px solid var(--border);
-    padding: 8px 12px;
-    border-radius: 10px;
-    color: var(--gold);
-    font-weight: bold;
-    font-size: 14px;
-}
+        .header h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
 
-.buy-btn {
-    background: var(--gold);
-    padding: 10px 18px;
-    border-radius: 8px;
-    border: none;
-    font-weight: bold;
-    cursor: pointer;
-    color: #111;
-}
+        .header p {
+            color: #7f8c8d;
+            font-size: 1.1em;
+        }
 
-/* MAIN CONTENT */
-.container {
-    padding: 20px;
-    flex: 1;
-    overflow-y: auto;
-}
+        .generation-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
 
-.prompt-box {
-    width: 100%;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    padding: 15px;
-    border-radius: 10px;
-    color: var(--text);
-    resize: none;
-    height: 120px;
-    margin-bottom: 20px;
-}
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
 
-.generate-btn {
-    background: var(--gold);
-    border: none;
-    padding: 14px;
-    width: 100%;
-    border-radius: 12px;
-    color: #111;
-    font-weight: bold;
-    cursor: pointer;
-    font-size: 16px;
-}
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #3498db;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+        }
 
-/* IMAGE PREVIEW */
-.image-box {
-    margin-top: 25px;
-    background: var(--bg-card);
-    border-radius: 12px;
-    padding: 15px;
-    border: 1px solid var(--border);
-}
+        .user-details {
+            flex: 1;
+        }
 
-.image-box img {
-    width: 100%;
-    border-radius: 12px;
-    border: 2px solid var(--gold);
-}
+        .user-name {
+            font-weight: 600;
+            color: #2c3e50;
+        }
 
-.open-btn {
-    display: inline-block;
-    margin-top: 10px;
-    padding: 10px;
-    background: none;
-    border: 1px solid var(--gold);
-    color: var(--gold);
-    border-radius: 8px;
-    cursor: pointer;
-}
+        .golden-balance {
+            background: #f39c12;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
 
-/* MODAL */
-.modal {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.75);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 999;
-}
+        .credits-info {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
 
-.modal-box {
-    background: var(--bg-card);
-    padding: 25px;
-    width: 90%;
-    max-width: 400px;
-    border-radius: 16px;
-    border: 2px solid var(--gold);
-}
+        .credits-display {
+            font-size: 2em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
 
-.pack {
-    background: rgba(255,255,255,0.06);
-    border: 1px solid var(--border);
-    padding: 12px;
-    border-radius: 10px;
-    margin-bottom: 12px;
-    cursor: pointer;
-}
+        .purchase-btn {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 10px 5px;
+        }
 
-.pack:hover {
-    border-color: var(--gold);
-}
+        .purchase-btn:hover {
+            background: #219a52;
+            transform: translateY(-2px);
+        }
 
-/* LOADING */
-.loading {
-    text-align: center;
-    padding: 10px;
-    color: var(--gold);
-    font-weight: bold;
-}
-</style>
+        .free-tier {
+            background: #3498db;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .prompt-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 16px;
+            resize: vertical;
+            min-height: 100px;
+            margin-bottom: 15px;
+            font-family: inherit;
+        }
+
+        .prompt-input:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+
+        .settings-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .setting-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .setting-group label {
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .setting-group select {
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .generate-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .generate-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(155, 89, 182, 0.4);
+        }
+
+        .generate-btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .image-result {
+            margin-top: 20px;
+            text-align: center;
+            display: none;
+        }
+
+        .generated-image {
+            max-width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .image-actions {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .action-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .download-btn {
+            background: #27ae60;
+            color: white;
+        }
+
+        .download-btn:hover {
+            background: #219a52;
+            transform: translateY(-2px);
+        }
+
+        .copy-btn {
+            background: #3498db;
+            color: white;
+        }
+
+        .copy-btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 2s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .pricing-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .pricing-title {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .pricing-plans {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .plan {
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .plan.free {
+            background: #e8f4fd;
+            border: 2px solid #3498db;
+        }
+
+        .plan.premium {
+            background: #fff3cd;
+            border: 2px solid #f39c12;
+        }
+
+        .plan h4 {
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+
+        .plan p {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            background: #27ae60;
+        }
+
+        .notification.error {
+            background: #e74c3c;
+        }
+
+        .notification.info {
+            background: #3498db;
+        }
+
+        .prompt-tips {
+            background: #e8f4fd;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .prompt-tips h4 {
+            color: #3498db;
+            margin-bottom: 8px;
+        }
+
+        .prompt-tips ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        .prompt-tips li {
+            margin-bottom: 5px;
+        }
+    </style>
 </head>
 <body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🎨 AI Image Generation</h1>
+            <p>Create stunning images with DALL-E 3. Download or copy your creations instantly.</p>
+        </div>
 
-<!-- HEADER -->
-<div class="header">
-    <h2>🎨 Image Generator</h2>
-    <div>
-        <span class="balance-box" id="creditBox">0 Images</span>
-        <span class="balance-box" id="goldBox">0G</span>
+        <!-- User Info -->
+        <div class="user-info">
+            <div class="user-avatar" id="userAvatar">U</div>
+            <div class="user-details">
+                <div class="user-name" id="userName">User</div>
+                <div class="golden-balance" id="goldenBalance">0G</div>
+            </div>
+        </div>
+
+        <!-- Generation Section -->
+        <div class="generation-section">
+            <!-- Free Tier Info -->
+            <div class="free-tier">
+                <strong>✨ Free Tier:</strong> 1 image per month for all users!
+            </div>
+
+            <!-- Credits Info -->
+            <div class="credits-info">
+                <h3>Image Credits</h3>
+                <div class="credits-display" id="creditsDisplay">0</div>
+                <p>credits remaining</p>
+                <button class="purchase-btn" id="purchaseBtn">
+                    Buy 10 Credits - 4 Golden
+                </button>
+                <p style="font-size: 12px; margin-top: 10px; opacity: 0.9;">
+                    Each credit = 1 image generation
+                </p>
+            </div>
+
+            <!-- Prompt Tips -->
+            <div class="prompt-tips">
+                <h4>💡 Tips for better images:</h4>
+                <ul>
+                    <li>Be specific about style, colors, and composition</li>
+                    <li>Mention art style (photorealistic, cartoon, painting, etc.)</li>
+                    <li>Include lighting and mood details</li>
+                </ul>
+            </div>
+
+            <!-- Prompt Input -->
+            <textarea 
+                class="prompt-input" 
+                id="promptInput" 
+                placeholder="Describe the image you want to create... Example: 'A majestic dragon flying over a medieval castle at sunset, digital art style'"
+            ></textarea>
+
+            <!-- Settings -->
+            <div class="settings-row">
+                <div class="setting-group">
+                    <label for="sizeSelect">Image Size</label>
+                    <select id="sizeSelect">
+                        <option value="1024x1024">1024x1024 (Standard)</option>
+                        <option value="1792x1024">1792x1024 (Widescreen)</option>
+                        <option value="1024x1792">1024x1792 (Portrait)</option>
+                    </select>
+                </div>
+                <div class="setting-group">
+                    <label for="qualitySelect">Quality</label>
+                    <select id="qualitySelect">
+                        <option value="standard">Standard</option>
+                        <option value="hd">HD</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Generate Button -->
+            <button class="generate-btn" id="generateBtn">
+                Generate Image 🎨
+            </button>
+
+            <!-- Loading -->
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Creating your masterpiece... This may take 10-20 seconds</p>
+            </div>
+
+            <!-- Image Result -->
+            <div class="image-result" id="imageResult">
+                <img class="generated-image" id="generatedImage" alt="Generated image">
+                <div class="image-actions" id="imageActions">
+                    <button class="action-btn download-btn" id="downloadBtn">
+                        📥 Download
+                    </button>
+                    <button class="action-btn copy-btn" id="copyBtn">
+                        📋 Copy Image
+                    </button>
+                </div>
+            </div>
+
+            <!-- Pricing Info -->
+            <div class="pricing-info">
+                <h3 class="pricing-title">Pricing Plans</h3>
+                <div class="pricing-plans">
+                    <div class="plan free">
+                        <h4>🎁 Free Tier</h4>
+                        <p><strong>1 image per month</strong></p>
+                        <p>Perfect for trying out</p>
+                        <p>No cost</p>
+                    </div>
+                    <div class="plan premium">
+                        <h4>💎 Credit Pack</h4>
+                        <p><strong>10 images - 4 Golden</strong></p>
+                        <p>Best value</p>
+                        <p>No expiration</p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    <button class="buy-btn" onclick="openModal()">Buy Credits</button>
-</div>
 
-<!-- CONTENT -->
-<div class="container">
+    <!-- Notification -->
+    <div class="notification" id="notification"></div>
 
-    <textarea id="promptInput" class="prompt-box" placeholder="Describe the image you want to generate..."></textarea>
+    <script>
+        class ImageGenerator {
+            constructor() {
+                this.currentImage = null;
+                this.user = null;
+                this.initializeElements();
+                this.checkAuth();
+                this.updateCreditsDisplay();
+                this.setupEventListeners();
+            }
 
-    <button class="generate-btn" onclick="generateImg()">Generate Image</button>
+            initializeElements() {
+                this.elements = {
+                    userAvatar: document.getElementById('userAvatar'),
+                    userName: document.getElementById('userName'),
+                    goldenBalance: document.getElementById('goldenBalance'),
+                    creditsDisplay: document.getElementById('creditsDisplay'),
+                    purchaseBtn: document.getElementById('purchaseBtn'),
+                    promptInput: document.getElementById('promptInput'),
+                    generateBtn: document.getElementById('generateBtn'),
+                    loading: document.getElementById('loading'),
+                    generatedImage: document.getElementById('generatedImage'),
+                    imageResult: document.getElementById('imageResult'),
+                    imageActions: document.getElementById('imageActions'),
+                    downloadBtn: document.getElementById('downloadBtn'),
+                    copyBtn: document.getElementById('copyBtn'),
+                    notification: document.getElementById('notification')
+                };
+            }
 
-    <div id="resultBox"></div>
-</div>
+            async checkAuth() {
+                try {
+                    const response = await fetch('/api/me');
+                    const data = await response.json();
+                    
+                    if (data.loggedIn) {
+                        this.user = data.user;
+                        this.updateUserInfo(data);
+                    } else {
+                        window.location.href = '/login-signup.html';
+                    }
+                } catch (error) {
+                    console.error('Auth check failed:', error);
+                }
+            }
 
-<!-- BUY CREDITS MODAL -->
-<div class="modal" id="creditModal">
-    <div class="modal-box">
-        <h3 style="color: var(--gold); margin-bottom: 10px;">Buy Image Credits</h3>
+            updateUserInfo(data) {
+                this.elements.userName.textContent = data.user.name;
+                this.elements.goldenBalance.textContent = `${data.balance}G`;
+                
+                const initial = data.user.name.charAt(0).toUpperCase();
+                this.elements.userAvatar.textContent = initial;
+            }
 
-        <div class="pack" onclick="buyPack('small')">
-            <b>10 Images</b> — <span style="color: var(--gold);">4G</span>
-        </div>
+            getImageCredits() {
+                const creditsData = localStorage.getItem('image_credits');
+                if (creditsData) {
+                    return JSON.parse(creditsData);
+                }
+                return { credits: 0, freeUsed: false, lastFreeReset: null };
+            }
 
-        <div class="pack" onclick="buyPack('large')">
-            <b>27 Images</b> — <span style="color: var(--gold);">10G</span>
-        </div>
+            saveImageCredits(creditsData) {
+                localStorage.setItem('image_credits', JSON.stringify(creditsData));
+            }
 
-        <button class="buy-btn" style="width:100%; margin-top:15px;" onclick="closeModal()">Close</button>
-    </div>
-</div>
+            updateCreditsDisplay() {
+                const creditsData = this.getImageCredits();
+                const freeAvailable = !creditsData.freeUsed || this.shouldResetFreeCredit();
+                
+                let displayText = creditsData.credits;
+                if (freeAvailable && creditsData.credits === 0) {
+                    displayText = '1 (Free)';
+                } else if (freeAvailable && creditsData.credits > 0) {
+                    displayText = `${creditsData.credits} + 1 Free`;
+                }
+                
+                this.elements.creditsDisplay.textContent = displayText;
+            }
 
-<script>
-/* ============================================================
-   LOAD BALANCE + CREDITS FROM BACKEND
-============================================================ */
-async function loadStatus() {
-    const res = await fetch('/api/get-image-credits');
-    const data = await res.json();
+            shouldResetFreeCredit() {
+                const creditsData = this.getImageCredits();
+                if (!creditsData.lastFreeReset) return true;
+                
+                const lastReset = new Date(creditsData.lastFreeReset);
+                const now = new Date();
+                const monthDiff = (now.getFullYear() - lastReset.getFullYear()) * 12 + 
+                                 (now.getMonth() - lastReset.getMonth());
+                return monthDiff >= 1;
+            }
 
-    if (data.success) {
-        document.getElementById("creditBox").innerText = data.credits + " Images";
-        document.getElementById("goldBox").innerText   = data.balance + "G";
-    }
-}
+            resetFreeCreditIfNeeded() {
+                if (this.shouldResetFreeCredit()) {
+                    const creditsData = this.getImageCredits();
+                    creditsData.freeUsed = false;
+                    creditsData.lastFreeReset = new Date().toISOString();
+                    this.saveImageCredits(creditsData);
+                    this.updateCreditsDisplay();
+                }
+            }
 
-loadStatus();
+            async purchaseCredits() {
+                try {
+                    const response = await fetch('/api/purchase-image-credits', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({})
+                    });
 
-/* ============================================================
-   BUY PACKS
-============================================================ */
-async function buyPack(packName) {
-    const res = await fetch("/api/buy-image-pack", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pack: packName })
-    });
+                    const data = await response.json();
 
-    const data = await res.json();
+                    if (data.success) {
+                        const creditsData = this.getImageCredits();
+                        creditsData.credits += 10;
+                        this.saveImageCredits(creditsData);
+                        this.updateCreditsDisplay();
+                        
+                        this.showNotification('✅ 10 image credits purchased!', 'success');
+                        this.elements.goldenBalance.textContent = `${data.newBalance}G`;
+                    } else {
+                        this.showNotification('❌ ' + (data.error || 'Purchase failed'), 'error');
+                    }
+                } catch (error) {
+                    console.error('Purchase error:', error);
+                    this.showNotification('❌ Error purchasing credits', 'error');
+                }
+            }
 
-    if (!data.success) return alert(data.error);
+            async generateImage() {
+                const prompt = this.elements.promptInput.value.trim();
+                if (!prompt) {
+                    this.showNotification('Please enter a prompt', 'error');
+                    return;
+                }
 
-    alert("Pack purchased!");
+                const creditsData = this.getImageCredits();
+                this.resetFreeCreditIfNeeded();
 
-    loadStatus();
-    closeModal();
-}
+                const freeAvailable = !creditsData.freeUsed;
+                const hasCredits = creditsData.credits > 0;
 
-/* MODAL CONTROL */
-function openModal() {
-    document.getElementById("creditModal").style.display = "flex";
-}
-function closeModal() {
-    document.getElementById("creditModal").style.display = "none";
-}
+                if (!freeAvailable && !hasCredits) {
+                    this.showNotification('No credits remaining. Purchase more or wait for next month\'s free credit.', 'error');
+                    return;
+                }
 
-/* ============================================================
-   GENERATE IMAGE (uses 1 credit)
-============================================================ */
-async function generateImg() {
-    const prompt = document.getElementById("promptInput").value.trim();
+                // Disable generate button and show loading
+                this.elements.generateBtn.disabled = true;
+                this.elements.loading.style.display = 'block';
+                this.elements.imageResult.style.display = 'none';
 
-    if (!prompt) return alert("Enter a prompt first!");
+                try {
+                    const size = document.getElementById('sizeSelect').value;
+                    const quality = document.getElementById('qualitySelect').value;
 
-    document.getElementById("resultBox").innerHTML = `
-        <div class="loading">Generating image...</div>
-    `;
+                    const response = await fetch('/api/generate-image', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ prompt, size, quality })
+                    });
 
-    const res = await fetch("/api/generate-image", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt })
-    });
+                    const data = await response.json();
 
-    const data = await res.json();
+                    if (data.success) {
+                        this.currentImage = {
+                            url: data.imageUrl,
+                            prompt: prompt,
+                            timestamp: new Date().toISOString(),
+                            size: size,
+                            quality: quality
+                        };
 
-    if (!data.success) {
-        document.getElementById("resultBox").innerHTML = "";
-        return alert(data.error);
-    }
+                        // Deduct credit
+                        if (freeAvailable) {
+                            creditsData.freeUsed = true;
+                        } else {
+                            creditsData.credits -= 1;
+                        }
+                        this.saveImageCredits(creditsData);
+                        this.updateCreditsDisplay();
 
-    loadStatus();
+                        // Display image
+                        this.elements.generatedImage.src = data.imageUrl;
+                        this.elements.generatedImage.onload = () => {
+                            this.elements.imageResult.style.display = 'block';
+                            this.elements.imageActions.style.display = 'flex';
+                        };
 
-    document.getElementById("resultBox").innerHTML = `
-        <div class="image-box">
-            <img src="${data.imageUrl}" alt="Generated Image">
-            <button class="open-btn" onclick="window.open('${data.imageUrl}', '_blank')">Open Full Image</button>
-        </div>
-    `;
-}
-</script>
+                        this.showNotification('🎨 Image generated successfully!', 'success');
+                    } else {
+                        throw new Error(data.error || 'Generation failed');
+                    }
+                } catch (error) {
+                    console.error('Generation error:', error);
+                    this.showNotification('❌ ' + error.message, 'error');
+                } finally {
+                    this.elements.generateBtn.disabled = false;
+                    this.elements.loading.style.display = 'none';
+                }
+            }
 
+            downloadImage() {
+                if (!this.currentImage) return;
+
+                const link = document.createElement('a');
+                link.href = this.currentImage.url;
+                link.download = `ai-image-${Date.now()}.png`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                this.showNotification('📥 Image downloaded!', 'success');
+            }
+
+            async copyImage() {
+                if (!this.currentImage) return;
+
+                try {
+                    // Fetch the image
+                    const response = await fetch(this.currentImage.url);
+                    const blob = await response.blob();
+                    
+                    // Copy to clipboard
+                    await navigator.clipboard.write([
+                        new ClipboardItem({
+                            [blob.type]: blob
+                        })
+                    ]);
+                    
+                    this.showNotification('📋 Image copied to clipboard!', 'success');
+                } catch (error) {
+                    console.error('Copy failed:', error);
+                    this.showNotification('❌ Failed to copy image', 'error');
+                }
+            }
+
+            showNotification(message, type) {
+                const notification = this.elements.notification;
+                notification.textContent = message;
+                notification.className = `notification ${type}`;
+                notification.classList.add('show');
+                
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 3000);
+            }
+
+            setupEventListeners() {
+                // Purchase credits
+                this.elements.purchaseBtn.addEventListener('click', () => {
+                    this.purchaseCredits();
+                });
+
+                // Generate image
+                this.elements.generateBtn.addEventListener('click', () => {
+                    this.generateImage();
+                });
+
+                // Download image
+                this.elements.downloadBtn.addEventListener('click', () => {
+                    this.downloadImage();
+                });
+
+                // Copy image
+                this.elements.copyBtn.addEventListener('click', () => {
+                    this.copyImage();
+                });
+
+                // Enter key to generate (Ctrl+Enter)
+                this.elements.promptInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && e.ctrlKey) {
+                        e.preventDefault();
+                        this.generateImage();
+                    }
+                });
+
+                // Initial setup
+                this.resetFreeCreditIfNeeded();
+            }
+        }
+
+        // Initialize the image generator
+        let imageGenerator;
+        document.addEventListener('DOMContentLoaded', () => {
+            imageGenerator = new ImageGenerator();
+        });
+    </script>
 </body>
 </html>

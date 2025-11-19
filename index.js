@@ -790,7 +790,7 @@ app.post("/api/generate-image", requireFeature("chat_advancedai"), async (req, r
 const IMAGE_CREDITS_PRICE = 4; // 4 Golden for 10 images
 const IMAGE_CREDITS_COUNT = 10;
 
-// Purchase image credits - just deduct Golden, frontend handles localStorage
+// Purchase image credits
 app.post("/api/purchase-image-credits", authUser, (req, res) => {
   const db = loadGoldenDB();
   const id = getUserIdentifier(req);
@@ -828,7 +828,7 @@ app.post("/api/purchase-image-credits", authUser, (req, res) => {
   });
 });
 
-// Generate Image endpoint - no credit check on backend
+// Generate Image endpoint - FIXED VERSION
 app.post("/api/generate-image", authUser, async (req, res) => {
   try {
     const { prompt, size = "1024x1024", quality = "standard" } = req.body;
@@ -837,9 +837,9 @@ app.post("/api/generate-image", authUser, async (req, res) => {
       return res.status(400).json({ error: "Prompt is required" });
     }
 
+    console.log(`🎨 Generating image: ${prompt.substring(0, 100)}...`);
+
     // Generate image with DALL-E 3
-    console.log(`🎨 Generating image: ${prompt.substring(0, 50)}...`);
-    
     const imageResponse = await openai.images.generate({
       model: "dall-e-3",
       prompt: prompt,
@@ -850,8 +850,7 @@ app.post("/api/generate-image", authUser, async (req, res) => {
     });
 
     const imageUrl = imageResponse.data[0].url;
-
-    console.log(`✅ Image generated successfully`);
+    console.log(`✅ Image generated successfully: ${imageUrl}`);
 
     res.json({
       success: true,
@@ -860,19 +859,23 @@ app.post("/api/generate-image", authUser, async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Image generation error:", error);
+    console.error("❌ Image generation error:", error);
     
-    // Handle OpenAI-specific errors
+    // Better error handling
+    let errorMessage = "Image generation failed";
     if (error.message.includes("safety")) {
-      return res.status(400).json({ 
-        error: "Content policy violation",
-        message: "Your prompt was rejected for safety reasons. Please try a different prompt."
-      });
+      errorMessage = "Content policy violation - please try a different prompt";
+    } else if (error.message.includes("billing")) {
+      errorMessage = "OpenAI API billing issue - please contact support";
+    } else if (error.message.includes("rate limit")) {
+      errorMessage = "Rate limit exceeded - please try again later";
+    } else {
+      errorMessage = error.message;
     }
     
     res.status(500).json({ 
-      error: "Image generation failed",
-      message: error.message 
+      success: false,
+      error: errorMessage
     });
   }
 });

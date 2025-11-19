@@ -786,18 +786,101 @@ app.post("/api/generate-image", requireFeature("chat_advancedai"), async (req, r
     });
   }
 });
+// ============ IMAGE GENERATION SYSTEM ============
+const IMAGE_CREDITS_PRICE = 4; // 4 Golden for 10 images
+const IMAGE_CREDITS_COUNT = 10;
 
+// Purchase image credits - just deduct Golden, frontend handles localStorage
+app.post("/api/purchase-image-credits", authUser, (req, res) => {
+  const db = loadGoldenDB();
+  const id = getUserIdentifier(req);
+  const user = db.users[id];
 
+  if (!user) return res.status(404).json({ error: "User not found" });
+
+  // Check balance
+  if (user.golden_balance < IMAGE_CREDITS_PRICE) {
+    return res.status(403).json({ error: `Not enough Golden. Need ${IMAGE_CREDITS_PRICE}G.` });
+  }
+
+  // Deduct Golden
+  user.golden_balance -= IMAGE_CREDITS_PRICE;
+  user.total_golden_spent = (user.total_golden_spent || 0) + IMAGE_CREDITS_PRICE;
+
+  // Record transaction
+  user.transactions = user.transactions || [];
+  user.transactions.push({
+    type: "image_credits",
+    amount: -IMAGE_CREDITS_PRICE,
+    credits: IMAGE_CREDITS_COUNT,
+    previous_balance: user.golden_balance + IMAGE_CREDITS_PRICE,
+    new_balance: user.golden_balance,
+    timestamp: new Date().toISOString(),
+  });
+
+  saveGoldenDB(db);
+
+  res.json({
+    success: true,
+    message: `Purchased ${IMAGE_CREDITS_COUNT} image credits for ${IMAGE_CREDITS_PRICE}G`,
+    credits_purchased: IMAGE_CREDITS_COUNT,
+    newBalance: user.golden_balance
+  });
+});
+
+// Generate Image endpoint - no credit check on backend
+app.post("/api/generate-image", authUser, async (req, res) => {
+  try {
+    const { prompt, size = "1024x1024", quality = "standard" } = req.body;
+    
+    if (!prompt) {
+      return res.status(400).json({ error: "Prompt is required" });
+    }
+
+    // Generate image with DALL-E 3
+    console.log(`🎨 Generating image: ${prompt.substring(0, 50)}...`);
+    
+    const imageResponse = await openai.images.generate({
+      model: "dall-e-3",
+      prompt: prompt,
+      size: size,
+      quality: quality,
+      n: 1,
+      response_format: "url"
+    });
+
+    const imageUrl = imageResponse.data[0].url;
+
+    console.log(`✅ Image generated successfully`);
+
+    res.json({
+      success: true,
+      imageUrl: imageUrl,
+      prompt: prompt
+    });
+
+  } catch (error) {
+    console.error("Image generation error:", error);
+    
+    // Handle OpenAI-specific errors
+    if (error.message.includes("safety")) {
+      return res.status(400).json({ 
+        error: "Content policy violation",
+        message: "Your prompt was rejected for safety reasons. Please try a different prompt."
+      });
+    }
+    
+    res.status(500).json({ 
+      error: "Image generation failed",
+      message: error.message 
+    });
+  }
+});
 // ======================================================
 // OPTIONAL ENDPOINT: Return pack pricing to frontend
 // front-end does not use this yet, but it's here for future
 // ======================================================
-app.get("/api/image-packs", (req, res) => {
-  res.json({
-    success: true,
-    packs: IMAGE_PACKS
-  });
-});// Homework Helper
+// Homework Helper
 app.post("/homework-helper", requireFeature("homework_helper"), upload.single("image"), async (req, res) => {
   let filePath = req.file?.path;
   try {

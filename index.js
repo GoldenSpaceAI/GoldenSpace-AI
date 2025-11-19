@@ -828,7 +828,7 @@ app.post("/api/purchase-image-credits", authUser, (req, res) => {
   });
 });
 
-// Generate Image endpoint - FIXED VERSION
+// Generate Image endpoint - SIMPLE VERSION (no feature check)
 app.post("/api/generate-image", authUser, async (req, res) => {
   try {
     const { prompt, size = "1024x1024", quality = "standard" } = req.body;
@@ -837,7 +837,7 @@ app.post("/api/generate-image", authUser, async (req, res) => {
       return res.status(400).json({ error: "Prompt is required" });
     }
 
-    console.log(`🎨 Generating image: ${prompt.substring(0, 100)}...`);
+    console.log(`🎨 Generating image for user: ${prompt.substring(0, 100)}...`);
 
     // Generate image with DALL-E 3
     const imageResponse = await openai.images.generate({
@@ -850,7 +850,7 @@ app.post("/api/generate-image", authUser, async (req, res) => {
     });
 
     const imageUrl = imageResponse.data[0].url;
-    console.log(`✅ Image generated successfully: ${imageUrl}`);
+    console.log(`✅ Image generated successfully`);
 
     res.json({
       success: true,
@@ -861,14 +861,11 @@ app.post("/api/generate-image", authUser, async (req, res) => {
   } catch (error) {
     console.error("❌ Image generation error:", error);
     
-    // Better error handling
     let errorMessage = "Image generation failed";
     if (error.message.includes("safety")) {
       errorMessage = "Content policy violation - please try a different prompt";
     } else if (error.message.includes("billing")) {
-      errorMessage = "OpenAI API billing issue - please contact support";
-    } else if (error.message.includes("rate limit")) {
-      errorMessage = "Rate limit exceeded - please try again later";
+      errorMessage = "OpenAI API billing issue";
     } else {
       errorMessage = error.message;
     }

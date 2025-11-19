@@ -612,11 +612,13 @@
                     this.elements.generatedImage.onload = () => {
                         this.elements.imageResult.style.display = 'block';
                         this.elements.loading.style.display = 'none';
+                        this.elements.generateBtn.disabled = false;
                     };
 
                     // Handle image load error
                     this.elements.generatedImage.onerror = () => {
                         this.elements.loading.style.display = 'none';
+                        this.elements.generateBtn.disabled = false;
                         this.showNotification('❌ Failed to load image', 'error');
                     };
 
@@ -712,18 +714,11 @@
                 this.copyImage();
             });
 
-            // Enter key to generate (Ctrl+Enter or just Enter)
+            // Enter key to generate (Ctrl+Enter)
             this.elements.promptInput.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
                     e.preventDefault();
                     this.generateImage();
-                }
-            });
-
-            // Simple Enter in textarea should just add new line
-            this.elements.promptInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter' && !e.ctrlKey && !e.metaKey) {
-                    // Allow default behavior (new line)
                 }
             });
         }

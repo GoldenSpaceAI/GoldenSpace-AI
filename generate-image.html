@@ -445,267 +445,295 @@
 
     <!-- Notification -->
     <div class="notification" id="notification"></div>
+<script>
+    class SimpleImageGenerator {
+        constructor() {
+            this.currentImage = null;
+            this.user = null;
+            this.initializeElements();
+            this.checkAuth();
+            this.updateCreditsDisplay();
+            this.setupEventListeners();
+        }
 
-    <script>
-        class SimpleImageGenerator {
-            constructor() {
-                this.currentImage = null;
-                this.user = null;
-                this.initializeElements();
-                this.checkAuth();
-                this.updateCreditsDisplay();
-                this.setupEventListeners();
-            }
+        initializeElements() {
+            this.elements = {
+                userAvatar: document.getElementById('userAvatar'),
+                userName: document.getElementById('userName'),
+                goldenBalance: document.getElementById('goldenBalance'),
+                creditsDisplay: document.getElementById('creditsDisplay'),
+                purchaseBtn: document.getElementById('purchaseBtn'),
+                promptInput: document.getElementById('promptInput'),
+                generateBtn: document.getElementById('generateBtn'),
+                loading: document.getElementById('loading'),
+                generatedImage: document.getElementById('generatedImage'),
+                imageResult: document.getElementById('imageResult'),
+                downloadBtn: document.getElementById('downloadBtn'),
+                copyBtn: document.getElementById('copyBtn'),
+                notification: document.getElementById('notification')
+            };
+        }
 
-            initializeElements() {
-                this.elements = {
-                    userAvatar: document.getElementById('userAvatar'),
-                    userName: document.getElementById('userName'),
-                    goldenBalance: document.getElementById('goldenBalance'),
-                    creditsDisplay: document.getElementById('creditsDisplay'),
-                    purchaseBtn: document.getElementById('purchaseBtn'),
-                    promptInput: document.getElementById('promptInput'),
-                    generateBtn: document.getElementById('generateBtn'),
-                    loading: document.getElementById('loading'),
-                    generatedImage: document.getElementById('generatedImage'),
-                    imageResult: document.getElementById('imageResult'),
-                    downloadBtn: document.getElementById('downloadBtn'),
-                    copyBtn: document.getElementById('copyBtn'),
-                    notification: document.getElementById('notification')
-                };
-            }
-
-            async checkAuth() {
-                try {
-                    const response = await fetch('/api/me');
-                    const data = await response.json();
-                    
-                    if (data.loggedIn) {
-                        this.user = data.user;
-                        this.updateUserInfo(data);
-                    } else {
-                        window.location.href = '/login-signup.html';
-                    }
-                } catch (error) {
-                    console.error('Auth check failed:', error);
-                }
-            }
-
-            updateUserInfo(data) {
-                this.elements.userName.textContent = data.user.name;
-                this.elements.goldenBalance.textContent = `${data.balance}G`;
+        async checkAuth() {
+            try {
+                const response = await fetch('/api/me');
+                const data = await response.json();
                 
-                const initial = data.user.name.charAt(0).toUpperCase();
-                this.elements.userAvatar.textContent = initial;
-            }
-
-            getImageCredits() {
-                const creditsData = localStorage.getItem('image_credits');
-                if (creditsData) {
-                    return JSON.parse(creditsData);
-                }
-                // New users get 1 free credit
-                return { credits: 0, freeUsed: false };
-            }
-
-            saveImageCredits(creditsData) {
-                localStorage.setItem('image_credits', JSON.stringify(creditsData));
-            }
-
-            updateCreditsDisplay() {
-                const creditsData = this.getImageCredits();
-                
-                if (!creditsData.freeUsed && creditsData.credits === 0) {
-                    this.elements.creditsDisplay.textContent = '1';
-                    this.elements.creditsDisplay.innerHTML = '1 <span style="font-size: 0.5em; opacity: 0.8;">(Free)</span>';
-                } else if (!creditsData.freeUsed && creditsData.credits > 0) {
-                    this.elements.creditsDisplay.textContent = creditsData.credits + 1;
+                if (data.loggedIn) {
+                    this.user = data.user;
+                    this.updateUserInfo(data);
                 } else {
-                    this.elements.creditsDisplay.textContent = creditsData.credits;
+                    window.location.href = '/login-signup.html';
                 }
-            }
-
-            canGenerateImage() {
-                const creditsData = this.getImageCredits();
-                return !creditsData.freeUsed || creditsData.credits > 0;
-            }
-
-            async purchaseCredits() {
-                try {
-                    const response = await fetch('/api/purchase-image-credits', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({})
-                    });
-
-                    const data = await response.json();
-
-                    if (data.success) {
-                        const creditsData = this.getImageCredits();
-                        creditsData.credits += 10;
-                        this.saveImageCredits(creditsData);
-                        this.updateCreditsDisplay();
-                        
-                        this.showNotification('✅ Success! You got 10 image credits', 'success');
-                        this.elements.goldenBalance.textContent = `${data.newBalance}G`;
-                    } else {
-                        this.showNotification('❌ ' + (data.error || 'Not enough Golden'), 'error');
-                    }
-                } catch (error) {
-                    console.error('Purchase error:', error);
-                    this.showNotification('❌ Error processing purchase', 'error');
-                }
-            }
-
-            async generateImage() {
-                const prompt = this.elements.promptInput.value.trim();
-                if (!prompt) {
-                    this.showNotification('Please describe what you want to create', 'error');
-                    return;
-                }
-
-                if (!this.canGenerateImage()) {
-                    this.showNotification('No credits left. Please buy more to create images.', 'error');
-                    return;
-                }
-
-                // Disable generate button and show loading
-                this.elements.generateBtn.disabled = true;
-                this.elements.loading.style.display = 'block';
-                this.elements.imageResult.style.display = 'none';
-
-                try {
-                    const response = await fetch('/api/generate-image', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ 
-                            prompt: prompt,
-                            size: "1024x1024",
-                            quality: "standard"
-                        })
-                    });
-
-                    const data = await response.json();
-
-                    if (data.success) {
-                        this.currentImage = {
-                            url: data.imageUrl,
-                            prompt: prompt
-                        };
-
-                        // Deduct credit
-                        const creditsData = this.getImageCredits();
-                        if (!creditsData.freeUsed) {
-                            creditsData.freeUsed = true;
-                        } else {
-                            creditsData.credits -= 1;
-                        }
-                        this.saveImageCredits(creditsData);
-                        this.updateCreditsDisplay();
-
-                        // Display image
-                        this.elements.generatedImage.src = data.imageUrl;
-                        this.elements.generatedImage.onload = () => {
-                            this.elements.imageResult.style.display = 'block';
-                        };
-
-                        this.showNotification('🎨 Amazing! Your image is ready', 'success');
-                    } else {
-                        throw new Error(data.error || 'Failed to create image');
-                    }
-                } catch (error) {
-                    console.error('Generation error:', error);
-                    if (error.message.includes('safety')) {
-                        this.showNotification('⚠️ Please try a different description', 'error');
-                    } else {
-                        this.showNotification('❌ Failed to create image', 'error');
-                    }
-                } finally {
-                    this.elements.generateBtn.disabled = false;
-                    this.elements.loading.style.display = 'none';
-                }
-            }
-
-            downloadImage() {
-                if (!this.currentImage) return;
-
-                const link = document.createElement('a');
-                link.href = this.currentImage.url;
-                link.download = `ai-image-${Date.now()}.png`;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                
-                this.showNotification('📥 Image downloaded!', 'success');
-            }
-
-            async copyImage() {
-                if (!this.currentImage) return;
-
-                try {
-                    const response = await fetch(this.currentImage.url);
-                    const blob = await response.blob();
-                    
-                    await navigator.clipboard.write([
-                        new ClipboardItem({
-                            [blob.type]: blob
-                        })
-                    ]);
-                    
-                    this.showNotification('📋 Copied to clipboard!', 'success');
-                } catch (error) {
-                    console.error('Copy failed:', error);
-                    this.showNotification('❌ Failed to copy', 'error');
-                }
-            }
-
-            showNotification(message, type) {
-                const notification = this.elements.notification;
-                notification.textContent = message;
-                notification.className = `notification ${type}`;
-                notification.classList.add('show');
-                
-                setTimeout(() => {
-                    notification.classList.remove('show');
-                }, 4000);
-            }
-
-            setupEventListeners() {
-                // Purchase credits
-                this.elements.purchaseBtn.addEventListener('click', () => {
-                    this.purchaseCredits();
-                });
-
-                // Generate image
-                this.elements.generateBtn.addEventListener('click', () => {
-                    this.generateImage();
-                });
-
-                // Download image
-                this.elements.downloadBtn.addEventListener('click', () => {
-                    this.downloadImage();
-                });
-
-                // Copy image
-                this.elements.copyBtn.addEventListener('click', () => {
-                    this.copyImage();
-                });
-
-                // Enter key to generate
-                this.elements.promptInput.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter' && e.ctrlKey) {
-                        e.preventDefault();
-                        this.generateImage();
-                    }
-                });
+            } catch (error) {
+                console.error('Auth check failed:', error);
+                this.showNotification('❌ Please login to use image generator', 'error');
             }
         }
 
-        // Initialize the image generator
-        let imageGenerator;
-        document.addEventListener('DOMContentLoaded', () => {
-            imageGenerator = new SimpleImageGenerator();
-        });
-    </script>
-</body>
+        updateUserInfo(data) {
+            this.elements.userName.textContent = data.user.name;
+            this.elements.goldenBalance.textContent = `${data.balance}G`;
+            
+            const initial = data.user.name.charAt(0).toUpperCase();
+            this.elements.userAvatar.textContent = initial;
+        }
+
+        getImageCredits() {
+            const creditsData = localStorage.getItem('image_credits');
+            if (creditsData) {
+                return JSON.parse(creditsData);
+            }
+            // New users get 1 free credit
+            return { credits: 0, freeUsed: false };
+        }
+
+        saveImageCredits(creditsData) {
+            localStorage.setItem('image_credits', JSON.stringify(creditsData));
+        }
+
+        updateCreditsDisplay() {
+            const creditsData = this.getImageCredits();
+            
+            if (!creditsData.freeUsed && creditsData.credits === 0) {
+                this.elements.creditsDisplay.textContent = '1';
+                this.elements.creditsDisplay.innerHTML = '1 <span style="font-size: 0.5em; opacity: 0.8;">(Free)</span>';
+            } else if (!creditsData.freeUsed && creditsData.credits > 0) {
+                this.elements.creditsDisplay.textContent = creditsData.credits + 1;
+            } else {
+                this.elements.creditsDisplay.textContent = creditsData.credits;
+            }
+        }
+
+        canGenerateImage() {
+            const creditsData = this.getImageCredits();
+            return !creditsData.freeUsed || creditsData.credits > 0;
+        }
+
+        async purchaseCredits() {
+            try {
+                const response = await fetch('/api/purchase-image-credits', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({})
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    const creditsData = this.getImageCredits();
+                    creditsData.credits += 10;
+                    this.saveImageCredits(creditsData);
+                    this.updateCreditsDisplay();
+                    
+                    this.showNotification('✅ Success! You got 10 image credits', 'success');
+                    this.elements.goldenBalance.textContent = `${data.newBalance}G`;
+                } else {
+                    this.showNotification('❌ ' + (data.error || 'Not enough Golden'), 'error');
+                }
+            } catch (error) {
+                console.error('Purchase error:', error);
+                this.showNotification('❌ Error processing purchase', 'error');
+            }
+        }
+
+        async generateImage() {
+            const prompt = this.elements.promptInput.value.trim();
+            if (!prompt) {
+                this.showNotification('Please describe what you want to create', 'error');
+                return;
+            }
+
+            if (!this.canGenerateImage()) {
+                this.showNotification('No credits left. Please buy more to create images.', 'error');
+                return;
+            }
+
+            // Disable generate button and show loading
+            this.elements.generateBtn.disabled = true;
+            this.elements.loading.style.display = 'block';
+            this.elements.imageResult.style.display = 'none';
+
+            try {
+                console.log('Sending request to generate image...');
+                const response = await fetch('/api/generate-image', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        prompt: prompt,
+                        size: "1024x1024",
+                        quality: "standard"
+                    })
+                });
+
+                const data = await response.json();
+                console.log('Response received:', data);
+
+                if (data.success) {
+                    this.currentImage = {
+                        url: data.imageUrl,
+                        prompt: prompt
+                    };
+
+                    // Deduct credit
+                    const creditsData = this.getImageCredits();
+                    if (!creditsData.freeUsed) {
+                        creditsData.freeUsed = true;
+                    } else {
+                        creditsData.credits -= 1;
+                    }
+                    this.saveImageCredits(creditsData);
+                    this.updateCreditsDisplay();
+
+                    // Display image
+                    this.elements.generatedImage.src = data.imageUrl;
+                    this.elements.generatedImage.onload = () => {
+                        this.elements.imageResult.style.display = 'block';
+                        this.elements.loading.style.display = 'none';
+                    };
+
+                    // Handle image load error
+                    this.elements.generatedImage.onerror = () => {
+                        this.elements.loading.style.display = 'none';
+                        this.showNotification('❌ Failed to load image', 'error');
+                    };
+
+                    this.showNotification('🎨 Amazing! Your image is ready', 'success');
+                } else {
+                    throw new Error(data.error || 'Failed to create image');
+                }
+            } catch (error) {
+                console.error('Generation error:', error);
+                this.elements.loading.style.display = 'none';
+                this.elements.generateBtn.disabled = false;
+                
+                if (error.message.includes('safety') || error.message.includes('policy')) {
+                    this.showNotification('⚠️ Please try a different description', 'error');
+                } else if (error.message.includes('billing') || error.message.includes('quota')) {
+                    this.showNotification('❌ Service temporarily unavailable', 'error');
+                } else {
+                    this.showNotification('❌ Failed to create image: ' + error.message, 'error');
+                }
+            }
+        }
+
+        downloadImage() {
+            if (!this.currentImage) return;
+
+            const link = document.createElement('a');
+            link.href = this.currentImage.url;
+            link.download = `ai-image-${Date.now()}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            this.showNotification('📥 Image downloaded!', 'success');
+        }
+
+        async copyImage() {
+            if (!this.currentImage) return;
+
+            try {
+                // Show loading for copy operation
+                this.elements.copyBtn.innerHTML = '⏳ Copying...';
+                this.elements.copyBtn.disabled = true;
+
+                const response = await fetch(this.currentImage.url);
+                const blob = await response.blob();
+                
+                await navigator.clipboard.write([
+                    new ClipboardItem({
+                        [blob.type]: blob
+                    })
+                ]);
+                
+                this.showNotification('📋 Copied to clipboard!', 'success');
+            } catch (error) {
+                console.error('Copy failed:', error);
+                this.showNotification('❌ Failed to copy - try downloading instead', 'error');
+            } finally {
+                // Reset button
+                this.elements.copyBtn.innerHTML = '📋 Copy';
+                this.elements.copyBtn.disabled = false;
+            }
+        }
+
+        showNotification(message, type) {
+            const notification = this.elements.notification;
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 4000);
+        }
+
+        setupEventListeners() {
+            // Purchase credits
+            this.elements.purchaseBtn.addEventListener('click', () => {
+                this.purchaseCredits();
+            });
+
+            // Generate image
+            this.elements.generateBtn.addEventListener('click', () => {
+                this.generateImage();
+            });
+
+            // Download image
+            this.elements.downloadBtn.addEventListener('click', () => {
+                this.downloadImage();
+            });
+
+            // Copy image
+            this.elements.copyBtn.addEventListener('click', () => {
+                this.copyImage();
+            });
+
+            // Enter key to generate (Ctrl+Enter or just Enter)
+            this.elements.promptInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                    e.preventDefault();
+                    this.generateImage();
+                }
+            });
+
+            // Simple Enter in textarea should just add new line
+            this.elements.promptInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && !e.ctrlKey && !e.metaKey) {
+                    // Allow default behavior (new line)
+                }
+            });
+        }
+    }
+
+    // Initialize the image generator
+    let imageGenerator;
+    document.addEventListener('DOMContentLoaded', () => {
+        imageGenerator = new SimpleImageGenerator();
+    });
+</script>
+    </body>
 </html>

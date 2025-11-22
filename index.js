@@ -364,7 +364,7 @@ function requireFeature(feature) {
 }
 
 // ---------------------------------------------
-// UNLOCK FEATURE (PAY GOLDEN)
+// UNLOCK / RENEW FEATURE (30 DAYS)
 // ---------------------------------------------
 app.post("/api/unlock-feature", authUser, (req, res) => {
   const { feature } = req.body;
@@ -373,13 +373,13 @@ app.post("/api/unlock-feature", authUser, (req, res) => {
     return res.status(400).json({ error: "Invalid feature" });
   }
 
-  const db = getDB();
+  const db = loadGoldenDB();
   const id = getUserIdentifier(req);
   const user = db.users[id];
 
   const cost = FEATURE_PRICES[feature];
 
-  // Admin gets everything free
+  // USER MUST HAVE ENOUGH GOLDEN (Admin = free)
   if (req.user.email !== "farisalmhamad3@gmail.com") {
     if (user.golden_balance < cost) {
       return res.status(400).json({ error: "Not enough Golden" });
@@ -387,29 +387,50 @@ app.post("/api/unlock-feature", authUser, (req, res) => {
     user.golden_balance -= cost;
   }
 
-  // Unlock for 30 days
-  const expiry = new Date();
+  // -----------------------------
+  // CALCULATE NEW EXPIRY DATE
+  // -----------------------------
+  let expiry = new Date();
+
+  // If feature is already active → extend from old expiry
+  if (user.subscriptions && user.subscriptions[feature]) {
+    const oldExpiry = new Date(user.subscriptions[feature]);
+
+    if (oldExpiry > new Date()) {
+      // extend from old expiry
+      expiry = oldExpiry;
+    }
+  }
+
+  // Add 30 days
   expiry.setDate(expiry.getDate() + 30);
 
-  user.subscriptions = user.subscriptions || {};
+  // -----------------------------
+  // SAVE SUBSCRIPTION
+  // -----------------------------
+  if (!user.subscriptions) user.subscriptions = {};
+
   user.subscriptions[feature] = expiry.toISOString();
 
+  // Log transaction
   user.transactions = user.transactions || [];
   user.transactions.push({
-    type: "unlock",
-    amount: -cost,
+    type: "subscription",
     feature,
-    timestamp: new Date().toISOString(),
+    amount: -cost,
+    newExpiry: expiry.toISOString(),
+    timestamp: new Date().toISOString()
   });
 
-  saveDB(db);
+  saveGoldenDB(db);
 
   res.json({
     success: true,
     newBalance: user.golden_balance,
-    expires: expiry.toISOString(),
+    expires: expiry.toISOString()
   });
 });
+
 
 // ---------------------------------------------
 // ADVANCED AI SUBSCRIPTION (20G / 30 days)
@@ -463,6 +484,65 @@ app.post("/api/subscribe-advanced-ai", authUser, (req, res) => {
     newBalance: user.golden_balance,
     expires: expiry.toISOString(),
   });
+});
+// =============================================
+// GET ALL USER SUBSCRIPTIONS (for subscriptions.html)
+// =============================================
+app.get("/api/subscriptions", authUser, (req, res) => {
+  const db = loadGoldenDB();
+  const id = getUserIdentifier(req);
+  const user = db.users[id];
+
+  if (!user) {
+    return res.status(404).json({ error: "User not found" });
+  }
+
+  const now = new Date();
+  const subs = Object.entries(user.subscriptions || {}).map(([feature, expiry]) => {
+    const expiryDate = new Date(expiry);
+    const active = expiryDate > now;
+
+    const cost = FEATURE_PRICES[feature] || 0;
+
+    const daysLeft = active
+      ? Math.ceil((expiryDate - now) / (1000 * 60 * 60 * 24))
+      : 0;
+
+    return {
+      feature,
+      expiry,
+      cost,
+      active,
+      daysLeft
+    };
+  });
+
+  res.json({
+    success: true,
+    balance: user.golden_balance,
+    subscriptions: subs
+  });
+});
+// =============================================
+// CANCEL SUBSCRIPTION (stop auto-renew)
+// =============================================
+app.post("/api/cancel-subscription", authUser, (req, res) => {
+  const { feature } = req.body;
+
+  const db = loadGoldenDB();
+  const id = getUserIdentifier(req);
+  const user = db.users[id];
+
+  if (!user.subscriptions || !user.subscriptions[feature]) {
+    return res.status(400).json({ error: "Subscription not found" });
+  }
+
+  // Just remove the expiry = no auto-renew
+  delete user.subscriptions[feature];
+
+  saveGoldenDB(db);
+
+  res.json({ success: true });
 });
 
 // ---------------------------------------------

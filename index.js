@@ -1,6 +1,6 @@
-// =============================================
-// PART 1 — CORE SETUP & DATABASE
-// GoldenSpaceAI — Clean & Optimized Core
+/// =============================================
+// PART 1 — CORE SETUP & PERSISTENT DATABASE
+// GoldenSpaceAI — Render Disk Optimized
 // =============================================
 
 import express from "express";
@@ -20,7 +20,7 @@ import fs from "fs";
 import crypto from "crypto";
 
 // ---------------------------------------------
-// LOAD ENVIRONMENT
+// LOAD ENV & INITIALIZE APP
 // ---------------------------------------------
 dotenv.config();
 const app = express();
@@ -30,30 +30,40 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // ---------------------------------------------
+// ENSURE /data DISK EXISTS (Render Persistent Disk)
+// ---------------------------------------------
+fs.mkdirSync("/data", { recursive: true });
+
+// ---------------------------------------------
 // BASIC CONSTANTS
 // ---------------------------------------------
 const SITE_BASE_URL = "https://goldenspaceai.space";
 
-// 🟢 IMPORTANT: Store database on the Render persistent disk
-const GOLDEN_DB_PATH = "/data/golden_database.json";
-const PAYMENT_DB_PATH = "/data/payment_database.json";
+const GOLDEN_DB_PATH = "/data/golden_database.json";      // User DB
+const PAYMENT_DB_PATH = "/data/payment_database.json";    // Payments DB
 
-const BLOCKCYPHER_TOKEN = process.env.BLOCKCYPHER_TOKEN;   // << YOUR PAYMENT TOKEN
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const BLOCKCYPHER_TOKEN = process.env.BLOCKCYPHER_TOKEN;
 
 // ---------------------------------------------
-// ENSURE ENVIRONMENT VARIABLES
+// VALIDATE ENVIRONMENT VARIABLES
 // ---------------------------------------------
 function validateEnvironment() {
-  const required = ["OPENAI_API_KEY", "SESSION_SECRET", "BLOCKCYPHER_TOKEN"];
-  const missing = required.filter(k => !process.env[k]);
+  const required = [
+    "OPENAI_API_KEY",
+    "SESSION_SECRET",
+    "BLOCKCYPHER_TOKEN"
+  ];
 
+  const missing = required.filter(v => !process.env[v]);
   if (missing.length > 0) {
-    console.error("❌ Missing ENV variables:", missing);
+    console.error("❌ Missing environment variables:", missing);
     process.exit(1);
   }
-  console.log("✅ Environment variables loaded");
+
+  console.log("✅ All environment variables loaded");
 }
+
 validateEnvironment();
 
 // ---------------------------------------------
@@ -65,7 +75,7 @@ const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
 // EXPRESS MIDDLEWARE
 // ---------------------------------------------
 app.use(cors({ origin: true, credentials: true }));
-app.use(express.json({ limit: "20mb" }));
+app.use(express.json({ limit: "25mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
@@ -82,63 +92,64 @@ app.use(
       httpOnly: true,
       sameSite: "lax",
       secure: true,
-      maxAge: 1000 * 60 * 60 * 24 * 7,
-    },
+      maxAge: 1000 * 60 * 60 * 24 * 7  // 7 days
+    }
   })
 );
 
 // ---------------------------------------------
-// PASSPORT SERIALIZATION
+// PASSPORT INITIALIZATION
 // ---------------------------------------------
 passport.serializeUser((user, done) => done(null, user));
-passport.deserializeUser((obj, done) => done(null, obj));
+passport.deserializeUser((user, done) => done(null, user));
 
 app.use(passport.initialize());
 app.use(passport.session());
 
 // ---------------------------------------------
-// MULTER FILE UPLOAD (Images only)
+// MULTER (IMAGE UPLOADS)
 // ---------------------------------------------
 const upload = multer({
   dest: "uploads/",
-  limits: { fileSize: 10 * 1024 * 1024 },
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
   fileFilter: (req, file, cb) => {
     if (file.mimetype.startsWith("image/")) cb(null, true);
-    else cb(new Error("Only image files allowed"), false);
-  },
+    else cb(new Error("Only images allowed"), false);
+  }
 });
 
 // ---------------------------------------------
-// DATABASE LOADING & SAVING
+// DATABASE HELPERS (PERSISTENT DISK)
 // ---------------------------------------------
 function loadGoldenDB() {
   try {
-    if (fs.existsSync(GOLDEN_DB_PATH)) {
-      const raw = fs.readFileSync(GOLDEN_DB_PATH, "utf8");
-      return raw.trim() ? JSON.parse(raw) : { users: {} };
-    } else {
-      const initial = { users: {} };
-      fs.writeFileSync(GOLDEN_DB_PATH, JSON.stringify(initial, null, 2));
-      return initial;
+    if (!fs.existsSync(GOLDEN_DB_PATH)) {
+      const init = { users: {} };
+      fs.writeFileSync(GOLDEN_DB_PATH, JSON.stringify(init, null, 2));
+      return init;
     }
-  } catch (e) {
-    console.error("DB read error:", e);
+
+    const raw = fs.readFileSync(GOLDEN_DB_PATH, "utf8");
+    return raw.trim() ? JSON.parse(raw) : { users: {} };
+
+  } catch (err) {
+    console.error("❌ Failed to load Golden DB:", err);
     return { users: {} };
   }
 }
 
-let saving = false;
-async function saveGoldenDB(db) {
-  if (saving) return;
-  saving = true;
+let savingGolden = false;
+function saveGoldenDB(db) {
+  if (savingGolden) return;
+  savingGolden = true;
 
   try {
     fs.writeFileSync(GOLDEN_DB_PATH, JSON.stringify(db, null, 2));
   } catch (err) {
-    console.error("DB save error:", err);
+    console.error("❌ Failed to save Golden DB:", err);
   }
 
-  saving = false;
+  savingGolden = false;
 }
 
 // ---------------------------------------------
@@ -149,13 +160,12 @@ function getUserIdentifier(req) {
 }
 
 function authUser(req, res, next) {
-  if (!req.user)
-    return res.status(401).json({ error: "Login required" });
+  if (!req.user) return res.status(401).json({ error: "Login required" });
   next();
 }
 
 // ---------------------------------------------
-// GOOGLE LOGIN
+// SOCIAL LOGIN (GOOGLE & GITHUB)
 // ---------------------------------------------
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
   passport.use(
@@ -164,43 +174,33 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
         clientID: process.env.GOOGLE_CLIENT_ID,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
         callbackURL: `${SITE_BASE_URL}/auth/google/callback`,
-        proxy: true,
+        proxy: true
       },
       (_access, _refresh, profile, done) => {
         const user = {
           id: profile.id,
+          provider: "google",
           name: profile.displayName,
           email: profile.emails?.[0]?.value || "",
-          photo: profile.photos?.[0]?.value || "",
-          provider: "google",
+          photo: profile.photos?.[0]?.value || ""
         };
+
         ensureUserExists(user);
         done(null, user);
       }
     )
   );
 
-  app.get(
-    "/auth/google",
-    passport.authenticate("google", {
-      scope: ["profile", "email"],
-      prompt: "select_account",
-    })
+  app.get("/auth/google",
+    passport.authenticate("google", { scope: ["profile", "email"] })
   );
 
-  app.get(
-    "/auth/google/callback",
-    passport.authenticate("google", {
-      failureRedirect: "/login-signup.html",
-      session: true,
-    }),
+  app.get("/auth/google/callback",
+    passport.authenticate("google", { failureRedirect: "/login" }),
     (req, res) => res.redirect("/")
   );
 }
 
-// ---------------------------------------------
-// GITHUB LOGIN
-// ---------------------------------------------
 if (process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET) {
   passport.use(
     new GitHubStrategy(
@@ -208,36 +208,35 @@ if (process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET) {
         clientID: process.env.GITHUB_CLIENT_ID,
         clientSecret: process.env.GITHUB_CLIENT_SECRET,
         callbackURL: `${SITE_BASE_URL}/auth/github/callback`,
-        proxy: true,
+        proxy: true
       },
       (_access, _refresh, profile, done) => {
         const user = {
           id: profile.id,
-          name: profile.displayName || profile.username,
-          email: profile.emails?.[0]?.value || `${profile.username}@github.user`,
-          photo: profile.photos?.[0]?.value || "",
           provider: "github",
+          name: profile.displayName || profile.username,
+          email: profile.emails?.[0]?.value || profile.username + "@github.user",
+          photo: profile.photos?.[0]?.value || ""
         };
+
         ensureUserExists(user);
         done(null, user);
       }
     )
   );
 
-  app.get("/auth/github", passport.authenticate("github", { scope: ["user:email"] }));
+  app.get("/auth/github",
+    passport.authenticate("github", { scope: ["user:email"] })
+  );
 
-  app.get(
-    "/auth/github/callback",
-    passport.authenticate("github", {
-      failureRedirect: "/login-signup.html",
-      session: true,
-    }),
+  app.get("/auth/github/callback",
+    passport.authenticate("github", { failureRedirect: "/login" }),
     (req, res) => res.redirect("/")
   );
 }
 
 // ---------------------------------------------
-// USER CREATION (called on login)
+// USER CREATION (RUNS AFTER LOGIN)
 // ---------------------------------------------
 function ensureUserExists(user) {
   const db = loadGoldenDB();
@@ -248,11 +247,15 @@ function ensureUserExists(user) {
       email: user.email,
       name: user.name,
       photo: user.photo,
+
       golden_balance: user.email === "farisalmhamad3@gmail.com" ? 100000 : 0,
+      total_golden_earned: 0,
+
       subscriptions: {},
-      created_at: new Date().toISOString(),
-      last_login: new Date().toISOString(),
       transactions: [],
+
+      created_at: new Date().toISOString(),
+      last_login: new Date().toISOString()
     };
   } else {
     db.users[id].last_login = new Date().toISOString();
@@ -260,6 +263,7 @@ function ensureUserExists(user) {
 
   saveGoldenDB(db);
 }
+
 // =============================================
 // PART 2 — USER SYSTEM (PROFILE, BALANCE, SUBSCRIPTIONS, TRANSFERS)
 // =============================================
@@ -898,9 +902,9 @@ app.use((req, res) => {
 // PART 5 — FULL AUTOMATIC BLOCKCHAIN PAYMENT ENGINE
 // =============================================
 
-// ---------------------------
-// CONFIG
-// ---------------------------
+// ---------------------------------------------
+// CONFIGURATION
+// ---------------------------------------------
 const PAYMENT_WALLETS = {
   btc: "bc1qz5wtz2d329xsm7gcs9e3jwls9supg2fk2hkxtd",
   eth: "0x8BEaCb38dF916F6644F81cA0De18C1F4996d32Ea",
@@ -908,86 +912,95 @@ const PAYMENT_WALLETS = {
 };
 
 const GOLDEN_PLANS = {
-  mini:  { priceUSD: 5,  golden: 20 },
-  golden:{ priceUSD: 10, golden: 44 },
-  ultra: { priceUSD: 20, golden: 90 }
+  mini:   { priceUSD: 5,  golden: 20 },
+  golden: { priceUSD: 10, golden: 44 },
+  ultra:  { priceUSD: 20, golden: 90 }
 };
 
-// Save payments to JSON
-const PAYMENTS_DB_PATH = "./data/payment_database.json";
-
-function loadPaymentsDB() {
+// ---------------------------------------------
+// PAYMENT DATABASE (Persistent Disk)
+// ---------------------------------------------
+function loadPaymentDB() {
   try {
-    if (!fs.existsSync(PAYMENTS_DB_PATH)) {
-      fs.writeFileSync(PAYMENTS_DB_PATH, JSON.stringify({ payments: [] }, null, 2));
+    if (!fs.existsSync(PAYMENT_DB_PATH)) {
+      fs.writeFileSync(PAYMENT_DB_PATH, JSON.stringify({ payments: [] }, null, 2));
     }
-    const file = fs.readFileSync(PAYMENTS_DB_PATH, "utf8");
-    return JSON.parse(file);
+
+    const raw = fs.readFileSync(PAYMENT_DB_PATH, "utf8");
+    return raw.trim() ? JSON.parse(raw) : { payments: [] };
+
   } catch (err) {
-    console.error("Payment DB load error:", err);
+    console.error("❌ Failed to load payment DB:", err);
     return { payments: [] };
   }
 }
 
-function savePaymentsDB(db) {
-  fs.writeFileSync(PAYMENTS_DB_PATH, JSON.stringify(db, null, 2));
+function savePaymentDB(db) {
+  try {
+    fs.writeFileSync(PAYMENT_DB_PATH, JSON.stringify(db, null, 2));
+  } catch (err) {
+    console.error("❌ Failed to save payment DB:", err);
+  }
 }
 
-let paymentDB = loadPaymentsDB();
-
-// Generate random ID
+// ---------------------------------------------
+// RANDOM ID GENERATOR
+// ---------------------------------------------
 function randomId() {
   return crypto.randomBytes(12).toString("hex");
 }
 
 // =============================================
-// CREATE PAYMENT REQUEST (USER SENDS CRYPTO)
+// CREATE PAYMENT REQUEST
 // =============================================
-app.post("/api/create-payment", authUser, async (req, res) => {
+app.post("/api/create-payment", authUser, (req, res) => {
   try {
     const { plan, crypto } = req.body;
 
     if (!GOLDEN_PLANS[plan]) return res.status(400).json({ error: "Invalid plan" });
     if (!PAYMENT_WALLETS[crypto]) return res.status(400).json({ error: "Invalid crypto" });
 
-    const userId = getUserIdentifier(req);
-    const planData = GOLDEN_PLANS[plan];
-    const wallet = PAYMENT_WALLETS[crypto];
+    const db = loadPaymentDB();
 
     const payment = {
       id: randomId(),
-      userId,
+      userId: getUserIdentifier(req),
       userEmail: req.user.email,
+
       plan,
       crypto,
-      wallet,
-      expectedUSD: planData.priceUSD,
-      expectedGolden: planData.golden,
+
+      wallet: PAYMENT_WALLETS[crypto],
+      expectedUSD: GOLDEN_PLANS[plan].priceUSD,
+      expectedGolden: GOLDEN_PLANS[plan].golden,
+
       status: "pending",
+      txHash: null,
       createdAt: new Date().toISOString(),
-      txHash: null
+      confirmedAt: null
     };
 
-    // Save to DB
-    paymentDB.payments.push(payment);
-    savePaymentsDB(paymentDB);
+    db.payments.push(payment);
+    savePaymentDB(db);
 
     res.json({ success: true, paymentId: payment.id });
 
-  } catch (error) {
-    console.error("Create-payment error:", error);
+  } catch (err) {
+    console.error("❌ create-payment error:", err);
     res.status(500).json({ error: "Failed to create payment" });
   }
 });
 
 // =============================================
-// BLOCKCYPHER API — GET ADDRESS TRANSACTIONS
+// BLOCKCYPHER — FETCH TRANSACTIONS
 // =============================================
 async function getAddressTxs(crypto, address) {
   try {
-    const chain = crypto === "btc" ? "btc/main" :
-                  crypto === "eth" ? "eth/main" :
-                  crypto === "ltc" ? "ltc/main" : null;
+    const chain =
+      crypto === "btc" ? "btc/main" :
+      crypto === "eth" ? "eth/main" :
+      crypto === "ltc" ? "ltc/main" :
+      null;
 
     if (!chain) return null;
 
@@ -1000,13 +1013,13 @@ async function getAddressTxs(crypto, address) {
     return data.txrefs || data.unconfirmed_txrefs || [];
 
   } catch (err) {
-    console.error("BlockCypher error:", err.message);
+    console.error("❌ BlockCypher API error:", err.message);
     return null;
   }
 }
 
 // =============================================
-// WHEN CONFIRMED → ADD GOLDEN TO USER
+// ADD GOLDEN TO USER AFTER CONFIRMATION
 // =============================================
 function addGolden(payment) {
   const db = loadGoldenDB();
@@ -1014,16 +1027,17 @@ function addGolden(payment) {
   if (!user) return;
 
   const amount = GOLDEN_PLANS[payment.plan].golden;
-  const prev = user.golden_balance;
+  const before = user.golden_balance;
 
+  // Add Golden
   user.golden_balance += amount;
   user.total_golden_earned += amount;
 
-  user.transactions = user.transactions || [];
+  // Log Transaction
   user.transactions.push({
     type: "crypto_purchase",
     amount,
-    previous_balance: prev,
+    previous_balance: before,
     new_balance: user.golden_balance,
     crypto: payment.crypto,
     txHash: payment.txHash,
@@ -1032,11 +1046,11 @@ function addGolden(payment) {
 
   saveGoldenDB(db);
 
-  console.log(`💰 Auto-added ${amount}G to ${user.email}`);
+  console.log(`💰 Added ${amount}G to ${user.email}`);
 }
 
 // =============================================
-// CHECK A PAYMENT (CONFIRMATION)
+// CHECK SINGLE PAYMENT STATUS
 // =============================================
 async function checkPayment(payment) {
   const txs = await getAddressTxs(payment.crypto, payment.wallet);
@@ -1046,11 +1060,18 @@ async function checkPayment(payment) {
     if (tx.confirmations >= 1) {
       if (payment.status === "confirmed") return;
 
+      // Confirm payment
       payment.status = "confirmed";
       payment.txHash = tx.tx_hash;
       payment.confirmedAt = new Date().toISOString();
-      savePaymentsDB(paymentDB);
 
+      // Save payment DB
+      const db = loadPaymentDB();
+      const index = db.payments.findIndex(p => p.id === payment.id);
+      db.payments[index] = payment;
+      savePaymentDB(db);
+
+      // Add Golden
       addGolden(payment);
       return;
     }
@@ -1058,21 +1079,26 @@ async function checkPayment(payment) {
 }
 
 // =============================================
-// BACKGROUND LOOP — CHECK EVERY 20 SECONDS
+// BACKGROUND PAYMENT CHECKER
+// runs every 20 seconds
 // =============================================
 setInterval(async () => {
-  const pending = paymentDB.payments.filter(p => p.status === "pending");
+  const db = loadPaymentDB();
+  const pending = db.payments.filter(p => p.status === "pending");
 
   if (pending.length > 0) {
-    console.log(`🔍 Checking ${pending.length} pending payments...`);
+    console.log(`🔍 Checking ${pending.length} payment(s)...`);
   }
 
-  for (const pay of pending) {
-    await checkPayment(pay);
+  for (const payment of pending) {
+    await checkPayment(payment);
   }
-}, 20000); // 20 seconds
-
+}, 20000);  // 20 seconds
+// =============================================
+// SERVER START — REQUIRED FOR RENDER
+// =============================================
 const PORT = process.env.PORT || 3000;
+
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`🚀 GoldenSpaceAI running on port ${PORT}`);
 });

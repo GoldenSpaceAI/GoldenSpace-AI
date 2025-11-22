@@ -136,7 +136,6 @@
             border: 2px solid rgba(212, 175, 55, 0.3);
             max-width: 500px;
             margin: 0 auto;
-            display: none;
         }
 
         .login-icon {
@@ -779,28 +778,28 @@
             <!-- Step 1: Select Plan -->
             <div class="step-content active" id="step1Content">
                 <div class="plans-grid">
-                    <div class="plan-card" data-plan="mini">
+                    <div class="plan-card" data-plan="60">
                         <div class="plan-icon">✨</div>
-                        <div class="plan-name">Mini Pack</div>
-                        <div class="plan-price">$5.00</div>
-                        <div class="plan-golden">20 Golden</div>
-                        <div class="save-badge">Perfect Start</div>
+                        <div class="plan-name">Standard Pack</div>
+                        <div class="plan-price">$15.00</div>
+                        <div class="plan-golden">60 Golden</div>
+                        <div class="save-badge">Best Value</div>
                     </div>
                     
-                    <div class="plan-card" data-plan="golden">
+                    <div class="plan-card" data-plan="100">
                         <div class="plan-icon">🌟</div>
-                        <div class="plan-name">Golden Pack</div>
-                        <div class="plan-price">$10.00</div>
-                        <div class="plan-golden">45 Golden</div>
-                        <div class="save-badge">Save $1.5</div>
+                        <div class="plan-name">Pro Pack</div>
+                        <div class="plan-price">$20.00</div>
+                        <div class="plan-golden">100 Golden</div>
+                        <div class="save-badge">Popular</div>
                     </div>
                     
-                    <div class="plan-card" data-plan="ultra">
+                    <div class="plan-card" data-plan="200">
                         <div class="plan-icon">💎</div>
-                        <div class="plan-name">Ultra Pack</div>
-                        <div class="plan-price">$20.00</div>
-                        <div class="plan-golden">90 Golden</div>
-                        <div class="save-badge">Save $5</div>
+                        <div class="plan-name">Ultimate Pack</div>
+                        <div class="plan-price">$40.00</div>
+                        <div class="plan-golden">200 Golden</div>
+                        <div class="save-badge">Maximum Value</div>
                     </div>
                 </div>
 
@@ -874,7 +873,7 @@
 
                     <div class="amount-display">
                         <div class="amount-label">Send Exactly</div>
-                        <div class="amount-value" id="finalAmount">$5.00 in BTC</div>
+                        <div class="amount-value" id="finalAmount">$15.00 in BTC</div>
                     </div>
 
                     <div class="wallet-section">
@@ -923,9 +922,9 @@
                 };
 
                 this.plans = {
-                    mini: { price: 5, golden: 20 },
-                    golden: { price: 10, golden: 45 },
-                    ultra: { price: 20, golden: 90 }
+                    60: { price: 15, golden: 60 },
+                    100: { price: 20, golden: 100 },
+                    200: { price: 40, golden: 200 }
                 };
 
                 // Wallet validation regex patterns
@@ -985,21 +984,13 @@
 
             async checkAuth() {
                 try {
-                    // Simulate API call - replace with actual authentication
-                    const mockUser = {
-                        loggedIn: true,
-                        user: {
-                            name: 'John Doe',
-                            email: 'john@example.com',
-                            provider: 'Google'
-                        },
-                        balance: 150
-                    };
+                    const response = await fetch('/api/me');
+                    const data = await response.json();
                     
-                    if (mockUser.loggedIn) {
-                        this.user = mockUser.user;
+                    if (data.loggedIn) {
+                        this.user = data.user;
                         this.showPaymentFlow();
-                        this.updateUserInfo(mockUser);
+                        this.updateUserInfo(data);
                     } else {
                         this.showLoginRequired();
                     }
@@ -1134,34 +1125,52 @@
 
             async submitPaymentRequest() {
                 try {
-                    // Send payment request to admin panel
+                    if (!this.user || !this.selectedPlan || !this.selectedCrypto || !this.userWalletAddress) {
+                        throw new Error('Missing required information');
+                    }
+
+                    // Get current balance
+                    const balanceResponse = await fetch('/api/golden-balance');
+                    const balanceData = await balanceResponse.json();
+                    
                     const paymentRequest = {
                         userEmail: this.user.email,
                         userProvider: this.user.provider,
+                        userName: this.user.name,
+                        currentGoldenBalance: balanceData.balance,
                         plan: this.selectedPlan,
                         crypto: this.selectedCrypto,
                         amount: this.plans[this.selectedPlan].price,
                         goldenAmount: this.plans[this.selectedPlan].golden,
                         userWalletAddress: this.userWalletAddress,
-                        timestamp: new Date().toISOString(),
-                        status: 'pending'
+                        timestamp: new Date().toISOString()
                     };
 
-                    // Store in localStorage (in real app, send to server)
-                    const requests = JSON.parse(localStorage.getItem('goldenPaymentRequests') || '[]');
-                    requests.push(paymentRequest);
-                    localStorage.setItem('goldenPaymentRequests', JSON.stringify(requests));
+                    // Send payment request to server
+                    const response = await fetch('/api/payment-request', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(paymentRequest)
+                    });
 
-                    this.showNotification('✅ Payment request submitted! We will verify your transaction.', 'success');
-                    
-                    // Redirect after delay
-                    setTimeout(() => {
-                        window.location.href = '/dashboard.html';
-                    }, 2000);
+                    const result = await response.json();
+
+                    if (result.success) {
+                        this.showNotification('✅ Payment request submitted! We will verify your transaction.', 'success');
+                        
+                        // Redirect after delay
+                        setTimeout(() => {
+                            window.location.href = '/';
+                        }, 3000);
+                    } else {
+                        throw new Error(result.error || 'Failed to submit payment request');
+                    }
 
                 } catch (error) {
                     console.error('Error submitting payment request:', error);
-                    this.showNotification('❌ Failed to submit payment request', 'error');
+                    this.showNotification(`❌ ${error.message}`, 'error');
                 }
             }
 

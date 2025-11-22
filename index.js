@@ -899,37 +899,44 @@ app.post("/live-chat-process", async (req, res) => {
   }
 });
 // =============================================
-// PART 4 — STATIC PAGES, ROUTING & HEALTH CHECKS
+// PART 4 — STATIC PAGES, ROUTING & HEALTH CHECKS (REWRITTEN)
 // =============================================
 
-// Serve main website pages
+import express from "express";
+import path from "path";
+import fs from "fs";
+
+// FUNCTION TO JOIN PATHS SAFELY
+function pagePath(file) {
+  return path.join(__dirname, file);
+}
+
+// ---------------------------------------------
+// PREVENT WILDCARD FROM INTERCEPTING /api/*
+// ---------------------------------------------
+app.use((req, res, next) => {
+  if (req.path.startsWith("/api/")) return next();
+  next();
+});
+
+// ---------------------------------------------
+// ROOT PAGE
+// ---------------------------------------------
 app.get("/", (_req, res) => {
-  res.sendFile(path.join(__dirname, "index.html"));
+  res.sendFile(pagePath("index.html"));
 });
 
+// ---------------------------------------------
+// LOGIN PAGE
+// ---------------------------------------------
 app.get("/login", (_req, res) => {
-  res.sendFile(path.join(__dirname, "login-signup.html"));
+  res.sendFile(pagePath("login-signup.html"));
 });
 
-// Dynamic page loader (secure)
-app.get("/:page.html", (req, res) => {
-  const page = req.params.page.toLowerCase();
-
-  // Security check
-  if (!/^[a-z0-9\-]+$/i.test(page)) {
-    return res.status(400).send("Invalid page");
-  }
-
-  const filePath = path.join(__dirname, `${page}.html`);
-  if (fs.existsSync(filePath)) {
-    return res.sendFile(filePath);
-  }
-
-  res.status(404).send("Page not found");
-});
-
-// Dedicated static routes
-const staticPages = {
+// ---------------------------------------------
+// DIRECT STATIC ROUTES (no wildcard)
+// ---------------------------------------------
+const staticRoutes = {
   "/plans": "plans.html",
   "/success": "success.html",
   "/FreeAI": "chat-free-ai.html",
@@ -951,14 +958,39 @@ const staticPages = {
   "/admin-panel": "admin-page.12345432.html"
 };
 
-Object.entries(staticPages).forEach(([route, file]) => {
+// Register pages
+Object.entries(staticRoutes).forEach(([route, file]) => {
   app.get(route, (req, res) => {
-    res.sendFile(path.join(__dirname, file));
+    res.sendFile(pagePath(file));
   });
 });
 
 // ---------------------------------------------
-// HEALTH CHECK ENDPOINT
+// WILDCARD FOR *.html PAGES (SAFE)
+// ---------------------------------------------
+app.get("/:page.html", (req, res, next) => {
+
+  // DO NOT TOUCH API ROUTES
+  if (req.path.startsWith("/api/")) return next();
+
+  const page = req.params.page.toLowerCase();
+
+  // Security: only letters, numbers, dash
+  if (!/^[a-z0-9\-]+$/i.test(page)) {
+    return res.status(400).send("Invalid request");
+  }
+
+  const filePath = pagePath(`${page}.html`);
+
+  if (fs.existsSync(filePath)) {
+    return res.sendFile(filePath);
+  }
+
+  return res.status(404).send("Page not found");
+});
+
+// ---------------------------------------------
+// HEALTH CHECK
 // ---------------------------------------------
 app.get("/health", (_req, res) => {
   const db = loadGoldenDB();
@@ -970,17 +1002,18 @@ app.get("/health", (_req, res) => {
 });
 
 // ---------------------------------------------
-// ERROR HANDLING
+// 404 JSON HANDLER FOR UNKNOWN ROUTES
 // ---------------------------------------------
-app.use((err, req, res, next) => {
-  console.error("Unhandled Error:", err);
-  res.status(500).json({ error: "Internal server error" });
+app.use((req, res) => {
+  // If API → JSON
+  if (req.path.startsWith("/api/")) {
+    return res.status(404).json({ error: "API endpoint not found" });
+  }
+
+  // Otherwise → normal 404
+  return res.status(404).send("Page not found");
 });
 
-// 404 Handler
-app.use((req, res) => {
-  res.status(404).json({ error: "Endpoint not found" });
-});
 // =============================================
 // PART 5 — FULL AUTOMATIC BLOCKCHAIN PAYMENT ENGINE (FIXED + ALWAYS SCANNING)
 // =============================================

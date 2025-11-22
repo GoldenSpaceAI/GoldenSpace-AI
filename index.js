@@ -897,8 +897,6 @@ app.use((req, res) => {
 // ---------------------------
 // CONFIG
 // ---------------------------
-const BLOCKCYPHER_TOKEN = process.env.BLOCKCYPHER_TOKEN;
-
 const PAYMENT_WALLETS = {
   btc: "bc1qz5wtz2d329xsm7gcs9e3jwls9supg2fk2hkxtd",
   eth: "0x8BEaCb38dF916F6644F81cA0De18C1F4996d32Ea",

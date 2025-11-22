@@ -1,173 +1,158 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>GoldenSpaceAI • Plans</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GoldenSpaceAI • Buy Golden</title>
+
 <style>
 :root {
-  --dark: #0a0a0a;
-  --card: #111;
-  --gold1: #ffd86b;
-  --gold2: #f4b83e;
-  --border: rgba(255,255,255,0.08);
-  --text: #d9d9d9;
+  --gold1:#ffd86b;
+  --gold2:#f4b83e;
+  --text:#eaeaea;
+  --border:rgba(255,255,255,0.15);
+  --bg-dark:rgba(0,0,0,0.7);
 }
 
 body {
-  margin: 0;
-  font-family: "Segoe UI", Roboto, sans-serif;
-  background: var(--dark);
-  color: var(--text);
-  overflow-x: hidden;
+  margin:0;
+  font-family:"Segoe UI",sans-serif;
+  background:url("https://www.nasa.gov/wp-content/uploads/2023/03/iss070e000123.jpg") center/cover fixed;
+  color:var(--text);
+  backdrop-filter:blur(4px);
 }
 
+/* NAV */
 .nav {
-  padding: 18px 26px;
-  background: rgba(0,0,0,0.6);
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  position: sticky;
-  top: 0;
-  z-index: 10;
+  background:rgba(0,0,0,0.55);
+  padding:15px 22px;
+  border-bottom:1px solid var(--border);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.brand {font-size:24px;font-weight:900;color:var(--gold1);}
+.pill{
+  color:var(--gold1);
+  padding:8px 16px;
+  border:1px solid var(--border);
+  border-radius:20px;
+  text-decoration:none;
 }
 
-.brand {
-  font-size: 22px;
-  font-weight: 900;
-  color: var(--gold1);
-}
-
-.pill {
-  color: var(--gold1);
-  text-decoration: none;
-  padding: 8px 16px;
-  border-radius: 16px;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.1);
-}
-
+/* WRAPPER */
 .wrap {
-  max-width: 1200px;
-  margin: 40px auto;
-  padding: 10px;
+  max-width:1150px;
+  margin:40px auto;
+  padding:20px;
+  backdrop-filter:blur(6px);
 }
 
+/* TITLE */
 .section-title {
-  text-align: center;
-  font-size: 32px;
-  font-weight: 900;
-  margin-bottom: 20px;
-  color: var(--gold1);
+  text-align:center;
+  font-size:36px;
+  font-weight:900;
+  margin-bottom:20px;
+  color:var(--gold1);
+  text-shadow:0 0 15px rgba(255,215,0,0.25);
 }
 
-.plans-row {
-  display: flex;
-  gap: 24px;
-  justify-content: center;
-  flex-wrap: wrap;
+/* PLANS */
+.plans {
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:20px;
 }
 
 .plan-card {
-  background: var(--card);
-  padding: 28px;
-  border-radius: 18px;
-  width: 300px;
-  border: 1px solid var(--border);
-  text-align: center;
-  transition: 0.35s;
-  position: relative;
+  background:var(--bg-dark);
+  border-radius:18px;
+  padding:26px;
+  width:300px;
+  border:1px solid var(--border);
+  transition:.35s;
+  position:relative;
+  backdrop-filter:blur(5px);
 }
-
-.plan-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 0 40px rgba(255,215,0,0.15);
-}
-
+.plan-card:hover {transform:translateY(-8px); box-shadow:0 10px 35px rgba(0,0,0,0.4);}
 .badge {
-  position: absolute;
-  top: -10px;
-  right: -10px;
-  background: linear-gradient(180deg, var(--gold1), var(--gold2));
-  padding: 6px 12px;
-  border-radius: 12px;
-  color: #000;
-  font-weight: 900;
-  font-size: 12px;
+  position:absolute;
+  top:-10px;right:-10px;
+  background:linear-gradient(180deg,var(--gold1),var(--gold2));
+  padding:6px 12px;
+  font-weight:900;
+  border-radius:12px;
+  color:#000;
 }
+.price {font-size:34px;color:var(--gold1);font-weight:900;margin:10px 0 4px;}
+.golden {font-size:16px;margin-bottom:12px;}
 
-.price {
-  font-size: 38px;
-  font-weight: 900;
-  margin: 16px 0 6px;
-  color: var(--gold1);
+.btn {
+  width:100%;
+  border:0;
+  padding:12px;
+  border-radius:12px;
+  cursor:pointer;
+  background:linear-gradient(180deg,var(--gold1),var(--gold2));
+  color:#000;
+  font-weight:800;
+  transition:.3s;
 }
-
-.golden {
-  font-size: 20px;
-  margin-bottom: 16px;
-}
-
-.btn-select {
-  margin-top: 16px;
-  width: 100%;
-  border: 0;
-  padding: 12px;
-  border-radius: 12px;
-  background: linear-gradient(180deg, var(--gold1), var(--gold2));
-  color: #000;
-  cursor: pointer;
-  font-size: 16px;
-  font-weight: 800;
-  transition: 0.35s;
-}
-
-.btn-select:hover {
-  transform: scale(1.03);
-}
+.btn:hover {transform:scale(1.04);}
 
 /* STEPS */
-.step-card {
-  margin-top: 40px;
-  display: none;
-  background: var(--card);
-  padding: 28px;
-  border-radius: 18px;
-  border: 1px solid var(--border);
+.step {
+  margin-top:40px;
+  display:none;
+  background:var(--bg-dark);
+  padding:26px;
+  border-radius:18px;
+  border:1px solid var(--border);
+}
+.crypto button {
+  margin:5px;
+  padding:10px 18px;
+  border-radius:12px;
+  border:1px solid var(--border);
+  background:rgba(0,0,0,0.3);
+  color:var(--text);
+}
+.crypto button.active {
+  background:var(--gold1);
+  color:#000;
+  font-weight:900;
 }
 
-.crypto-opt button {
-  margin: 5px;
-  padding: 10px 16px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  background: rgba(255,255,255,0.08);
-  color: var(--text);
-  cursor: pointer;
+/* FOOT NAV */
+.footer-btns {
+  margin-top:20px;
+  display:flex;
+  justify-content:space-between;
+}
+.back-btn {
+  background:none;
+  border:1px solid var(--border);
+  padding:10px 20px;
+  border-radius:12px;
+  color:var(--text);
+  cursor:pointer;
+}
+.continue-btn {
+  background:linear-gradient(180deg,var(--gold1),var(--gold2));
+  border:0;
+  padding:10px 20px;
+  border-radius:12px;
+  cursor:pointer;
+  color:#000;
+  font-weight:900;
 }
 
-.crypto-opt button.active {
-  background: var(--gold1);
-  color: #000;
-  font-weight: 700;
-}
-
-.status {
-  margin-top: 15px;
-  font-size: 16px;
-}
-
-.status.success {
-  color: #8affae;
-  font-weight: bold;
-}
-
-.status.error {
-  color: #ff9090;
-  font-weight: bold;
-}
+/* STATUS */
+.status {margin-top:12px;font-size:16px;}
+.status.success{color:#8affae;}
+.status.error{color:#ff8c8c;}
 </style>
 </head>
 <body>
@@ -181,60 +166,52 @@ body {
 
   <h1 class="section-title">Choose Your Plan</h1>
 
-  <!-- 3 PLAN CARDS -->
-  <div class="plans-row">
+  <div class="plans">
 
-    <!-- MINI -->
     <div class="plan-card">
-      <h2>Mini Plan</h2>
-      <p class="price">$5</p>
-      <p class="golden">20 Golden</p>
-      <button class="btn-select" onclick="selectPlan('mini',20,5)">Select Mini</button>
+      <h2>Mini</h2>
+      <div class="price">$5</div>
+      <div class="golden">20 Golden</div>
+      <button class="btn" onclick="selectPlan('mini',20,5)">Select Mini</button>
     </div>
 
-    <!-- GOLDEN (BADGE) -->
     <div class="plan-card">
-      <div class="badge">MOST POPULAR</div>
-      <h2>Golden Plan</h2>
-      <p class="price">$10</p>
-      <p class="golden">44 Golden</p>
-      <button class="btn-select" onclick="selectPlan('golden',44,10)">Select Golden</button>
+      <div class="badge">POPULAR</div>
+      <h2>Golden</h2>
+      <div class="price">$10</div>
+      <div class="golden">44 Golden</div>
+      <button class="btn" onclick="selectPlan('golden',44,10)">Select Golden</button>
     </div>
 
-    <!-- ULTRA -->
     <div class="plan-card">
-      <h2>Ultra Plan</h2>
-      <p class="price">$20</p>
-      <p class="golden">90 Golden</p>
-      <button class="btn-select" onclick="selectPlan('ultra',90,20)">Select Ultra</button>
+      <h2>Ultra</h2>
+      <div class="price">$20</div>
+      <div class="golden">90 Golden</div>
+      <button class="btn" onclick="selectPlan('ultra',90,20)">Select Ultra</button>
     </div>
 
   </div>
 
-  <!-- STEP 1 -->
-  <div id="step1" class="step-card">
-    <h2>Step 1 — Choose Crypto</h2>
-    <p>Select a cryptocurrency to pay with:</p>
-    <div class="crypto-opt">
+  <!-- STEP 2 -->
+  <div id="step2" class="step">
+    <h2>Step 2 — Choose Crypto</h2>
+    <div class="crypto">
       <button onclick="chooseCrypto('btc')">Bitcoin</button>
       <button onclick="chooseCrypto('eth')">Ethereum</button>
       <button onclick="chooseCrypto('ltc')">Litecoin</button>
     </div>
-  </div>
-
-  <!-- STEP 2 -->
-  <div id="step2" class="step-card">
-    <h2>Step 2 — Payment Details</h2>
-    <p><b>Send EXACT amount:</b> <span id="amountText"></span></p>
-    <p><b>Wallet:</b></p>
-    <div style="padding:12px;background:#000;border-radius:10px;color:var(--gold1);" id="walletBox"></div>
+    <div class="footer-btns">
+      <button class="back-btn" onclick="goBackToPlans()">← Back</button>
+    </div>
   </div>
 
   <!-- STEP 3 -->
-  <div id="step3" class="step-card">
-    <h2>Step 3 — Verification</h2>
-    <p>We will verify your blockchain payment.</p>
-    <div id="verifyBox" class="status">Waiting for payment...</div>
+  <div id="step3" class="step">
+    <h2>Step 3 — Payment Details</h2>
+    <p><b>Send exactly:</b> <span id="amountText"></span></p>
+    <p><b>Wallet:</b></p>
+    <div id="walletBox" style="padding:12px;background:#000;border-radius:10px;color:var(--gold1);"></div>
+    <div id="verifyBox" class="status">⏳ Waiting for payment...</div>
   </div>
 
 </div>
@@ -247,18 +224,21 @@ let expectedUSD=null;
 let currentPaymentId=null;
 let createdAt=null;
 
-function selectPlan(plan, gold, usd){
+function selectPlan(plan,g,u){
   selectedPlan=plan;
-  expectedGolden=gold;
-  expectedUSD=usd;
-  document.getElementById('step1').style.display='block';
+  expectedGolden=g;
+  expectedUSD=u;
+  document.getElementById("step2").style.display="block";
   window.scrollTo(0,document.body.scrollHeight);
+}
+
+function goBackToPlans(){
+  document.getElementById("step2").style.display="none";
 }
 
 function chooseCrypto(c){
   selectedCrypto=c;
-  [...document.querySelectorAll('.crypto-opt button')]
-    .forEach(b=>b.classList.remove('active'));
+  [...document.querySelectorAll('.crypto button')].forEach(b=>b.classList.remove('active'));
   event.target.classList.add('active');
   createPayment();
 }
@@ -271,17 +251,10 @@ async function createPayment(){
     body:JSON.stringify({plan:selectedPlan,crypto:selectedCrypto})
   });
   const d=await r.json();
-
-  if(!d.success){
-    alert('Error creating payment.');
-    return;
-  }
+  if(!d.success){alert("Error creating payment.");return;}
 
   currentPaymentId=d.paymentId;
   createdAt=Date.now();
-
-  // Step 2 visible
-  document.getElementById('step2').style.display='block';
 
   const walletMap={
     btc:"bc1qz5wtz2d329xsm7gcs9e3jwls9supg2fk2hkxtd",
@@ -289,35 +262,29 @@ async function createPayment(){
     ltc:"LSNv8n6bZ2hR9KqD9q7B2n6X2gZ2hR9KqD9"
   };
 
-  document.getElementById('walletBox').textContent=walletMap[selectedCrypto];
-  document.getElementById('amountText').textContent="$"+expectedUSD+" (20–30 sec fee change allowed)";
+  document.getElementById("step3").style.display="block";
+  document.getElementById("amountText").textContent="$"+expectedUSD;
+  document.getElementById("walletBox").textContent=walletMap[selectedCrypto];
 
-  document.getElementById('step3').style.display='block';
   startVerificationLoop();
 }
 
 async function checkStatus(){
   const r=await fetch(`/api/payment-status?id=${currentPaymentId}`,{credentials:'include'});
   const d=await r.json();
-
-  const box=document.getElementById('verifyBox');
+  const box=document.getElementById("verifyBox");
 
   if(d.status==="confirmed"){
     box.className="status success";
-    box.innerHTML=`
-      ✅ Payment Confirmed!<br><br>
-      <b>TX Hash:</b> ${d.txHash}<br>
-      <b>Confirmed At:</b> ${new Date(d.confirmedAt).toLocaleString()}<br>
-      <b>USD Value:</b> $${d.usdValue}<br><br>
-      Your Golden was added to your account 🎉
-    `;
+    box.innerHTML=`✅ Payment Confirmed<br><br>
+    TX Hash: ${d.txHash}<br>
+    Golden Delivered 🎉`;
     return "done";
   }
 
-  // timeout after 3 hours
-  if(Date.now() - createdAt > (3*60*60*1000)){
+  if(Date.now()-createdAt>3*60*60*1000){
     box.className="status error";
-    box.innerHTML="❌ Payment Declined<br><small>If any crypto was received, we will manually refund it.</small>";
+    box.innerHTML="❌ Payment Declined<br><small>If we received any crypto, we will refund it.</small>";
     return "done";
   }
 

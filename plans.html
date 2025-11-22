@@ -21,18 +21,18 @@ body {
     font-family: 'Inter', sans-serif;
     min-height: 100vh;
     color: #fff;
-    background: url('https://i.imgur.com/nwZQm0R.jpeg') no-repeat center center fixed;
+    background: url('https://i.imgur.com/4L0QHpN.jpeg') no-repeat center center fixed;
     background-size: cover;
     overflow-x: hidden;
 }
 
-/* Dark Nebula Overlay */
+/* Dark Overlay */
 body::before {
     content: "";
     position: fixed;
     inset: 0;
     background: rgba(0,0,0,0.55);
-    backdrop-filter: blur(3px);
+    backdrop-filter: blur(4px);
     z-index: -1;
 }
 
@@ -48,21 +48,21 @@ body::before {
     position: absolute;
     top: 25px;
     right: 25px;
-    background: rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.07);
     padding: 12px 22px;
     border-radius: 30px;
     display: flex;
     align-items: center;
     gap: 12px;
     border: 1px solid rgba(255,255,255,0.25);
-    backdrop-filter: blur(12px);
+    backdrop-filter: blur(10px);
 }
 
 .user-avatar {
-    width: 40px;
-    height: 40px;
+    width: 42px;
+    height: 42px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #a29bfe, #74b9ff);
+    background: linear-gradient(135deg, #ffeaa7, #fab1a0);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -71,7 +71,7 @@ body::before {
 }
 
 .golden-balance {
-    background: linear-gradient(135deg, #f1c40f, #f39c12);
+    background: linear-gradient(135deg, #ffd700, #f39c12);
     padding: 4px 12px;
     border-radius: 15px;
     font-weight: 600;
@@ -90,17 +90,17 @@ body::before {
 .header h1 {
     font-size: 3.2em;
     font-family: 'Playfair Display', serif;
-    background: linear-gradient(135deg, #b197fc, #74b9ff);
+    background: linear-gradient(135deg, #ffeaa7, #ffd700);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
 .header p {
     font-size: 1.3em;
-    opacity: 0.85;
+    opacity: 0.9;
 }
 
-/* ------------------ STEPS INDICATOR ------------------ */
+/* ------------------ STEP INDICATOR ------------------ */
 
 .step-indicator {
     display: flex;
@@ -134,30 +134,31 @@ body::before {
 }
 
 .plan-card {
-    background: rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.09);
     border-radius: 20px;
     padding: 35px 25px;
     text-align: center;
-    border: 1px solid rgba(255,255,255,0.15);
-    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.18);
+    backdrop-filter: blur(14px);
     transition: 0.3s;
     cursor: pointer;
 }
 
-plan-card:hover {
-    transform: translateY(-8px);
-    border-color: #74b9ff;
-    box-shadow: 0px 12px 40px rgba(116,185,255,0.3);
+.plan-card:hover {
+    transform: translateY(-7px);
+    border-color: #ffd700;
+    box-shadow: 0px 12px 40px rgba(255,215,0,0.2);
 }
 
 .plan-title {
     font-family: 'Playfair Display', serif;
-    font-size: 1.7em;
+    font-size: 1.8em;
     margin-bottom: 12px;
+    color: #ffeaa7;
 }
 
 .plan-price {
-    font-size: 2.2em;
+    font-size: 2.3em;
     font-weight: 700;
     color: #55efc4;
     margin-bottom: 10px;
@@ -165,13 +166,13 @@ plan-card:hover {
 
 .plan-golden {
     font-size: 1.2em;
-    color: #ffeaa7;
+    color: #ffd700;
     margin-bottom: 20px;
 }
 
 .buy-btn {
     margin-top: 15px;
-    background: linear-gradient(135deg, #6c5ce7, #0984e3);
+    background: linear-gradient(135deg, #f39c12, #e17055);
     padding: 15px 25px;
     border-radius: 12px;
     border: none;
@@ -184,24 +185,8 @@ plan-card:hover {
 }
 
 .buy-btn:hover {
-    background: linear-gradient(135deg, #7f78ff, #00a8ff);
     transform: translateY(-3px);
-}
-
-/* ------------------ STEP CONTENT ------------------ */
-
-.step-content {
-    display: none;
-    animation: fadein 0.5s ease-out;
-}
-
-.step-content.active {
-    display: block;
-}
-
-@keyframes fadein {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+    background: linear-gradient(135deg, #ffbe76, #ff7675);
 }
 
 /* ------------------ CRYPTO CARDS ------------------ */
@@ -214,43 +199,49 @@ plan-card:hover {
 }
 
 .crypto-card {
-    background: rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.09);
     padding: 25px;
     border-radius: 16px;
     text-align: center;
     cursor: pointer;
     transition: 0.3s;
     border: 1px solid rgba(255,255,255,0.15);
+    backdrop-filter: blur(12px);
 }
 
 .crypto-card:hover {
     transform: translateY(-6px);
-    border-color: #74b9ff;
+    border-color: #ffd700;
 }
 
 .crypto-selected {
-    background: rgba(255,255,255,0.2);
-    border-color: #74b9ff !important;
+    background: rgba(255,255,255,0.17) !important;
+    border-color: #ffd700 !important;
 }
 
 .crypto-icon {
-    font-size: 2.5em;
+    font-size: 2.7em;
+    margin-bottom: 10px;
 }
 
 /* Navigation Buttons */
 .nav-btn {
-    margin-top: 40px;
-    background: linear-gradient(135deg, #74b9ff, #6c5ce7);
+    margin-top: 35px;
+    background: linear-gradient(135deg, #ffeaa7, #ffd700);
     padding: 15px 35px;
     border-radius: 30px;
     border: none;
     cursor: pointer;
-    color: white;
-    font-weight: 600;
+    color: #2d3436;
+    font-weight: 700;
     font-size: 1.1em;
     transition: 0.3s;
     display: block;
     margin-left: auto;
+}
+
+.nav-btn:hover:not(:disabled) {
+    transform: translateY(-4px);
 }
 
 .nav-btn:disabled {
@@ -258,10 +249,18 @@ plan-card:hover {
     cursor: not-allowed;
 }
 
-.nav-btn:hover:not(:disabled) {
-    transform: translateY(-4px);
+/* STEP CONTENT */
+.step-content {
+    display: none;
+}
+.step-content.active {
+    display: block;
 }
 
+/* Spinner */
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
 </style>
 </head>
 <body>
@@ -278,14 +277,14 @@ plan-card:hover {
 <!-- HEADER -->
 <div class="header">
     <h1>Buy Golden</h1>
-    <p>Unlock Advanced AI Features with Golden Credits</p>
+    <p>Unlock Premium AI Features & Power Your Experience</p>
 </div>
 
 <!-- STEP INDICATOR -->
 <div class="step-indicator">
     <div class="step active" id="stepIndicator1"><div class="step-number">1</div>Select Plan</div>
     <div class="step" id="stepIndicator2"><div class="step-number">2</div>Select Crypto</div>
-    <div class="step" id="stepIndicator3"><div class="step-number">3</div>Blockchain Info</div>
+    <div class="step" id="stepIndicator3"><div class="step-number">3</div>Send Payment</div>
     <div class="step" id="stepIndicator4"><div class="step-number">4</div>Verification</div>
 </div>
 
@@ -342,33 +341,33 @@ plan-card:hover {
     <button class="nav-btn" id="toStep3" disabled>Continue →</button>
 
 </div>
-<!-- STEP 3 — BLOCKCHAIN PAYMENT INFO -->
+
+<!-- STEP 3 -->
 <div class="step-content" id="step3">
 
     <h2 style="text-align:center; margin-bottom:25px; font-family:'Playfair Display',serif;">
-        Blockchain Payment Instructions
+        Send Your Payment
     </h2>
 
     <div style="
-        background:rgba(255,255,255,0.1);
+        background:rgba(255,255,255,0.08);
         padding:25px;
         border-radius:20px;
         border:1px solid rgba(255,255,255,0.2);
         max-width:600px;
         margin:auto;
         text-align:center;
-        backdrop-filter:blur(10px);
+        backdrop-filter:blur(12px);
     ">
         <p style="font-size:1.2em; margin-bottom:10px;">Plan: <strong id="summaryPlan"></strong></p>
         <p style="font-size:1.2em; margin-bottom:10px;">Crypto: <strong id="summaryCrypto"></strong></p>
-        <p style="opacity:0.8; margin-bottom:20px;">
+
+        <p style="opacity:0.85; margin-bottom:20px;">
             Send the exact amount to the wallet address below.
         </p>
 
-        <!-- QR Code -->
         <div id="qrCode" style="margin-bottom:20px;"></div>
 
-        <!-- Wallet Address -->
         <div style="
             padding:15px;
             background:rgba(0,0,0,0.4);
@@ -384,7 +383,7 @@ plan-card:hover {
 
 </div>
 
-<!-- STEP 4 — WAITING FOR VERIFICATION -->
+<!-- STEP 4 -->
 <div class="step-content" id="step4">
 
     <h2 style="text-align:center; margin-bottom:25px; font-family:'Playfair Display',serif;">
@@ -392,19 +391,19 @@ plan-card:hover {
     </h2>
 
     <div style="
-        background:rgba(255,255,255,0.1);
+        background:rgba(255,255,255,0.08);
         padding:25px;
         border-radius:20px;
         border:1px solid rgba(255,255,255,0.2);
         max-width:600px;
         margin:auto;
         text-align:center;
-        backdrop-filter:blur(10px);
+        backdrop-filter:blur(12px);
     ">
         <div style="
             margin:20px auto;
-            border:6px solid rgba(255,255,255,0.2);
-            border-top:6px solid #74b9ff;
+            border:6px solid rgba(255,255,255,0.25);
+            border-top:6px solid #ffd700;
             border-radius:50%;
             width:60px;
             height:60px;
@@ -412,13 +411,15 @@ plan-card:hover {
         "></div>
 
         <p style="margin-top:20px; font-size:1.1em;">
-            Your payment is being verified on the blockchain.
+            We’re confirming your transaction on the blockchain.
         </p>
-        <p style="opacity:0.8; margin-top:10px;">
-            This usually takes 1–10 minutes.
+
+        <p style="opacity:0.85; margin-top:10px;">
+            Usually takes 1–10 minutes.
         </p>
+
         <p style="opacity:0.7; margin-top:10px;">
-            You may close this page. Golden will be added automatically.
+            You may close this page — your Golden will be added automatically.
         </p>
     </div>
 
@@ -428,9 +429,8 @@ plan-card:hover {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
 
 <script>
-/* ----------------------------------------
-   USER INFO
----------------------------------------- */
+
+/* Load User */
 let currentUser = null;
 
 async function loadUser() {
@@ -445,12 +445,9 @@ async function loadUser() {
         document.getElementById("goldenBalance").textContent = data.balance + "G";
     }
 }
-
 loadUser();
 
-/* ----------------------------------------
-   STEP NAVIGATION
----------------------------------------- */
+/* Steps */
 function showStep(n) {
     document.querySelectorAll(".step-content").forEach(s => s.classList.remove("active"));
     document.querySelector(`#step${n}`).classList.add("active");
@@ -459,73 +456,42 @@ function showStep(n) {
     document.querySelector(`#stepIndicator${n}`).classList.add("active");
 }
 
-/* ----------------------------------------
-   SELECT PLAN
----------------------------------------- */
+/* Select Plan */
 let selectedPlan = null;
-
 document.querySelectorAll(".plan-card").forEach(card => {
     card.addEventListener("click", () => {
         selectedPlan = card.dataset.plan;
-
-        // highlight
-        document.querySelectorAll(".plan-card").forEach(c => c.style.borderColor = "rgba(255,255,255,0.15)");
-        card.style.borderColor = "#74b9ff";
-
+        document.querySelectorAll(".plan-card").forEach(c => c.style.borderColor = "rgba(255,255,255,0.18)");
+        card.style.borderColor = "#ffd700";
         document.getElementById("toStep2").disabled = false;
     });
 });
 
-/* ----------------------------------------
-   SELECT CRYPTO
----------------------------------------- */
+/* Select Crypto */
 let selectedCrypto = null;
-
 document.querySelectorAll(".crypto-card").forEach(card => {
     card.addEventListener("click", () => {
         selectedCrypto = card.dataset.crypto;
-
-        document.querySelectorAll(".crypto-card").forEach(c => {
-            c.classList.remove("crypto-selected");
-        });
-
+        document.querySelectorAll(".crypto-card").forEach(c => c.classList.remove("crypto-selected"));
         card.classList.add("crypto-selected");
         document.getElementById("toStep3").disabled = false;
     });
 });
 
-/* ----------------------------------------
-   STEP 1 → STEP 2
----------------------------------------- */
-document.getElementById("toStep2").addEventListener("click", () => {
-    showStep(2);
-});
-
-/* ----------------------------------------
-   STEP 2 → STEP 3
----------------------------------------- */
+/* Step Navigation */
+document.getElementById("toStep2").addEventListener("click", () => showStep(2));
 document.getElementById("toStep3").addEventListener("click", () => {
 
-    // Summary info
     document.getElementById("summaryPlan").textContent = selectedPlan.toUpperCase();
     document.getElementById("summaryCrypto").textContent = selectedCrypto.toUpperCase();
 
-    // Wallets from your old file
     let wallet = "";
-
-    if (selectedCrypto === "btc") {
-        wallet = "bc1qz5wtz2d329xsm7gcs9e3jwls9supg2fk2hkxtd";
-    }
-    if (selectedCrypto === "eth") {
-        wallet = "0x8BEaCb38dF916F6644F81cA0De18C1F4996d32Ea";
-    }
-    if (selectedCrypto === "ltc") {
-        wallet = "LSNv8n6bZ2hR9KqD9q7B2n6X2gZ2hR9KqD9"; 
-    }
+    if (selectedCrypto === "btc") wallet = "bc1qz5wtz2d329xsm7gcs9e3jwls9supg2fk2hkxtd";
+    if (selectedCrypto === "eth") wallet = "0x8BEaCb38dF916F6644F81cA0De18C1F4996d32Ea";
+    if (selectedCrypto === "ltc") wallet = "LSNv8n6bZ2hR9KqD9q7B2n6X2gZ2hR9KqD9";
 
     document.getElementById("walletAddress").textContent = wallet;
 
-    // QR
     new QRious({
         element: document.getElementById("qrCode"),
         value: wallet,
@@ -535,11 +501,8 @@ document.getElementById("toStep3").addEventListener("click", () => {
     showStep(3);
 });
 
-/* ----------------------------------------
-   STEP 3 → STEP 4
----------------------------------------- */
+/* Payment Create */
 document.getElementById("toStep4").addEventListener("click", async () => {
-
     if (!currentUser) {
         alert("You must log in first");
         return;
@@ -547,7 +510,6 @@ document.getElementById("toStep4").addEventListener("click", async () => {
 
     showStep(4);
 
-    // Create pending payment
     await fetch("/api/create-payment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -560,13 +522,6 @@ document.getElementById("toStep4").addEventListener("click", async () => {
 });
 
 </script>
-
-<!-- SPINNER ANIMATION -->
-<style>
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-</style>
 
 </body>
 </html>

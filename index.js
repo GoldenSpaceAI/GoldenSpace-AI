@@ -899,7 +899,7 @@ app.use((req, res) => {
   res.status(404).json({ error: "Endpoint not found" });
 });
 // =============================================
-// PART 5 — FULL AUTOMATIC BLOCKCHAIN PAYMENT ENGINE
+// PART 5 — FULL AUTOMATIC BLOCKCHAIN PAYMENT ENGINE (FIXED + ALWAYS SCANNING)
 // =============================================
 
 // ---------------------------------------------
@@ -918,7 +918,7 @@ const GOLDEN_PLANS = {
 };
 
 // ---------------------------------------------
-// PAYMENT DATABASE (Persistent Disk)
+// PAYMENT DATABASE (Render Persistent Disk)
 // ---------------------------------------------
 function loadPaymentDB() {
   try {
@@ -930,7 +930,7 @@ function loadPaymentDB() {
     return raw.trim() ? JSON.parse(raw) : { payments: [] };
 
   } catch (err) {
-    console.error("❌ Failed to load payment DB:", err);
+    console.error("❌ Payment DB load error:", err);
     return { payments: [] };
   }
 }
@@ -939,12 +939,12 @@ function savePaymentDB(db) {
   try {
     fs.writeFileSync(PAYMENT_DB_PATH, JSON.stringify(db, null, 2));
   } catch (err) {
-    console.error("❌ Failed to save payment DB:", err);
+    console.error("❌ Payment DB save error:", err);
   }
 }
 
 // ---------------------------------------------
-// RANDOM ID GENERATOR
+// RANDOM ID
 // ---------------------------------------------
 function randomId() {
   return crypto.randomBytes(12).toString("hex");
@@ -966,14 +966,11 @@ app.post("/api/create-payment", authUser, (req, res) => {
       id: randomId(),
       userId: getUserIdentifier(req),
       userEmail: req.user.email,
-
       plan,
       crypto,
-
       wallet: PAYMENT_WALLETS[crypto],
       expectedUSD: GOLDEN_PLANS[plan].priceUSD,
       expectedGolden: GOLDEN_PLANS[plan].golden,
-
       status: "pending",
       txHash: null,
       createdAt: new Date().toISOString(),
@@ -992,7 +989,7 @@ app.post("/api/create-payment", authUser, (req, res) => {
 });
 
 // =============================================
-// BLOCKCYPHER — FETCH TRANSACTIONS
+// BLOCKCYPHER — GET TRANSACTIONS
 // =============================================
 async function getAddressTxs(crypto, address) {
   try {
@@ -1013,27 +1010,25 @@ async function getAddressTxs(crypto, address) {
     return data.txrefs || data.unconfirmed_txrefs || [];
 
   } catch (err) {
-    console.error("❌ BlockCypher API error:", err.message);
+    console.error("⚠ BlockCypher API error:", err.message);
     return null;
   }
 }
 
 // =============================================
-// ADD GOLDEN TO USER AFTER CONFIRMATION
+// ADD GOLDEN AFTER CONFIRMATION
 // =============================================
 function addGolden(payment) {
-  const db = loadGoldenDB();
-  const user = db.users[payment.userId];
+  const usersDB = loadGoldenDB();
+  const user = usersDB.users[payment.userId];
   if (!user) return;
 
   const amount = GOLDEN_PLANS[payment.plan].golden;
   const before = user.golden_balance;
 
-  // Add Golden
   user.golden_balance += amount;
   user.total_golden_earned += amount;
 
-  // Log Transaction
   user.transactions.push({
     type: "crypto_purchase",
     amount,
@@ -1041,16 +1036,16 @@ function addGolden(payment) {
     new_balance: user.golden_balance,
     crypto: payment.crypto,
     txHash: payment.txHash,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 
-  saveGoldenDB(db);
+  saveGoldenDB(usersDB);
 
-  console.log(`💰 Added ${amount}G to ${user.email}`);
+  console.log(`💰 ${amount}G added to ${user.email}`);
 }
 
 // =============================================
-// CHECK SINGLE PAYMENT STATUS
+// CHECK ONE PAYMENT
 // =============================================
 async function checkPayment(payment) {
   const txs = await getAddressTxs(payment.crypto, payment.wallet);
@@ -1058,20 +1053,19 @@ async function checkPayment(payment) {
 
   for (const tx of txs) {
     if (tx.confirmations >= 1) {
+
       if (payment.status === "confirmed") return;
 
-      // Confirm payment
       payment.status = "confirmed";
       payment.txHash = tx.tx_hash;
       payment.confirmedAt = new Date().toISOString();
 
-      // Save payment DB
+      // Save
       const db = loadPaymentDB();
-      const index = db.payments.findIndex(p => p.id === payment.id);
-      db.payments[index] = payment;
+      const idx = db.payments.findIndex(p => p.id === payment.id);
+      db.payments[idx] = payment;
       savePaymentDB(db);
 
-      // Add Golden
       addGolden(payment);
       return;
     }
@@ -1079,20 +1073,20 @@ async function checkPayment(payment) {
 }
 
 // =============================================
-// BACKGROUND PAYMENT CHECKER
-// runs every 20 seconds
+// BACKGROUND PAYMENT SCANNER (EVERY 20 SEC)
 // =============================================
 setInterval(async () => {
+  console.log("🔁 Payment scanner running...");
+
   const db = loadPaymentDB();
   const pending = db.payments.filter(p => p.status === "pending");
 
-  if (pending.length > 0) {
-    console.log(`🔍 Checking ${pending.length} payment(s)...`);
-  }
+  console.log(`Pending payments: ${pending.length}`);
 
   for (const payment of pending) {
     await checkPayment(payment);
   }
+
 }, 20000);  // 20 seconds
 // =============================================
 // SERVER START — REQUIRED FOR RENDER

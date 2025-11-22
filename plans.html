@@ -1,858 +1,645 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Buy Golden Tokens | GoldenSpaceAI</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<style>
-  :root {
-    --gold: #FFD700;
-    --gold-light: #FFED4E;
-    --gold-dark: #E6C200;
-    --bg-dark: #0A0F1C;
-    --bg-card: #111827;
-    --bg-card-hover: #1F2937;
-    --text-primary: #F3F4F6;
-    --text-secondary: #9CA3AF;
-    --text-muted: #6B7280;
-    --success: #10B981;
-    --warning: #F59E0B;
-    --error: #EF4444;
-    --border: #374151;
-  }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buy Golden - GoldenSpaceAI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            padding: 20px;
+        }
 
-  body {
-    font-family: 'Inter', sans-serif;
-    background: var(--bg-dark);
-    color: var(--text-primary);
-    line-height: 1.6;
-    min-height: 100vh;
-    background-image: 
-      radial-gradient(circle at 20% 30%, rgba(255, 215, 0, 0.05) 0%, transparent 50%),
-      radial-gradient(circle at 80% 70%, rgba(255, 215, 0, 0.03) 0%, transparent 50%),
-      url("https://images.unsplash.com/photo-1462331940025-496dfbfc7564?auto=format&fit=crop&w=1950&q=80");
-    background-size: cover;
-    background-attachment: fixed;
-    background-position: center;
-  }
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+        }
 
-  .container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 20px;
-  }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
 
-  /* Header */
-  .header {
-    text-align: center;
-    padding: 80px 20px 40px;
-    background: linear-gradient(135deg, rgba(10, 15, 28, 0.9) 0%, rgba(17, 24, 39, 0.7) 100%);
-    backdrop-filter: blur(10px);
-    border-bottom: 1px solid var(--border);
-  }
+        .logo {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
 
-  .logo {
-    font-size: 2.5rem;
-    font-weight: 800;
-    color: var(--gold);
-    margin-bottom: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-  }
+        h1 {
+            color: white;
+            margin-bottom: 10px;
+            font-size: 2.2em;
+        }
 
-  .logo i {
-    font-size: 2.2rem;
-  }
+        .subtitle {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1.1em;
+        }
 
-  .header h1 {
-    font-size: 3.5rem;
-    font-weight: 800;
-    background: linear-gradient(135deg, var(--gold), var(--gold-light));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    margin-bottom: 16px;
-  }
+        .payment-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
 
-  .subtitle {
-    font-size: 1.25rem;
-    color: var(--text-secondary);
-    max-width: 600px;
-    margin: 0 auto 30px;
-    font-weight: 400;
-  }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f8f9fa;
+        }
 
-  /* Steps */
-  .steps {
-    display: flex;
-    justify-content: center;
-    gap: 40px;
-    margin: 40px auto;
-    max-width: 800px;
-    position: relative;
-  }
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #3498db;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            font-size: 1.2em;
+        }
 
-  .steps::before {
-    content: '';
-    position: absolute;
-    top: 24px;
-    left: 100px;
-    right: 100px;
-    height: 2px;
-    background: linear-gradient(90deg, var(--gold), transparent);
-    z-index: 1;
-  }
+        .user-details {
+            flex: 1;
+        }
 
-  .step {
-    text-align: center;
-    z-index: 2;
-    position: relative;
-  }
+        .user-name {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 1.1em;
+        }
 
-  .step-number {
-    width: 50px;
-    height: 50px;
-    background: var(--gold);
-    color: var(--bg-dark);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    font-size: 1.25rem;
-    margin: 0 auto 12px;
-    border: 4px solid var(--bg-card);
-  }
+        .golden-balance {
+            background: #f39c12;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9em;
+            display: inline-block;
+            margin-top: 5px;
+        }
 
-  .step-text {
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-    font-weight: 500;
-  }
+        .packages {
+            margin-bottom: 25px;
+        }
 
-  /* Plans Grid */
-  .plans-section {
-    padding: 60px 20px;
-  }
+        .section-title {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
 
-  .section-title {
-    text-align: center;
-    font-size: 2.5rem;
-    font-weight: 700;
-    margin-bottom: 50px;
-    color: var(--text-primary);
-  }
+        .package-options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
 
-  .plans-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 30px;
-    margin-bottom: 60px;
-  }
+        .package-option {
+            border: 2px solid #e9ecef;
+            border-radius: 15px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
 
-  .plan-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 40px 30px;
-    text-align: center;
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-  }
+        .package-option.selected {
+            border-color: #3498db;
+            background: #f8f9fa;
+        }
 
-  .plan-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, var(--gold), var(--gold-light));
-  }
+        .package-option:hover {
+            border-color: #3498db;
+        }
 
-  .plan-card:hover {
-    transform: translateY(-10px);
-    border-color: var(--gold);
-    box-shadow: 0 20px 40px rgba(255, 215, 0, 0.15);
-  }
+        .package-name {
+            font-weight: bold;
+            color: #2c3e50;
+            font-size: 1.1em;
+            margin-bottom: 5px;
+        }
 
-  .plan-card.popular {
-    border-color: var(--gold);
-    box-shadow: 0 10px 30px rgba(255, 215, 0, 0.1);
-  }
+        .package-price {
+            color: #27ae60;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
 
-  .popular-badge {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    background: var(--gold);
-    color: var(--bg-dark);
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 0.8rem;
-    font-weight: 700;
-  }
+        .package-golden {
+            color: #f39c12;
+            font-weight: 600;
+        }
 
-  .plan-icon {
-    font-size: 3rem;
-    color: var(--gold);
-    margin-bottom: 20px;
-  }
+        .save-badge {
+            background: #e74c3c;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            position: absolute;
+            top: 15px;
+            right: 15px;
+        }
 
-  .plan-name {
-    font-size: 1.5rem;
-    font-weight: 700;
-    margin-bottom: 10px;
-    color: var(--text-primary);
-  }
+        .crypto-section {
+            margin-bottom: 25px;
+        }
 
-  .plan-description {
-    color: var(--text-secondary);
-    margin-bottom: 25px;
-    font-size: 0.95rem;
-  }
+        .crypto-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+        }
 
-  .plan-price {
-    font-size: 2.5rem;
-    font-weight: 800;
-    color: var(--gold);
-    margin-bottom: 5px;
-  }
+        .crypto-option {
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
 
-  .plan-usd-price {
-    color: var(--text-secondary);
-    font-size: 1rem;
-    margin-bottom: 20px;
-  }
+        .crypto-option.selected {
+            border-color: #3498db;
+            background: #f8f9fa;
+        }
 
-  .plan-features {
-    list-style: none;
-    margin-bottom: 30px;
-    text-align: left;
-  }
+        .crypto-icon {
+            font-size: 1.5em;
+            margin-bottom: 8px;
+        }
 
-  .plan-features li {
-    padding: 8px 0;
-    color: var(--text-secondary);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
+        .crypto-name {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 0.9em;
+        }
 
-  .plan-features li i {
-    color: var(--success);
-    font-size: 0.9rem;
-  }
+        .payment-details {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            display: none;
+        }
 
-  .buy-btn {
-    width: 100%;
-    padding: 15px 20px;
-    background: linear-gradient(135deg, var(--gold), var(--gold-light));
-    color: var(--bg-dark);
-    border: none;
-    border-radius: 12px;
-    font-size: 1.1rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-  }
+        .payment-details.active {
+            display: block;
+        }
 
-  .buy-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 25px rgba(255, 215, 0, 0.3);
-  }
+        .payment-title {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: 1.2em;
+        }
 
-  .buy-btn:disabled {
-    background: var(--border);
-    color: var(--text-muted);
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
-  }
+        .amount-info {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            border: 2px solid #e9ecef;
+        }
 
-  /* Live Pricing */
-  .live-pricing {
-    background: var(--bg-card);
-    border-radius: 16px;
-    padding: 30px;
-    margin: 40px auto;
-    max-width: 800px;
-    border: 1px solid var(--border);
-  }
+        .amount-label {
+            color: #7f8c8d;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
 
-  .live-pricing-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 20px;
-  }
+        .amount-value {
+            color: #2c3e50;
+            font-weight: bold;
+            font-size: 1.3em;
+        }
 
-  .live-pricing-title {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
+        .wallet-info {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 2px solid #e9ecef;
+        }
 
-  .live-pricing-title i {
-    color: var(--gold);
-  }
+        .wallet-address {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            font-family: monospace;
+            word-break: break-all;
+            margin-bottom: 15px;
+            border: 1px solid #e9ecef;
+        }
 
-  .refresh-btn {
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--text-secondary);
-    padding: 8px 16px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
+        .copy-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            width: 100%;
+            transition: background 0.3s;
+        }
 
-  .refresh-btn:hover {
-    border-color: var(--gold);
-    color: var(--gold);
-  }
+        .copy-btn:hover {
+            background: #2980b9;
+        }
 
-  .crypto-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 15px;
-  }
+        .qr-code {
+            text-align: center;
+            margin-bottom: 20px;
+        }
 
-  .crypto-item {
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 12px;
-    padding: 15px;
-    text-align: center;
-    transition: all 0.3s ease;
-  }
+        .qr-placeholder {
+            width: 200px;
+            height: 200px;
+            background: #f8f9fa;
+            border: 2px dashed #bdc3c7;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
 
-  .crypto-item:hover {
-    background: rgba(255, 215, 0, 0.1);
-    border: 1px solid var(--gold);
-  }
+        .instructions {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
 
-  .crypto-name {
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-    margin-bottom: 5px;
-  }
+        .instructions h4 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
 
-  .crypto-price {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: var(--text-primary);
-  }
+        .instructions ol {
+            margin-left: 20px;
+            color: #856404;
+        }
 
-  .crypto-change {
-    font-size: 0.8rem;
-    margin-top: 5px;
-  }
+        .instructions li {
+            margin-bottom: 8px;
+        }
 
-  .positive {
-    color: var(--success);
-  }
+        .back-btn {
+            background: #95a5a6;
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.3s;
+        }
 
-  .negative {
-    color: var(--error);
-  }
+        .back-btn:hover {
+            background: #7f8c8d;
+        }
 
-  /* User Info */
-  .user-info {
-    text-align: center;
-    padding: 20px;
-    background: var(--bg-card);
-    border-radius: 12px;
-    margin: 30px auto;
-    max-width: 500px;
-    border: 1px solid var(--border);
-  }
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
 
-  .user-welcome {
-    font-size: 1.1rem;
-    margin-bottom: 10px;
-  }
+        .notification.show {
+            transform: translateX(0);
+        }
 
-  .user-balance {
-    font-size: 1.3rem;
-    font-weight: 700;
-    color: var(--gold);
-  }
+        .notification.success {
+            background: #27ae60;
+        }
 
-  .login-prompt {
-    color: var(--warning);
-    font-weight: 600;
-  }
-
-  /* Footer */
-  .footer {
-    text-align: center;
-    padding: 40px 20px;
-    background: rgba(10, 15, 28, 0.9);
-    border-top: 1px solid var(--border);
-    margin-top: 60px;
-  }
-
-  .footer-text {
-    color: var(--text-secondary);
-    font-size: 0.9rem;
-  }
-
-  /* Loading States */
-  .loading {
-    opacity: 0.7;
-    pointer-events: none;
-  }
-
-  .pulse {
-    animation: pulse 1.5s infinite;
-  }
-
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.7; }
-  }
-
-  /* Responsive */
-  @media (max-width: 768px) {
-    .header h1 {
-      font-size: 2.5rem;
-    }
-    
-    .steps {
-      flex-direction: column;
-      gap: 20px;
-    }
-    
-    .steps::before {
-      display: none;
-    }
-    
-    .plans-grid {
-      grid-template-columns: 1fr;
-    }
-    
-    .crypto-grid {
-      grid-template-columns: repeat(2, 1fr);
-    }
-  }
-</style>
+        .notification.error {
+            background: #e74c3c;
+        }
+    </style>
 </head>
 <body>
-  <!-- Header -->
-  <div class="header">
     <div class="container">
-      <div class="logo">
-        <i class="fas fa-rocket"></i>
-        GoldenSpaceAI
-      </div>
-      <h1>Buy Golden Tokens</h1>
-      <p class="subtitle">
-        Power your AI experience with Golden tokens. Simple pricing, instant access to premium features.
-      </p>
-      
-      <!-- Steps -->
-      <div class="steps">
-        <div class="step">
-          <div class="step-number">1</div>
-          <div class="step-text">Choose Package</div>
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">💰</div>
+            <h1>Buy Golden</h1>
+            <p class="subtitle">Power up your AI experience</p>
         </div>
-        <div class="step">
-          <div class="step-number">2</div>
-          <div class="step-text">Pay with Crypto</div>
-        </div>
-        <div class="step">
-          <div class="step-number">3</div>
-          <div class="step-text">Instant Access</div>
-        </div>
-      </div>
-    </div>
-  </div>
 
-  <!-- User Info -->
-  <div class="container">
-    <div class="user-info" id="userInfo">
-      <div class="login-prompt">
-        <i class="fas fa-info-circle"></i>
-        Please log in to purchase Golden tokens
-      </div>
-    </div>
-  </div>
-
-  <!-- Plans Section -->
-  <section class="plans-section">
-    <div class="container">
-      <h2 class="section-title">Choose Your Package</h2>
-      
-      <div class="plans-grid" id="plansGrid">
-        <!-- Plans will be loaded dynamically -->
-      </div>
-
-      <!-- Live Pricing -->
-      <div class="live-pricing">
-        <div class="live-pricing-header">
-          <h3 class="live-pricing-title">
-            <i class="fas fa-chart-line"></i>
-            Live Crypto Prices
-          </h3>
-          <button class="refresh-btn" onclick="loadCryptoPrices()">
-            <i class="fas fa-sync-alt"></i>
-            Refresh
-          </button>
-        </div>
-        <div class="crypto-grid" id="cryptoGrid">
-          <!-- Crypto prices will be loaded here -->
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Footer -->
-  <div class="footer">
-    <div class="container">
-      <p class="footer-text">
-        <i class="fas fa-shield-alt"></i>
-        Secure blockchain payments • Instant delivery • 24/7 support
-      </p>
-      <p class="footer-text">
-        © 2025 GoldenSpaceAI. All rights reserved.
-      </p>
-    </div>
-  </div>
-<script>
-    // Global state
-    let userData = null;
-    let cryptoPrices = {};
-    const GOLDEN_PACKAGES = {
-        60: { priceUSD: 15, popular: false },
-        100: { priceUSD: 20, popular: true },
-        200: { priceUSD: 40, popular: false }
-    };
-
-    // Fallback prices in case API fails
-    const FALLBACK_PRICES = {
-        bitcoin: { usd: 43450.32 },
-        ethereum: { usd: 2380.15 },
-        tether: { usd: 1.00 },
-        'usd-coin': { usd: 1.00 },
-        binancecoin: { usd: 305.67 },
-        tron: { usd: 0.1056 },
-        solana: { usd: 102.45 },
-        dogecoin: { usd: 0.0856 }
-    };
-
-    // Initialize
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log("Initializing GoldenSpaceAI Plans...");
-        checkUserStatus();
-        loadPlans();
-        loadCryptoPrices();
-        
-        // Auto-refresh prices every 30 seconds
-        setInterval(loadCryptoPrices, 30000);
-    });
-
-    // Check user login status - MODIFIED to always show logged in for demo
-    async function checkUserStatus() {
-        try {
-            console.log("Checking user status...");
-            // For demo purposes, we'll simulate a logged-in user
-            // In a real application, you would fetch from your API
-            userData = {
-                loggedIn: true,
-                user: {
-                    name: "Demo User",
-                    email: "demo@goldenspaceai.com"
-                },
-                balance: 50
-            };
-            console.log("User data:", userData);
-            updateUserInfo();
-        } catch (error) {
-            console.error('Failed to check user status:', error);
-            showLoginPrompt();
-        }
-    }
-
-    function updateUserInfo() {
-        const userInfo = document.getElementById('userInfo');
-        if (userData && userData.loggedIn) {
-            userInfo.innerHTML = `
-                <div class="user-welcome">Welcome back, <strong>${userData.user.name}</strong>!</div>
-                <div class="user-balance">
-                    <i class="fas fa-coins"></i>
-                    ${userData.balance || 0} Golden
+        <!-- Payment Card -->
+        <div class="payment-card">
+            <!-- User Info -->
+            <div class="user-info">
+                <div class="user-avatar" id="userAvatar">U</div>
+                <div class="user-details">
+                    <div class="user-name" id="userName">User</div>
+                    <div class="golden-balance" id="goldenBalance">0G</div>
                 </div>
-            `;
-        } else {
-            showLoginPrompt();
-        }
-    }
-
-    function showLoginPrompt() {
-        const userInfo = document.getElementById('userInfo');
-        userInfo.innerHTML = `
-            <div class="login-prompt">
-                <i class="fas fa-exclamation-triangle"></i>
-                Please <a href="/login-signup.html" style="color: var(--gold); text-decoration: none; font-weight: 700;">log in</a> to purchase Golden tokens
             </div>
-        `;
-    }
 
-    // Load and display plans - MODIFIED to ensure buttons are enabled
-    function loadPlans() {
-        const plansGrid = document.getElementById('plansGrid');
-        const plansHTML = Object.entries(GOLDEN_PACKAGES).map(([goldenAmount, packageInfo]) => {
-            const isPopular = packageInfo.popular;
-            const usdPrice = packageInfo.priceUSD;
-            
-            return `
-                <div class="plan-card ${isPopular ? 'popular' : ''}">
-                    ${isPopular ? '<div class="popular-badge">Most Popular</div>' : ''}
-                    <div class="plan-icon">
-                        <i class="fas fa-${goldenAmount >= 100 ? 'crown' : 'star'}"></i>
+            <!-- Package Selection -->
+            <div class="packages">
+                <h3 class="section-title">Select Package</h3>
+                <div class="package-options">
+                    <div class="package-option" data-package="mini">
+                        <div class="package-name">Mini Pack</div>
+                        <div class="package-price">$5.00</div>
+                        <div class="package-golden">20 Golden</div>
                     </div>
-                    <h3 class="plan-name">${goldenAmount} Golden</h3>
-                    <p class="plan-description">Perfect for ${goldenAmount >= 100 ? 'power users' : goldenAmount >= 60 ? 'regular users' : 'getting started'}</p>
                     
-                    <div class="plan-price">${goldenAmount}G</div>
-                    <div class="plan-usd-price" id="usdPrice${goldenAmount}">$${usdPrice} USD</div>
+                    <div class="package-option" data-package="golden">
+                        <div class="package-name">Golden Pack</div>
+                        <div class="package-price">$10.00</div>
+                        <div class="package-golden">45 Golden</div>
+                        <div class="save-badge">Save $1.5</div>
+                    </div>
                     
-                    <ul class="plan-features">
-                        <li><i class="fas fa-check"></i> Advanced AI Access</li>
-                        <li><i class="fas fa-check"></i> Image Generation</li>
-                        <li><i class="fas fa-check"></i> Priority Support</li>
-                        ${goldenAmount >= 100 ? '<li><i class="fas fa-check"></i> All Features Unlocked</li>' : ''}
-                    </ul>
-                    
-                    <button class="buy-btn" onclick="purchaseGolden(${goldenAmount}, ${usdPrice})">
-                        <i class="fas fa-bolt"></i>
-                        Buy Now
-                    </button>
+                    <div class="package-option" data-package="ultra">
+                        <div class="package-name">Ultra Pack</div>
+                        <div class="package-price">$20.00</div>
+                        <div class="package-golden">90 Golden</div>
+                        <div class="save-badge">Save $5</div>
+                    </div>
                 </div>
-            `;
-        }).join('');
+            </div>
 
-        plansGrid.innerHTML = plansHTML;
-    }
-
-    // Load crypto prices with enhanced error handling
-    async function loadCryptoPrices() {
-        const cryptoGrid = document.getElementById('cryptoGrid');
-        const refreshBtn = document.querySelector('.refresh-btn');
-        
-        cryptoGrid.classList.add('loading');
-        refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
-        refreshBtn.disabled = true;
-
-        try {
-            console.log("Fetching crypto prices...");
-            // For demo purposes, we'll use fallback prices
-            // In a real application, you would fetch from your API
-            cryptoPrices = FALLBACK_PRICES;
-            console.log("Crypto prices received:", cryptoPrices);
-            updateCryptoDisplay();
-            updateUSDConversion();
-            showSuccessMessage();
-        } catch (error) {
-            console.error('Failed to load crypto prices:', error);
-            console.log('Using fallback prices...');
-            
-            // Use fallback prices
-            cryptoPrices = FALLBACK_PRICES;
-            updateCryptoDisplay();
-            updateUSDConversion();
-            showErrorMessage();
-        } finally {
-            cryptoGrid.classList.remove('loading');
-            refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
-            refreshBtn.disabled = false;
-        }
-    }
-
-    function updateCryptoDisplay() {
-        const cryptoGrid = document.getElementById('cryptoGrid');
-        const cryptos = [
-            { id: 'bitcoin', symbol: 'BTC', name: 'Bitcoin' },
-            { id: 'ethereum', symbol: 'ETH', name: 'Ethereum' },
-            { id: 'tether', symbol: 'USDT', name: 'Tether' },
-            { id: 'usd-coin', symbol: 'USDC', name: 'USD Coin' },
-            { id: 'binancecoin', symbol: 'BNB', name: 'BNB' },
-            { id: 'tron', symbol: 'TRX', name: 'TRON' },
-            { id: 'solana', symbol: 'SOL', name: 'Solana' },
-            { id: 'dogecoin', symbol: 'DOGE', name: 'Dogecoin' }
-        ];
-
-        const cryptoHTML = cryptos.map(crypto => {
-            const priceData = cryptoPrices[crypto.id];
-            if (!priceData || !priceData.usd) {
-                return `
-                    <div class="crypto-item">
-                        <div class="crypto-name">${crypto.name} (${crypto.symbol})</div>
-                        <div class="crypto-price" style="color: var(--text-muted);">--</div>
-                        <div class="crypto-change" style="color: var(--text-muted);">
-                            <i class="fas fa-minus"></i>
-                            N/A
-                        </div>
+            <!-- Crypto Selection -->
+            <div class="crypto-section">
+                <h3 class="section-title">Choose Crypto</h3>
+                <div class="crypto-options">
+                    <div class="crypto-option" data-crypto="btc">
+                        <div class="crypto-icon">₿</div>
+                        <div class="crypto-name">Bitcoin</div>
                     </div>
-                `;
+                    <div class="crypto-option" data-crypto="eth">
+                        <div class="crypto-icon">Ξ</div>
+                        <div class="crypto-name">Ethereum</div>
+                    </div>
+                    <div class="crypto-option" data-crypto="ltc">
+                        <div class="crypto-icon">Ł</div>
+                        <div class="crypto-name">Litecoin</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Details -->
+            <div class="payment-details" id="paymentDetails">
+                <h3 class="payment-title">Send Payment</h3>
+                
+                <div class="amount-info">
+                    <div class="amount-label">Send Exactly</div>
+                    <div class="amount-value" id="amountValue">$5.00</div>
+                </div>
+
+                <div class="wallet-info">
+                    <div style="margin-bottom: 10px; font-weight: 600; color: #2c3e50;">Wallet Address:</div>
+                    <div class="wallet-address" id="walletAddress">Select package and crypto first</div>
+                    <button class="copy-btn" id="copyAddressBtn">Copy Address</button>
+                </div>
+
+                <div class="qr-code">
+                    <div class="qr-placeholder" id="qrPlaceholder">
+                        QR Code Will Appear Here
+                    </div>
+                </div>
+
+                <div class="instructions">
+                    <h4>⚠️ Important Instructions:</h4>
+                    <ol>
+                        <li>Send <strong>exactly</strong> the amount shown above</li>
+                        <li>Convert $ to crypto in your wallet first</li>
+                        <li>Wait for blockchain confirmation (2-3 minutes)</li>
+                        <li>Golden will be added automatically to your balance</li>
+                    </ol>
+                </div>
+
+                <button class="back-btn" id="backBtn">← Back to Selection</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div class="notification" id="notification"></div>
+
+    <script>
+        class PaymentSystem {
+            constructor() {
+                this.selectedPackage = null;
+                this.selectedCrypto = null;
+                this.user = null;
+                
+                this.walletAddresses = {
+                    btc: 'bc1qz5wtz2d329xsm7gcs9e3jwls9supg2fk2hkxtd',
+                    eth: '0x8BEaCb38dF916F6644F81cA0De18C1F4996d32Ea',
+                    ltc: '0x8BEaCb38dF916F6644F81cA0De18C1F4996d32Ea'
+                };
+
+                this.qrCodes = {
+                    btc: 'BTC=QR',
+                    eth: 'ETH=QR', 
+                    ltc: 'LTC=QR'
+                };
+
+                this.packages = {
+                    mini: { price: 5, golden: 20 },
+                    golden: { price: 10, golden: 45 },
+                    ultra: { price: 20, golden: 90 }
+                };
+
+                this.initializeElements();
+                this.checkAuth();
+                this.setupEventListeners();
             }
 
-            const price = priceData.usd;
-            const formattedPrice = price < 1 ? price.toFixed(4) : 
-                                  price < 10 ? price.toFixed(3) : 
-                                  price.toFixed(2);
-            
-            return `
-                <div class="crypto-item">
-                    <div class="crypto-name">${crypto.name} (${crypto.symbol})</div>
-                    <div class="crypto-price">$${formattedPrice}</div>
-                    <div class="crypto-change positive">
-                        <i class="fas fa-circle"></i>
-                        Live
-                    </div>
-                </div>
-            `;
-        }).join('');
+            initializeElements() {
+                this.elements = {
+                    userAvatar: document.getElementById('userAvatar'),
+                    userName: document.getElementById('userName'),
+                    goldenBalance: document.getElementById('goldenBalance'),
+                    paymentDetails: document.getElementById('paymentDetails'),
+                    amountValue: document.getElementById('amountValue'),
+                    walletAddress: document.getElementById('walletAddress'),
+                    copyAddressBtn: document.getElementById('copyAddressBtn'),
+                    qrPlaceholder: document.getElementById('qrPlaceholder'),
+                    backBtn: document.getElementById('backBtn'),
+                    notification: document.getElementById('notification')
+                };
+            }
 
-        cryptoGrid.innerHTML = cryptoHTML;
-    }
-
-    function updateUSDConversion() {
-        // Update USD prices based on current crypto rates
-        Object.entries(GOLDEN_PACKAGES).forEach(([goldenAmount, packageInfo]) => {
-            const usdElement = document.getElementById(`usdPrice${goldenAmount}`);
-            if (usdElement) {
-                usdElement.textContent = `$${packageInfo.priceUSD} USD`;
-                
-                // Show crypto equivalent prices if we have Bitcoin data
-                if (cryptoPrices.bitcoin && cryptoPrices.bitcoin.usd) {
-                    const btcPrice = (packageInfo.priceUSD / cryptoPrices.bitcoin.usd).toFixed(6);
-                    usdElement.innerHTML += `<br><small style="color: var(--text-muted); font-size: 0.8rem;">≈ ${btcPrice} BTC</small>`;
+            async checkAuth() {
+                try {
+                    const response = await fetch('/api/me');
+                    const data = await response.json();
+                    
+                    if (data.loggedIn) {
+                        this.user = data.user;
+                        this.updateUserInfo(data);
+                    } else {
+                        window.location.href = '/login-signup.html';
+                    }
+                } catch (error) {
+                    console.error('Auth check failed:', error);
                 }
             }
-        });
-    }
 
-    function showSuccessMessage() {
-        // Briefly show success indicator
-        const refreshBtn = document.querySelector('.refresh-btn');
-        const originalHTML = refreshBtn.innerHTML;
-        
-        refreshBtn.innerHTML = '<i class="fas fa-check"></i> Updated!';
-        refreshBtn.style.color = 'var(--success)';
-        
-        setTimeout(() => {
-            refreshBtn.innerHTML = originalHTML;
-            refreshBtn.style.color = '';
-        }, 2000);
-    }
-
-    function showErrorMessage() {
-        const cryptoGrid = document.getElementById('cryptoGrid');
-        const existingItems = cryptoGrid.querySelectorAll('.crypto-item');
-        
-        if (existingItems.length === 0) {
-            cryptoGrid.innerHTML = `
-                <div style="grid-column: 1 / -1; text-align: center; padding: 20px;">
-                    <div style="color: var(--warning); font-size: 2rem; margin-bottom: 10px;">
-                        <i class="fas fa-exclamation-triangle"></i>
-                    </div>
-                    <div style="color: var(--text-secondary); margin-bottom: 10px;">
-                        Using demo prices
-                    </div>
-                    <div style="color: var(--text-muted); font-size: 0.9rem;">
-                        Live prices will resume when connection is available
-                    </div>
-                </div>
-            `;
-        }
-    }
-
-    // Purchase function - MODIFIED to work properly
-    async function purchaseGolden(goldenAmount, usdPrice) {
-        // Show purchase confirmation
-        const confirmed = confirm(`Purchase ${goldenAmount} Golden for $${usdPrice}?\n\nYou will be redirected to the payment page.`);
-        
-        if (confirmed) {
-            // Show loading state
-            const buttons = document.querySelectorAll('.buy-btn');
-            buttons.forEach(btn => {
-                if (btn.textContent.includes(`${goldenAmount}G`)) {
-                    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
-                    btn.disabled = true;
-                }
-            });
-            
-            // Simulate API call delay
-            setTimeout(() => {
-                // Redirect to payment page with parameters
-                alert(`Success! You would now be redirected to complete your purchase of ${goldenAmount} Golden tokens for $${usdPrice}.`);
+            updateUserInfo(data) {
+                this.elements.userName.textContent = data.user.name;
+                this.elements.goldenBalance.textContent = `${data.balance}G`;
                 
-                // Reset buttons
-                buttons.forEach(btn => {
-                    btn.innerHTML = '<i class="fas fa-bolt"></i> Buy Now';
-                    btn.disabled = false;
+                const initial = data.user.name.charAt(0).toUpperCase();
+                this.elements.userAvatar.textContent = initial;
+            }
+
+            selectPackage(packageType) {
+                // Remove selected class from all packages
+                document.querySelectorAll('.package-option').forEach(pkg => {
+                    pkg.classList.remove('selected');
                 });
                 
-                // In a real application, you would redirect:
-                // window.location.href = `/payment.html?amount=${goldenAmount}&price=${usdPrice}`;
-            }, 1500);
-        }
-    }
-
-    // Test the API endpoint directly
-    async function testCryptoAPI() {
-        console.log("Testing crypto API endpoint...");
-        try {
-            // For demo purposes, we'll simulate a successful test
-            console.log("Test API: Success");
-            return true;
-        } catch (error) {
-            console.log("Test API error:", error);
-            return false;
-        }
-    }
-
-    // Run test on load
-    setTimeout(() => {
-        testCryptoAPI();
-    }, 1000);
-
-    // Add some visual effects
-    document.addEventListener('mousemove', function(e) {
-        const cards = document.querySelectorAll('.plan-card');
-        cards.forEach(card => {
-            const rect = card.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            
-            if (x > 0 && x < rect.width && y > 0 && y < rect.height) {
-                card.style.setProperty('--mouse-x', `${x}px`);
-                card.style.setProperty('--mouse-y', `${y}px`);
+                // Add selected class to clicked package
+                const packageEl = document.querySelector(`[data-package="${packageType}"]`);
+                packageEl.classList.add('selected');
+                
+                this.selectedPackage = packageType;
+                this.checkSelections();
             }
+
+            selectCrypto(cryptoType) {
+                // Remove selected class from all cryptos
+                document.querySelectorAll('.crypto-option').forEach(crypto => {
+                    crypto.classList.remove('selected');
+                });
+                
+                // Add selected class to clicked crypto
+                const cryptoEl = document.querySelector(`[data-crypto="${cryptoType}"]`);
+                cryptoEl.classList.add('selected');
+                
+                this.selectedCrypto = cryptoType;
+                this.checkSelections();
+            }
+
+            checkSelections() {
+                if (this.selectedPackage && this.selectedCrypto) {
+                    this.showPaymentDetails();
+                }
+            }
+
+            showPaymentDetails() {
+                const packageInfo = this.packages[this.selectedPackage];
+                const cryptoName = this.selectedCrypto.toUpperCase();
+                
+                // Update amount
+                this.elements.amountValue.textContent = `$${packageInfo.price}.00 in ${cryptoName}`;
+                
+                // Update wallet address
+                this.elements.walletAddress.textContent = this.walletAddresses[this.selectedCrypto];
+                
+                // Update QR code display
+                this.elements.qrPlaceholder.textContent = this.qrCodes[this.selectedCrypto];
+                
+                // Show payment details
+                this.elements.paymentDetails.classList.add('active');
+                
+                // Scroll to payment details
+                this.elements.paymentDetails.scrollIntoView({ behavior: 'smooth' });
+            }
+
+            hidePaymentDetails() {
+                this.elements.paymentDetails.classList.remove('active');
+                this.selectedPackage = null;
+                this.selectedCrypto = null;
+                
+                // Clear selections
+                document.querySelectorAll('.package-option, .crypto-option').forEach(el => {
+                    el.classList.remove('selected');
+                });
+            }
+
+            copyWalletAddress() {
+                const address = this.walletAddresses[this.selectedCrypto];
+                navigator.clipboard.writeText(address).then(() => {
+                    this.showNotification('✅ Wallet address copied!', 'success');
+                }).catch(() => {
+                    this.showNotification('❌ Failed to copy address', 'error');
+                });
+            }
+
+            showNotification(message, type) {
+                const notification = this.elements.notification;
+                notification.textContent = message;
+                notification.className = `notification ${type}`;
+                notification.classList.add('show');
+                
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 3000);
+            }
+
+            setupEventListeners() {
+                // Package selection
+                document.querySelectorAll('.package-option').forEach(pkg => {
+                    pkg.addEventListener('click', () => {
+                        this.selectPackage(pkg.dataset.package);
+                    });
+                });
+
+                // Crypto selection
+                document.querySelectorAll('.crypto-option').forEach(crypto => {
+                    crypto.addEventListener('click', () => {
+                        this.selectCrypto(crypto.dataset.crypto);
+                    });
+                });
+
+                // Copy address button
+                this.elements.copyAddressBtn.addEventListener('click', () => {
+                    this.copyWalletAddress();
+                });
+
+                // Back button
+                this.elements.backBtn.addEventListener('click', () => {
+                    this.hidePaymentDetails();
+                });
+            }
+        }
+
+        // Initialize payment system
+        let paymentSystem;
+        document.addEventListener('DOMContentLoaded', () => {
+            paymentSystem = new PaymentSystem();
         });
-    });
-</script>  
-   </body>
+    </script>
+</body>
 </html>

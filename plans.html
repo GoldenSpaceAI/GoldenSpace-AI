@@ -1,185 +1,241 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Buy Golden • GoldenSpaceAI</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GoldenSpaceAI • Plans</title>
 <style>
-body {
-  margin: 0;
-  font-family: "Segoe UI", sans-serif;
-  background: #0d1117;
-  color: white;
+:root {
+  --dark: #0a0a0a;
+  --card: #111;
+  --gold1: #ffd86b;
+  --gold2: #f4b83e;
+  --border: rgba(255,255,255,0.08);
+  --text: #d9d9d9;
 }
 
-.top {
-  padding: 16px 20px;
+body {
+  margin: 0;
+  font-family: "Segoe UI", Roboto, sans-serif;
+  background: var(--dark);
+  color: var(--text);
+  overflow-x: hidden;
+}
+
+.nav {
+  padding: 18px 26px;
   background: rgba(0,0,0,0.6);
-  border-bottom: 1px solid rgba(255,215,0,0.3);
-  position: sticky;
-  top: 0;
-  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
-.top h1 { color: #ffd86b; margin: 0; }
 
-a.pill {
-  padding: 8px 14px;
-  border-radius: 20px;
-  background: rgba(255,215,0,0.15);
-  border: 1px solid rgba(255,215,0,0.4);
-  color: #ffd86b;
+.brand {
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--gold1);
+}
+
+.pill {
+  color: var(--gold1);
   text-decoration: none;
-  font-weight: bold;
+  padding: 8px 16px;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
 }
 
 .wrap {
-  max-width: 1000px;
+  max-width: 1200px;
   margin: 40px auto;
-  padding: 0 20px;
+  padding: 10px;
 }
 
-/* PLAN CARDS */
-.plans {
-  display: grid;
-  grid-template-columns: repeat(auto-fit,minmax(260px,1fr));
-  gap: 18px;
-}
-
-.card {
-  background: #161b22;
-  border: 1px solid rgba(255,215,0,0.2);
-  padding: 25px;
-  border-radius: 14px;
+.section-title {
   text-align: center;
-  transition: 0.3s;
+  font-size: 32px;
+  font-weight: 900;
+  margin-bottom: 20px;
+  color: var(--gold1);
 }
-.card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 0 20px rgba(255,215,0,0.25);
-}
-.card h2 { color: #ffd86b; margin: 8px 0; font-size: 24px; }
-.card p { color: #ccc; margin: 6px 0; }
-.card strong { color: #ffd86b; font-size: 32px; }
-.btn {
-  margin-top: 15px;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
-  font-weight: bold;
-  background: linear-gradient(180deg,#ffd86b,#f4b83e);
-  color: #000;
-}
-.btn:hover { opacity: 0.95; }
 
-/* STEP BOX */
-.step-box {
-  margin-top: 35px;
-  padding: 25px;
-  background: #11161c;
-  border: 1px solid rgba(255,215,0,0.25);
-  border-radius: 14px;
+.plans-row {
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.plan-card {
+  background: var(--card);
+  padding: 28px;
+  border-radius: 18px;
+  width: 300px;
+  border: 1px solid var(--border);
+  text-align: center;
+  transition: 0.35s;
+  position: relative;
+}
+
+.plan-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 0 40px rgba(255,215,0,0.15);
+}
+
+.badge {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  background: linear-gradient(180deg, var(--gold1), var(--gold2));
+  padding: 6px 12px;
+  border-radius: 12px;
+  color: #000;
+  font-weight: 900;
+  font-size: 12px;
+}
+
+.price {
+  font-size: 38px;
+  font-weight: 900;
+  margin: 16px 0 6px;
+  color: var(--gold1);
+}
+
+.golden {
+  font-size: 20px;
+  margin-bottom: 16px;
+}
+
+.btn-select {
+  margin-top: 16px;
+  width: 100%;
+  border: 0;
+  padding: 12px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, var(--gold1), var(--gold2));
+  color: #000;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 800;
+  transition: 0.35s;
+}
+
+.btn-select:hover {
+  transform: scale(1.03);
+}
+
+/* STEPS */
+.step-card {
+  margin-top: 40px;
   display: none;
+  background: var(--card);
+  padding: 28px;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+}
+
+.crypto-opt button {
+  margin: 5px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.08);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.crypto-opt button.active {
+  background: var(--gold1);
+  color: #000;
+  font-weight: 700;
 }
 
 .status {
   margin-top: 15px;
-  background: #0b0f14;
-  padding: 15px;
-  border-radius: 10px;
-  border: 1px solid rgba(255,215,0,0.2);
+  font-size: 16px;
 }
-.status.success { color: #6dff8e; }
-.status.error { color: #ff7a7a; }
 
-.loader {
-  margin-top: 10px;
-  font-size: 14px;
-  color: #ccc;
+.status.success {
+  color: #8affae;
+  font-weight: bold;
 }
-.crypto-opt {
-  margin: 10px 0;
-  display: flex;
-  gap: 10px;
-}
-.crypto-opt button {
-  flex: 1;
-  padding: 10px;
-  border-radius: 8px;
-  background: rgba(255,215,0,0.1);
-  color: #ffd86b;
-  border: 1px solid rgba(255,215,0,0.3);
-  cursor: pointer;
-}
-.crypto-opt button.active {
-  background: #ffd86b;
-  color: #000;
+
+.status.error {
+  color: #ff9090;
+  font-weight: bold;
 }
 </style>
 </head>
 <body>
 
-<div class="top">
-  <h1>GoldenSpaceAI — Buy Golden</h1>
-  <div>
-    <a class="pill" href="/">Home</a>
-  </div>
+<div class="nav">
+  <div class="brand">GoldenSpaceAI</div>
+  <a class="pill" href="/">Home</a>
 </div>
 
 <div class="wrap">
 
-<h2 style="color:#ffd86b;text-align:center;margin-bottom:20px;">Choose Your Plan</h2>
+  <h1 class="section-title">Choose Your Plan</h1>
 
-<div class="plans">
-  <div class="card">
-    <h2>Mini Pack</h2>
-    <strong>20G</strong>
-    <p>$5.00</p>
-    <button class="btn" onclick="selectPlan('mini',20,5)">Select</button>
+  <!-- 3 PLAN CARDS -->
+  <div class="plans-row">
+
+    <!-- MINI -->
+    <div class="plan-card">
+      <h2>Mini Plan</h2>
+      <p class="price">$5</p>
+      <p class="golden">20 Golden</p>
+      <button class="btn-select" onclick="selectPlan('mini',20,5)">Select Mini</button>
+    </div>
+
+    <!-- GOLDEN (BADGE) -->
+    <div class="plan-card">
+      <div class="badge">MOST POPULAR</div>
+      <h2>Golden Plan</h2>
+      <p class="price">$10</p>
+      <p class="golden">44 Golden</p>
+      <button class="btn-select" onclick="selectPlan('golden',44,10)">Select Golden</button>
+    </div>
+
+    <!-- ULTRA -->
+    <div class="plan-card">
+      <h2>Ultra Plan</h2>
+      <p class="price">$20</p>
+      <p class="golden">90 Golden</p>
+      <button class="btn-select" onclick="selectPlan('ultra',90,20)">Select Ultra</button>
+    </div>
+
   </div>
 
-  <div class="card">
-    <h2>Golden Pack</h2>
-    <strong>44G</strong>
-    <p>$10.00</p>
-    <button class="btn" onclick="selectPlan('golden',44,10)">Select</button>
+  <!-- STEP 1 -->
+  <div id="step1" class="step-card">
+    <h2>Step 1 — Choose Crypto</h2>
+    <p>Select a cryptocurrency to pay with:</p>
+    <div class="crypto-opt">
+      <button onclick="chooseCrypto('btc')">Bitcoin</button>
+      <button onclick="chooseCrypto('eth')">Ethereum</button>
+      <button onclick="chooseCrypto('ltc')">Litecoin</button>
+    </div>
   </div>
 
-  <div class="card">
-    <h2>Ultra Pack</h2>
-    <strong>90G</strong>
-    <p>$20.00</p>
-    <button class="btn" onclick="selectPlan('ultra',90,20)">Select</button>
+  <!-- STEP 2 -->
+  <div id="step2" class="step-card">
+    <h2>Step 2 — Payment Details</h2>
+    <p><b>Send EXACT amount:</b> <span id="amountText"></span></p>
+    <p><b>Wallet:</b></p>
+    <div style="padding:12px;background:#000;border-radius:10px;color:var(--gold1);" id="walletBox"></div>
   </div>
-</div>
 
-<!-- STEP 1 -->
-<div id="step1" class="step-box">
-  <h3>Step 1 — Select Crypto</h3>
-  <div class="crypto-opt">
-    <button onclick="chooseCrypto('btc')">BTC</button>
-    <button onclick="chooseCrypto('eth')">ETH</button>
-    <button onclick="chooseCrypto('ltc')">LTC</button>
+  <!-- STEP 3 -->
+  <div id="step3" class="step-card">
+    <h2>Step 3 — Verification</h2>
+    <p>We will verify your blockchain payment.</p>
+    <div id="verifyBox" class="status">Waiting for payment...</div>
   </div>
-</div>
-
-<!-- STEP 2 -->
-<div id="step2" class="step-box">
-  <h3>Step 2 — Send Payment</h3>
-  <p><b>Send exactly:</b> <span id="amountText"></span></p>
-  <p><b>To this wallet:</b></p>
-  <div class="status" id="walletBox"></div>
-  <p class="loader">Waiting for blockchain... this page will update automatically.</p>
-</div>
-
-<!-- STEP 3 -->
-<div id="step3" class="step-box">
-  <h3>Step 3 — Verification Status</h3>
-  <div id="verifyBox" class="status"></div>
-</div>
 
 </div>
 
@@ -201,11 +257,9 @@ function selectPlan(plan, gold, usd){
 
 function chooseCrypto(c){
   selectedCrypto=c;
-
   [...document.querySelectorAll('.crypto-opt button')]
     .forEach(b=>b.classList.remove('active'));
   event.target.classList.add('active');
-
   createPayment();
 }
 
@@ -238,7 +292,6 @@ async function createPayment(){
   document.getElementById('walletBox').textContent=walletMap[selectedCrypto];
   document.getElementById('amountText').textContent="$"+expectedUSD+" (20–30 sec fee change allowed)";
 
-  // show step 3
   document.getElementById('step3').style.display='block';
   startVerificationLoop();
 }
@@ -249,23 +302,22 @@ async function checkStatus(){
 
   const box=document.getElementById('verifyBox');
 
-  if (d.status === "confirmed") {
-  box.className = "status success";
-  box.innerHTML = `
-    ✅ Payment Confirmed!<br><br>
-    <b>TX Hash:</b> ${d.txHash}<br>
-    <b>Confirmed At:</b> ${new Date(d.confirmedAt).toLocaleString()}<br>
-    <b>USD Value:</b> $${d.usdValue}<br><br>
-    Golden has been added to your account 🎉
-  `;
-  return "done";
-}
-
+  if(d.status==="confirmed"){
+    box.className="status success";
+    box.innerHTML=`
+      ✅ Payment Confirmed!<br><br>
+      <b>TX Hash:</b> ${d.txHash}<br>
+      <b>Confirmed At:</b> ${new Date(d.confirmedAt).toLocaleString()}<br>
+      <b>USD Value:</b> $${d.usdValue}<br><br>
+      Your Golden was added to your account 🎉
+    `;
+    return "done";
+  }
 
   // timeout after 3 hours
   if(Date.now() - createdAt > (3*60*60*1000)){
     box.className="status error";
-    box.innerHTML="❌ Payment Declined<br><small>If we received any crypto, we will manually refund it.</small>";
+    box.innerHTML="❌ Payment Declined<br><small>If any crypto was received, we will manually refund it.</small>";
     return "done";
   }
 
@@ -278,9 +330,8 @@ function startVerificationLoop(){
   const loop=setInterval(async()=>{
     const r=await checkStatus();
     if(r==="done") clearInterval(loop);
-  },10000); // every 10 sec
+  },10000);
 }
 </script>
-
 </body>
 </html>

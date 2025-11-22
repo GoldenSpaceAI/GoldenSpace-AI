@@ -1131,7 +1131,57 @@ Object.entries(staticPages).forEach(([route, file]) => {
     res.sendFile(path.join(__dirname, file));
   });
 });
-// ============ PAYMENT REQUEST SYSTEM ============
+// ============ PAYMENT REQUEST ROUTE ============
+app.post("/api/payment-request", authUser, async (req, res) => {
+  try {
+    const { 
+      userEmail, 
+      userProvider, 
+      userName, 
+      currentGoldenBalance,
+      plan, 
+      crypto, 
+      amount, 
+      goldenAmount, 
+      userWalletAddress 
+    } = req.body;
+
+    const userId = getUserIdentifier(req);
+    
+    const paymentRequest = {
+      id: crypto.randomBytes(16).toString('hex'),
+      userId,
+      userEmail,
+      userProvider,
+      userName,
+      currentGoldenBalance,
+      plan,
+      crypto: crypto.toUpperCase(),
+      amount,
+      goldenAmount,
+      userWalletAddress,
+      status: 'pending',
+      timestamp: new Date().toISOString(),
+      adminNotes: ''
+    };
+    
+    // Make sure paymentRequests array exists
+    if (!paymentRequests) paymentRequests = [];
+    paymentRequests.push(paymentRequest);
+    
+    console.log(`💰 New payment request from ${userEmail} for ${goldenAmount}G`);
+    
+    res.json({
+      success: true,
+      message: 'Payment request submitted successfully',
+      requestId: paymentRequest.id
+    });
+    
+  } catch (error) {
+    console.error('Payment request error:', error);
+    res.status(500).json({ error: 'Failed to submit payment request' });
+  }
+});// ============ PAYMENT REQUEST SYSTEM ============
 // Store payment requests in memory (in production, use a database)
 let paymentRequests = [];
 

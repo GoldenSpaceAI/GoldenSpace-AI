@@ -2,194 +2,184 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GoldenSpaceAI • Buy Golden</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GoldenSpaceAI – Buy Golden Credits</title>
 
 <style>
-    :root {
-        --gold:#ffd700;
-        --gold2:#ffef9a;
-        --bg-dark:#0a0a0f;
-        --card-bg:rgba(15,15,25,0.7);
-        --border:rgba(255,255,255,0.15);
-        --white:#ffffff;
-    }
-
     body {
         margin: 0;
-        font-family: system-ui, sans-serif;
-        background: url("https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?auto=format&fit=crop&w=1600&q=60")
-            no-repeat center center/cover;
-        backdrop-filter: blur(3px);
-        color: var(--white);
+        font-family: Arial, sans-serif;
+        background: url("https://images.unsplash.com/photo-1444703686981-a3abbc4d4fe3?auto=format&fit=crop&w=1600&q=80") no-repeat center/cover;
+        color: white;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 40px 10px;
     }
 
-    .overlay {
-        background: rgba(0,0,0,0.6);
-        min-height: 100vh;
-        padding: 40px 15px;
+    .container {
+        background: rgba(0,0,0,0.65);
+        padding: 25px;
+        border-radius: 14px;
+        width: 100%;
+        max-width: 420px;
+        box-shadow: 0 0 20px rgba(255,215,0,0.25);
     }
 
     h1 {
         text-align: center;
-        font-size: 2.4rem;
-        margin-bottom: 10px;
-        color: var(--gold);
-    }
-
-    p.subtitle {
-        text-align: center;
-        opacity: 0.8;
-        margin-bottom: 40px;
-    }
-
-    .plans {
-        max-width: 1000px;
-        margin: auto;
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(260px,1fr));
-        gap: 25px;
-    }
-
-    .plan-box {
-        background: var(--card-bg);
-        padding: 25px;
-        border-radius: 18px;
-        border: 1px solid var(--border);
-        text-align: center;
-        transition: 0.25s;
-        backdrop-filter: blur(4px);
-    }
-
-    .plan-box:hover {
-        transform: translateY(-6px);
-        border-color: var(--gold);
-    }
-
-    .price {
-        font-size: 2rem;
-        font-weight: bold;
-        color: var(--gold);
-    }
-
-    .gold {
-        font-size: 1.2rem;
-        color: var(--gold2);
+        font-size: 26px;
         margin-bottom: 20px;
+        color: #ffd700;
+        text-shadow: 0 0 10px black;
     }
 
-    .wallet-box {
-        margin-top: 15px;
-        padding: 12px;
-        border-radius: 12px;
-        background: rgba(255,255,255,0.1);
-        font-size: 0.9rem;
-        word-break: break-all;
-    }
-
-    button.copyBtn {
-        margin-top: 10px;
+    button, select {
         width: 100%;
-        padding: 10px 0;
+        padding: 12px;
+        margin-top: 10px;
         border: none;
-        border-radius: 10px;
-        background: var(--gold);
-        color: black;
-        font-weight: bold;
+        border-radius: 8px;
+        font-size: 16px;
         cursor: pointer;
+        font-weight: bold;
     }
 
-    button.copyBtn:hover {
-        background: var(--gold2);
+    .next-btn {
+        background: #ffd700;
+        color: black;
     }
 
-    .steps {
-        max-width: 800px;
-        margin: 50px auto 0;
-        background: rgba(0,0,0,0.55);
-        padding: 25px;
-        border-radius: 16px;
-        border: 1px solid var(--border);
-        backdrop-filter: blur(3px);
+    .back-btn {
+        background: #555;
+        color: white;
     }
 
-    .steps h2 {
-        color: var(--gold);
-        margin-bottom: 10px;
+    .login-btn {
+        background: #ffd700;
+        color: black;
+        margin-top: 20px;
     }
 
-    .steps p {
-        opacity: 0.85;
-        margin-bottom: 8px;
-        line-height: 1.6;
+    .box {
+        margin-top: 20px;
+        padding: 15px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 10px;
     }
+
+    .hidden { display: none; }
+
+    .loader {
+        margin: 20px auto;
+        border: 6px solid #444;
+        border-top: 6px solid #ffd700;
+        border-radius: 50%;
+        width: 45px;
+        height: 45px;
+        animation: spin 0.9s linear infinite;
+    }
+
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+
 </style>
 </head>
-
 <body>
-<div class="overlay">
 
-    <h1>GoldenSpaceAI – Golden Packages</h1>
-    <p class="subtitle">Send crypto → system detects it → Golden is added automatically.</p>
+<div class="container">
 
-    <div class="plans">
+    <h1>Buy Golden Credits</h1>
 
-        <!-- MINI -->
-        <div class="plan-box">
-            <h2>Mini Pack</h2>
-            <div class="price">$5</div>
-            <div class="gold">20 Golden</div>
-
-            <div class="wallet-box" id="minibtc">
-                BTC: bc1qz5wtz2d329xsm7gcs9e3jwls9supg2fk2hkxtd
-            </div>
-            <button class="copyBtn" onclick="copy('minibtc')">Copy Address</button>
-        </div>
-
-        <!-- GOLDEN -->
-        <div class="plan-box">
-            <h2>Golden Pack</h2>
-            <div class="price">$10</div>
-            <div class="gold">44 Golden</div>
-
-            <div class="wallet-box" id="goldenbtc">
-                BTC: bc1qz5wtz2d329xsm7gcs9e3jwls9supg2fk2hkxtd
-            </div>
-            <button class="copyBtn" onclick="copy('goldenbtc')">Copy Address</button>
-        </div>
-
-        <!-- ULTRA -->
-        <div class="plan-box">
-            <h2>Ultra Pack</h2>
-            <div class="price">$20</div>
-            <div class="gold">90 Golden</div>
-
-            <div class="wallet-box" id="ultrabtc">
-                BTC: bc1qz5wtz2d329xsm7gcs9e3jwls9supg2fk2hkxtd
-            </div>
-            <button class="copyBtn" onclick="copy('ultrabtc')">Copy Address</button>
-        </div>
-
+    <!-- NOT LOGGED IN -->
+    <div id="notLogged" class="box hidden">
+        <p>You must be logged in to buy Golden.</p>
+        <button class="login-btn" onclick="window.location='/login'">Login</button>
     </div>
 
-    <!-- Steps Section -->
-    <div class="steps">
-        <h2>How it works</h2>
-        <p>1. Choose any Golden package above.</p>
-        <p>2. Copy the Bitcoin address.</p>
-        <p>3. Send the exact amount in BTC (any amount works — system detects automatically).</p>
-        <p>4. BlockCypher scans your payment every 20 seconds.</p>
-        <p>5. Once confirmed → Golden balance updates instantly.</p>
-        <p>6. You will see your Golden added inside your profile.</p>
+    <!-- STEP 1 -->
+    <div id="step1" class="box hidden">
+        <h2>Select a Plan</h2>
+        <select id="planSelect">
+            <option value="mini">Mini – 20G for $5</option>
+            <option value="golden">Golden – 44G for $10</option>
+            <option value="ultra">Ultra – 90G for $20</option>
+        </select>
+
+        <select id="cryptoSelect">
+            <option value="btc">Bitcoin (BTC)</option>
+        </select>
+
+        <button class="next-btn" onclick="goStep2()">Next</button>
+    </div>
+
+    <!-- STEP 2 -->
+    <div id="step2" class="box hidden">
+        <h2>Send Payment</h2>
+        <p><strong>Amount:</strong> <span id="amountDisplay"></span></p>
+        <p><strong>Wallet:</strong></p>
+        <p style="word-break: break-all; font-size: 14px;" id="walletDisplay"></p>
+
+        <button class="next-btn" onclick="goStep3()">I Have Sent the Payment</button>
+        <button class="back-btn" onclick="backToStep1()">Back</button>
+    </div>
+
+    <!-- STEP 3 -->
+    <div id="step3" class="box hidden">
+        <h2>Waiting for Confirmation…</h2>
+        <div class="loader"></div>
+        <p>Your payment is being scanned every 20 seconds.</p>
+        <p style="font-size: 14px;">This page will auto-refresh.</p>
     </div>
 
 </div>
 
 <script>
-function copy(id) {
-    let text = document.getElementById(id).innerText.replace("BTC: ", "");
-    navigator.clipboard.writeText(text);
-    alert("Copied: " + text);
+const WALLET = "bc1qz5wtz2d329xsm7gcs9e3jwls9supg2fk2hkxtd";
+
+// plan data
+const plans = {
+    mini: { usd: 5, g: 20 },
+    golden: { usd: 10, g: 44 },
+    ultra: { usd: 20, g: 90 }
+};
+
+async function checkLogin() {
+    let res = await fetch("/api/me");
+    let data = await res.json();
+
+    if (!data.loggedIn) {
+        document.getElementById("notLogged").classList.remove("hidden");
+    } else {
+        document.getElementById("step1").classList.remove("hidden");
+    }
+}
+
+checkLogin();
+
+// STEP 1 → STEP 2
+function goStep2() {
+    const plan = document.getElementById("planSelect").value;
+    const amount = plans[plan].usd;
+
+    document.getElementById("amountDisplay").textContent = `${amount} USD`;
+    document.getElementById("walletDisplay").textContent = WALLET;
+
+    document.getElementById("step1").classList.add("hidden");
+    document.getElementById("step2").classList.remove("hidden");
+}
+
+// STEP 2 → STEP 3
+function goStep3() {
+    document.getElementById("step2").classList.add("hidden");
+    document.getElementById("step3").classList.remove("hidden");
+
+    setTimeout(() => { location.reload(); }, 5000);
+}
+
+function backToStep1() {
+    document.getElementById("step2").classList.add("hidden");
+    document.getElementById("step1").classList.remove("hidden");
 }
 </script>
 

@@ -16,39 +16,11 @@
             font-family: 'Inter', sans-serif;
             background: 
                 linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(184, 148, 31, 0.2) 100%),
-                url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><defs><radialGradient id="a" cx="0.5" cy="0.5" r="0.5"><stop offset="0%" stop-color="%23d4af37" stop-opacity="0.1"/><stop offset="100%" stop-color="%23b8941f" stop-opacity="0.05"/></radialGradient></defs><rect width="100" height="100" fill="url(%23a)"/><path d="M30,30 L70,70 M70,30 L30,70" stroke="%23d4af37" stroke-width="0.5" stroke-opacity="0.1"/></svg>'),
                 #fefefe;
             min-height: 100vh;
             color: #2c3e50;
             position: relative;
             overflow-x: hidden;
-        }
-
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: 
-                radial-gradient(circle at 20% 80%, rgba(212, 175, 55, 0.15) 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, rgba(184, 148, 31, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 40% 40%, rgba(247, 239, 138, 0.08) 0%, transparent 50%);
-            pointer-events: none;
-            z-index: -1;
-        }
-
-        .golden-glow {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 80vw;
-            height: 80vh;
-            background: radial-gradient(circle, rgba(212, 175, 55, 0.1) 0%, transparent 70%);
-            pointer-events: none;
-            z-index: -1;
         }
 
         .container {
@@ -321,21 +293,6 @@
             background: linear-gradient(135deg, #d4af37, #f7ef8a);
         }
 
-        .plan-card::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-            transition: left 0.5s ease;
-        }
-
-        .plan-card:hover::after {
-            left: 100%;
-        }
-
         .plan-card:hover {
             transform: translateY(-12px);
             border-color: #d4af37;
@@ -436,31 +393,11 @@
             margin-bottom: 8px;
         }
 
-        .crypto-help {
-            text-align: center;
-            margin-top: 30px;
-            color: #7f8c8d;
-            font-size: 1.1em;
-        }
-
-        .help-link {
-            color: #3498db;
-            text-decoration: none;
-            font-weight: 600;
-            border-bottom: 2px solid transparent;
-            transition: all 0.3s ease;
-        }
-
-        .help-link:hover {
-            color: #2980b9;
-            border-bottom-color: #3498db;
-        }
-
-        /* Payment Final */
-        .payment-final {
+        /* Wallet Address Input */
+        .wallet-input-section {
             background: rgba(255,255,255,0.95);
             border-radius: 25px;
-            padding: 50px 40px;
+            padding: 40px;
             box-shadow: 0 20px 50px rgba(0,0,0,0.15);
             backdrop-filter: blur(15px);
             border: 2px solid rgba(212, 175, 55, 0.3);
@@ -499,6 +436,71 @@
             color: #856404;
             line-height: 1.7;
             font-size: 1.05em;
+        }
+
+        .wallet-input-group {
+            margin-bottom: 25px;
+        }
+
+        .wallet-label {
+            display: block;
+            color: #2c3e50;
+            font-weight: 600;
+            margin-bottom: 12px;
+            font-size: 1.1em;
+        }
+
+        .wallet-input {
+            width: 100%;
+            padding: 18px 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            font-size: 1.05em;
+            font-family: 'Courier New', monospace;
+            background: white;
+            transition: all 0.3s ease;
+        }
+
+        .wallet-input:focus {
+            outline: none;
+            border-color: #d4af37;
+            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2);
+        }
+
+        .wallet-input.valid {
+            border-color: #27ae60;
+            background: #f8fff9;
+        }
+
+        .wallet-input.invalid {
+            border-color: #e74c3c;
+            background: #fff8f8;
+        }
+
+        .validation-message {
+            margin-top: 8px;
+            font-size: 0.95em;
+            font-weight: 500;
+        }
+
+        .validation-message.valid {
+            color: #27ae60;
+        }
+
+        .validation-message.invalid {
+            color: #e74c3c;
+        }
+
+        /* Payment Final */
+        .payment-final {
+            background: rgba(255,255,255,0.95);
+            border-radius: 25px;
+            padding: 50px 40px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+            backdrop-filter: blur(15px);
+            border: 2px solid rgba(212, 175, 55, 0.3);
+            max-width: 600px;
+            margin: 0 auto;
         }
 
         .amount-display {
@@ -725,8 +727,6 @@
     </style>
 </head>
 <body>
-    <div class="golden-glow"></div>
-    
     <div class="container">
         <!-- User Bar -->
         <div class="user-bar" id="userBar" style="display: none;">
@@ -768,6 +768,10 @@
                 </div>
                 <div class="step" id="step3">
                     <div class="step-number">3</div>
+                    <div class="step-text">Wallet Address</div>
+                </div>
+                <div class="step" id="step4">
+                    <div class="step-number">4</div>
                     <div class="step-text">Send Payment</div>
                 </div>
             </div>
@@ -826,19 +830,39 @@
                     </div>
                 </div>
 
-                <div class="crypto-help">
-                    Don't have these coins? 
-                    <a href="buy-crypto.html" class="help-link" target="_blank">Learn how to buy crypto for beginners</a>
-                </div>
-
                 <div class="navigation">
                     <button class="nav-btn back" id="backToStep1">← Back</button>
                     <button class="nav-btn" id="nextToStep3" disabled>Continue →</button>
                 </div>
             </div>
 
-            <!-- Step 3: Send Payment -->
+            <!-- Step 3: Wallet Address -->
             <div class="step-content" id="step3Content">
+                <div class="wallet-input-section">
+                    <div class="warning-box">
+                        <div class="warning-title">IMPORTANT: ADD YOUR WALLET ADDRESS</div>
+                        <div class="warning-text">
+                            <strong>NOTE:</strong> Please add the <strong>WALLET ADDRESS</strong> that you will <strong>SEND FROM</strong> the Crypto you selected for us to verify your transaction.<br><br>
+                            <strong>NOTE:</strong> IF THE WALLET ADDRESS THAT YOU PLACED WASN'T WHAT YOU PAID WITH, THE TRANSACTION WILL <strong>FAIL</strong> AND WE WILL <strong>REFUND YOUR MONEY</strong>!
+                        </div>
+                    </div>
+
+                    <div class="wallet-input-group">
+                        <label class="wallet-label">Your Sending Wallet Address</label>
+                        <input type="text" class="wallet-input" id="walletAddressInput" 
+                               placeholder="Enter your wallet address (e.g., bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh)">
+                        <div class="validation-message" id="walletValidation"></div>
+                    </div>
+
+                    <div class="navigation">
+                        <button class="nav-btn back" id="backToStep2">← Back</button>
+                        <button class="nav-btn" id="nextToStep4" disabled>Continue →</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 4: Send Payment -->
+            <div class="step-content" id="step4Content">
                 <div class="payment-final">
                     <div class="warning-box">
                         <div class="warning-title">TRIPLE CHECK BEFORE SENDING</div>
@@ -854,7 +878,7 @@
                     </div>
 
                     <div class="wallet-section">
-                        <div class="wallet-title">Wallet Address</div>
+                        <div class="wallet-title">Our Wallet Address</div>
                         <div class="wallet-address" id="walletAddress">Select plan and crypto first</div>
                         <button class="copy-btn" id="copyAddressBtn">📋 Copy Address</button>
                     </div>
@@ -866,8 +890,8 @@
                     </div>
 
                     <div class="navigation">
-                        <button class="nav-btn back" id="backToStep2">← Back</button>
-                        <button class="nav-btn" onclick="window.location.href='/'">Complete</button>
+                        <button class="nav-btn back" id="backToStep3">← Back</button>
+                        <button class="nav-btn" id="submitPaymentRequest">Submit Payment Request</button>
                     </div>
                 </div>
             </div>
@@ -883,24 +907,32 @@
                 this.currentStep = 1;
                 this.selectedPlan = null;
                 this.selectedCrypto = null;
+                this.userWalletAddress = null;
                 this.user = null;
                 
                 this.walletAddresses = {
                     btc: 'bc1qz5wtz2d329xsm7gcs9e3jwls9supg2fk2hkxtd',
                     eth: '0x8BEaCb38dF916F6644F81cA0De18C1F4996d32Ea',
-                    ltc: '0x8BEaCb38dF916F6644F81cA0De18C1F4996d32Ea'
+                    ltc: 'LSNv8n6bZ2hR9KqD9q7B2n6X2gZ2hR9KqD9'
                 };
 
                 this.qrImages = {
-                    btc: 'GoldenSpace-AI/BTC=QR.jpeg',
-                    eth: 'GoldenSpace-AI/ETH=QR.jpeg',
-                    ltc: 'GoldenSpace-AI/LTC=QR.jpeg'
+                    btc: 'GoldenSpaceAI/GoldenSpace-ai/BTC=QR.jpeg',
+                    eth: 'GoldenSpaceAI/GoldenSpace-ai/ETH=QR.jpeg',
+                    ltc: 'GoldenSpaceAI/GoldenSpace-ai/LTC=QR.jpeg'
                 };
 
                 this.plans = {
                     mini: { price: 5, golden: 20 },
                     golden: { price: 10, golden: 45 },
                     ultra: { price: 20, golden: 90 }
+                };
+
+                // Wallet validation regex patterns
+                this.walletPatterns = {
+                    btc: /^(bc1|[13])[a-zA-HJ-NP-Z0-9]{25,39}$/,
+                    eth: /^0x[a-fA-F0-9]{40}$/,
+                    ltc: /^[LM3][a-km-zA-HJ-NP-Z1-9]{26,33}$/
                 };
 
                 this.initializeElements();
@@ -921,15 +953,23 @@
                     step1: document.getElementById('step1'),
                     step2: document.getElementById('step2'),
                     step3: document.getElementById('step3'),
+                    step4: document.getElementById('step4'),
                     step1Content: document.getElementById('step1Content'),
                     step2Content: document.getElementById('step2Content'),
                     step3Content: document.getElementById('step3Content'),
+                    step4Content: document.getElementById('step4Content'),
                     
                     // Navigation
                     nextToStep2: document.getElementById('nextToStep2'),
                     nextToStep3: document.getElementById('nextToStep3'),
+                    nextToStep4: document.getElementById('nextToStep4'),
                     backToStep1: document.getElementById('backToStep1'),
                     backToStep2: document.getElementById('backToStep2'),
+                    backToStep3: document.getElementById('backToStep3'),
+                    
+                    // Wallet input
+                    walletAddressInput: document.getElementById('walletAddressInput'),
+                    walletValidation: document.getElementById('walletValidation'),
                     
                     // Final step
                     finalAmount: document.getElementById('finalAmount'),
@@ -937,6 +977,7 @@
                     copyAddressBtn: document.getElementById('copyAddressBtn'),
                     qrImage: document.getElementById('qrImage'),
                     qrPlaceholder: document.getElementById('qrPlaceholder'),
+                    submitPaymentRequest: document.getElementById('submitPaymentRequest'),
                     
                     notification: document.getElementById('notification')
                 };
@@ -944,13 +985,21 @@
 
             async checkAuth() {
                 try {
-                    const response = await fetch('/api/me');
-                    const data = await response.json();
+                    // Simulate API call - replace with actual authentication
+                    const mockUser = {
+                        loggedIn: true,
+                        user: {
+                            name: 'John Doe',
+                            email: 'john@example.com',
+                            provider: 'Google'
+                        },
+                        balance: 150
+                    };
                     
-                    if (data.loggedIn) {
-                        this.user = data.user;
+                    if (mockUser.loggedIn) {
+                        this.user = mockUser.user;
                         this.showPaymentFlow();
-                        this.updateUserInfo(data);
+                        this.updateUserInfo(mockUser);
                     } else {
                         this.showLoginRequired();
                     }
@@ -1003,20 +1052,58 @@
                 this.elements.nextToStep3.disabled = false;
             }
 
+            validateWalletAddress(address) {
+                if (!this.selectedCrypto) return false;
+                
+                const pattern = this.walletPatterns[this.selectedCrypto];
+                return pattern.test(address);
+            }
+
+            updateWalletValidation() {
+                const address = this.elements.walletAddressInput.value.trim();
+                const isValid = this.validateWalletAddress(address);
+                
+                this.elements.walletAddressInput.classList.remove('valid', 'invalid');
+                this.elements.walletValidation.className = 'validation-message';
+                
+                if (address === '') {
+                    this.elements.walletValidation.textContent = '';
+                    this.elements.nextToStep4.disabled = true;
+                    return;
+                }
+                
+                if (isValid) {
+                    this.elements.walletAddressInput.classList.add('valid');
+                    this.elements.walletValidation.classList.add('valid');
+                    this.elements.walletValidation.textContent = '✓ Valid wallet address format';
+                    this.elements.nextToStep4.disabled = false;
+                    this.userWalletAddress = address;
+                } else {
+                    this.elements.walletAddressInput.classList.add('invalid');
+                    this.elements.walletValidation.classList.add('invalid');
+                    this.elements.walletValidation.textContent = '✗ Invalid wallet address format for selected cryptocurrency';
+                    this.elements.nextToStep4.disabled = true;
+                }
+            }
+
             goToStep(stepNumber) {
+                // Hide all steps
                 this.elements.step1Content.classList.remove('active');
                 this.elements.step2Content.classList.remove('active');
                 this.elements.step3Content.classList.remove('active');
+                this.elements.step4Content.classList.remove('active');
                 this.elements.step1.classList.remove('active');
                 this.elements.step2.classList.remove('active');
                 this.elements.step3.classList.remove('active');
+                this.elements.step4.classList.remove('active');
                 
+                // Show current step
                 this.elements[`step${stepNumber}`].classList.add('active');
                 this.elements[`step${stepNumber}Content`].classList.add('active');
                 
                 this.currentStep = stepNumber;
 
-                if (stepNumber === 3 && this.selectedPlan && this.selectedCrypto) {
+                if (stepNumber === 4 && this.selectedPlan && this.selectedCrypto) {
                     this.updateFinalStep();
                 }
             }
@@ -1045,6 +1132,39 @@
                 });
             }
 
+            async submitPaymentRequest() {
+                try {
+                    // Send payment request to admin panel
+                    const paymentRequest = {
+                        userEmail: this.user.email,
+                        userProvider: this.user.provider,
+                        plan: this.selectedPlan,
+                        crypto: this.selectedCrypto,
+                        amount: this.plans[this.selectedPlan].price,
+                        goldenAmount: this.plans[this.selectedPlan].golden,
+                        userWalletAddress: this.userWalletAddress,
+                        timestamp: new Date().toISOString(),
+                        status: 'pending'
+                    };
+
+                    // Store in localStorage (in real app, send to server)
+                    const requests = JSON.parse(localStorage.getItem('goldenPaymentRequests') || '[]');
+                    requests.push(paymentRequest);
+                    localStorage.setItem('goldenPaymentRequests', JSON.stringify(requests));
+
+                    this.showNotification('✅ Payment request submitted! We will verify your transaction.', 'success');
+                    
+                    // Redirect after delay
+                    setTimeout(() => {
+                        window.location.href = '/dashboard.html';
+                    }, 2000);
+
+                } catch (error) {
+                    console.error('Error submitting payment request:', error);
+                    this.showNotification('❌ Failed to submit payment request', 'error');
+                }
+            }
+
             showNotification(message, type) {
                 const notification = this.elements.notification;
                 notification.textContent = message;
@@ -1057,23 +1177,38 @@
             }
 
             setupEventListeners() {
+                // Plan selection
                 document.querySelectorAll('.plan-card').forEach(plan => {
                     plan.addEventListener('click', () => {
                         this.selectPlan(plan.dataset.plan);
                     });
                 });
 
+                // Crypto selection
                 document.querySelectorAll('.crypto-card').forEach(crypto => {
                     crypto.addEventListener('click', () => {
                         this.selectCrypto(crypto.dataset.crypto);
                     });
                 });
 
+                // Wallet address validation
+                this.elements.walletAddressInput.addEventListener('input', () => {
+                    this.updateWalletValidation();
+                });
+
+                // Navigation
                 this.elements.nextToStep2.addEventListener('click', () => this.goToStep(2));
                 this.elements.nextToStep3.addEventListener('click', () => this.goToStep(3));
+                this.elements.nextToStep4.addEventListener('click', () => this.goToStep(4));
                 this.elements.backToStep1.addEventListener('click', () => this.goToStep(1));
                 this.elements.backToStep2.addEventListener('click', () => this.goToStep(2));
+                this.elements.backToStep3.addEventListener('click', () => this.goToStep(3));
+                
+                // Copy address
                 this.elements.copyAddressBtn.addEventListener('click', () => this.copyWalletAddress());
+                
+                // Submit payment request
+                this.elements.submitPaymentRequest.addEventListener('click', () => this.submitPaymentRequest());
             }
         }
 

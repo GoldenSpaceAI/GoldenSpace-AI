@@ -1129,8 +1129,214 @@ Object.entries(staticPages).forEach(([route, file]) => {
     res.sendFile(path.join(__dirname, file));
   });
 });
+// ============ PAYMENT REQUEST SYSTEM ============
+// Store payment requests in memory (in production, use a database)
+let paymentRequests = [];
 
-// ============ CRYPTO PRICING ============
+// API to submit payment request
+app.post("/api/payment-request", authUser, async (req, res) => {
+  try {
+    const { 
+      userEmail, 
+      userProvider, 
+      userName, 
+      currentGoldenBalance,
+      plan, 
+      crypto, 
+      amount, 
+      goldenAmount, 
+      userWalletAddress 
+    } = req.body;
+
+    const userId = getUserIdentifier(req);
+    
+    const paymentRequest = {
+      id: require('crypto').randomBytes(16).toString('hex'),
+      userId,
+      userEmail,
+      userProvider,
+      userName,
+      currentGoldenBalance,
+      plan,
+      crypto: crypto.toUpperCase(),
+      amount,
+      goldenAmount,
+      userWalletAddress,
+      status: 'pending',
+      timestamp: new Date().toISOString(),
+      adminNotes: ''
+    };
+    
+    paymentRequests.push(paymentRequest);
+    
+    console.log(`💰 New payment request from ${userEmail} for ${goldenAmount}G`);
+    
+    res.json({
+      success: true,
+      message: 'Payment request submitted successfully',
+      requestId: paymentRequest.id
+    });
+    
+  } catch (error) {
+    console.error('Payment request error:', error);
+    res.status(500).json({ error: 'Failed to submit payment request' });
+  }
+});
+
+// Get all payment requests (admin only)
+app.get("/api/admin/payment-requests", requireAdmin, (req, res) => {
+  res.json({
+    success: true,
+    requests: paymentRequests
+  });
+});
+
+// Approve payment request (admin only)
+app.post("/api/admin/approve-payment", requireAdmin, async (req, res) => {
+  try {
+    const { requestId, adminNotes } = req.body;
+    
+    const request = paymentRequests.find(r => r.id === requestId);
+    if (!request) {
+      return res.status(404).json({ error: 'Payment request not found' });
+    }
+    
+    // Update user's golden balance
+    const db = loadGoldenDB();
+    const user = db.users[request.userId];
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    const previousBalance = user.golden_balance || 0;
+    user.golden_balance = previousBalance + parseInt(request.goldenAmount);
+    user.total_golden_earned = (user.total_golden_earned || 0) + parseInt(request.goldenAmount);
+    
+    // Record transaction
+    user.transactions = user.transactions || [];
+    user.transactions.push({
+      type: "purchase",
+      amount: parseInt(request.goldenAmount),
+      previous_balance: previousBalance,
+      new_balance: user.golden_balance,
+      plan: request.plan,
+      crypto: request.crypto,
+      adminNotes: adminNotes || 'Payment approved',
+      timestamp: new Date().toISOString(),
+    });
+    
+    // Update request status
+    request.status = 'approved';
+    request.approvedAt = new Date().toISOString();
+    request.adminNotes = adminNotes || '';
+    request.newBalance = user.golden_balance;
+    
+    saveGoldenDB(db);
+    
+    console.log(`✅ Payment approved: ${request.userEmail} +${request.goldenAmount}G`);
+    
+    res.json({
+      success: true,
+      message: `Added ${request.goldenAmount}G to ${request.userEmail}`,
+      newBalance: user.golden_balance
+    });
+    
+  } catch (error) {
+    console.error('Approve payment error:', error);
+    res.status(500).json({ error: 'Failed to approve payment' });
+  }
+});
+
+// Deny payment request (admin only)
+app.post("/api/admin/deny-payment", requireAdmin, (req, res) => {
+  try {
+    const { requestId, adminNotes } = req.body;
+    
+    const request = paymentRequests.find(r => r.id === requestId);
+    if (!request) {
+      return res.status(404).json({ error: 'Payment request not found' });
+    }
+    
+    request.status = 'denied';
+    request.deniedAt = new Date().toISOString();
+    request.adminNotes = adminNotes || 'Payment denied';
+    
+    console.log(`❌ Payment denied: ${request.userEmail}`);
+    
+    res.json({
+      success: true,
+      message: 'Payment request denied'
+    });
+    
+  } catch (error) {
+    console.error('Deny payment error:', error);
+    res.status(500).json({ error: 'Failed to deny payment' });
+  }
+});
+
+// Manual golden adjustment (admin only)
+app.post("/api/admin/adjust-golden", requireAdmin, async (req, res) => {
+  try {
+    const { userEmail, amount, reason } = req.body;
+    
+    if (!userEmail || !amount || !reason) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+    
+    const db = loadGoldenDB();
+    const userEntry = Object.entries(db.users).find(([_, user]) => 
+      user.email && user.email.toLowerCase() === userEmail.toLowerCase()
+    );
+    
+    if (!userEntry) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    const [userId, user] = userEntry;
+    const previousBalance = user.golden_balance || 0;
+    user.golden_balance = previousBalance + parseInt(amount);
+    
+    // Record transaction
+    user.transactions = user.transactions || [];
+    user.transactions.push({
+      type: amount > 0 ? "admin_add" : "admin_subtract",
+      amount: parseInt(amount),
+      previous_balance: previousBalance,
+      new_balance: user.golden_balance,
+      reason: reason,
+      timestamp: new Date().toISOString(),
+    });
+    
+    if (amount > 0) {
+      user.total_golden_earned = (user.total_golden_earned || 0) + parseInt(amount);
+    } else {
+      user.total_golden_spent = (user.total_golden_spent || 0) + Math.abs(parseInt(amount));
+    }
+    
+    saveGoldenDB(db);
+    
+    console.log(`🔧 Manual adjustment: ${userEmail} ${amount > 0 ? '+' : ''}${amount}G - ${reason}`);
+    
+    res.json({
+      success: true,
+      message: `Adjusted ${amount}G for ${userEmail}`,
+      newBalance: user.golden_balance
+    });
+    
+  } catch (error) {
+    console.error('Adjust golden error:', error);
+    res.status(500).json({ error: 'Failed to adjust golden balance' });
+  }
+});
+
+// Admin authentication middleware
+function requireAdmin(req, res, next) {
+  if (!req.user || req.user.email !== "farisalmhamad3@gmail.com") {
+    return res.status(403).json({ error: "Admin access required" });
+  }
+  next();
+}// ============ CRYPTO PRICING ============
 let lastPrices = {};
 let lastPriceFetch = 0;
 

@@ -901,11 +901,6 @@ app.post("/live-chat-process", async (req, res) => {
 // =============================================
 // PART 4 — STATIC PAGES, ROUTING & HEALTH CHECKS (REWRITTEN)
 // =============================================
-
-import express from "express";
-import path from "path";
-import fs from "fs";
-
 // FUNCTION TO JOIN PATHS SAFELY
 function pagePath(file) {
   return path.join(__dirname, file);

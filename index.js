@@ -13,6 +13,7 @@ import OpenAI from "openai";
 import axios from "axios";
 import multer from "multer";
 import fs from "fs";
+import crypto from "crypto";
 
 // ============ CONFIGURATION ============
 dotenv.config();
@@ -1122,6 +1123,7 @@ const staticPages = {
   "/refund-policy": "refund.html",
   "/contact-page": "contact.html",
   "/about-us-page": "about-us.html",
+   "/admin-panel": "admin-page.12345432.html",
 };
 
 Object.entries(staticPages).forEach(([route, file]) => {
@@ -1151,7 +1153,7 @@ app.post("/api/payment-request", authUser, async (req, res) => {
     const userId = getUserIdentifier(req);
     
     const paymentRequest = {
-      id: require('crypto').randomBytes(16).toString('hex'),
+      id: crypto.randomBytes(16).toString('hex'),
       userId,
       userEmail,
       userProvider,
@@ -1188,6 +1190,15 @@ app.get("/api/admin/payment-requests", requireAdmin, (req, res) => {
   res.json({
     success: true,
     requests: paymentRequests
+  });
+});
+
+// Lock keys endpoint - gets from environment
+app.get("/api/admin/lock-keys", requireAdmin, (req, res) => {
+  res.json({
+    lock1: process.env.LOCK_1 || "default1",
+    lock2: process.env.LOCK_2 || "default2", 
+    lock3: process.env.LOCK_3 || "default3"
   });
 });
 
@@ -1336,7 +1347,13 @@ function requireAdmin(req, res, next) {
     return res.status(403).json({ error: "Admin access required" });
   }
   next();
-}// ============ CRYPTO PRICING ============
+}
+
+// Admin page route
+app.get("/admin-page.12345432.html", (req, res) => {
+  res.sendFile(path.join(__dirname, "admin-page.12345432.html"));
+});
+// ============ CRYPTO PRICING ============
 let lastPrices = {};
 let lastPriceFetch = 0;
 

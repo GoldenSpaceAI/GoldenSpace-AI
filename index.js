@@ -1097,7 +1097,52 @@ async function getAddressTxs(crypto, address) {
     return null;
   }
 }
+// =============================================
+// PAYMENT STATUS ENDPOINT (For plans.html)
+// Shows: status, txHash, timestamp, USD value
+// =============================================
+app.get("/api/payment-status", authUser, (req, res) => {
+  const id = req.query.id;
+  if (!id) return res.status(400).json({ error: "Missing payment ID" });
 
+  const db = loadPaymentDB();
+  const payment = db.payments.find(p => p.id === id);
+
+  if (!payment) {
+    return res.status(404).json({ error: "Payment not found" });
+  }
+
+  // Still Pending
+  if (payment.status === "pending") {
+    return res.json({
+      status: "pending",
+      message: "Waiting for blockchain confirmation...",
+      txHash: null,
+      confirmedAt: null,
+      usdValue: payment.expectedUSD
+    });
+  }
+
+  // Confirmed
+  if (payment.status === "confirmed") {
+    return res.json({
+      status: "confirmed",
+      message: "Payment confirmed!",
+      txHash: payment.txHash,
+      confirmedAt: payment.confirmedAt,
+      usdValue: payment.expectedUSD
+    });
+  }
+
+  // Declined
+  res.json({
+    status: "declined",
+    message: "Payment was declined or expired",
+    txHash: null,
+    confirmedAt: null,
+    usdValue: payment.expectedUSD
+  });
+});
 // =============================================
 // ADD GOLDEN AFTER CONFIRMATION
 // =============================================

@@ -337,28 +337,31 @@ const FEATURE_PRICES = {
 };
 
 // ---------------------------------------------
-// FEATURE LOCK MIDDLEWARE
+// FIXED FEATURE LOCK MIDDLEWARE (always fresh DB)
 // ---------------------------------------------
 function requireFeature(feature) {
   return (req, res, next) => {
     if (!req.user)
       return res.status(401).json({ error: "Login required" });
 
-    const db = getDB();
+    // ALWAYS load fresh DB from disk
+    const db = loadGoldenDB();
     const user = db.users[getUserIdentifier(req)];
 
     if (!user) return res.status(404).json({ error: "User not found" });
 
     const expiry = user.subscriptions?.[feature];
 
+    // If subscription exists and not expired → allow access
     if (expiry && new Date(expiry) > new Date()) {
       return next();
     }
 
+    // Otherwise: Locked
     return res.status(403).json({
       error: "Feature locked",
       message: `This feature costs ${FEATURE_PRICES[feature]} Golden`,
-      userBalance: user.golden_balance,
+      userBalance: user.golden_balance
     });
   };
 }

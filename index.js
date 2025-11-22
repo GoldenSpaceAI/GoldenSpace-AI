@@ -33,7 +33,11 @@ const __dirname = path.dirname(__filename);
 // BASIC CONSTANTS
 // ---------------------------------------------
 const SITE_BASE_URL = "https://goldenspaceai.space";
-const GOLDEN_DB_PATH = "./data/golden_database.json";
+
+// 🟢 IMPORTANT: Store database on the Render persistent disk
+const GOLDEN_DB_PATH = "/data/golden_database.json";
+const PAYMENT_DB_PATH = "/data/payment_database.json";
+
 const BLOCKCYPHER_TOKEN = process.env.BLOCKCYPHER_TOKEN;   // << YOUR PAYMENT TOKEN
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 

@@ -2,184 +2,283 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>GoldenSpaceAI – Buy Golden Credits</title>
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Buy Golden • GoldenSpaceAI</title>
 <style>
-    body {
-        margin: 0;
-        font-family: Arial, sans-serif;
-        background: url("https://images.unsplash.com/photo-1444703686981-a3abbc4d4fe3?auto=format&fit=crop&w=1600&q=80") no-repeat center/cover;
-        color: white;
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding: 40px 10px;
-    }
+body {
+  margin: 0;
+  font-family: "Segoe UI", sans-serif;
+  background: #0d1117;
+  color: white;
+}
 
-    .container {
-        background: rgba(0,0,0,0.65);
-        padding: 25px;
-        border-radius: 14px;
-        width: 100%;
-        max-width: 420px;
-        box-shadow: 0 0 20px rgba(255,215,0,0.25);
-    }
+.top {
+  padding: 16px 20px;
+  background: rgba(0,0,0,0.6);
+  border-bottom: 1px solid rgba(255,215,0,0.3);
+  position: sticky;
+  top: 0;
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.top h1 { color: #ffd86b; margin: 0; }
 
-    h1 {
-        text-align: center;
-        font-size: 26px;
-        margin-bottom: 20px;
-        color: #ffd700;
-        text-shadow: 0 0 10px black;
-    }
+a.pill {
+  padding: 8px 14px;
+  border-radius: 20px;
+  background: rgba(255,215,0,0.15);
+  border: 1px solid rgba(255,215,0,0.4);
+  color: #ffd86b;
+  text-decoration: none;
+  font-weight: bold;
+}
 
-    button, select {
-        width: 100%;
-        padding: 12px;
-        margin-top: 10px;
-        border: none;
-        border-radius: 8px;
-        font-size: 16px;
-        cursor: pointer;
-        font-weight: bold;
-    }
+.wrap {
+  max-width: 1000px;
+  margin: 40px auto;
+  padding: 0 20px;
+}
 
-    .next-btn {
-        background: #ffd700;
-        color: black;
-    }
+/* PLAN CARDS */
+.plans {
+  display: grid;
+  grid-template-columns: repeat(auto-fit,minmax(260px,1fr));
+  gap: 18px;
+}
 
-    .back-btn {
-        background: #555;
-        color: white;
-    }
+.card {
+  background: #161b22;
+  border: 1px solid rgba(255,215,0,0.2);
+  padding: 25px;
+  border-radius: 14px;
+  text-align: center;
+  transition: 0.3s;
+}
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 0 20px rgba(255,215,0,0.25);
+}
+.card h2 { color: #ffd86b; margin: 8px 0; font-size: 24px; }
+.card p { color: #ccc; margin: 6px 0; }
+.card strong { color: #ffd86b; font-size: 32px; }
+.btn {
+  margin-top: 15px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: bold;
+  background: linear-gradient(180deg,#ffd86b,#f4b83e);
+  color: #000;
+}
+.btn:hover { opacity: 0.95; }
 
-    .login-btn {
-        background: #ffd700;
-        color: black;
-        margin-top: 20px;
-    }
+/* STEP BOX */
+.step-box {
+  margin-top: 35px;
+  padding: 25px;
+  background: #11161c;
+  border: 1px solid rgba(255,215,0,0.25);
+  border-radius: 14px;
+  display: none;
+}
 
-    .box {
-        margin-top: 20px;
-        padding: 15px;
-        background: rgba(255,255,255,0.1);
-        border-radius: 10px;
-    }
+.status {
+  margin-top: 15px;
+  background: #0b0f14;
+  padding: 15px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,215,0,0.2);
+}
+.status.success { color: #6dff8e; }
+.status.error { color: #ff7a7a; }
 
-    .hidden { display: none; }
-
-    .loader {
-        margin: 20px auto;
-        border: 6px solid #444;
-        border-top: 6px solid #ffd700;
-        border-radius: 50%;
-        width: 45px;
-        height: 45px;
-        animation: spin 0.9s linear infinite;
-    }
-
-    @keyframes spin { 100% { transform: rotate(360deg); } }
-
+.loader {
+  margin-top: 10px;
+  font-size: 14px;
+  color: #ccc;
+}
+.crypto-opt {
+  margin: 10px 0;
+  display: flex;
+  gap: 10px;
+}
+.crypto-opt button {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  background: rgba(255,215,0,0.1);
+  color: #ffd86b;
+  border: 1px solid rgba(255,215,0,0.3);
+  cursor: pointer;
+}
+.crypto-opt button.active {
+  background: #ffd86b;
+  color: #000;
+}
 </style>
 </head>
 <body>
 
-<div class="container">
+<div class="top">
+  <h1>GoldenSpaceAI — Buy Golden</h1>
+  <div>
+    <a class="pill" href="/">Home</a>
+  </div>
+</div>
 
-    <h1>Buy Golden Credits</h1>
+<div class="wrap">
 
-    <!-- NOT LOGGED IN -->
-    <div id="notLogged" class="box hidden">
-        <p>You must be logged in to buy Golden.</p>
-        <button class="login-btn" onclick="window.location='/login'">Login</button>
-    </div>
+<h2 style="color:#ffd86b;text-align:center;margin-bottom:20px;">Choose Your Plan</h2>
 
-    <!-- STEP 1 -->
-    <div id="step1" class="box hidden">
-        <h2>Select a Plan</h2>
-        <select id="planSelect">
-            <option value="mini">Mini – 20G for $5</option>
-            <option value="golden">Golden – 44G for $10</option>
-            <option value="ultra">Ultra – 90G for $20</option>
-        </select>
+<div class="plans">
+  <div class="card">
+    <h2>Mini Pack</h2>
+    <strong>20G</strong>
+    <p>$5.00</p>
+    <button class="btn" onclick="selectPlan('mini',20,5)">Select</button>
+  </div>
 
-        <select id="cryptoSelect">
-            <option value="btc">Bitcoin (BTC)</option>
-        </select>
+  <div class="card">
+    <h2>Golden Pack</h2>
+    <strong>44G</strong>
+    <p>$10.00</p>
+    <button class="btn" onclick="selectPlan('golden',44,10)">Select</button>
+  </div>
 
-        <button class="next-btn" onclick="goStep2()">Next</button>
-    </div>
+  <div class="card">
+    <h2>Ultra Pack</h2>
+    <strong>90G</strong>
+    <p>$20.00</p>
+    <button class="btn" onclick="selectPlan('ultra',90,20)">Select</button>
+  </div>
+</div>
 
-    <!-- STEP 2 -->
-    <div id="step2" class="box hidden">
-        <h2>Send Payment</h2>
-        <p><strong>Amount:</strong> <span id="amountDisplay"></span></p>
-        <p><strong>Wallet:</strong></p>
-        <p style="word-break: break-all; font-size: 14px;" id="walletDisplay"></p>
+<!-- STEP 1 -->
+<div id="step1" class="step-box">
+  <h3>Step 1 — Select Crypto</h3>
+  <div class="crypto-opt">
+    <button onclick="chooseCrypto('btc')">BTC</button>
+    <button onclick="chooseCrypto('eth')">ETH</button>
+    <button onclick="chooseCrypto('ltc')">LTC</button>
+  </div>
+</div>
 
-        <button class="next-btn" onclick="goStep3()">I Have Sent the Payment</button>
-        <button class="back-btn" onclick="backToStep1()">Back</button>
-    </div>
+<!-- STEP 2 -->
+<div id="step2" class="step-box">
+  <h3>Step 2 — Send Payment</h3>
+  <p><b>Send exactly:</b> <span id="amountText"></span></p>
+  <p><b>To this wallet:</b></p>
+  <div class="status" id="walletBox"></div>
+  <p class="loader">Waiting for blockchain... this page will update automatically.</p>
+</div>
 
-    <!-- STEP 3 -->
-    <div id="step3" class="box hidden">
-        <h2>Waiting for Confirmation…</h2>
-        <div class="loader"></div>
-        <p>Your payment is being scanned every 20 seconds.</p>
-        <p style="font-size: 14px;">This page will auto-refresh.</p>
-    </div>
+<!-- STEP 3 -->
+<div id="step3" class="step-box">
+  <h3>Step 3 — Verification Status</h3>
+  <div id="verifyBox" class="status"></div>
+</div>
 
 </div>
 
 <script>
-const WALLET = "bc1qz5wtz2d329xsm7gcs9e3jwls9supg2fk2hkxtd";
+let selectedPlan=null;
+let selectedCrypto=null;
+let expectedGolden=null;
+let expectedUSD=null;
+let currentPaymentId=null;
+let createdAt=null;
 
-// plan data
-const plans = {
-    mini: { usd: 5, g: 20 },
-    golden: { usd: 10, g: 44 },
-    ultra: { usd: 20, g: 90 }
-};
-
-async function checkLogin() {
-    let res = await fetch("/api/me");
-    let data = await res.json();
-
-    if (!data.loggedIn) {
-        document.getElementById("notLogged").classList.remove("hidden");
-    } else {
-        document.getElementById("step1").classList.remove("hidden");
-    }
+function selectPlan(plan, gold, usd){
+  selectedPlan=plan;
+  expectedGolden=gold;
+  expectedUSD=usd;
+  document.getElementById('step1').style.display='block';
+  window.scrollTo(0,document.body.scrollHeight);
 }
 
-checkLogin();
+function chooseCrypto(c){
+  selectedCrypto=c;
 
-// STEP 1 → STEP 2
-function goStep2() {
-    const plan = document.getElementById("planSelect").value;
-    const amount = plans[plan].usd;
+  [...document.querySelectorAll('.crypto-opt button')]
+    .forEach(b=>b.classList.remove('active'));
+  event.target.classList.add('active');
 
-    document.getElementById("amountDisplay").textContent = `${amount} USD`;
-    document.getElementById("walletDisplay").textContent = WALLET;
-
-    document.getElementById("step1").classList.add("hidden");
-    document.getElementById("step2").classList.remove("hidden");
+  createPayment();
 }
 
-// STEP 2 → STEP 3
-function goStep3() {
-    document.getElementById("step2").classList.add("hidden");
-    document.getElementById("step3").classList.remove("hidden");
+async function createPayment(){
+  const r=await fetch('/api/create-payment',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    credentials:'include',
+    body:JSON.stringify({plan:selectedPlan,crypto:selectedCrypto})
+  });
+  const d=await r.json();
 
-    setTimeout(() => { location.reload(); }, 5000);
+  if(!d.success){
+    alert('Error creating payment.');
+    return;
+  }
+
+  currentPaymentId=d.paymentId;
+  createdAt=Date.now();
+
+  // Step 2 visible
+  document.getElementById('step2').style.display='block';
+
+  const walletMap={
+    btc:"bc1qz5wtz2d329xsm7gcs9e3jwls9supg2fk2hkxtd",
+    eth:"0x8BEaCb38dF916F6644F81cA0De18C1F4996d32Ea",
+    ltc:"LSNv8n6bZ2hR9KqD9q7B2n6X2gZ2hR9KqD9"
+  };
+
+  document.getElementById('walletBox').textContent=walletMap[selectedCrypto];
+  document.getElementById('amountText').textContent="$"+expectedUSD+" (20–30 sec fee change allowed)";
+
+  // show step 3
+  document.getElementById('step3').style.display='block';
+  startVerificationLoop();
 }
 
-function backToStep1() {
-    document.getElementById("step2").classList.add("hidden");
-    document.getElementById("step1").classList.remove("hidden");
+async function checkStatus(){
+  const r=await fetch(`/api/payment-status?id=${currentPaymentId}`,{credentials:'include'});
+  const d=await r.json();
+
+  const box=document.getElementById('verifyBox');
+
+  if (d.status === "confirmed") {
+  box.className = "status success";
+  box.innerHTML = `
+    ✅ Payment Confirmed!<br><br>
+    <b>TX Hash:</b> ${d.txHash}<br>
+    <b>Confirmed At:</b> ${new Date(d.confirmedAt).toLocaleString()}<br>
+    <b>USD Value:</b> $${d.usdValue}<br><br>
+    Golden has been added to your account 🎉
+  `;
+  return "done";
+}
+
+
+  // timeout after 3 hours
+  if(Date.now() - createdAt > (3*60*60*1000)){
+    box.className="status error";
+    box.innerHTML="❌ Payment Declined<br><small>If we received any crypto, we will manually refund it.</small>";
+    return "done";
+  }
+
+  box.className="status";
+  box.textContent="⏳ Waiting for blockchain confirmation...";
+  return "wait";
+}
+
+function startVerificationLoop(){
+  const loop=setInterval(async()=>{
+    const r=await checkStatus();
+    if(r==="done") clearInterval(loop);
+  },10000); // every 10 sec
 }
 </script>
 

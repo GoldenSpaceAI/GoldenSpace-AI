@@ -778,28 +778,28 @@
             <!-- Step 1: Select Plan -->
             <div class="step-content active" id="step1Content">
                 <div class="plans-grid">
-                    <div class="plan-card" data-plan="60">
+                    <div class="plan-card" data-plan="mini">
                         <div class="plan-icon">✨</div>
-                        <div class="plan-name">Standard Pack</div>
-                        <div class="plan-price">$15.00</div>
-                        <div class="plan-golden">60 Golden</div>
-                        <div class="save-badge">Best Value</div>
+                        <div class="plan-name">Mini Pack</div>
+                        <div class="plan-price">$5.00</div>
+                        <div class="plan-golden">20 Golden</div>
+                        <div class="save-badge">Perfect Start</div>
                     </div>
                     
-                    <div class="plan-card" data-plan="100">
+                    <div class="plan-card" data-plan="golden">
                         <div class="plan-icon">🌟</div>
-                        <div class="plan-name">Pro Pack</div>
-                        <div class="plan-price">$20.00</div>
-                        <div class="plan-golden">100 Golden</div>
-                        <div class="save-badge">Popular</div>
+                        <div class="plan-name">Golden Pack</div>
+                        <div class="plan-price">$10.00</div>
+                        <div class="plan-golden">44 Golden</div>
+                        <div class="save-badge">Save $1.5</div>
                     </div>
                     
-                    <div class="plan-card" data-plan="200">
+                    <div class="plan-card" data-plan="ultra">
                         <div class="plan-icon">💎</div>
-                        <div class="plan-name">Ultimate Pack</div>
-                        <div class="plan-price">$40.00</div>
-                        <div class="plan-golden">200 Golden</div>
-                        <div class="save-badge">Maximum Value</div>
+                        <div class="plan-name">Ultra Pack</div>
+                        <div class="plan-price">$20.00</div>
+                        <div class="plan-golden">90 Golden</div>
+                        <div class="save-badge">Save $5</div>
                     </div>
                 </div>
 
@@ -873,7 +873,7 @@
 
                     <div class="amount-display">
                         <div class="amount-label">Send Exactly</div>
-                        <div class="amount-value" id="finalAmount">$15.00 in BTC</div>
+                        <div class="amount-value" id="finalAmount">$5.00 in BTC</div>
                     </div>
 
                     <div class="wallet-section">
@@ -922,9 +922,9 @@
                 };
 
                 this.plans = {
-                    60: { price: 15, golden: 60 },
-                    100: { price: 20, golden: 100 },
-                    200: { price: 40, golden: 200 }
+                    mini: { price: 5, golden: 20 },
+                    golden: { price: 10, golden: 44 },
+                    ultra: { price: 20, golden: 90 }
                 };
 
                 // Wallet validation regex patterns
@@ -1146,14 +1146,22 @@
                         timestamp: new Date().toISOString()
                     };
 
+                    console.log('📤 Sending payment request:', paymentRequest);
+
                     // Send payment request to server
                     const response = await fetch('/api/payment-request', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                         },
+                        credentials: 'include',
                         body: JSON.stringify(paymentRequest)
                     });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+                    }
 
                     const result = await response.json();
 
@@ -1169,7 +1177,7 @@
                     }
 
                 } catch (error) {
-                    console.error('Error submitting payment request:', error);
+                    console.error('❌ Error submitting payment request:', error);
                     this.showNotification(`❌ ${error.message}`, 'error');
                 }
             }

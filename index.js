@@ -891,7 +891,7 @@ app.use((req, res) => {
   res.status(404).json({ error: "Endpoint not found" });
 });
 // =============================================
-// PART 5 — AUTOMATIC BLOCKCHAIN PAYMENT ENGINE
+// PART 5 — FULL AUTOMATIC BLOCKCHAIN PAYMENT ENGINE
 // =============================================
 
 // ---------------------------
@@ -911,8 +911,8 @@ const GOLDEN_PLANS = {
   ultra: { priceUSD: 20, golden: 90 }
 };
 
-// Save payments to JSON on disk
-const PAYMENTS_DB_PATH = "./data/payments.json";
+// Save payments to JSON
+const PAYMENTS_DB_PATH = "./data/payment_database.json";
 
 function loadPaymentsDB() {
   try {
@@ -922,7 +922,7 @@ function loadPaymentsDB() {
     const file = fs.readFileSync(PAYMENTS_DB_PATH, "utf8");
     return JSON.parse(file);
   } catch (err) {
-    console.error("Error loading payments DB:", err);
+    console.error("Payment DB load error:", err);
     return { payments: [] };
   }
 }
@@ -933,130 +933,94 @@ function savePaymentsDB(db) {
 
 let paymentDB = loadPaymentsDB();
 
-// ---------------------------
-// CREATE PAYMENT
-// ---------------------------
+// Generate random ID
+function randomId() {
+  return crypto.randomBytes(12).toString("hex");
+}
+
+// =============================================
+// CREATE PAYMENT REQUEST (USER SENDS CRYPTO)
+// =============================================
 app.post("/api/create-payment", authUser, async (req, res) => {
   try {
     const { plan, crypto } = req.body;
 
-    if (!GOLDEN_PLANS[plan]) {
-      return res.status(400).json({ error: "Invalid plan" });
-    }
-
-    if (!PAYMENT_WALLETS[crypto]) {
-      return res.status(400).json({ error: "Invalid crypto" });
-    }
+    if (!GOLDEN_PLANS[plan]) return res.status(400).json({ error: "Invalid plan" });
+    if (!PAYMENT_WALLETS[crypto]) return res.status(400).json({ error: "Invalid crypto" });
 
     const userId = getUserIdentifier(req);
-    const userEmail = req.user.email;
-
-    const expectedUSD = GOLDEN_PLANS[plan].priceUSD;
-    const expectedGolden = GOLDEN_PLANS[plan].golden;
+    const planData = GOLDEN_PLANS[plan];
     const wallet = PAYMENT_WALLETS[crypto];
 
     const payment = {
-      id: cryptoRandomId(),
+      id: randomId(),
       userId,
-      email: userEmail,
+      userEmail: req.user.email,
       plan,
       crypto,
       wallet,
-      expectedUSD,
-      expectedGolden,
+      expectedUSD: planData.priceUSD,
+      expectedGolden: planData.golden,
       status: "pending",
       createdAt: new Date().toISOString(),
       txHash: null
     };
 
+    // Save to DB
     paymentDB.payments.push(payment);
     savePaymentsDB(paymentDB);
 
-    res.json({
-      success: true,
-      message: "Payment created",
-      paymentId: payment.id
-    });
+    res.json({ success: true, paymentId: payment.id });
 
-  } catch (err) {
-    console.error("Create payment error:", err);
+  } catch (error) {
+    console.error("Create-payment error:", error);
     res.status(500).json({ error: "Failed to create payment" });
   }
 });
 
-function cryptoRandomId() {
-  return crypto.randomBytes(12).toString("hex");
-}
-
-// ---------------------------
-// BLOCKCYPHER GET TRANSACTIONS
-// ---------------------------
-async function getTransactions(crypto, address) {
+// =============================================
+// BLOCKCYPHER API — GET ADDRESS TRANSACTIONS
+// =============================================
+async function getAddressTxs(crypto, address) {
   try {
-    let chain = crypto === "btc" ? "btc/main" :
-                crypto === "eth" ? "eth/main" :
-                crypto === "ltc" ? "ltc/main" : null;
+    const chain = crypto === "btc" ? "btc/main" :
+                  crypto === "eth" ? "eth/main" :
+                  crypto === "ltc" ? "ltc/main" : null;
 
     if (!chain) return null;
 
     const url = `https://api.blockcypher.com/v1/${chain}/addrs/${address}`;
-    const response = await axios.get(url, {
+
+    const { data } = await axios.get(url, {
       params: { token: BLOCKCYPHER_TOKEN }
     });
 
-    return response.data.txrefs || response.data.unconfirmed_txrefs || [];
+    return data.txrefs || data.unconfirmed_txrefs || [];
+
   } catch (err) {
-    console.error("Error fetching tx:", err.message);
+    console.error("BlockCypher error:", err.message);
     return null;
   }
 }
 
-// ---------------------------
-// PROCESS CONFIRMED PAYMENTS
-// ---------------------------
-async function processPayment(payment) {
-  const { crypto, wallet, expectedUSD } = payment;
-
-  const txs = await getTransactions(crypto, wallet);
-  if (!txs) return;
-
-  for (const tx of txs) {
-    if (tx.confirmations >= 1) {
-      // Protect: only process once
-      if (payment.status === "confirmed") return;
-
-      payment.status = "confirmed";
-      payment.txHash = tx.tx_hash;
-      payment.confirmedAt = new Date().toISOString();
-      savePaymentsDB(paymentDB);
-
-      console.log(`💰 PAYMENT CONFIRMED: ${payment.email} TX: ${payment.txHash}`);
-
-      addGoldenToUser(payment);
-
-      return;
-    }
-  }
-}
-
-// ---------------------------
-// ADD GOLDEN TO USER ACCOUNT
-// ---------------------------
-function addGoldenToUser(payment) {
+// =============================================
+// WHEN CONFIRMED → ADD GOLDEN TO USER
+// =============================================
+function addGolden(payment) {
   const db = loadGoldenDB();
   const user = db.users[payment.userId];
   if (!user) return;
 
-  const gold = GOLDEN_PLANS[payment.plan].golden;
+  const amount = GOLDEN_PLANS[payment.plan].golden;
   const prev = user.golden_balance;
 
-  user.golden_balance += gold;
-  user.total_golden_earned += gold;
+  user.golden_balance += amount;
+  user.total_golden_earned += amount;
 
   user.transactions = user.transactions || [];
   user.transactions.push({
     type: "crypto_purchase",
-    amount: gold,
+    amount,
     previous_balance: prev,
     new_balance: user.golden_balance,
     crypto: payment.crypto,
@@ -1065,24 +1029,43 @@ function addGoldenToUser(payment) {
   });
 
   saveGoldenDB(db);
-  console.log(`✨ +${gold}G added to ${user.email}`);
+
+  console.log(`💰 Auto-added ${amount}G to ${user.email}`);
 }
 
-// ---------------------------
-// BACKGROUND CHECKER (EVERY 20 SEC)
-// ---------------------------
-setInterval(async () => {
-  try {
-    const pending = paymentDB.payments.filter(p => p.status === "pending");
+// =============================================
+// CHECK A PAYMENT (CONFIRMATION)
+// =============================================
+async function checkPayment(payment) {
+  const txs = await getAddressTxs(payment.crypto, payment.wallet);
+  if (!txs) return;
 
-    if (pending.length > 0) {
-      console.log(`🔍 Checking ${pending.length} pending payments`);
-    }
+  for (const tx of txs) {
+    if (tx.confirmations >= 1) {
+      if (payment.status === "confirmed") return;
 
-    for (const pay of pending) {
-      await processPayment(pay);
+      payment.status = "confirmed";
+      payment.txHash = tx.tx_hash;
+      payment.confirmedAt = new Date().toISOString();
+      savePaymentsDB(paymentDB);
+
+      addGolden(payment);
+      return;
     }
-  } catch (err) {
-    console.error("Background payment checker error:", err);
   }
-}, 20000);  // 20 seconds
+}
+
+// =============================================
+// BACKGROUND LOOP — CHECK EVERY 20 SECONDS
+// =============================================
+setInterval(async () => {
+  const pending = paymentDB.payments.filter(p => p.status === "pending");
+
+  if (pending.length > 0) {
+    console.log(`🔍 Checking ${pending.length} pending payments...`);
+  }
+
+  for (const pay of pending) {
+    await checkPayment(pay);
+  }
+}, 20000); // 20 seconds

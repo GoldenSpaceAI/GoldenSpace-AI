@@ -325,14 +325,30 @@ async function unlockUniversal20G() {
   }catch{ s.textContent='❌ Network error.'; s.className='status-message error'; }
 }
 async function checkHomeworkHelperAccess(){
-  try{
-    const r=await fetch('/api/feature-status?feature=homework_helper',{credentials:'include'});
-    const d=await r.json();
-    hasPremiumAccess=d.unlocked;
-    if(!d.unlocked) showUniversalLockForHomework();
-    return d.unlocked;
-  }catch{ showUniversalLockForHomework(); return false; }
+  try {
+    const r = await fetch('/api/me', { credentials: 'include' }).then(r => r.json());
+
+    if (!r.loggedIn) {
+      showUniversalLockForHomework();
+      return false;
+    }
+
+    const expiry = r.subscriptions?.homework_helper;
+
+    if (expiry && new Date(expiry) > new Date()) {
+      hasPremiumAccess = true;
+      return true;
+    }
+
+    showUniversalLockForHomework();
+    return false;
+
+  } catch (e) {
+    showUniversalLockForHomework();
+    return false;
+  }
 }
+
 
 /* ---------- Image Preview ---------- */
 function renderPreview(){

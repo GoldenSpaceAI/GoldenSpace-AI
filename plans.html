@@ -1,1238 +1,309 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Buy Golden - GoldenSpaceAI</title>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background: 
-                linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(184, 148, 31, 0.2) 100%),
-                #fefefe;
-            min-height: 100vh;
-            color: #2c3e50;
-            position: relative;
-            overflow-x: hidden;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 30px 20px;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            z-index: 1;
-        }
-
-        /* Header Styles */
-        .header {
-            text-align: center;
-            margin-bottom: 50px;
-            padding-top: 20px;
-        }
-
-        .logo {
-            font-size: 4.5em;
-            margin-bottom: 15px;
-            text-shadow: 0 4px 8px rgba(212, 175, 55, 0.3);
-            animation: float 3s ease-in-out infinite;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-        }
-
-        h1 {
-            font-family: 'Playfair Display', serif;
-            color: #2c3e50;
-            margin-bottom: 15px;
-            font-size: 3em;
-            font-weight: 700;
-            background: linear-gradient(135deg, #d4af37, #b8941f);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .subtitle {
-            color: #5d4037;
-            font-size: 1.3em;
-            font-weight: 400;
-            opacity: 0.9;
-            letter-spacing: 0.5px;
-        }
-
-        /* User Bar */
-        .user-bar {
-            position: absolute;
-            top: 30px;
-            right: 30px;
-            background: rgba(255, 255, 255, 0.95);
-            padding: 12px 25px;
-            border-radius: 30px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(212, 175, 55, 0.2);
-            transition: all 0.3s ease;
-        }
-
-        .user-bar:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 30px rgba(212, 175, 55, 0.2);
-        }
-
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #d4af37, #f7ef8a);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            color: #2c3e50;
-            font-size: 1.1em;
-            box-shadow: 0 4px 8px rgba(212, 175, 55, 0.3);
-        }
-
-        .user-name {
-            font-weight: 600;
-            color: #2c3e50;
-            font-size: 1em;
-        }
-
-        .golden-balance {
-            background: linear-gradient(135deg, #f39c12, #e67e22);
-            color: white;
-            padding: 6px 15px;
-            border-radius: 20px;
-            font-weight: bold;
-            font-size: 0.9em;
-            box-shadow: 0 3px 6px rgba(243, 156, 18, 0.3);
-        }
-
-        /* Login Required */
-        .login-required {
-            background: rgba(255,255,255,0.95);
-            border-radius: 25px;
-            padding: 80px 50px;
-            text-align: center;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.15);
-            backdrop-filter: blur(15px);
-            border: 2px solid rgba(212, 175, 55, 0.3);
-            max-width: 500px;
-            margin: 0 auto;
-        }
-
-        .login-icon {
-            font-size: 5em;
-            margin-bottom: 25px;
-            color: #d4af37;
-            text-shadow: 0 4px 8px rgba(212, 175, 55, 0.3);
-        }
-
-        .login-title {
-            color: #2c3e50;
-            margin-bottom: 20px;
-            font-size: 2em;
-            font-family: 'Playfair Display', serif;
-        }
-
-        .login-btn {
-            background: linear-gradient(135deg, #d4af37, #f7ef8a);
-            color: #2c3e50;
-            border: none;
-            padding: 18px 45px;
-            border-radius: 30px;
-            font-size: 1.2em;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 25px;
-            transition: all 0.3s ease;
-            box-shadow: 0 8px 20px rgba(212, 175, 55, 0.4);
-            font-family: 'Inter', sans-serif;
-        }
-
-        .login-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 12px 30px rgba(212, 175, 55, 0.6);
-        }
-
-        /* Payment Flow */
-        .payment-flow {
-            display: none;
-        }
-
-        /* Step Indicator */
-        .step-indicator {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 50px;
-            gap: 30px;
-            position: relative;
-        }
-
-        .step-indicator::before {
-            content: '';
-            position: absolute;
-            top: 20px;
-            left: 50px;
-            right: 50px;
-            height: 3px;
-            background: linear-gradient(90deg, #d4af37, #b8941f);
-            z-index: -1;
-        }
-
-        .step {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 12px;
-            color: #95a5a6;
-            font-weight: 500;
-            transition: all 0.3s ease;
-        }
-
-        .step.active {
-            color: #d4af37;
-            font-weight: 600;
-        }
-
-        .step-number {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: #ecf0f1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 1.2em;
-            border: 3px solid transparent;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-
-        .step.active .step-number {
-            background: linear-gradient(135deg, #d4af37, #f7ef8a);
-            color: white;
-            border-color: #b8941f;
-            box-shadow: 0 6px 15px rgba(212, 175, 55, 0.4);
-        }
-
-        .step-text {
-            font-size: 1em;
-            font-weight: 500;
-        }
-
-        /* Step Content */
-        .step-content {
-            display: none;
-            animation: slideUp 0.5s ease-out;
-        }
-
-        @keyframes slideUp {
-            from { 
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to { 
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .step-content.active {
-            display: block;
-        }
-
-        /* Plans Grid */
-        .plans-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 30px;
-            margin-bottom: 50px;
-        }
-
-        .plan-card {
-            background: rgba(255,255,255,0.95);
-            border-radius: 25px;
-            padding: 40px 30px;
-            text-align: center;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.1);
-            backdrop-filter: blur(15px);
-            border: 2px solid transparent;
-            transition: all 0.4s ease;
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .plan-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 6px;
-            background: linear-gradient(135deg, #d4af37, #f7ef8a);
-        }
-
-        .plan-card:hover {
-            transform: translateY(-12px);
-            border-color: #d4af37;
-            box-shadow: 0 25px 50px rgba(212, 175, 55, 0.25);
-        }
-
-        .plan-card.selected {
-            border-color: #d4af37;
-            background: rgba(255,255,255,0.98);
-            box-shadow: 0 20px 45px rgba(212, 175, 55, 0.3);
-            transform: translateY(-5px);
-        }
-
-        .plan-icon {
-            font-size: 3.5em;
-            margin-bottom: 20px;
-            color: #d4af37;
-            text-shadow: 0 4px 8px rgba(212, 175, 55, 0.3);
-        }
-
-        .plan-name {
-            font-size: 1.6em;
-            font-weight: 700;
-            color: #2c3e50;
-            margin-bottom: 15px;
-            font-family: 'Playfair Display', serif;
-        }
-
-        .plan-price {
-            font-size: 2.5em;
-            font-weight: 700;
-            color: #27ae60;
-            margin-bottom: 8px;
-            text-shadow: 0 2px 4px rgba(39, 174, 96, 0.2);
-        }
-
-        .plan-golden {
-            font-size: 1.3em;
-            color: #f39c12;
-            font-weight: 600;
-            margin-bottom: 20px;
-        }
-
-        .save-badge {
-            background: linear-gradient(135deg, #e74c3c, #c0392b);
-            color: white;
-            padding: 8px 20px;
-            border-radius: 20px;
-            font-size: 0.95em;
-            font-weight: 600;
-            display: inline-block;
-            box-shadow: 0 4px 8px rgba(231, 76, 60, 0.3);
-        }
-
-        /* Crypto Grid */
-        .crypto-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 25px;
-            margin-bottom: 40px;
-        }
-
-        .crypto-card {
-            background: rgba(255,255,255,0.95);
-            border-radius: 20px;
-            padding: 30px 25px;
-            text-align: center;
-            box-shadow: 0 12px 30px rgba(0,0,0,0.1);
-            backdrop-filter: blur(15px);
-            border: 2px solid transparent;
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-
-        .crypto-card:hover {
-            transform: translateY(-8px);
-            border-color: #d4af37;
-            box-shadow: 0 20px 40px rgba(212, 175, 55, 0.2);
-        }
-
-        .crypto-card.selected {
-            border-color: #d4af37;
-            background: rgba(255,255,255,0.98);
-            box-shadow: 0 18px 35px rgba(212, 175, 55, 0.25);
-            transform: translateY(-5px);
-        }
-
-        .crypto-icon {
-            font-size: 3em;
-            margin-bottom: 15px;
-            text-shadow: 0 3px 6px rgba(0,0,0,0.1);
-        }
-
-        .crypto-name {
-            font-size: 1.2em;
-            font-weight: 600;
-            color: #2c3e50;
-            margin-bottom: 8px;
-        }
-
-        /* Wallet Address Input */
-        .wallet-input-section {
-            background: rgba(255,255,255,0.95);
-            border-radius: 25px;
-            padding: 40px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.15);
-            backdrop-filter: blur(15px);
-            border: 2px solid rgba(212, 175, 55, 0.3);
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
-        .warning-box {
-            background: linear-gradient(135deg, #fff3cd, #ffeaa7);
-            border: 2px solid #ffd43b;
-            border-radius: 20px;
-            padding: 30px;
-            margin-bottom: 35px;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .warning-box::before {
-            content: '⚠️';
-            position: absolute;
-            top: 15px;
-            left: 20px;
-            font-size: 1.5em;
-        }
-
-        .warning-title {
-            color: #856404;
-            font-size: 1.4em;
-            font-weight: 700;
-            margin-bottom: 15px;
-            font-family: 'Playfair Display', serif;
-        }
-
-        .warning-text {
-            color: #856404;
-            line-height: 1.7;
-            font-size: 1.05em;
-        }
-
-        .wallet-input-group {
-            margin-bottom: 25px;
-        }
-
-        .wallet-label {
-            display: block;
-            color: #2c3e50;
-            font-weight: 600;
-            margin-bottom: 12px;
-            font-size: 1.1em;
-        }
-
-        .wallet-input {
-            width: 100%;
-            padding: 18px 20px;
-            border: 2px solid #e9ecef;
-            border-radius: 12px;
-            font-size: 1.05em;
-            font-family: 'Courier New', monospace;
-            background: white;
-            transition: all 0.3s ease;
-        }
-
-        .wallet-input:focus {
-            outline: none;
-            border-color: #d4af37;
-            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2);
-        }
-
-        .wallet-input.valid {
-            border-color: #27ae60;
-            background: #f8fff9;
-        }
-
-        .wallet-input.invalid {
-            border-color: #e74c3c;
-            background: #fff8f8;
-        }
-
-        .validation-message {
-            margin-top: 8px;
-            font-size: 0.95em;
-            font-weight: 500;
-        }
-
-        .validation-message.valid {
-            color: #27ae60;
-        }
-
-        .validation-message.invalid {
-            color: #e74c3c;
-        }
-
-        /* Payment Final */
-        .payment-final {
-            background: rgba(255,255,255,0.95);
-            border-radius: 25px;
-            padding: 50px 40px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.15);
-            backdrop-filter: blur(15px);
-            border: 2px solid rgba(212, 175, 55, 0.3);
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
-        .amount-display {
-            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-            border-radius: 20px;
-            padding: 30px;
-            text-align: center;
-            margin-bottom: 35px;
-            border: 2px solid #e9ecef;
-            position: relative;
-        }
-
-        .amount-display::before {
-            content: '💰';
-            position: absolute;
-            top: -15px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: white;
-            padding: 0 15px;
-            font-size: 1.5em;
-        }
-
-        .amount-label {
-            color: #7f8c8d;
-            font-size: 1.1em;
-            margin-bottom: 12px;
-            font-weight: 500;
-        }
-
-        .amount-value {
-            color: #2c3e50;
-            font-size: 2.2em;
-            font-weight: 700;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .wallet-section {
-            background: #f8f9fa;
-            border-radius: 20px;
-            padding: 30px;
-            margin-bottom: 30px;
-            border: 2px solid #e9ecef;
-        }
-
-        .wallet-title {
-            color: #2c3e50;
-            font-weight: 600;
-            margin-bottom: 18px;
-            text-align: center;
-            font-size: 1.3em;
-        }
-
-        .wallet-address {
-            background: white;
-            padding: 18px;
-            border-radius: 12px;
-            font-family: 'Courier New', monospace;
-            word-break: break-all;
-            margin-bottom: 20px;
-            border: 1px solid #e9ecef;
-            font-size: 0.95em;
-            line-height: 1.5;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
-        }
-
-        .copy-btn {
-            background: linear-gradient(135deg, #3498db, #2980b9);
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: 600;
-            width: 100%;
-            transition: all 0.3s ease;
-            font-size: 1.05em;
-            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
-        }
-
-        .copy-btn:hover {
-            background: linear-gradient(135deg, #2980b9, #2471a3);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(52, 152, 219, 0.5);
-        }
-
-        .qr-section {
-            text-align: center;
-            margin-bottom: 30px;
-            padding: 25px;
-            background: white;
-            border-radius: 20px;
-            border: 2px solid rgba(212, 175, 55, 0.3);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-        }
-
-        .qr-title {
-            color: #2c3e50;
-            font-weight: 600;
-            margin-bottom: 20px;
-            font-size: 1.3em;
-        }
-
-        .qr-image {
-            width: 220px;
-            height: 220px;
-            border: 4px solid #d4af37;
-            border-radius: 18px;
-            box-shadow: 0 12px 30px rgba(212, 175, 55, 0.3);
-            transition: all 0.3s ease;
-        }
-
-        .qr-image:hover {
-            transform: scale(1.05);
-            box-shadow: 0 15px 35px rgba(212, 175, 55, 0.4);
-        }
-
-        /* Navigation */
-        .navigation {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 40px;
-        }
-
-        .nav-btn {
-            background: linear-gradient(135deg, #d4af37, #f7ef8a);
-            color: #2c3e50;
-            border: none;
-            padding: 18px 35px;
-            border-radius: 30px;
-            font-size: 1.1em;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 8px 20px rgba(212, 175, 55, 0.4);
-            font-family: 'Inter', sans-serif;
-            min-width: 140px;
-        }
-
-        .nav-btn:hover:not(:disabled) {
-            transform: translateY(-3px);
-            box-shadow: 0 12px 25px rgba(212, 175, 55, 0.6);
-        }
-
-        .nav-btn:disabled {
-            background: #bdc3c7;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-
-        .nav-btn.back {
-            background: linear-gradient(135deg, #95a5a6, #7f8c8d);
-        }
-
-        /* Notification */
-        .notification {
-            position: fixed;
-            top: 30px;
-            right: 30px;
-            padding: 18px 28px;
-            border-radius: 12px;
-            color: white;
-            font-weight: 600;
-            z-index: 1000;
-            transform: translateX(400px);
-            transition: transform 0.4s ease;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
-        }
-
-        .notification.show {
-            transform: translateX(0);
-        }
-
-        .notification.success {
-            background: linear-gradient(135deg, #27ae60, #219a52);
-        }
-
-        .notification.error {
-            background: linear-gradient(135deg, #e74c3c, #c0392b);
-        }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .container {
-                padding: 20px 15px;
-            }
-            
-            .plans-grid {
-                grid-template-columns: 1fr;
-                gap: 20px;
-            }
-            
-            .crypto-grid {
-                grid-template-columns: 1fr;
-                gap: 15px;
-            }
-            
-            .user-bar {
-                position: relative;
-                top: auto;
-                right: auto;
-                justify-content: center;
-                margin-bottom: 20px;
-            }
-            
-            .step-indicator {
-                gap: 15px;
-            }
-            
-            .step-indicator::before {
-                display: none;
-            }
-            
-            h1 {
-                font-size: 2.2em;
-            }
-            
-            .payment-final {
-                padding: 30px 20px;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Buy Golden – GoldenSpaceAI</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+
+<style>
+/* -------------------- GLOBAL -------------------- */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    color: #fff;
+    background: url('https://i.imgur.com/nwZQm0R.jpeg') no-repeat center center fixed;
+    background-size: cover;
+    overflow-x: hidden;
+}
+
+/* dim overlay */
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    backdrop-filter: blur(3px);
+    z-index: -1;
+}
+
+.container {
+    max-width: 1200px;
+    margin: auto;
+    padding: 30px 20px;
+}
+
+/* -------------------- USER BAR -------------------- */
+
+.user-bar {
+    position: absolute;
+    top: 25px;
+    right: 25px;
+    background: rgba(255,255,255,0.1);
+    padding: 12px 22px;
+    border-radius: 30px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border: 1px solid rgba(255,255,255,0.25);
+    backdrop-filter: blur(12px);
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #a29bfe, #74b9ff);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    color: #2d3436;
+}
+
+.golden-balance {
+    background: linear-gradient(135deg, #f1c40f, #f39c12);
+    padding: 4px 12px;
+    border-radius: 15px;
+    font-weight: 600;
+    color: #2d3436;
+    font-size: 0.85em;
+}
+
+/* -------------------- HEADER -------------------- */
+
+.header {
+    text-align: center;
+    margin-top: 70px;
+    margin-bottom: 50px;
+}
+
+.header h1 {
+    font-size: 3.2em;
+    font-family: 'Playfair Display', serif;
+    background: linear-gradient(135deg, #b197fc, #74b9ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.header p {
+    font-size: 1.3em;
+    opacity: 0.85;
+}
+
+/* -------------------- PLAN CARDS -------------------- */
+
+.plans-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 30px;
+    margin-top: 40px;
+}
+
+.plan-card {
+    background: rgba(255,255,255,0.08);
+    border-radius: 20px;
+    padding: 35px 25px;
+    text-align: center;
+    border: 1px solid rgba(255,255,255,0.15);
+    backdrop-filter: blur(12px);
+    transition: 0.3s;
+    cursor: pointer;
+}
+
+.plan-card:hover {
+    transform: translateY(-8px);
+    border-color: #74b9ff;
+    box-shadow: 0px 12px 40px rgba(116,185,255,0.3);
+}
+
+.plan-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.7em;
+    margin-bottom: 12px;
+}
+
+.plan-price {
+    font-size: 2.2em;
+    font-weight: 700;
+    color: #55efc4;
+    margin-bottom: 10px;
+}
+
+.plan-golden {
+    font-size: 1.2em;
+    color: #ffeaa7;
+    margin-bottom: 20px;
+}
+
+.buy-btn {
+    margin-top: 15px;
+    background: linear-gradient(135deg, #6c5ce7, #0984e3);
+    padding: 15px 25px;
+    border-radius: 12px;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+    font-size: 1.1em;
+    color: white;
+    font-weight: 600;
+    transition: 0.3s;
+}
+
+.buy-btn:hover {
+    background: linear-gradient(135deg, #7f78ff, #00a8ff);
+    transform: translateY(-3px);
+}
+
+/* -------------------- LOADING MODAL -------------------- */
+
+#loadingModal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(3px);
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+}
+
+.loading-box {
+    background: rgba(255,255,255,0.1);
+    padding: 30px 40px;
+    border-radius: 20px;
+    text-align: center;
+    border: 1px solid rgba(255,255,255,0.2);
+    backdrop-filter: blur(10px);
+}
+
+.loading-box h2 {
+    font-family: 'Playfair Display', serif;
+    margin-bottom: 10px;
+}
+
+.spinner {
+    margin: 20px auto;
+    border: 6px solid rgba(255,255,255,0.2);
+    border-top: 6px solid #74b9ff;
+    border-radius: 50%;
+    width: 55px;
+    height: 55px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+</style>
 </head>
+
 <body>
-    <div class="container">
-        <!-- User Bar -->
-        <div class="user-bar" id="userBar" style="display: none;">
-            <div class="user-avatar" id="userAvatar">U</div>
-            <div class="user-name" id="userName">User</div>
-            <div class="golden-balance" id="goldenBalance">0G</div>
-        </div>
+<div class="container">
 
-        <!-- Header -->
-        <div class="header">
-            <div class="logo">💰</div>
-            <h1>Buy Golden</h1>
-            <p class="subtitle">Unlock Premium AI Features with Golden</p>
-        </div>
-
-        <!-- Login Required -->
-        <div class="login-required" id="loginRequired">
-            <div class="login-icon">🔒</div>
-            <h2 class="login-title">Authentication Required</h2>
-            <p style="color: #7f8c8d; font-size: 1.1em; line-height: 1.6; margin-bottom: 10px;">
-                Please log in to purchase Golden and access exclusive AI features
-            </p>
-            <button class="login-btn" onclick="window.location.href='/login-signup.html'">
-                Login / Sign Up
-            </button>
-        </div>
-
-        <!-- Payment Flow -->
-        <div class="payment-flow" id="paymentFlow">
-            <!-- Step Indicator -->
-            <div class="step-indicator">
-                <div class="step active" id="step1">
-                    <div class="step-number">1</div>
-                    <div class="step-text">Select Plan</div>
-                </div>
-                <div class="step" id="step2">
-                    <div class="step-number">2</div>
-                    <div class="step-text">Choose Crypto</div>
-                </div>
-                <div class="step" id="step3">
-                    <div class="step-number">3</div>
-                    <div class="step-text">Wallet Address</div>
-                </div>
-                <div class="step" id="step4">
-                    <div class="step-number">4</div>
-                    <div class="step-text">Send Payment</div>
-                </div>
-            </div>
-
-            <!-- Step 1: Select Plan -->
-            <div class="step-content active" id="step1Content">
-                <div class="plans-grid">
-                    <div class="plan-card" data-plan="mini">
-                        <div class="plan-icon">✨</div>
-                        <div class="plan-name">Mini Pack</div>
-                        <div class="plan-price">$5.00</div>
-                        <div class="plan-golden">20 Golden</div>
-                        <div class="save-badge">Perfect Start</div>
-                    </div>
-                    
-                    <div class="plan-card" data-plan="golden">
-                        <div class="plan-icon">🌟</div>
-                        <div class="plan-name">Golden Pack</div>
-                        <div class="plan-price">$10.00</div>
-                        <div class="plan-golden">44 Golden</div>
-                        <div class="save-badge">Save $1.5</div>
-                    </div>
-                    
-                    <div class="plan-card" data-plan="ultra">
-                        <div class="plan-icon">💎</div>
-                        <div class="plan-name">Ultra Pack</div>
-                        <div class="plan-price">$20.00</div>
-                        <div class="plan-golden">90 Golden</div>
-                        <div class="save-badge">Save $5</div>
-                    </div>
-                </div>
-
-                <div class="navigation">
-                    <div></div>
-                    <button class="nav-btn" id="nextToStep2" disabled>Continue →</button>
-                </div>
-            </div>
-
-            <!-- Step 2: Choose Crypto -->
-            <div class="step-content" id="step2Content">
-                <div class="crypto-grid">
-                    <div class="crypto-card" data-crypto="btc">
-                        <div class="crypto-icon">₿</div>
-                        <div class="crypto-name">Bitcoin (BTC)</div>
-                        <div style="color: #7f8c8d; font-size: 0.95em;">Fast & Secure</div>
-                    </div>
-                    <div class="crypto-card" data-crypto="eth">
-                        <div class="crypto-icon">Ξ</div>
-                        <div class="crypto-name">Ethereum (ETH)</div>
-                        <div style="color: #7f8c8d; font-size: 0.95em;">Widely Accepted</div>
-                    </div>
-                    <div class="crypto-card" data-crypto="ltc">
-                        <div class="crypto-icon">Ł</div>
-                        <div class="crypto-name">Litecoin (LTC)</div>
-                        <div style="color: #7f8c8d; font-size: 0.95em;">Low Fees</div>
-                    </div>
-                </div>
-
-                <div class="navigation">
-                    <button class="nav-btn back" id="backToStep1">← Back</button>
-                    <button class="nav-btn" id="nextToStep3" disabled>Continue →</button>
-                </div>
-            </div>
-
-            <!-- Step 3: Wallet Address -->
-            <div class="step-content" id="step3Content">
-                <div class="wallet-input-section">
-                    <div class="warning-box">
-                        <div class="warning-title">IMPORTANT: ADD YOUR WALLET ADDRESS</div>
-                        <div class="warning-text">
-                            <strong>NOTE:</strong> Please add the <strong>WALLET ADDRESS</strong> that you will <strong>SEND FROM</strong> the Crypto you selected for us to verify your transaction.<br><br>
-                            <strong>NOTE:</strong> IF THE WALLET ADDRESS THAT YOU PLACED WASN'T WHAT YOU PAID WITH, THE TRANSACTION WILL <strong>FAIL</strong> AND WE WILL <strong>REFUND YOUR MONEY</strong>!
-                        </div>
-                    </div>
-
-                    <div class="wallet-input-group">
-                        <label class="wallet-label">Your Sending Wallet Address</label>
-                        <input type="text" class="wallet-input" id="walletAddressInput" 
-                               placeholder="Enter your wallet address (e.g., bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh)">
-                        <div class="validation-message" id="walletValidation"></div>
-                    </div>
-
-                    <div class="navigation">
-                        <button class="nav-btn back" id="backToStep2">← Back</button>
-                        <button class="nav-btn" id="nextToStep4" disabled>Continue →</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Step 4: Send Payment -->
-            <div class="step-content" id="step4Content">
-                <div class="payment-final">
-                    <div class="warning-box">
-                        <div class="warning-title">TRIPLE CHECK BEFORE SENDING</div>
-                        <div class="warning-text">
-                            Send <strong>EXACTLY</strong> the amount shown below. Not less, not more.<br>
-                            If not received the exact amount, the transaction will <strong>FAIL</strong> and your money will be <strong>LOST</strong>!
-                        </div>
-                    </div>
-
-                    <div class="amount-display">
-                        <div class="amount-label">Send Exactly</div>
-                        <div class="amount-value" id="finalAmount">$5.00 in BTC</div>
-                    </div>
-
-                    <div class="wallet-section">
-                        <div class="wallet-title">Our Wallet Address</div>
-                        <div class="wallet-address" id="walletAddress">Select plan and crypto first</div>
-                        <button class="copy-btn" id="copyAddressBtn">📋 Copy Address</button>
-                    </div>
-
-                    <div class="qr-section">
-                        <div class="qr-title">Scan QR Code</div>
-                        <img class="qr-image" id="qrImage" src="" alt="QR Code" style="display: none;">
-                        <div id="qrPlaceholder" style="color: #7f8c8d; font-style: italic; padding: 20px;">QR code will appear here</div>
-                    </div>
-
-                    <div class="navigation">
-                        <button class="nav-btn back" id="backToStep3">← Back</button>
-                        <button class="nav-btn" id="submitPaymentRequest">Submit Payment Request</button>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <!-- USER BAR -->
+    <div class="user-bar" id="userBar" style="display:none;">
+        <div class="user-avatar" id="userAvatar">U</div>
+        <div style="font-weight:600;" id="userName">User</div>
+        <div class="golden-balance" id="goldenBalance">0G</div>
     </div>
 
-    <!-- Notification -->
-    <div class="notification" id="notification"></div>
+    <!-- HEADER -->
+    <div class="header">
+        <h1>Buy Golden</h1>
+        <p>Unlock advanced AI features instantly</p>
+    </div>
 
-    <script>
-        class GoldenPaymentSystem {
-            constructor() {
-                this.currentStep = 1;
-                this.selectedPlan = null;
-                this.selectedCrypto = null;
-                this.userWalletAddress = null;
-                this.user = null;
-                
-                this.walletAddresses = {
-                    btc: 'bc1qz5wtz2d329xsm7gcs9e3jwls9supg2fk2hkxtd',
-                    eth: '0x8BEaCb38dF916F6644F81cA0De18C1F4996d32Ea',
-                    ltc: 'LSNv8n6bZ2hR9KqD9q7B2n6X2gZ2hR9KqD9'
-                };
+    <!-- PLANS -->
+    <div class="plans-grid">
+        <div class="plan-card" data-plan="mini">
+            <div class="plan-title">Mini Pack</div>
+            <div class="plan-price">$5</div>
+            <div class="plan-golden">20 Golden</div>
+            <button class="buy-btn">Buy Now</button>
+        </div>
 
-                this.qrImages = {
-                    btc: 'GoldenSpaceAI/GoldenSpace-ai/BTC=QR.jpeg',
-                    eth: 'GoldenSpaceAI/GoldenSpace-ai/ETH=QR.jpeg',
-                    ltc: 'GoldenSpaceAI/GoldenSpace-ai/LTC=QR.jpeg'
-                };
+        <div class="plan-card" data-plan="golden">
+            <div class="plan-title">Golden Pack</div>
+            <div class="plan-price">$10</div>
+            <div class="plan-golden">44 Golden</div>
+            <button class="buy-btn">Buy Now</button>
+        </div>
 
-                this.plans = {
-                    mini: { price: 5, golden: 20 },
-                    golden: { price: 10, golden: 44 },
-                    ultra: { price: 20, golden: 90 }
-                };
+        <div class="plan-card" data-plan="ultra">
+            <div class="plan-title">Ultra Pack</div>
+            <div class="plan-price">$20</div>
+            <div class="plan-golden">90 Golden</div>
+            <button class="buy-btn">Buy Now</button>
+        </div>
+    </div>
+</div>
 
-                // Wallet validation regex patterns
-                this.walletPatterns = {
-                    btc: /^(bc1|[13])[a-zA-HJ-NP-Z0-9]{25,39}$/,
-                    eth: /^0x[a-fA-F0-9]{40}$/,
-                    ltc: /^[LM3][a-km-zA-HJ-NP-Z1-9]{26,33}$/
-                };
+<!-- LOADING MODAL -->
+<div id="loadingModal">
+    <div class="loading-box">
+        <h2>Creating Payment…</h2>
+        <div class="spinner"></div>
+        <p style="opacity:0.8;">Do not refresh or close this page</p>
+    </div>
+</div>
 
-                this.initializeElements();
-                this.checkAuth();
-                this.setupEventListeners();
-            }
+<script>
+let user = null;
 
-            initializeElements() {
-                this.elements = {
-                    userBar: document.getElementById('userBar'),
-                    userAvatar: document.getElementById('userAvatar'),
-                    userName: document.getElementById('userName'),
-                    goldenBalance: document.getElementById('goldenBalance'),
-                    loginRequired: document.getElementById('loginRequired'),
-                    paymentFlow: document.getElementById('paymentFlow'),
-                    
-                    // Steps
-                    step1: document.getElementById('step1'),
-                    step2: document.getElementById('step2'),
-                    step3: document.getElementById('step3'),
-                    step4: document.getElementById('step4'),
-                    step1Content: document.getElementById('step1Content'),
-                    step2Content: document.getElementById('step2Content'),
-                    step3Content: document.getElementById('step3Content'),
-                    step4Content: document.getElementById('step4Content'),
-                    
-                    // Navigation
-                    nextToStep2: document.getElementById('nextToStep2'),
-                    nextToStep3: document.getElementById('nextToStep3'),
-                    nextToStep4: document.getElementById('nextToStep4'),
-                    backToStep1: document.getElementById('backToStep1'),
-                    backToStep2: document.getElementById('backToStep2'),
-                    backToStep3: document.getElementById('backToStep3'),
-                    
-                    // Wallet input
-                    walletAddressInput: document.getElementById('walletAddressInput'),
-                    walletValidation: document.getElementById('walletValidation'),
-                    
-                    // Final step
-                    finalAmount: document.getElementById('finalAmount'),
-                    walletAddress: document.getElementById('walletAddress'),
-                    copyAddressBtn: document.getElementById('copyAddressBtn'),
-                    qrImage: document.getElementById('qrImage'),
-                    qrPlaceholder: document.getElementById('qrPlaceholder'),
-                    submitPaymentRequest: document.getElementById('submitPaymentRequest'),
-                    
-                    notification: document.getElementById('notification')
-                };
-            }
+/* Load user info */
+async function loadUser() {
+    const res = await fetch("/api/me");
+    const data = await res.json();
 
-            async checkAuth() {
-                try {
-                    const response = await fetch('/api/me');
-                    const data = await response.json();
-                    
-                    if (data.loggedIn) {
-                        this.user = data.user;
-                        this.showPaymentFlow();
-                        this.updateUserInfo(data);
-                    } else {
-                        this.showLoginRequired();
-                    }
-                } catch (error) {
-                    console.error('Auth check failed:', error);
-                    this.showLoginRequired();
-                }
-            }
+    if (data.loggedIn) {
+        user = data.user;
 
-            showLoginRequired() {
-                this.elements.loginRequired.style.display = 'block';
-                this.elements.paymentFlow.style.display = 'none';
-            }
+        document.getElementById("userBar").style.display = "flex";
+        document.getElementById("userName").textContent = data.user.name;
+        document.getElementById("goldenBalance").textContent = data.balance + "G";
+        document.getElementById("userAvatar").textContent = data.user.name.charAt(0).toUpperCase();
+    }
+}
 
-            showPaymentFlow() {
-                this.elements.loginRequired.style.display = 'none';
-                this.elements.paymentFlow.style.display = 'block';
-                this.elements.userBar.style.display = 'flex';
-            }
+loadUser();
 
-            updateUserInfo(data) {
-                this.elements.userName.textContent = data.user.name;
-                this.elements.goldenBalance.textContent = `${data.balance}G`;
-                
-                const initial = data.user.name.charAt(0).toUpperCase();
-                this.elements.userAvatar.textContent = initial;
-            }
+/* Handle Buy Button */
+document.querySelectorAll(".plan-card").forEach(card => {
+    card.querySelector(".buy-btn").addEventListener("click", async () => {
+        if (!user) return alert("You must log in first.");
 
-            selectPlan(planType) {
-                document.querySelectorAll('.plan-card').forEach(plan => {
-                    plan.classList.remove('selected');
-                });
-                
-                const planEl = document.querySelector(`[data-plan="${planType}"]`);
-                planEl.classList.add('selected');
-                
-                this.selectedPlan = planType;
-                this.elements.nextToStep2.disabled = false;
-            }
+        const plan = card.dataset.plan;
 
-            selectCrypto(cryptoType) {
-                document.querySelectorAll('.crypto-card').forEach(crypto => {
-                    crypto.classList.remove('selected');
-                });
-                
-                const cryptoEl = document.querySelector(`[data-crypto="${cryptoType}"]`);
-                cryptoEl.classList.add('selected');
-                
-                this.selectedCrypto = cryptoType;
-                this.elements.nextToStep3.disabled = false;
-            }
+        document.getElementById("loadingModal").style.display = "flex";
 
-            validateWalletAddress(address) {
-                if (!this.selectedCrypto) return false;
-                
-                const pattern = this.walletPatterns[this.selectedCrypto];
-                return pattern.test(address);
-            }
-
-            updateWalletValidation() {
-                const address = this.elements.walletAddressInput.value.trim();
-                const isValid = this.validateWalletAddress(address);
-                
-                this.elements.walletAddressInput.classList.remove('valid', 'invalid');
-                this.elements.walletValidation.className = 'validation-message';
-                
-                if (address === '') {
-                    this.elements.walletValidation.textContent = '';
-                    this.elements.nextToStep4.disabled = true;
-                    return;
-                }
-                
-                if (isValid) {
-                    this.elements.walletAddressInput.classList.add('valid');
-                    this.elements.walletValidation.classList.add('valid');
-                    this.elements.walletValidation.textContent = '✓ Valid wallet address format';
-                    this.elements.nextToStep4.disabled = false;
-                    this.userWalletAddress = address;
-                } else {
-                    this.elements.walletAddressInput.classList.add('invalid');
-                    this.elements.walletValidation.classList.add('invalid');
-                    this.elements.walletValidation.textContent = '✗ Invalid wallet address format for selected cryptocurrency';
-                    this.elements.nextToStep4.disabled = true;
-                }
-            }
-
-            goToStep(stepNumber) {
-                // Hide all steps
-                this.elements.step1Content.classList.remove('active');
-                this.elements.step2Content.classList.remove('active');
-                this.elements.step3Content.classList.remove('active');
-                this.elements.step4Content.classList.remove('active');
-                this.elements.step1.classList.remove('active');
-                this.elements.step2.classList.remove('active');
-                this.elements.step3.classList.remove('active');
-                this.elements.step4.classList.remove('active');
-                
-                // Show current step
-                this.elements[`step${stepNumber}`].classList.add('active');
-                this.elements[`step${stepNumber}Content`].classList.add('active');
-                
-                this.currentStep = stepNumber;
-
-                if (stepNumber === 4 && this.selectedPlan && this.selectedCrypto) {
-                    this.updateFinalStep();
-                }
-            }
-
-            updateFinalStep() {
-                const plan = this.plans[this.selectedPlan];
-                const cryptoName = this.selectedCrypto.toUpperCase();
-                
-                this.elements.finalAmount.textContent = `$${plan.price}.00 in ${cryptoName}`;
-                this.elements.walletAddress.textContent = this.walletAddresses[this.selectedCrypto];
-                
-                // Show actual QR code
-                this.elements.qrImage.src = this.qrImages[this.selectedCrypto];
-                this.elements.qrImage.style.display = 'block';
-                this.elements.qrPlaceholder.style.display = 'none';
-            }
-
-            copyWalletAddress() {
-                if (!this.selectedCrypto) return;
-                
-                const address = this.walletAddresses[this.selectedCrypto];
-                navigator.clipboard.writeText(address).then(() => {
-                    this.showNotification('✅ Wallet address copied to clipboard!', 'success');
-                }).catch(() => {
-                    this.showNotification('❌ Failed to copy address', 'error');
-                });
-            }
-
-            async submitPaymentRequest() {
-                try {
-                    if (!this.user || !this.selectedPlan || !this.selectedCrypto || !this.userWalletAddress) {
-                        throw new Error('Missing required information');
-                    }
-
-                    // Get current balance
-                    const balanceResponse = await fetch('/api/golden-balance');
-                    const balanceData = await balanceResponse.json();
-                    
-                    const paymentRequest = {
-                        userEmail: this.user.email,
-                        userProvider: this.user.provider,
-                        userName: this.user.name,
-                        currentGoldenBalance: balanceData.balance,
-                        plan: this.selectedPlan,
-                        crypto: this.selectedCrypto,
-                        amount: this.plans[this.selectedPlan].price,
-                        goldenAmount: this.plans[this.selectedPlan].golden,
-                        userWalletAddress: this.userWalletAddress,
-                        timestamp: new Date().toISOString()
-                    };
-
-                    console.log('📤 Sending payment request:', paymentRequest);
-
-                    // Send payment request to server
-                    const response = await fetch('/api/payment-request', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        credentials: 'include',
-                        body: JSON.stringify(paymentRequest)
-                    });
-
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
-                    }
-
-                    const result = await response.json();
-
-                    if (result.success) {
-                        this.showNotification('✅ Payment request submitted! We will verify your transaction.', 'success');
-                        
-                        // Redirect after delay
-                        setTimeout(() => {
-                            window.location.href = '/';
-                        }, 3000);
-                    } else {
-                        throw new Error(result.error || 'Failed to submit payment request');
-                    }
-
-                } catch (error) {
-                    console.error('❌ Error submitting payment request:', error);
-                    this.showNotification(`❌ ${error.message}`, 'error');
-                }
-            }
-
-            showNotification(message, type) {
-                const notification = this.elements.notification;
-                notification.textContent = message;
-                notification.className = `notification ${type}`;
-                notification.classList.add('show');
-                
-                setTimeout(() => {
-                    notification.classList.remove('show');
-                }, 4000);
-            }
-
-            setupEventListeners() {
-                // Plan selection
-                document.querySelectorAll('.plan-card').forEach(plan => {
-                    plan.addEventListener('click', () => {
-                        this.selectPlan(plan.dataset.plan);
-                    });
-                });
-
-                // Crypto selection
-                document.querySelectorAll('.crypto-card').forEach(crypto => {
-                    crypto.addEventListener('click', () => {
-                        this.selectCrypto(crypto.dataset.crypto);
-                    });
-                });
-
-                // Wallet address validation
-                this.elements.walletAddressInput.addEventListener('input', () => {
-                    this.updateWalletValidation();
-                });
-
-                // Navigation
-                this.elements.nextToStep2.addEventListener('click', () => this.goToStep(2));
-                this.elements.nextToStep3.addEventListener('click', () => this.goToStep(3));
-                this.elements.nextToStep4.addEventListener('click', () => this.goToStep(4));
-                this.elements.backToStep1.addEventListener('click', () => this.goToStep(1));
-                this.elements.backToStep2.addEventListener('click', () => this.goToStep(2));
-                this.elements.backToStep3.addEventListener('click', () => this.goToStep(3));
-                
-                // Copy address
-                this.elements.copyAddressBtn.addEventListener('click', () => this.copyWalletAddress());
-                
-                // Submit payment request
-                this.elements.submitPaymentRequest.addEventListener('click', () => this.submitPaymentRequest());
-            }
-        }
-
-        let paymentSystem;
-        document.addEventListener('DOMContentLoaded', () => {
-            paymentSystem = new GoldenPaymentSystem();
+        const res = await fetch("/api/create-payment", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                userId: user.id,
+                plan
+            })
         });
-    </script>
+
+        const data = await res.json();
+
+        if (data.success) {
+            document.querySelector("h2").textContent = "Waiting for Blockchain Confirmation";
+        } else {
+            alert("Error creating payment.");
+        }
+    });
+});
+</script>
+
 </body>
 </html>

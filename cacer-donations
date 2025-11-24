@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Worldwide Charity Hub | GoldenSpaceAI</title>
+
+<style>
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: url('https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?auto=format&fit=crop&w=1920&q=80')
+            no-repeat center center fixed;
+        background-size: cover;
+        color: white;
+        backdrop-filter: blur(4px);
+    }
+
+    .overlay {
+        background: rgba(0,0,0,0.6);
+        min-height: 100vh;
+        padding: 40px 20px;
+    }
+
+    h1 {
+        text-align: center;
+        color: #FFD700;
+        font-size: 36px;
+        margin-bottom: 20px;
+    }
+
+    .section-title {
+        color: #FFD700;
+        font-size: 24px;
+        margin-top: 40px;
+        margin-bottom: 15px;
+        text-shadow: 0 0 10px rgba(255,215,0,0.4);
+    }
+
+    .charity-box {
+        background: rgba(255,255,255,0.1);
+        padding: 18px;
+        margin-bottom: 15px;
+        border-radius: 12px;
+        border-left: 4px solid #FFD700;
+    }
+
+    .charity-box h3 {
+        margin: 0;
+        font-size: 20px;
+        color: #fff;
+    }
+
+    .charity-box p {
+        font-size: 15px;
+        opacity: 0.8;
+        margin: 6px 0 12px 0;
+    }
+
+    .charity-box a {
+        background: #FFD700;
+        color: black;
+        padding: 10px 20px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: bold;
+        transition: 0.2s;
+    }
+
+    .charity-box a:hover {
+        background: white;
+        transform: scale(1.05);
+    }
+
+    footer {
+        margin-top: 50px;
+        text-align: center;
+        opacity: 0.65;
+        font-size: 13px;
+    }
+</style>
+</head>
+
+<body>
+<div class="overlay">
+
+<h1>🌍 GoldenSpaceAI • Worldwide Charity Hub</h1>
+<p style="text-align:center;opacity:0.8;font-size:16px;margin-bottom:35px;">
+    Choose a verified charity below. All donations go directly to their official website.
+</p>
+
+<!-- 🇱🇧 LEBANON -->
+<h2 class="section-title">🇱🇧 Lebanon</h2>
+<div class="charity-box">
+    <h3>Children's Cancer Center of Lebanon (CCCL)</h3>
+    <p>Treats kids with cancer for free. One of the most trusted charities in Lebanon.</p>
+    <a href="https://www.cccl.org.lb/donatenow-campaign/138/en" target="_blank">Donate</a>
+</div>
+
+<div class="charity-box">
+    <h3>Red Cross Lebanon</h3>
+    <p>Emergency medical response, blood donation, disaster management.</p>
+    <a href="https://donate.redcross.org.lb/" target="_blank">Donate</a>
+</div>
+
+<div class="charity-box">
+    <h3>Beirut Heritage Initiative</h3>
+    <p>Helps restore Beirut after explosions and supports families in need.</p>
+    <a href="https://beirutheritageinitiative.org/donate" target="_blank">Donate</a>
+</div>
+
+<!-- 🌍 MIDDLE EAST -->
+<h2 class="section-title"> Middle East</h2>
+<div class="charity-box">
+    <h3>UNRWA Relief for Palestine</h3>
+    <p>Supports families, schools, health and emergency aid in Gaza & West Bank.</p>
+    <a href="https://donate.unrwa.org/" target="_blank">Donate</a>
+</div>
+
+<div class="charity-box">
+    <h3>King Salman Humanitarian Aid (KSA)</h3>
+    <p>Medical and humanitarian operations across the region.</p>
+    <a href="https://donate.ksrelief.org/" target="_blank">Donate</a>
+</div>
+
+<div class="charity-box">
+    <h3>Qatar Charity</h3>
+    <p>Supports families, refugees, food aid, and medical operations.</p>
+    <a href="https://www.qcharity.org/en/qa/donation" target="_blank">Donate</a>
+</div>
+
+<!-- 🇺🇸 UNITED STATES -->
+<h2 class="section-title">🇺🇸 United States</h2>
+<div class="charity-box">
+    <h3>St. Jude Children’s Research Hospital</h3>
+    <p>Kids receive cancer treatment free of charge. One of the most trusted charities in the world.</p>
+    <a href="https://www.stjude.org/donate" target="_blank">Donate</a>
+</div>
+
+<div class="charity-box">
+    <h3>American Red Cross</h3>
+    <p>Disaster relief, blood donation, emergency support.</p>
+    <a href="https://www.redcross.org/donate" target="_blank">Donate</a>
+</div>
+
+<!-- 🇪🇺 EUROPE -->
+<h2 class="section-title">🇪🇺 Europe</h2>
+<div class="charity-box">
+    <h3>UNICEF Europe Division</h3>
+    <p>Supports children’s health, food, and education across Europe.</p>
+    <a href="https://donate.unicef.org" target="_blank">Donate</a>
+</div>
+
+<div class="charity-box">
+    <h3>Save The Children (EU)</h3>
+    <p>Education, hunger relief, refugee protection in Europe.</p>
+    <a href="https://www.savethechildren.net/donate" target="_blank">Donate</a>
+</div>
+
+<!-- 🇷🇺 RUSSIA -->
+<h2 class="section-title">🇷🇺 Russia</h2>
+<div class="charity-box">
+    <h3>Gift of Life (Podari Zhizn)</h3>
+    <p>Russian charity helping kids fight cancer & serious illnesses.</p>
+    <a href="https://podari-zhizn.ru/en/help" target="_blank">Donate</a>
+</div>
+
+<div class="charity-box">
+    <h3>Russian Red Cross</h3>
+    <p>Disaster support, medicine, first aid & humanitarian assistance.</p>
+    <a href="https://redcross.ru/en/donations/" target="_blank">Donate</a>
+</div>
+
+<!-- 🌐 GLOBAL -->
+<h2 class="section-title">🌐 Global Charities</h2>
+<div class="charity-box">
+    <h3>UNICEF Global</h3>
+    <p>Helps children worldwide with health, food, and disaster support.</p>
+    <a href="https://www.unicef.org/donate" target="_blank">Donate</a>
+</div>
+
+<div class="charity-box">
+    <h3>Doctors Without Borders</h3>
+    <p>Medical emergency teams in 70+ countries.</p>
+    <a href="https://donate.doctorswithoutborders.org" target="_blank">Donate</a>
+</div>
+
+<footer>
+    GoldenSpaceAI • Worldwide Verified Charity Directory • This page does not collect funds.
+</footer>
+
+</div>
+</body>
+</html>

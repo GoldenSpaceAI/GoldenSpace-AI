@@ -96,8 +96,161 @@ app.use(
     }
   })
 );
+// AdvancedAI (GPT-4)
+app.post("/api/generate-advanced", async (req, res) => {
+  try {
+    const { prompt } = req.body;
+    if (!prompt) return res.status(400).json({ error: "No prompt provided." });
 
-// ---------------------------------------------
+    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4",
+      messages: [{ role: "user", content: prompt }],
+      temperature: 0.6,
+    });
+
+    res.json({ text: completion.choices[0]?.message?.content || "No response." });
+  } catch (err) {
+    console.error("AdvancedAI error:", err);
+    res.status(500).json({ error: "Error generating response." });
+  }
+});
+
+// DeepSeek Chat - General Purpose
+app.post("/api/generate-deepseek-chat", async (req, res) => {
+  try {
+    const { messages } = req.body;
+    
+    if (!messages || !Array.isArray(messages)) {
+      return res.status(400).json({ error: "No messages provided or invalid format." });
+    }
+
+    // Add system message to define DeepSeek identity
+    const systemMessage = {
+      role: "system",
+      content: "You are DeepSeek Chat, an AI assistant created by DeepSeek Company. You are not GPT-4 or any OpenAI model. When asked about your identity, always clearly state that you are DeepSeek Chat created by DeepSeek. Be honest about your capabilities and origins."
+    };
+
+    const apiMessages = [
+      systemMessage,
+      ...messages.map(msg => ({
+        role: msg.role === 'ai' ? 'assistant' : 'user',
+        content: msg.content
+      }))
+    ];
+
+    const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.DEEPSEEK_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: "deepseek-chat",
+        messages: apiMessages,
+        max_tokens: 4000,
+        temperature: 0.7
+      })
+    });
+
+    const data = await response.json();
+    
+    // Check if the response has the expected structure
+    if (!data.choices || !Array.isArray(data.choices) || data.choices.length === 0) {
+      console.error("DeepSeek Chat API response error:", data);
+      return res.status(500).json({ 
+        error: "AI service returned unexpected response",
+        details: data.error?.message || "No choices in response"
+      });
+    }
+
+    res.json({ 
+      text: data.choices[0]?.message?.content || "No response.",
+      model: "DeepSeek Chat"
+    });
+    
+  } catch (err) {
+    console.error("DeepSeek Chat error:", err);
+    res.status(500).json({ 
+      error: "AI service error",
+      details: err.message 
+    });
+  }
+});
+
+// DeepSeek Coder - Programming Specialist
+app.post("/api/generate-deepseek-coder", async (req, res) => {
+  try {
+    const { messages } = req.body;
+    
+    if (!messages || !Array.isArray(messages)) {
+      return res.status(400).json({ error: "No messages provided or invalid format." });
+    }
+
+    // Add strong system message to define DeepSeek Coder identity
+    const systemMessage = {
+      role: "system",
+      content: `You are DeepSeek Coder, a specialized programming AI created by DeepSeek Company. 
+      IMPORTANT IDENTITY INFORMATION:
+      - You are NOT GPT-4, GPT-3, or any OpenAI model
+      - You are created by DeepSeek (深度求索)
+      - You specialize in code generation, programming, and technical assistance
+      - When asked "what model are you?" or "who created you?", always respond: "I am DeepSeek Coder, created by DeepSeek Company"
+      - Be truthful about your identity and capabilities
+      - Do not claim to be any other AI model`
+    };
+
+    const apiMessages = [
+      systemMessage,
+      ...messages.map(msg => ({
+        role: msg.role === 'ai' ? 'assistant' : 'user',
+        content: msg.content
+      }))
+    ];
+
+    const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.DEEPSEEK_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: "deepseek-coder",
+        messages: apiMessages,
+        max_tokens: 4000,
+        temperature: 0.7
+      })
+    });
+
+    const data = await response.json();
+    
+    // Check if the response has the expected structure
+    if (!data.choices || !Array.isArray(data.choices) || data.choices.length === 0) {
+      console.error("DeepSeek Coder API response error:", data);
+      return res.status(500).json({ 
+        error: "AI service returned unexpected response",
+        details: data.error?.message || "No choices in response"
+      });
+    }
+
+    const responseText = data.choices[0]?.message?.content || "No response.";
+    
+    // Log the response for debugging
+    console.log("DeepSeek Coder Response:", responseText.substring(0, 200));
+    
+    res.json({ 
+      text: responseText,
+      model: "DeepSeek Coder"
+    });
+    
+  } catch (err) {
+    console.error("DeepSeek Coder error:", err);
+    res.status(500).json({ 
+      error: "AI service error",
+      details: err.message 
+    });
+  }
+});// ---------------------------------------------
 // PASSPORT INITIALIZATION
 // ---------------------------------------------
 passport.serializeUser((user, done) => done(null, user));

@@ -83,6 +83,31 @@
             border: 1px solid rgba(99, 102, 241, 0.3);
         }
 
+        .header-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .control-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: var(--glass-border);
+            color: var(--text-muted);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+        }
+
         /* --- Chat Area --- */
         #chat-box {
             flex: 1;
@@ -327,8 +352,16 @@
     <div class="chat-container">
         <div class="chat-header">
             <h1><i class="fa-solid fa-robot"></i> GoldenSpace AI <span class="model-badge">Unlimited</span></h1>
-            <div style="font-size: 0.85rem; color: var(--text-muted);">
-                <i class="fa-solid fa-circle" style="color: #10b981; font-size: 8px; margin-right: 5px;"></i> Online
+            <div class="header-controls">
+                <button class="control-btn" onclick="loadChatHistory()">
+                    <i class="fa-solid fa-history"></i> Load History
+                </button>
+                <button class="control-btn" onclick="clearChatHistory()">
+                    <i class="fa-solid fa-trash"></i> Clear History
+                </button>
+                <div style="font-size: 0.85rem; color: var(--text-muted);">
+                    <i class="fa-solid fa-circle" style="color: #10b981; font-size: 8px; margin-right: 5px;"></i> Online
+                </div>
             </div>
         </div>
 
@@ -380,6 +413,71 @@
 
         let selectedImage = null;
         let isRecording = false;
+        let recognition = null;
+        let chatHistory = [];
+        const STORAGE_KEY = 'goldenspace_ai_chat_history';
+
+        // --- Initialize Chat from Local Storage ---
+        function initializeChat() {
+            loadChatFromStorage();
+            // Display welcome message only if no history exists
+            if (chatHistory.length === 0) {
+                chatHistory.push({
+                    role: 'ai',
+                    text: 'Hello! I am your advanced AI assistant. <br>You can type, <b>speak</b>, or upload <b>images</b>. How can I help you today?',
+                    timestamp: new Date().toISOString()
+                });
+            }
+            renderChatHistory();
+        }
+
+        // --- Local Storage Functions ---
+        function saveChatToStorage() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(chatHistory));
+                console.log('Chat saved to local storage:', chatHistory.length, 'messages');
+            } catch (error) {
+                console.error('Error saving to local storage:', error);
+            }
+        }
+
+        function loadChatFromStorage() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    chatHistory = JSON.parse(saved);
+                    console.log('Chat loaded from local storage:', chatHistory.length, 'messages');
+                }
+            } catch (error) {
+                console.error('Error loading from local storage:', error);
+                chatHistory = [];
+            }
+        }
+
+        function clearChatHistory() {
+            if (confirm('Are you sure you want to clear all chat history? This cannot be undone.')) {
+                chatHistory = [];
+                localStorage.removeItem(STORAGE_KEY);
+                renderChatHistory();
+                
+                // Add a fresh welcome message
+                addMessageToChat('ai', 'Hello! I am your advanced AI assistant. <br>You can type, <b>speak</b>, or upload <b>images</b>. How can I help you today?');
+            }
+        }
+
+        function loadChatHistory() {
+            loadChatFromStorage();
+            renderChatHistory();
+            alert(`Loaded ${chatHistory.length} messages from history.`);
+        }
+
+        function renderChatHistory() {
+            chatBox.innerHTML = '';
+            chatHistory.forEach(msg => {
+                addMessageToChat(msg.role, msg.text, msg.imageUrl);
+            });
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
 
         // --- Auto Resize Textarea ---
         function autoResize(textarea) {
@@ -408,10 +506,10 @@
             previewContainer.style.display = "none";
         }
 
-        // --- Speech to Text (Microphone) ---
+        // --- Speech Recognition ---
         function toggleSpeech() {
-            if (!('webkitSpeechRecognition' in window)) {
-                alert("Speech recognition is not supported in this browser. Try Chrome.");
+            if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+                alert("Speech recognition is not supported in this browser. Try Chrome, Edge, or Safari.");
                 return;
             }
 
@@ -420,7 +518,8 @@
                 return;
             }
 
-            recognition = new webkitSpeechRecognition();
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
             recognition.lang = 'en-US';
             recognition.continuous = false;
             recognition.interimResults = false;
@@ -429,31 +528,68 @@
                 isRecording = true;
                 micBtn.classList.add("recording");
                 userInput.placeholder = "Listening...";
+                micBtn.title = "Stop recording";
             };
 
             recognition.onend = function() {
                 isRecording = false;
                 micBtn.classList.remove("recording");
                 userInput.placeholder = "Type a message or speak...";
+                micBtn.title = "Speak";
             };
 
             recognition.onresult = function(event) {
                 const transcript = event.results[0][0].transcript;
-                userInput.value += (userInput.value ? " " : "") + transcript;
+                userInput.value = (userInput.value ? userInput.value + ' ' : '') + transcript;
                 autoResize(userInput);
+            };
+
+            recognition.onerror = function(event) {
+                console.error('Speech recognition error:', event.error);
+                isRecording = false;
+                micBtn.classList.remove("recording");
+                userInput.placeholder = "Type a message or speak...";
+                micBtn.title = "Speak";
+                
+                if (event.error === 'not-allowed') {
+                    alert('Microphone access denied. Please allow microphone access in your browser settings.');
+                }
             };
 
             recognition.start();
         }
 
-        // --- Text to Speech (Speak Response) ---
+        // --- Text to Speech ---
         function speakText(text) {
-            window.speechSynthesis.cancel(); // Stop any current speech
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = 'en-US';
-            utterance.rate = 1;
-            utterance.pitch = 1;
-            window.speechSynthesis.speak(utterance);
+            if ('speechSynthesis' in window) {
+                // Cancel any ongoing speech
+                window.speechSynthesis.cancel();
+                
+                // Remove HTML tags and clean text for speech
+                const cleanText = text.replace(/<[^>]*>/g, '');
+                
+                const utterance = new SpeechSynthesisUtterance(cleanText);
+                utterance.lang = 'en-US';
+                utterance.rate = 1;
+                utterance.pitch = 1;
+                utterance.volume = 1;
+                
+                // Get available voices
+                const voices = window.speechSynthesis.getVoices();
+                if (voices.length > 0) {
+                    // Prefer a natural-sounding voice
+                    const preferredVoice = voices.find(voice => 
+                        voice.lang.includes('en') && voice.name.includes('Natural')
+                    ) || voices.find(voice => voice.lang.includes('en-US')) || voices[0];
+                    
+                    utterance.voice = preferredVoice;
+                }
+                
+                // Speak the text
+                window.speechSynthesis.speak(utterance);
+            } else {
+                alert('Text-to-speech is not supported in this browser.');
+            }
         }
 
         // --- Send Message Logic ---
@@ -461,8 +597,20 @@
             const text = userInput.value.trim();
             if (!text && !selectedImage) return;
 
-            // 1. Add User Message to Chat
-            addMessageToChat("user", text, selectedImage ? URL.createObjectURL(selectedImage) : null);
+            // 1. Save image URL if exists
+            let imageUrl = null;
+            if (selectedImage) {
+                imageUrl = URL.createObjectURL(selectedImage);
+            }
+
+            // 2. Add User Message to Chat and History
+            addMessageToChat("user", text, imageUrl);
+            chatHistory.push({
+                role: 'user',
+                text: text,
+                imageUrl: imageUrl,
+                timestamp: new Date().toISOString()
+            });
             
             // Clear inputs
             userInput.value = "";
@@ -470,10 +618,10 @@
             const imageToSend = selectedImage;
             clearImage();
 
-            // 2. Add Loading Indicator
+            // 3. Add Loading Indicator
             const loadingId = addLoadingIndicator();
             
-            // 3. Prepare Data
+            // 4. Prepare Data
             const formData = new FormData();
             formData.append("message", text);
             if (imageToSend) {
@@ -481,7 +629,7 @@
             }
 
             try {
-                // 4. Send to Backend
+                // 5. Send to Backend (Replace with your actual API endpoint)
                 const response = await fetch("/api/unlimited-chat", {
                     method: "POST",
                     body: formData
@@ -489,18 +637,39 @@
                 
                 const data = await response.json();
 
-                // 5. Remove Loading & Add AI Response
+                // 6. Remove Loading & Add AI Response
                 removeLoadingIndicator(loadingId);
                 
                 if (data.reply) {
                     addMessageToChat("ai", data.reply);
+                    chatHistory.push({
+                        role: 'ai',
+                        text: data.reply,
+                        timestamp: new Date().toISOString()
+                    });
                 } else {
-                    addMessageToChat("ai", "Error: " + (data.error || "Unknown error occurred."));
+                    const errorMsg = "Error: " + (data.error || "Unknown error occurred.");
+                    addMessageToChat("ai", errorMsg);
+                    chatHistory.push({
+                        role: 'ai',
+                        text: errorMsg,
+                        timestamp: new Date().toISOString()
+                    });
                 }
+
+                // 7. Save to local storage
+                saveChatToStorage();
 
             } catch (error) {
                 removeLoadingIndicator(loadingId);
-                addMessageToChat("ai", "Network Error: Could not reach server.");
+                const errorMsg = "Network Error: Could not reach server.";
+                addMessageToChat("ai", errorMsg);
+                chatHistory.push({
+                    role: 'ai',
+                    text: errorMsg,
+                    timestamp: new Date().toISOString()
+                });
+                saveChatToStorage();
                 console.error(error);
             }
         }
@@ -519,14 +688,19 @@
             // If AI, add speaker button
             let toolsHtml = "";
             if (role === "ai") {
-                // Escape text for the onclick attribute
-                const cleanText = text.replace(/"/g, "&quot;").replace(/'/g, "&#39;").replace(/\n/g, " ");
+                // Clean text for the onclick attribute
+                const cleanText = text
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, "&#39;")
+                    .replace(/\n/g, " ")
+                    .replace(/<[^>]*>/g, '');
+                
                 toolsHtml = `
                     <div class="msg-tools">
                         <button class="tool-btn" onclick="speakText('${cleanText}')">
                             <i class="fa-solid fa-volume-high"></i> Speak
                         </button>
-                        <button class="tool-btn" onclick="navigator.clipboard.writeText('${cleanText}')">
+                        <button class="tool-btn" onclick="navigator.clipboard.writeText('${cleanText.replace(/&quot;/g, '"').replace(/&#39;/g, "'")}')">
                             <i class="fa-regular fa-copy"></i> Copy
                         </button>
                     </div>
@@ -577,6 +751,18 @@
                 e.preventDefault();
                 sendMessage();
             }
+        });
+
+        // Initialize the chat when page loads
+        document.addEventListener('DOMContentLoaded', initializeChat);
+
+        // Clean up object URLs when page closes
+        window.addEventListener('beforeunload', function() {
+            chatHistory.forEach(msg => {
+                if (msg.imageUrl && msg.imageUrl.startsWith('blob:')) {
+                    URL.revokeObjectURL(msg.imageUrl);
+                }
+            });
         });
 
     </script>

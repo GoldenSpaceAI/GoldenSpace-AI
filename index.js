@@ -587,8 +587,81 @@ app.post("/api/unlock-feature", authUser, (req, res) => {
   });
 });
 
+//--------UNlimate ai --------------------------------------------------------
 
-// ---------------------------------------------
+// 1. Route to serve the new Frontend file
+app.get('/chataiadvanced', (req, res) => {
+  res.sendFile(path.join(__dirname, 'chataiadvanced.html'));
+});
+
+// 2. The Auto-Switching API Endpoint
+// We use your existing 'upload' middleware to handle the image file
+app.post('/api/unlimited-chat', upload.single("image"), async (req, res) => {
+  try {
+    const { message, modelPreference } = req.body;
+    const file = req.file; // Multer puts the file here
+    
+    let activeModel = "gpt-4o"; // Default flagship model
+    let aiResponse = "";
+    let messages = [];
+
+    // --- INTELLIGENT MODEL SWITCHING LOGIC ---
+    if (file) {
+      // IMAGE MODE: Switch to Vision capable model (GPT-4o)
+      console.log("📸 Image detected. Switching to Vision Model...");
+      activeModel = "gpt-4o"; 
+
+      // Convert file to base64 for OpenAI
+      const b64 = fs.readFileSync(file.path).toString("base64");
+      const mime = file.mimetype;
+
+      messages = [
+        { role: "system", content: "You are a helpful AI assistant capable of analyzing images." },
+        { 
+          role: "user", 
+          content: [
+            { type: "text", text: message || "Analyze this image." },
+            { type: "image_url", image_url: { url: `data:${mime};base64,${b64}` } }
+          ] 
+        }
+      ];
+
+      // Clean up the uploaded file from disk after reading
+      fs.unlink(file.path, (err) => { if (err) console.error("Error deleting temp file:", err); });
+
+    } else {
+      // TEXT MODE
+      console.log("📝 Text only. Using standard model...");
+      if(modelPreference) activeModel = modelPreference;
+      
+      messages = [
+        { role: "system", content: "You are a helpful AI assistant." },
+        { role: "user", content: message }
+      ];
+    }
+
+    // Call OpenAI
+    const completion = await openai.chat.completions.create({
+        model: activeModel,
+        messages: messages,
+        max_tokens: 2000
+    });
+
+    aiResponse = completion.choices[0]?.message?.content || "No response generated.";
+
+    res.json({ 
+        reply: aiResponse, 
+        usedModel: activeModel,
+        status: "success"
+    });
+
+  } catch (error) {
+    console.error("Unlimited AI Error:", error);
+    res.status(500).json({ error: "Failed to process request: " + error.message });
+  }
+});
+
+//----------------------------------------------------------------------------// ---------------------------------------------
 // ADVANCED AI SUBSCRIPTION (20G / 30 days)
 // ---------------------------------------------
 const ADVANCED_AI_PRICE = 20;

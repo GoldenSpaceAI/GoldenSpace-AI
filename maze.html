@@ -23,25 +23,25 @@
             align-items: center;
             height: 100vh;
             overflow: hidden;
-            /* Prevent accidental refreshing/scrolling on touch */
             touch-action: none;
         }
 
-        /* Menu Overlays */
         .menu-screen {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             background: var(--panel);
-            padding: 30px;
+            padding: 25px;
             border: 2px solid var(--gold);
             border-radius: 15px;
             text-align: center;
             box-shadow: 0 0 50px rgba(255, 215, 0, 0.2);
             z-index: 30;
             width: 85%;
-            max-width: 400px;
+            max-width: 450px;
+            max-height: 85vh;
+            overflow-y: auto;
             backdrop-filter: blur(5px);
         }
 
@@ -49,17 +49,12 @@
             color: var(--gold);
             margin-top: 0;
             text-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
-            font-size: 2.2rem;
+            font-size: 2rem;
             letter-spacing: -1px;
         }
 
-        .menu-screen p {
-            color: #ccc;
-            font-size: 1rem;
-            margin-bottom: 20px;
-        }
+        .menu-screen p { color: #ccc; font-size: 0.9rem; margin-bottom: 15px; }
 
-        /* In-Game UI Layer */
         #ui-layer {
             position: absolute;
             top: 10px;
@@ -71,13 +66,8 @@
             z-index: 10;
         }
 
-        #ui-title {
-            font-size: 1.2rem;
-            margin: 0;
-            color: var(--gold);
-        }
+        #ui-title { font-size: 1.1rem; margin: 0; color: var(--gold); }
 
-        /* The Game Board */
         canvas {
             background-color: #1a1500;
             border: 3px solid #665500;
@@ -85,17 +75,16 @@
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
             display: none;
             max-width: 95vw;
-            max-height: 70vh;
+            max-height: 65vh;
             touch-action: none;
         }
 
-        /* Buttons */
         button {
             background: linear-gradient(180deg, rgba(255,215,0,0.1) 0%, rgba(255,215,0,0) 100%);
             color: var(--gold);
             border: 2px solid var(--gold);
-            padding: 12px 20px;
-            font-size: 1rem;
+            padding: 10px 18px;
+            font-size: 0.9rem;
             cursor: pointer;
             border-radius: 8px;
             transition: all 0.2s;
@@ -105,87 +94,39 @@
             text-transform: uppercase;
         }
 
-        button:active {
-            transform: scale(0.95);
-            background: var(--gold);
-            color: #000;
-        }
+        button:active { transform: scale(0.95); background: var(--gold); color: #000; }
 
-        .level-btn {
-            display: block;
-            width: 90%;
-            margin: 10px auto;
-        }
+        .level-btn { display: block; width: 90%; margin: 8px auto; }
 
-        /* Virtual D-Pad for Mobile */
-        #controls-wrapper {
-            position: absolute;
-            bottom: 20px;
-            display: none;
-            grid-template-areas: 
-                ". up ."
-                "left . right"
-                ". down .";
+        #currency-display { color: #FFD700; font-size: 1rem; display: flex; align-items: center; gap: 5px; }
+        .coin-icon { width: 16px; height: 16px; background: var(--gold); border-radius: 50%; display: inline-block; }
+
+        /* Character Grid */
+        .char-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
             gap: 10px;
-            z-index: 25;
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
         }
-
-        .control-btn {
-            width: 60px;
-            height: 60px;
-            background: rgba(255, 215, 0, 0.15);
-            border: 2px solid var(--gold);
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: var(--gold);
-            font-size: 1.5rem;
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
+        .char-item {
+            font-size: 2rem;
+            padding: 10px;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.2s;
+            background: rgba(255,255,255,0.05);
         }
-
-        .control-btn:active {
-            background: var(--gold);
-            color: #000;
-        }
-
-        #up { grid-area: up; }
-        #left { grid-area: left; }
-        #right { grid-area: right; }
-        #down { grid-area: down; }
-
-        /* Currency Display */
-        #currency-display {
-            color: #FFD700;
-            font-size: 1.1rem;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .coin-icon {
-            width: 18px;
-            height: 18px;
-            background: var(--gold);
-            border-radius: 50%;
-            display: inline-block;
-        }
+        .char-item.owned { border-color: rgba(255,215,0,0.3); }
+        .char-item.selected { border-color: var(--gold); background: rgba(255,215,0,0.2); }
+        .char-item.locked { opacity: 0.4; filter: grayscale(1); }
 
         /* Custom Menu Styles */
-        .custom-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 8px 0;
-        }
-        
-        input[type="color"] {
-            background: none;
-            border: 1px solid var(--gold);
-            height: 30px;
-            width: 50px;
-        }
+        .custom-row { display: flex; justify-content: space-between; align-items: center; margin: 8px 0; }
+        input[type="color"] { background: none; border: 1px solid var(--gold); height: 30px; width: 50px; }
 
         /* Death Wall Overlay */
         #death-wall {
@@ -205,8 +146,18 @@
             display: none;
             z-index: 21;
         }
-
         #timer-bar { height: 100%; background: #ff3333; width: 0%; }
+        
+        /* Swipe Instruction Hint */
+        #swipe-hint {
+            position: absolute;
+            bottom: 30px;
+            color: var(--gold);
+            opacity: 0.6;
+            font-size: 0.8rem;
+            display: none;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
@@ -215,7 +166,7 @@
     <div id="ui-layer">
         <div>
             <h1 id="ui-title">MAZE</h1>
-            <span id="level-display" style="font-size: 0.8rem; color: #aaa;"></span>
+            <span id="level-display" style="font-size: 0.7rem; color: #aaa;"></span>
         </div>
         <div style="display: flex; gap: 10px; align-items: center;">
             <div id="currency-display"><span class="coin-icon"></span> <span id="coin-count">0</span></div>
@@ -229,10 +180,19 @@
         <p>Master the colorful mazes and earn coins.</p>
         <button onclick="startRandom()" class="level-btn">Survival Mode (60s)</button>
         <button onclick="showLevels()" class="level-btn">Levels</button>
+        <button onclick="showCharacterShop()" class="level-btn">Change Character</button>
         <button onclick="showCustomMenu()" class="level-btn">Creator Studio</button>
         <div style="margin-top: 15px; font-size: 0.8rem; color: #777;">
-            Personal Best: <span id="best-time">--</span>s
+            Best: <span id="best-time">--</span>s | Coins: <span id="menu-coin-count">0</span>
         </div>
+    </div>
+
+    <!-- CHARACTER SHOP -->
+    <div id="shop-menu" class="menu-screen" style="display:none;">
+        <h2>Character Shop</h2>
+        <p>Unlocked: <span id="unlocked-count">0</span>/100+ | Cost: 50¢ each</p>
+        <div id="char-list" class="char-grid"></div>
+        <button class="level-btn" style="border-color: #888; color: #888; margin-top:20px;" onclick="showMainMenu()">Back</button>
     </div>
 
     <!-- LEVELS MENU -->
@@ -255,22 +215,14 @@
         </div>
         <div class="custom-row"><label>Wall:</label> <input type="color" id="c-wall" value="#FFD700"></div>
         <div class="custom-row"><label>Path:</label> <input type="color" id="c-path" value="#1a1500"></div>
-        <div class="custom-row"><label>Hero:</label> <input type="color" id="c-player" value="#FFFFFF"></div>
-        <div class="custom-row"><label>Exit:</label> <input type="color" id="c-goal" value="#FFA500"></div>
+        <div class="custom-row"><label>Goal:</label> <input type="color" id="c-goal" value="#FFA500"></div>
         <button class="level-btn" onclick="startCustom()">Test Creation</button>
         <button class="level-btn" style="border-color: #888; color: #888;" onclick="showMainMenu()">Back</button>
     </div>
 
     <!-- GAME CANVAS -->
     <canvas id="mazeCanvas" width="600" height="600"></canvas>
-
-    <!-- TOUCH CONTROLS -->
-    <div id="controls-wrapper">
-        <div id="up" class="control-btn" onmousedown="handleTouchMove('up')" ontouchstart="handleTouchMove('up')">▲</div>
-        <div id="left" class="control-btn" onmousedown="handleTouchMove('left')" ontouchstart="handleTouchMove('left')">◀</div>
-        <div id="right" class="control-btn" onmousedown="handleTouchMove('right')" ontouchstart="handleTouchMove('right')">▶</div>
-        <div id="down" class="control-btn" onmousedown="handleTouchMove('down')" ontouchstart="handleTouchMove('down')">▼</div>
-    </div>
+    <div id="swipe-hint">Swipe to move</div>
 
     <!-- OVERLAYS -->
     <div id="death-wall"></div>
@@ -299,6 +251,8 @@
         const loseScreen = document.getElementById('lose-screen');
         const levelDisplay = document.getElementById('level-display');
         const mainMenu = document.getElementById('main-menu');
+        const shopMenu = document.getElementById('shop-menu');
+        const charList = document.getElementById('char-list');
         const levelsMenu = document.getElementById('levels-menu');
         const customMenu = document.getElementById('custom-menu');
         const uiLayer = document.getElementById('ui-layer');
@@ -307,12 +261,18 @@
         const timerBar = document.getElementById('timer-bar');
         const timerContainer = document.getElementById('timer-bar-container');
         const coinDisplay = document.getElementById('coin-count');
+        const menuCoinDisplay = document.getElementById('menu-coin-count');
         const bestTimeDisplay = document.getElementById('best-time');
-        const controlsWrapper = document.getElementById('controls-wrapper');
+        const swipeHint = document.getElementById('swipe-hint');
 
-        // Logic State
-        let coins = 0;
-        let bestSurvivalTime = 0;
+        // Persistent State
+        let coins = parseInt(localStorage.getItem('mz_coins')) || 0;
+        let bestSurvivalTime = parseInt(localStorage.getItem('mz_best')) || 0;
+        let ownedChars = JSON.parse(localStorage.getItem('mz_owned')) || ['🚀'];
+        let selectedChar = localStorage.getItem('mz_current') || '🚀';
+
+        const EMOJIS = "🚀,⭐,🔥,💎,🤖,🐱,🐶,🦊,🦁,🐯,🐸,🐵,🐧,🐤,🦄,🦉,🐝,🦋,🐢,🐙,🐋,🦖,🐉,🌵,🌲,🌴,🍄,🍎,🍉,🍦,🍩,🍭,🍕,🍔,🍟,⚽,🏀,🎨,🎭,🎸,🎮,🛸,🚀,🛰️,🪐,🌓,🌋,🌀,🌈,☀️,⚡,❄️,🍄,🌻,🍀,🍁,🍒,🍓,🍍,🥥,🥑,🥨,🥯,🍣,🌮,🧁,🥧,🍭,🍫,🍿,🏀,⚽,🎾,🎱,🎳,♟️,🏹,🪁,🥊,🏂,🧗,🚴,🚣,🏰,⛩️,🗽,🗼,🏔️,🏜️,🌋,🛸,🛴,⛵,🚁,⚓,🧭,⏰,🔋,🧿,🔮,🧿,🧬,🧪,🔭,🌡️,🧱,🧲,💣,🛡️,🗝️,🎁,🎊,🎈,🎀,🪄,🧿".split(',');
+
         let cols, rows, w; 
         let grid = [];
         let player, goal;
@@ -324,41 +284,84 @@
         let themeWall, themePlayer, themeGoal, themePath;
 
         const THEMES = [
-            { wall: '#FFD700', player: '#FFFFFF', goal: '#FFA500', path: '#1a1500', name: "GOLDEN" },
-            { wall: '#00FFFF', player: '#FF00FF', goal: '#00FF00', path: '#001a1a', name: "CYBER" },
-            { wall: '#FF00FF', player: '#00FFFF', goal: '#FFFF00', path: '#1a001a', name: "NEON" },
-            { wall: '#00FF00', player: '#FFFFFF', goal: '#FF0000', path: '#001a00', name: "TOXIC" },
-            { wall: '#FF4500', player: '#00FFCC', goal: '#FFD700', path: '#1a0500', name: "LAVA" },
-            { wall: '#8A2BE2', player: '#00FF00', goal: '#FF1493', path: '#0d001a', name: "MAGIC" }
+            { wall: '#FFD700', goal: '#FFA500', path: '#1a1500', name: "GOLDEN" },
+            { wall: '#00FFFF', goal: '#00FF00', path: '#001a1a', name: "CYBER" },
+            { wall: '#FF00FF', goal: '#FFFF00', path: '#1a001a', name: "NEON" },
+            { wall: '#00FF00', goal: '#FF0000', path: '#001a00', name: "TOXIC" },
+            { wall: '#FF4500', goal: '#FFD700', path: '#1a0500', name: "LAVA" },
+            { wall: '#8A2BE2', goal: '#FF1493', path: '#0d001a', name: "MAGIC" }
         ];
+
+        function saveState() {
+            localStorage.setItem('mz_coins', coins);
+            localStorage.setItem('mz_best', bestSurvivalTime);
+            localStorage.setItem('mz_owned', JSON.stringify(ownedChars));
+            localStorage.setItem('mz_current', selectedChar);
+            coinDisplay.innerText = coins;
+            menuCoinDisplay.innerText = coins;
+            bestTimeDisplay.innerText = bestSurvivalTime;
+        }
 
         // --- NAVIGATION ---
         function hideAllScreens() {
-            [mainMenu, levelsMenu, customMenu, winScreen, loseScreen, canvas, uiLayer, deathWallOverlay, timerContainer, controlsWrapper].forEach(el => el.style.display = 'none');
+            [mainMenu, levelsMenu, customMenu, shopMenu, winScreen, loseScreen, canvas, uiLayer, deathWallOverlay, timerContainer, swipeHint].forEach(el => el.style.display = 'none');
         }
 
         function showMainMenu() {
             gameMode = 'MENU';
             hideAllScreens();
             mainMenu.style.display = 'block';
-            coinDisplay.innerText = coins;
+            saveState();
         }
 
         function showLevels() { hideAllScreens(); levelsMenu.style.display = 'block'; }
         function showCustomMenu() { hideAllScreens(); customMenu.style.display = 'block'; }
+        
+        function showCharacterShop() {
+            hideAllScreens();
+            shopMenu.style.display = 'block';
+            renderShop();
+        }
+
+        function renderShop() {
+            charList.innerHTML = '';
+            EMOJIS.forEach(emoji => {
+                const isOwned = ownedChars.includes(emoji);
+                const isSelected = selectedChar === emoji;
+                const div = document.createElement('div');
+                div.className = `char-item ${isOwned ? 'owned' : 'locked'} ${isSelected ? 'selected' : ''}`;
+                div.innerText = emoji;
+                div.onclick = () => {
+                    if (isOwned) {
+                        selectedChar = emoji;
+                        saveState();
+                        renderShop();
+                    } else if (coins >= 50) {
+                        coins -= 50;
+                        ownedChars.push(emoji);
+                        selectedChar = emoji;
+                        saveState();
+                        renderShop();
+                    }
+                };
+                charList.appendChild(div);
+            });
+            document.getElementById('unlocked-count').innerText = ownedChars.length;
+        }
+
         function updateCustomSize(val) { document.getElementById('size-val').innerText = val; }
 
         // --- THEMES ---
         function applyDefaultTheme() {
             let t = THEMES[Math.floor(Math.random() * THEMES.length)];
-            themeWall = t.wall; themePlayer = t.player; themeGoal = t.goal; themePath = t.path;
+            themeWall = t.wall; themeGoal = t.goal; themePath = t.path;
             uiTitle.innerText = t.name + " MAZE"; uiTitle.style.color = themeWall;
             canvas.style.borderColor = themeWall;
         }
 
         function applyCustomTheme() {
             themeWall = document.getElementById('c-wall').value; themePath = document.getElementById('c-path').value;
-            themePlayer = document.getElementById('c-player').value; themeGoal = document.getElementById('c-goal').value;
+            themeGoal = document.getElementById('c-goal').value;
             uiTitle.innerText = "CUSTOM MAZE"; uiTitle.style.color = themeWall;
             canvas.style.borderColor = themeWall;
         }
@@ -386,7 +389,7 @@
         function setupGame(c, r, titleText) {
             hideAllScreens();
             canvas.style.display = 'block'; uiLayer.style.display = 'flex';
-            controlsWrapper.style.display = 'grid'; // Show touch controls
+            swipeHint.style.display = 'block';
             levelDisplay.innerText = titleText; coinDisplay.innerText = coins;
             cols = c; rows = r; w = canvas.width / cols;
             grid = [];
@@ -451,11 +454,16 @@
             ctx.stroke();
             let pad = w * 0.2;
             ctx.fillStyle = themeGoal; ctx.fillRect(goal.c * w + pad, goal.r * w + pad, w - pad * 2, w - pad * 2);
-            ctx.fillStyle = themePlayer; ctx.fillRect(player.c * w + pad, player.r * w + pad, w - pad * 2, w - pad * 2);
+            
+            // Draw Emoji Player
+            ctx.font = `${w * 0.8}px sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(selectedChar, player.c * w + w/2, player.r * w + w/2 + 2);
         }
 
         // --- MOVE LOGIC ---
-        function handleTouchMove(dir) {
+        function handleMove(dir) {
             if (!['RANDOM', 'CAMPAIGN', 'CUSTOM'].includes(gameMode)) return;
             let currentCell = grid[index(player.c, player.r)];
             if (dir === 'up' && !currentCell.walls[0]) player.r--;
@@ -465,23 +473,24 @@
             checkWin();
         }
 
-        // SWIPE DETECTION
+        // GESTURE DETECTION (Upgraded Swipe)
         let touchStartX = 0, touchStartY = 0;
-        canvas.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY; }, false);
-        canvas.addEventListener('touchend', e => {
+        window.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY; }, {passive: false});
+        window.addEventListener('touchend', e => {
             let diffX = e.changedTouches[0].clientX - touchStartX;
             let diffY = e.changedTouches[0].clientY - touchStartY;
+            // Threshold for movement
             if (Math.abs(diffX) > 20 || Math.abs(diffY) > 20) {
-                if (Math.abs(diffX) > Math.abs(diffY)) handleTouchMove(diffX > 0 ? 'right' : 'left');
-                else handleTouchMove(diffY > 0 ? 'down' : 'up');
+                if (Math.abs(diffX) > Math.abs(diffY)) handleMove(diffX > 0 ? 'right' : 'left');
+                else handleMove(diffY > 0 ? 'down' : 'up');
             }
         }, false);
 
         window.addEventListener('keydown', e => {
-            if (e.key === 'ArrowUp' || e.key === 'w') handleTouchMove('up');
-            if (e.key === 'ArrowRight' || e.key === 'd') handleTouchMove('right');
-            if (e.key === 'ArrowDown' || e.key === 's') handleTouchMove('down');
-            if (e.key === 'ArrowLeft' || e.key === 'a') handleTouchMove('left');
+            if (e.key === 'ArrowUp' || e.key === 'w') handleMove('up');
+            if (e.key === 'ArrowRight' || e.key === 'd') handleMove('right');
+            if (e.key === 'ArrowDown' || e.key === 's') handleMove('down');
+            if (e.key === 'ArrowLeft' || e.key === 'a') handleMove('left');
             if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) e.preventDefault();
         });
 
@@ -492,9 +501,9 @@
                 if (gameMode === 'RANDOM') {
                     let sec = Math.floor((Date.now() - startTime)/1000);
                     if (sec > bestSurvivalTime) bestSurvivalTime = sec;
-                    bestTimeDisplay.innerText = bestSurvivalTime;
                 }
                 coins += reward; hideAllScreens();
+                saveState();
                 winScreen.style.display = 'block'; document.getElementById('reward-amt').innerText = reward;
                 document.getElementById('win-buttons').innerHTML = (gameMode === 'CAMPAIGN' && currentLevel < 5) ? `<button onclick="startLevel(${currentLevel+1})">Next Level</button>` : `<button onclick="showMainMenu()">Menu</button>`;
                 gameMode = 'WON';
@@ -508,6 +517,8 @@
             }
         }
 
+        // Initialize HUD
+        saveState();
         requestAnimationFrame(gameLoop);
     </script>
 </body>

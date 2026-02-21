@@ -9,6 +9,7 @@
             --gold: #FFD700;
             --bg: #0f0d05;
             --panel: rgba(15, 12, 0, 0.95);
+            --premium: #ff00ff;
         }
 
         body {
@@ -113,7 +114,8 @@
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
             gap: 10px;
-            margin-top: 15px;
+            margin-top: 10px;
+            margin-bottom: 20px;
             padding: 10px;
             background: rgba(0,0,0,0.3);
             border-radius: 10px;
@@ -133,6 +135,20 @@
         .char-item.owned { border-color: rgba(255,215,0,0.3); }
         .char-item.selected { border-color: var(--gold); background: rgba(255,215,0,0.2); transform: scale(1.1); }
         .char-item.locked { opacity: 0.4; filter: grayscale(1); }
+        .char-item.is-premium.owned { border-color: rgba(255, 0, 255, 0.5); }
+        .char-item.is-premium.selected { border-color: var(--premium); background: rgba(255, 0, 255, 0.2); }
+
+        .shop-section-title {
+            color: var(--gold);
+            font-size: 1rem;
+            font-weight: bold;
+            text-align: left;
+            margin-left: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .premium-text { color: var(--premium); text-shadow: 0 0 5px var(--premium); }
 
         /* Custom Menu Styles */
         .custom-row { display: flex; justify-content: space-between; align-items: center; margin: 8px 0; }
@@ -187,7 +203,6 @@
                 <button class="small-btn" style="margin:0; padding: 4px 10px; font-size: 0.7rem;" onclick="showMainMenu()">Exit</button>
             </div>
         </div>
-        <!-- Moved Timer Bar Here to avoid empty rectangle at bottom -->
         <div id="timer-bar-container"><div id="timer-bar"></div></div>
     </div>
 
@@ -197,7 +212,7 @@
         <p>Master the colorful mazes and earn coins.</p>
         <button onclick="startRandom()" class="level-btn">Survival Mode (60s)</button>
         <button onclick="showLevels()" class="level-btn">Levels</button>
-        <button onclick="showCharacterShop()" class="level-btn">Change Character</button>
+        <button onclick="showCharacterShop()" class="level-btn">Character Shop</button>
         <button onclick="showCustomMenu()" class="level-btn">Creator Studio</button>
         <div style="margin-top: 15px; font-size: 0.8rem; color: #777;">
             Best Survival: <span id="best-time">--</span>s | Coins: <span id="menu-coin-count">0</span>
@@ -207,9 +222,14 @@
     <!-- CHARACTER SHOP -->
     <div id="shop-menu" class="menu-screen" style="display:none;">
         <h2>Character Shop</h2>
-        <p>Unlocked: <span id="unlocked-count">0</span>/150+ | Price: 50¢</p>
-        <div id="char-list" class="char-grid"></div>
-        <button class="level-btn" style="border-color: #888; color: #888; margin-top:20px;" onclick="showMainMenu()">Back</button>
+        
+        <div class="shop-section-title">Standard <span>50¢</span></div>
+        <div id="char-list-standard" class="char-grid"></div>
+        
+        <div class="shop-section-title premium-text">Premium <span>200¢</span></div>
+        <div id="char-list-premium" class="char-grid"></div>
+
+        <button class="level-btn" style="border-color: #888; color: #888; margin-top:10px;" onclick="showMainMenu()">Back</button>
     </div>
 
     <!-- LEVELS MENU -->
@@ -277,29 +297,23 @@
             osc.stop(startTime + duration);
         }
 
-        // Special sounds based on emoji category
         function playEmojiSound(emoji) {
             const now = audioCtx.currentTime;
-            
-            // Unicorns & Magic (Sparkle sound)
-            if ("🦄🌈✨🌟🔮🪄🧚🧜🎠".includes(emoji)) {
+            if ("🦄🌈✨🌟🔮🪄🧚🧜🎠💎💠🔱⚜️🏵️💮".includes(emoji)) {
                 playTone(1200, 'sine', 0.05, now, 0.05);
                 playTone(1500, 'sine', 0.05, now + 0.02, 0.03);
             } 
-            // Animals (Neighs or chirps)
-            else if ("🐱🐶🦊🐯🐸🐵🐧🐤🦉🐝🦋🐢🐙🐋🦖🦋🐌🐞🦒🦓🦘🐘🐆🦁🐉".includes(emoji)) {
-                if (emoji === "🦄") { // Neigh-like sound for horses/unicorns
+            else if ("🐱🐶🦊🐯🐸🐵🐧🐤🦉🐝🦋🐢🐙🐋🦖🦋🐌🐞🦒🦓🦘🐘🐆🦁🐉🐲🦜🦢🦚".includes(emoji)) {
+                if (emoji === "🦄") {
                     playTone(600, 'sawtooth', 0.1, now, 0.05);
                     playTone(800, 'sawtooth', 0.05, now + 0.05, 0.05);
                 } else {
                     playTone(400, 'sine', 0.08, now, 0.05);
                 }
             }
-            // Space & Tech (Sci-fi blips)
-            else if ("🚀🛸🛰️🪐🌓☄️🌋🌀⚡❄️👾🤖🖥️🕹️💾📡".includes(emoji)) {
+            else if ("🚀🛸🛰️🪐🌓☄️🌋🌀⚡❄️👾🤖🖥️🕹️💾📡🧿".includes(emoji)) {
                 playTone(1000, 'square', 0.03, now, 0.04);
             }
-            // Default Move Sound
             else {
                 playTone(800, 'sine', 0.05, now, 0.05);
             }
@@ -315,7 +329,6 @@
 
         function playLoseSound() {
             const now = audioCtx.currentTime;
-            // The "Ta-ta-ta-taaaaa" falling effect
             playTone(200, 'sawtooth', 0.2, now, 0.1);
             playTone(180, 'sawtooth', 0.2, now + 0.15, 0.1);
             playTone(160, 'sawtooth', 0.2, now + 0.3, 0.1);
@@ -334,7 +347,8 @@
         const levelDisplay = document.getElementById('level-display');
         const mainMenu = document.getElementById('main-menu');
         const shopMenu = document.getElementById('shop-menu');
-        const charList = document.getElementById('char-list');
+        const standardCharList = document.getElementById('char-list-standard');
+        const premiumCharList = document.getElementById('char-list-premium');
         const levelsMenu = document.getElementById('levels-menu');
         const customMenu = document.getElementById('custom-menu');
         const uiLayer = document.getElementById('ui-layer');
@@ -353,19 +367,24 @@
         let ownedChars = JSON.parse(localStorage.getItem('mz_owned')) || ['🚀'];
         let selectedChar = localStorage.getItem('mz_current') || '🚀';
 
-        const EMOJIS = [
-            "🦄","🦄","🌈","✨","🌟","💖","🍬","🍭","🧁","🎀","💎","🔮","🪄","🧚","🧜","🐉","🦁",
-            "🐱","🐶","🦊","🐯","🐸","🐵","🐧","🐤","🦉","🐝","🦋","🐢","🐙","🐋","🦖","🦋","🐌","🐞","🦒","🦓","🦘","🐘","🐆",
-            "🚀","🛸","🛰️","🪐","🌓","☄️","🌋","🌀","⚡","❄️","👾","🤖","🖥️","🕹️","💾","📡",
-            "🍄","🌻","🍀","🍁","🍒","🍓","🍍","🥥","🥑","🥨","🥯","🍣","🌮","🍰","🥧","🍩","🍕","🍔","🍟","🍿","🍦",
-            "⚽","🏀","🎾","🎱","🎳","♟️","🏹","🪁","🥊","🏂","🧗","🚴","🚣","🎸","🎨","🎭","🎮","📸","🔭","🛹",
-            "🏰","⛩️","🗽","🗼","🏔️","🏜️","⛵","🚁","⚓","🧭","⏰","🔋","🧿","🧬","🧪","🧱","🧲","💣","🛡️","🗝️","🎁","🎊","🎈"
+        const STANDARD_EMOJIS = [
+            "🚀","🛸","🛰️","🪐","🌓","☄️","🌋","🌀","⚡","❄️","👾","🤖",
+            "🐱","🐶","🦊","🐯","🐸","🐵","🐧","🐤","🦉","🐝","🦋","🐢",
+            "🍄","🌻","🍀","🍁","🍒","🍓","🍍","🥥","🥑","🥨","🥯","🍣",
+            "⚽","🏀","🎾","🎱","🎳","♟️","🏹","🪁","🥊","🏂","🧗","🚴",
+            "🏰","⛩️","🗽","🗼","🏔️","🏜️","🧭","⏰","🔋","🧿","🧬","🧪","🧱","🧲","💣","🛡️","🗝️","🎁","🎊","🎈"
+        ];
+
+        const PREMIUM_EMOJIS = [
+            "💎","👑","🔱","⚜️","💠","🌀","🏮","🏺","🧿","🔮","🧬","🧪","🪐","🛰️","🛸",
+            "🦖","🐉","🐲","🦄","🦚","🦜","🦢","🦋","🏵️","💮"
         ];
 
         let cols, rows, w; 
         let grid = [];
         let player, goal;
         let gameMode = 'MENU'; 
+        let survivalDifficulty = 'easy'; // New state for mixed survival
         let currentLevel = 1;
         let startTime = 0;
         let deathWallScreenX = 0;
@@ -413,32 +432,37 @@
             renderShop();
         }
 
+        function createShopItem(emoji, cost, container, isPremium = false) {
+            const isOwned = ownedChars.includes(emoji);
+            const isSelected = selectedChar === emoji;
+            const div = document.createElement('div');
+            div.className = `char-item ${isOwned ? 'owned' : 'locked'} ${isSelected ? 'selected' : ''} ${isPremium ? 'is-premium' : ''}`;
+            div.innerText = emoji;
+            div.onclick = () => {
+                if (isOwned) {
+                    selectedChar = emoji;
+                    playClickSound();
+                    saveState();
+                    renderShop();
+                } else if (coins >= cost) {
+                    coins -= cost;
+                    ownedChars.push(emoji);
+                    selectedChar = emoji;
+                    playClickSound();
+                    saveState();
+                    renderShop();
+                }
+            };
+            container.appendChild(div);
+        }
+
         function renderShop() {
-            charList.innerHTML = '';
-            const uniqueEmojis = [...new Set(EMOJIS)];
-            uniqueEmojis.forEach(emoji => {
-                const isOwned = ownedChars.includes(emoji);
-                const isSelected = selectedChar === emoji;
-                const div = document.createElement('div');
-                div.className = `char-item ${isOwned ? 'owned' : 'locked'} ${isSelected ? 'selected' : ''}`;
-                div.innerText = emoji;
-                div.onclick = () => {
-                    if (isOwned) {
-                        selectedChar = emoji;
-                        playClickSound();
-                        saveState();
-                        renderShop();
-                    } else if (coins >= 50) {
-                        coins -= 50;
-                        ownedChars.push(emoji);
-                        selectedChar = emoji;
-                        playClickSound();
-                        saveState();
-                        renderShop();
-                    }
-                };
-                charList.appendChild(div);
-            });
+            standardCharList.innerHTML = '';
+            premiumCharList.innerHTML = '';
+            
+            STANDARD_EMOJIS.forEach(emoji => createShopItem(emoji, 50, standardCharList));
+            PREMIUM_EMOJIS.forEach(emoji => createShopItem(emoji, 200, premiumCharList, true));
+            
             document.getElementById('unlocked-count').innerText = ownedChars.length;
         }
 
@@ -464,7 +488,14 @@
             audioCtx.resume();
             gameMode = 'RANDOM'; applyDefaultTheme();
             startTime = Date.now(); deathWallScreenX = 0;
-            setupGame(Math.floor(Math.random() * 5) + 12, 12, "Survival");
+            
+            // 50/50 Chance for Easy or Hard Survival
+            survivalDifficulty = Math.random() > 0.5 ? 'hard' : 'easy';
+            let randomSize = survivalDifficulty === 'easy' ? 
+                (Math.floor(Math.random() * 4) + 10) : // 10-13
+                (Math.floor(Math.random() * 6) + 20); // 20-25
+            
+            setupGame(randomSize, randomSize, `Survival: ${survivalDifficulty.toUpperCase()}`);
             deathWallOverlay.style.display = 'block'; 
             timerContainer.style.display = 'block';
         }
@@ -602,11 +633,16 @@
         function checkWin() {
             if (player.c === goal.c && player.r === goal.r) {
                 playWinSound();
-                let reward = gameMode === 'RANDOM' ? 50 : (gameMode === 'CAMPAIGN' ? [0, 5, 15, 30, 60, 150][currentLevel] : 0);
+                let reward = 0;
+                
                 if (gameMode === 'RANDOM') {
+                    reward = survivalDifficulty === 'hard' ? 50 : 25;
                     let sec = Math.floor((Date.now() - startTime)/1000);
                     if (sec > bestSurvivalTime) bestSurvivalTime = sec;
+                } else if (gameMode === 'CAMPAIGN') {
+                    reward = [0, 5, 15, 30, 60, 150][currentLevel];
                 }
+                
                 coins += reward; hideAllScreens();
                 saveState();
                 winScreen.style.display = 'block'; document.getElementById('reward-amt').innerText = reward;
@@ -623,7 +659,6 @@
             }
         }
 
-        // Initial setup
         saveState();
         requestAnimationFrame(gameLoop);
     </script>

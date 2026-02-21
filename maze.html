@@ -61,9 +61,16 @@
             width: 95%;
             max-width: 800px;
             display: none; 
+            flex-direction: column;
+            gap: 5px;
+            z-index: 10;
+        }
+
+        .hud-main {
+            display: flex;
             justify-content: space-between;
             align-items: center;
-            z-index: 10;
+            width: 100%;
         }
 
         #ui-title { font-size: 1.1rem; margin: 0; color: var(--gold); }
@@ -143,13 +150,15 @@
         }
 
         #timer-bar-container {
-            position: fixed;
-            bottom: 0; left: 0; width: 100%; height: 6px;
+            width: 100%;
+            height: 6px;
             background: rgba(255,255,255,0.1);
             display: none;
-            z-index: 21;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 5px;
         }
-        #timer-bar { height: 100%; background: #ff3333; width: 0%; }
+        #timer-bar { height: 100%; background: #ff3333; width: 0%; border-radius: 3px; }
         
         #swipe-hint {
             position: absolute;
@@ -168,14 +177,18 @@
 
     <!-- TOP HUD -->
     <div id="ui-layer">
-        <div>
-            <h1 id="ui-title">MAZE</h1>
-            <span id="level-display" style="font-size: 0.7rem; color: #aaa;"></span>
+        <div class="hud-main">
+            <div>
+                <h1 id="ui-title">MAZE</h1>
+                <span id="level-display" style="font-size: 0.7rem; color: #aaa;"></span>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <div id="currency-display"><span class="coin-icon"></span> <span id="coin-count">0</span></div>
+                <button class="small-btn" style="margin:0; padding: 4px 10px; font-size: 0.7rem;" onclick="showMainMenu()">Exit</button>
+            </div>
         </div>
-        <div style="display: flex; gap: 10px; align-items: center;">
-            <div id="currency-display"><span class="coin-icon"></span> <span id="coin-count">0</span></div>
-            <button class="small-btn" style="margin:0; padding: 4px 10px; font-size: 0.7rem;" onclick="showMainMenu()">Exit</button>
-        </div>
+        <!-- Moved Timer Bar Here to avoid empty rectangle at bottom -->
+        <div id="timer-bar-container"><div id="timer-bar"></div></div>
     </div>
 
     <!-- MAIN MENU -->
@@ -230,7 +243,6 @@
 
     <!-- OVERLAYS -->
     <div id="death-wall"></div>
-    <div id="timer-bar-container"><div id="timer-bar"></div></div>
 
     <div id="win-screen" class="menu-screen" style="display:none;">
         <h2 id="win-header">ESCAPED!</h2>
@@ -265,8 +277,32 @@
             osc.stop(startTime + duration);
         }
 
-        function playMoveSound() {
-            playTone(800, 'sine', 0.05, audioCtx.currentTime, 0.05);
+        // Special sounds based on emoji category
+        function playEmojiSound(emoji) {
+            const now = audioCtx.currentTime;
+            
+            // Unicorns & Magic (Sparkle sound)
+            if ("🦄🌈✨🌟🔮🪄🧚🧜🎠".includes(emoji)) {
+                playTone(1200, 'sine', 0.05, now, 0.05);
+                playTone(1500, 'sine', 0.05, now + 0.02, 0.03);
+            } 
+            // Animals (Neighs or chirps)
+            else if ("🐱🐶🦊🐯🐸🐵🐧🐤🦉🐝🦋🐢🐙🐋🦖🦋🐌🐞🦒🦓🦘🐘🐆🦁🐉".includes(emoji)) {
+                if (emoji === "🦄") { // Neigh-like sound for horses/unicorns
+                    playTone(600, 'sawtooth', 0.1, now, 0.05);
+                    playTone(800, 'sawtooth', 0.05, now + 0.05, 0.05);
+                } else {
+                    playTone(400, 'sine', 0.08, now, 0.05);
+                }
+            }
+            // Space & Tech (Sci-fi blips)
+            else if ("🚀🛸🛰️🪐🌓☄️🌋🌀⚡❄️👾🤖🖥️🕹️💾📡".includes(emoji)) {
+                playTone(1000, 'square', 0.03, now, 0.04);
+            }
+            // Default Move Sound
+            else {
+                playTone(800, 'sine', 0.05, now, 0.05);
+            }
         }
 
         function playWinSound() {
@@ -317,20 +353,13 @@
         let ownedChars = JSON.parse(localStorage.getItem('mz_owned')) || ['🚀'];
         let selectedChar = localStorage.getItem('mz_current') || '🚀';
 
-        // Expanded Emoji List (150+ items including heavy Unicorn focus)
         const EMOJIS = [
-            // Unicorns & Magic
-            "🦄","🦄","🌈","🎠","✨","🌟","💖","🍬","🍭","🧁","🎀","💎","🔮","🪄","🧚","🧜","🐉","🦁",
-            // Animals
-            "🐱","🐶","🦊","🐯","🐸","🐵","🐧","🐤","🦉","🐝","🦋","🐢","🐙","🐋","🦖","🦖","🦖","🦋","🐌","🐞","🐜","🦒","🦓","🦘","🐘","🐆",
-            // Space & Tech
+            "🦄","🦄","🌈","✨","🌟","💖","🍬","🍭","🧁","🎀","💎","🔮","🪄","🧚","🧜","🐉","🦁",
+            "🐱","🐶","🦊","🐯","🐸","🐵","🐧","🐤","🦉","🐝","🦋","🐢","🐙","🐋","🦖","🦋","🐌","🐞","🦒","🦓","🦘","🐘","🐆",
             "🚀","🛸","🛰️","🪐","🌓","☄️","🌋","🌀","⚡","❄️","👾","🤖","🖥️","🕹️","💾","📡",
-            // Nature & Food
             "🍄","🌻","🍀","🍁","🍒","🍓","🍍","🥥","🥑","🥨","🥯","🍣","🌮","🍰","🥧","🍩","🍕","🍔","🍟","🍿","🍦",
-            // Sports & Hobbies
             "⚽","🏀","🎾","🎱","🎳","♟️","🏹","🪁","🥊","🏂","🧗","🚴","🚣","🎸","🎨","🎭","🎮","📸","🔭","🛹",
-            // Objects & Places
-            "🏰","⛩️","🗽","🗼","🏔️","🏜️","🌋","⛵","🚁","⚓","🧭","⏰","🔋","🧿","🧬","🧪","🧱","🧲","💣","🛡️","🗝️","🎁","🎊","🎈"
+            "🏰","⛩️","🗽","🗼","🏔️","🏜️","⛵","🚁","⚓","🧭","⏰","🔋","🧿","🧬","🧪","🧱","🧲","💣","🛡️","🗝️","🎁","🎊","🎈"
         ];
 
         let cols, rows, w; 
@@ -386,7 +415,6 @@
 
         function renderShop() {
             charList.innerHTML = '';
-            // Remove duplicates from display
             const uniqueEmojis = [...new Set(EMOJIS)];
             uniqueEmojis.forEach(emoji => {
                 const isOwned = ownedChars.includes(emoji);
@@ -437,7 +465,8 @@
             gameMode = 'RANDOM'; applyDefaultTheme();
             startTime = Date.now(); deathWallScreenX = 0;
             setupGame(Math.floor(Math.random() * 5) + 12, 12, "Survival");
-            deathWallOverlay.style.display = 'block'; timerContainer.style.display = 'block';
+            deathWallOverlay.style.display = 'block'; 
+            timerContainer.style.display = 'block';
         }
 
         function startLevel(lvl) {
@@ -541,7 +570,7 @@
             if (dir === 'left' && !currentCell.walls[3]) { player.c--; moved = true; }
             
             if (moved) {
-                playMoveSound();
+                playEmojiSound(selectedChar);
                 checkWin();
             }
         }

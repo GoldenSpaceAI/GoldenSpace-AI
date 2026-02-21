@@ -99,7 +99,7 @@
         .level-btn { display: block; width: 90%; margin: 8px auto; }
 
         #currency-display { color: #FFD700; font-size: 1rem; display: flex; align-items: center; gap: 5px; }
-        .coin-icon { width: 16px; height: 16px; background: var(--gold); border-radius: 50%; display: inline-block; }
+        .coin-icon { width: 16px; height: 16px; background: var(--gold); border-radius: 50%; display: inline-block; box-shadow: 0 0 10px var(--gold);}
 
         /* Character Grid */
         .char-grid {
@@ -119,14 +119,17 @@
             cursor: pointer;
             transition: 0.2s;
             background: rgba(255,255,255,0.05);
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
         .char-item.owned { border-color: rgba(255,215,0,0.3); }
-        .char-item.selected { border-color: var(--gold); background: rgba(255,215,0,0.2); }
+        .char-item.selected { border-color: var(--gold); background: rgba(255,215,0,0.2); transform: scale(1.1); }
         .char-item.locked { opacity: 0.4; filter: grayscale(1); }
 
         /* Custom Menu Styles */
         .custom-row { display: flex; justify-content: space-between; align-items: center; margin: 8px 0; }
-        input[type="color"] { background: none; border: 1px solid var(--gold); height: 30px; width: 50px; }
+        input[type="color"] { background: none; border: 1px solid var(--gold); height: 30px; width: 50px; cursor: pointer;}
 
         /* Death Wall Overlay */
         #death-wall {
@@ -148,7 +151,6 @@
         }
         #timer-bar { height: 100%; background: #ff3333; width: 0%; }
         
-        /* Swipe Instruction Hint */
         #swipe-hint {
             position: absolute;
             bottom: 30px;
@@ -157,7 +159,9 @@
             font-size: 0.8rem;
             display: none;
             pointer-events: none;
+            animation: pulse 2s infinite;
         }
+        @keyframes pulse { 0% { opacity: 0.3; } 50% { opacity: 0.8; } 100% { opacity: 0.3; } }
     </style>
 </head>
 <body>
@@ -183,14 +187,14 @@
         <button onclick="showCharacterShop()" class="level-btn">Change Character</button>
         <button onclick="showCustomMenu()" class="level-btn">Creator Studio</button>
         <div style="margin-top: 15px; font-size: 0.8rem; color: #777;">
-            Best: <span id="best-time">--</span>s | Coins: <span id="menu-coin-count">0</span>
+            Best Survival: <span id="best-time">--</span>s | Coins: <span id="menu-coin-count">0</span>
         </div>
     </div>
 
     <!-- CHARACTER SHOP -->
     <div id="shop-menu" class="menu-screen" style="display:none;">
         <h2>Character Shop</h2>
-        <p>Unlocked: <span id="unlocked-count">0</span>/100+ | Cost: 50¢ each</p>
+        <p>Unlocked: <span id="unlocked-count">0</span>/150+ | Price: 50¢</p>
         <div id="char-list" class="char-grid"></div>
         <button class="level-btn" style="border-color: #888; color: #888; margin-top:20px;" onclick="showMainMenu()">Back</button>
     </div>
@@ -222,7 +226,7 @@
 
     <!-- GAME CANVAS -->
     <canvas id="mazeCanvas" width="600" height="600"></canvas>
-    <div id="swipe-hint">Swipe to move</div>
+    <div id="swipe-hint">Swipe Screen to Move</div>
 
     <!-- OVERLAYS -->
     <div id="death-wall"></div>
@@ -238,13 +242,55 @@
     </div>
 
     <div id="lose-screen" class="menu-screen" style="display:none; border-color: #ff0000;">
-        <h2 style="color: #ff0000;">TIME'S UP</h2>
-        <p>The crushing wall caught you.</p>
+        <h2 style="color: #ff0000;">CONSUMED</h2>
+        <p>The wall caught up to you.</p>
         <button onclick="startRandom()" style="border-color: #ff0000; color: #ff0000;">Try Again</button>
         <button style="border-color: #888; color: #888;" onclick="showMainMenu()">Main Menu</button>
     </div>
 
     <script>
+        // --- AUDIO ENGINE ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playTone(freq, type, duration, startTime, volume = 0.1) {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, startTime);
+            gain.gain.setValueAtTime(volume, startTime);
+            gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(startTime);
+            osc.stop(startTime + duration);
+        }
+
+        function playMoveSound() {
+            playTone(800, 'sine', 0.05, audioCtx.currentTime, 0.05);
+        }
+
+        function playWinSound() {
+            const now = audioCtx.currentTime;
+            playTone(400, 'square', 0.2, now);
+            playTone(500, 'square', 0.2, now + 0.1);
+            playTone(600, 'square', 0.2, now + 0.2);
+            playTone(800, 'square', 0.5, now + 0.3);
+        }
+
+        function playLoseSound() {
+            const now = audioCtx.currentTime;
+            // The "Ta-ta-ta-taaaaa" falling effect
+            playTone(200, 'sawtooth', 0.2, now, 0.1);
+            playTone(180, 'sawtooth', 0.2, now + 0.15, 0.1);
+            playTone(160, 'sawtooth', 0.2, now + 0.3, 0.1);
+            playTone(120, 'sawtooth', 0.6, now + 0.45, 0.15);
+        }
+
+        function playClickSound() {
+            playTone(300, 'sine', 0.05, audioCtx.currentTime, 0.05);
+        }
+
+        // --- GAME LOGIC ---
         const canvas = document.getElementById('mazeCanvas');
         const ctx = canvas.getContext('2d');
         const winScreen = document.getElementById('win-screen');
@@ -271,7 +317,21 @@
         let ownedChars = JSON.parse(localStorage.getItem('mz_owned')) || ['🚀'];
         let selectedChar = localStorage.getItem('mz_current') || '🚀';
 
-        const EMOJIS = "🚀,⭐,🔥,💎,🤖,🐱,🐶,🦊,🦁,🐯,🐸,🐵,🐧,🐤,🦄,🦉,🐝,🦋,🐢,🐙,🐋,🦖,🐉,🌵,🌲,🌴,🍄,🍎,🍉,🍦,🍩,🍭,🍕,🍔,🍟,⚽,🏀,🎨,🎭,🎸,🎮,🛸,🚀,🛰️,🪐,🌓,🌋,🌀,🌈,☀️,⚡,❄️,🍄,🌻,🍀,🍁,🍒,🍓,🍍,🥥,🥑,🥨,🥯,🍣,🌮,🧁,🥧,🍭,🍫,🍿,🏀,⚽,🎾,🎱,🎳,♟️,🏹,🪁,🥊,🏂,🧗,🚴,🚣,🏰,⛩️,🗽,🗼,🏔️,🏜️,🌋,🛸,🛴,⛵,🚁,⚓,🧭,⏰,🔋,🧿,🔮,🧿,🧬,🧪,🔭,🌡️,🧱,🧲,💣,🛡️,🗝️,🎁,🎊,🎈,🎀,🪄,🧿".split(',');
+        // Expanded Emoji List (150+ items including heavy Unicorn focus)
+        const EMOJIS = [
+            // Unicorns & Magic
+            "🦄","🦄","🌈","🎠","✨","🌟","💖","🍬","🍭","🧁","🎀","💎","🔮","🪄","🧚","🧜","🐉","🦁",
+            // Animals
+            "🐱","🐶","🦊","🐯","🐸","🐵","🐧","🐤","🦉","🐝","🦋","🐢","🐙","🐋","🦖","🦖","🦖","🦋","🐌","🐞","🐜","🦒","🦓","🦘","🐘","🐆",
+            // Space & Tech
+            "🚀","🛸","🛰️","🪐","🌓","☄️","🌋","🌀","⚡","❄️","👾","🤖","🖥️","🕹️","💾","📡",
+            // Nature & Food
+            "🍄","🌻","🍀","🍁","🍒","🍓","🍍","🥥","🥑","🥨","🥯","🍣","🌮","🍰","🥧","🍩","🍕","🍔","🍟","🍿","🍦",
+            // Sports & Hobbies
+            "⚽","🏀","🎾","🎱","🎳","♟️","🏹","🪁","🥊","🏂","🧗","🚴","🚣","🎸","🎨","🎭","🎮","📸","🔭","🛹",
+            // Objects & Places
+            "🏰","⛩️","🗽","🗼","🏔️","🏜️","🌋","⛵","🚁","⚓","🧭","⏰","🔋","🧿","🧬","🧪","🧱","🧲","💣","🛡️","🗝️","🎁","🎊","🎈"
+        ];
 
         let cols, rows, w; 
         let grid = [];
@@ -314,10 +374,11 @@
             saveState();
         }
 
-        function showLevels() { hideAllScreens(); levelsMenu.style.display = 'block'; }
-        function showCustomMenu() { hideAllScreens(); customMenu.style.display = 'block'; }
+        function showLevels() { playClickSound(); hideAllScreens(); levelsMenu.style.display = 'block'; }
+        function showCustomMenu() { playClickSound(); hideAllScreens(); customMenu.style.display = 'block'; }
         
         function showCharacterShop() {
+            playClickSound();
             hideAllScreens();
             shopMenu.style.display = 'block';
             renderShop();
@@ -325,7 +386,9 @@
 
         function renderShop() {
             charList.innerHTML = '';
-            EMOJIS.forEach(emoji => {
+            // Remove duplicates from display
+            const uniqueEmojis = [...new Set(EMOJIS)];
+            uniqueEmojis.forEach(emoji => {
                 const isOwned = ownedChars.includes(emoji);
                 const isSelected = selectedChar === emoji;
                 const div = document.createElement('div');
@@ -334,12 +397,14 @@
                 div.onclick = () => {
                     if (isOwned) {
                         selectedChar = emoji;
+                        playClickSound();
                         saveState();
                         renderShop();
                     } else if (coins >= 50) {
                         coins -= 50;
                         ownedChars.push(emoji);
                         selectedChar = emoji;
+                        playClickSound();
                         saveState();
                         renderShop();
                     }
@@ -368,6 +433,7 @@
 
         // --- GAME START ---
         function startRandom() {
+            audioCtx.resume();
             gameMode = 'RANDOM'; applyDefaultTheme();
             startTime = Date.now(); deathWallScreenX = 0;
             setupGame(Math.floor(Math.random() * 5) + 12, 12, "Survival");
@@ -375,12 +441,14 @@
         }
 
         function startLevel(lvl) {
+            audioCtx.resume();
             gameMode = 'CAMPAIGN'; applyDefaultTheme(); currentLevel = lvl;
             let size = [0, 10, 15, 22, 32, 45][lvl];
             setupGame(size, size, `Level ${lvl}`);
         }
 
         function startCustom() {
+            audioCtx.resume();
             gameMode = 'CUSTOM'; applyCustomTheme();
             let size = parseInt(document.getElementById('custom-size').value);
             setupGame(size, size, "Custom");
@@ -466,20 +534,27 @@
         function handleMove(dir) {
             if (!['RANDOM', 'CAMPAIGN', 'CUSTOM'].includes(gameMode)) return;
             let currentCell = grid[index(player.c, player.r)];
-            if (dir === 'up' && !currentCell.walls[0]) player.r--;
-            if (dir === 'right' && !currentCell.walls[1]) player.c++;
-            if (dir === 'down' && !currentCell.walls[2]) player.r++;
-            if (dir === 'left' && !currentCell.walls[3]) player.c--;
-            checkWin();
+            let moved = false;
+            if (dir === 'up' && !currentCell.walls[0]) { player.r--; moved = true; }
+            if (dir === 'right' && !currentCell.walls[1]) { player.c++; moved = true; }
+            if (dir === 'down' && !currentCell.walls[2]) { player.r++; moved = true; }
+            if (dir === 'left' && !currentCell.walls[3]) { player.c--; moved = true; }
+            
+            if (moved) {
+                playMoveSound();
+                checkWin();
+            }
         }
 
-        // GESTURE DETECTION (Upgraded Swipe)
+        // GESTURE DETECTION
         let touchStartX = 0, touchStartY = 0;
-        window.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY; }, {passive: false});
+        window.addEventListener('touchstart', e => { 
+            touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY; 
+        }, {passive: false});
+        
         window.addEventListener('touchend', e => {
             let diffX = e.changedTouches[0].clientX - touchStartX;
             let diffY = e.changedTouches[0].clientY - touchStartY;
-            // Threshold for movement
             if (Math.abs(diffX) > 20 || Math.abs(diffY) > 20) {
                 if (Math.abs(diffX) > Math.abs(diffY)) handleMove(diffX > 0 ? 'right' : 'left');
                 else handleMove(diffY > 0 ? 'down' : 'up');
@@ -497,6 +572,7 @@
         // --- WIN/LOSE ---
         function checkWin() {
             if (player.c === goal.c && player.r === goal.r) {
+                playWinSound();
                 let reward = gameMode === 'RANDOM' ? 50 : (gameMode === 'CAMPAIGN' ? [0, 5, 15, 30, 60, 150][currentLevel] : 0);
                 if (gameMode === 'RANDOM') {
                     let sec = Math.floor((Date.now() - startTime)/1000);
@@ -513,11 +589,12 @@
         function checkDeath() {
             let rect = canvas.getBoundingClientRect();
             if (deathWallScreenX >= (rect.left + (player.c * w) + (w * 0.2))) {
+                playLoseSound();
                 gameMode = 'LOST'; hideAllScreens(); loseScreen.style.display = 'block';
             }
         }
 
-        // Initialize HUD
+        // Initial setup
         saveState();
         requestAnimationFrame(gameLoop);
     </script>

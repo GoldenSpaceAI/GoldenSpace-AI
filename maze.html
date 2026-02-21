@@ -384,7 +384,7 @@
         let grid = [];
         let player, goal;
         let gameMode = 'MENU'; 
-        let survivalDifficulty = 'easy'; // New state for mixed survival
+        let survivalDifficulty = 'easy'; // Tier for mixed survival
         let currentLevel = 1;
         let startTime = 0;
         let deathWallScreenX = 0;
@@ -489,11 +489,19 @@
             gameMode = 'RANDOM'; applyDefaultTheme();
             startTime = Date.now(); deathWallScreenX = 0;
             
-            // 50/50 Chance for Easy or Hard Survival
-            survivalDifficulty = Math.random() > 0.5 ? 'hard' : 'easy';
-            let randomSize = survivalDifficulty === 'easy' ? 
-                (Math.floor(Math.random() * 4) + 10) : // 10-13
-                (Math.floor(Math.random() * 6) + 20); // 20-25
+            // Randomly choose tier: Easy, Medium, or Hard
+            let rand = Math.random();
+            let randomSize;
+            if (rand < 0.33) {
+                survivalDifficulty = 'easy';
+                randomSize = Math.floor(Math.random() * 4) + 10; // 10-13
+            } else if (rand < 0.66) {
+                survivalDifficulty = 'medium';
+                randomSize = Math.floor(Math.random() * 4) + 16; // 16-19
+            } else {
+                survivalDifficulty = 'hard';
+                randomSize = Math.floor(Math.random() * 5) + 24; // 24-28
+            }
             
             setupGame(randomSize, randomSize, `Survival: ${survivalDifficulty.toUpperCase()}`);
             deathWallOverlay.style.display = 'block'; 
@@ -636,7 +644,10 @@
                 let reward = 0;
                 
                 if (gameMode === 'RANDOM') {
-                    reward = survivalDifficulty === 'hard' ? 50 : 25;
+                    if (survivalDifficulty === 'easy') reward = 25;
+                    else if (survivalDifficulty === 'medium') reward = 50;
+                    else if (survivalDifficulty === 'hard') reward = 500;
+                    
                     let sec = Math.floor((Date.now() - startTime)/1000);
                     if (sec > bestSurvivalTime) bestSurvivalTime = sec;
                 } else if (gameMode === 'CAMPAIGN') {

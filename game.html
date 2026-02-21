@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retro HTML5 Racer</title>
+    <style>
+        body {
+            margin: 0;
+            background: #111;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            font-family: 'Courier New', Courier, monospace;
+            color: white;
+        }
+        canvas {
+            border: 4px solid #333;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+        }
+        #instructions {
+            position: absolute;
+            top: 20px;
+            text-align: center;
+            background: rgba(0,0,0,0.7);
+            padding: 10px 20px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="instructions">
+        <h2>RETRO RACER</h2>
+        <p>Use <b>Arrow Keys</b> to Steer, Accelerate, and Brake</p>
+    </div>
+
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Game State Variables
+        let position = 0;       // How far down the track we are
+        let playerX = 0;        // Player's left/right position
+        let speed = 0;          // Current speed
+        let curve = 0;          // How sharp the current turn is
+        const maxSpeed = 150; 
+
+        // Input Handling
+        const keys = {};
+        window.addEventListener('keydown', (e) => keys[e.code] = true);
+        window.addEventListener('keyup', (e) => keys[e.code] = false);
+
+        // The Main Game Loop
+        function update() {
+            // 1. Physics & Input
+            if (keys['ArrowUp']) speed += 2;
+            if (keys['ArrowDown']) speed -= 3;
+            
+            // Friction and Speed Limits
+            speed *= 0.98; 
+            if (speed > maxSpeed) speed = maxSpeed;
+            if (speed < 0) speed = 0;
+
+            position += speed;
+
+            // Steering (feels faster when moving faster)
+            if (keys['ArrowLeft']) playerX -= (speed / maxSpeed) * 8;
+            if (keys['ArrowRight']) playerX += (speed / maxSpeed) * 8;
+
+            // Centrifugal Force: Push car to the outside of the curve
+            playerX -= curve * (speed / maxSpeed) * 4;
+
+            // Keep player from flying infinitely off-screen
+            if (playerX < -200) playerX = -200;
+            if (playerX > 200) playerX = 200;
+
+            // Generate an infinite curving track using Math.sin
+            curve = Math.sin(position / 1500) * 2;
+
+            // 2. Rendering
+            // Draw Sky
+            ctx.fillStyle = '#87CEEB';
+            ctx.fillRect(0, 0, canvas.width, canvas.height / 2);
+
+            // The Pseudo-3D Raster Loop
+            const horizon = 300;
+            
+            // We draw horizontal lines from the bottom of the screen to the horizon
+            for (let y = horizon + 1; y < canvas.height; y += 2) {
+                
+                // Calculate pseudo-depth (z) based on the Y pixel coordinate
+                let z = 15000 / (y - horizon); 
+                let p = (position + z); 
+                let scale = 300 / z; 
+
+                // Shift track X based on the curve and depth
+                let dx = curve * scale * (z / 100);
+
+                // Alternating colors for the illusion of speed
+                let isDark = Math.floor(p / 200) % 2 === 0;
+                let grassColor = isDark ? '#1e7b1e' : '#228B22';
+                let roadColor = isDark ? '#555555' : '#444444';
+                let rumbleColor = isDark ? '#ffffff' : '#ff0000';
+
+                // Draw Grass
+                ctx.fillStyle = grassColor;
+                ctx.fillRect(0, y, canvas.width, 2);
+
+                // Calculate Road Width and Center
+                let roadWidth = 2000 * scale;
+                let midPoint = (canvas.width / 2) + dx - (playerX * scale);
+
+                // Draw Rumble Strips
+                ctx.fillStyle = rumbleColor;
+                ctx.fillRect(midPoint - roadWidth / 2 - (30 * scale), y, roadWidth + (60 * scale), 2);
+
+                // Draw Road
+                ctx.fillStyle = roadColor;
+                ctx.fillRect(midPoint - roadWidth / 2, y, roadWidth, 2);
+            }
+
+            // 3. Draw the Player Car
+            drawCar();
+
+            // 4. Draw UI (Speedometer)
+            ctx.fillStyle = 'white';
+            ctx.font = '24px Courier New';
+            ctx.fillText(`SPEED: ${Math.floor(speed)} MPH`, 20, canvas.height - 20);
+
+            // Loop forever
+            requestAnimationFrame(update);
+        }
+
+        // Helper to draw a simple car shape
+        function drawCar() {
+            // Car Shadow
+            ctx.fillStyle = 'rgba(0,0,0,0.5)';
+            ctx.fillRect(360, 530, 80, 20);
+
+            // Tires
+            ctx.fillStyle = '#111';
+            ctx.fillRect(355, 500, 15, 30); // Left tire
+            ctx.fillRect(430, 500, 15, 30); // Right tire
+
+            // Car Body
+            ctx.fillStyle = '#cc0000';
+            ctx.fillRect(370, 480, 60, 40); // Top/Cabin
+            ctx.fillRect(360, 510, 80, 25); // Lower body
+
+            // Windshield
+            ctx.fillStyle = '#44ccff';
+            ctx.fillRect(375, 485, 50, 15);
+
+            // Taillights
+            ctx.fillStyle = '#ff3333';
+            ctx.fillRect(365, 520, 15, 10);
+            ctx.fillRect(420, 520, 15, 10);
+        }
+
+        // Start the game!
+        update();
+    </script>
+</body>
+</html>

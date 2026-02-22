@@ -3,13 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Colorful Maze Escape - Pro Edition</title>
+    <title>Colorful Maze Escape - Spike Pro Max</title>
     <style>
         :root {
             --gold: #FFD700;
-            --bg: #0f0d05;
-            --panel: rgba(15, 12, 0, 0.95);
+            --bg: #000000;
+            --panel: rgba(10, 10, 15, 0.98);
             --premium: #ff00ff;
+            --spike: #ff0000;
+            --neon-blue: #00f2ff;
         }
 
         body {
@@ -34,33 +36,31 @@
             transform: translate(-50%, -50%);
             background: var(--panel);
             padding: 25px;
-            border: 2px solid var(--gold);
-            border-radius: 15px;
+            border: 3px solid var(--gold);
+            border-radius: 20px;
             text-align: center;
-            box-shadow: 0 0 50px rgba(255, 215, 0, 0.2);
-            z-index: 30;
+            box-shadow: 0 0 60px rgba(0, 242, 255, 0.2);
+            z-index: 1000;
             width: 85%;
             max-width: 450px;
             max-height: 85vh;
             overflow-y: auto;
-            backdrop-filter: blur(5px);
+            backdrop-filter: blur(15px);
         }
 
-        .menu-screen h1, .menu-screen h2 {
+        .menu-screen h1 {
             color: var(--gold);
             margin-top: 0;
-            text-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
-            font-size: 2rem;
+            text-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+            font-size: 2.2rem;
             letter-spacing: -1px;
         }
-
-        .menu-screen p { color: #ccc; font-size: 0.9rem; margin-bottom: 15px; }
 
         #ui-layer {
             position: absolute;
             top: 10px;
             width: 95%;
-            max-width: 800px;
+            max-width: 1000px;
             display: none; 
             flex-direction: column;
             gap: 5px;
@@ -74,133 +74,113 @@
             width: 100%;
         }
 
-        #ui-title { font-size: 1.1rem; margin: 0; color: var(--gold); }
+        #ui-title { font-size: 1.2rem; margin: 0; color: var(--neon-blue); font-weight: bold; text-shadow: 0 0 10px var(--neon-blue); }
 
         canvas {
-            background-color: #1a1500;
-            border: 3px solid #665500;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+            background-color: #000;
+            border: 2px solid #222;
+            border-radius: 15px;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 1);
             display: none;
-            max-width: 95vw;
-            max-height: 65vh;
+            max-width: 98vw;
+            max-height: 75vh;
             touch-action: none;
         }
 
         button {
-            background: linear-gradient(180deg, rgba(255,215,0,0.1) 0%, rgba(255,215,0,0) 100%);
+            background: linear-gradient(180deg, rgba(255,215,0,0.2) 0%, rgba(255,215,0,0) 100%);
             color: var(--gold);
             border: 2px solid var(--gold);
-            padding: 10px 18px;
-            font-size: 0.9rem;
+            padding: 12px 20px;
+            font-size: 1rem;
             cursor: pointer;
-            border-radius: 8px;
-            transition: all 0.2s;
+            border-radius: 12px;
+            transition: 0.2s;
             margin: 5px;
             display: inline-block;
             font-weight: bold;
             text-transform: uppercase;
         }
 
-        button:active { transform: scale(0.95); background: var(--gold); color: #000; }
+        button:active { transform: scale(0.92); background: var(--gold); color: #000; }
+        .level-btn { display: block; width: 90%; margin: 10px auto; }
 
-        .level-btn { display: block; width: 90%; margin: 8px auto; }
+        #currency-display { color: #FFD700; font-size: 1.2rem; display: flex; align-items: center; gap: 8px; font-weight: bold; }
+        .coin-icon { width: 20px; height: 20px; background: var(--gold); border-radius: 50%; display: inline-block; box-shadow: 0 0 10px var(--gold);}
 
-        #currency-display { color: #FFD700; font-size: 1rem; display: flex; align-items: center; gap: 5px; }
-        .coin-icon { width: 16px; height: 16px; background: var(--gold); border-radius: 50%; display: inline-block; box-shadow: 0 0 10px var(--gold);}
-
-        /* Character Grid */
         .char-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
-            gap: 10px;
+            grid-template-columns: repeat(auto-fill, minmax(65px, 1fr));
+            gap: 12px;
             margin-top: 10px;
-            margin-bottom: 20px;
             padding: 10px;
-            background: rgba(0,0,0,0.3);
-            border-radius: 10px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 15px;
         }
         .char-item {
             font-size: 2rem;
-            padding: 10px;
+            padding: 12px;
             border: 2px solid transparent;
-            border-radius: 8px;
+            border-radius: 12px;
             cursor: pointer;
             transition: 0.2s;
-            background: rgba(255,255,255,0.05);
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            background: rgba(255,255,255,0.02);
+            display: flex; justify-content: center; align-items: center;
         }
-        .char-item.owned { border-color: rgba(255,215,0,0.3); }
-        .char-item.selected { border-color: var(--gold); background: rgba(255,215,0,0.2); transform: scale(1.1); }
-        .char-item.locked { opacity: 0.4; filter: grayscale(1); }
-        .char-item.is-premium.owned { border-color: rgba(255, 0, 255, 0.5); }
+        .char-item.owned { border-color: rgba(255,255,255,0.1); }
+        .char-item.selected { border-color: var(--gold); background: rgba(255, 215, 0, 0.2); transform: scale(1.1); }
+        .char-item.locked { opacity: 0.2; filter: grayscale(1); }
+        .char-item.is-premium.owned { border-color: rgba(255, 0, 255, 0.3); }
         .char-item.is-premium.selected { border-color: var(--premium); background: rgba(255, 0, 255, 0.2); }
 
         .shop-section-title {
             color: var(--gold);
-            font-size: 1rem;
+            font-size: 1.1rem;
             font-weight: bold;
             text-align: left;
-            margin-left: 10px;
+            margin: 20px 0 10px 10px;
             display: flex;
             justify-content: space-between;
         }
 
-        .premium-text { color: var(--premium); text-shadow: 0 0 5px var(--premium); }
-
-        /* Custom Menu Styles */
-        .custom-row { display: flex; justify-content: space-between; align-items: center; margin: 8px 0; }
-        input[type="color"] { background: none; border: 1px solid var(--gold); height: 30px; width: 50px; cursor: pointer;}
-
-        /* Death Wall Overlay */
         #death-wall {
             position: fixed;
             top: 0; left: 0; height: 100vh; width: 0;
-            background: repeating-linear-gradient(-45deg, #cc0000, #cc0000 25px, #8a0000 25px, #8a0000 50px);
-            border-right: 15px solid #ff3333;
+            background: repeating-linear-gradient(-45deg, #700, #700 25px, #c00 25px, #c00 50px);
+            border-right: 15px solid #f00;
             z-index: 20;
             display: none;
             pointer-events: none;
+            box-shadow: 20px 0 80px rgba(255,0,0,0.8);
         }
 
         #timer-bar-container {
-            width: 100%;
-            height: 6px;
-            background: rgba(255,255,255,0.1);
-            display: none;
-            border-radius: 3px;
-            overflow: hidden;
-            margin-top: 5px;
+            width: 100%; height: 12px; background: rgba(255,255,255,0.1);
+            display: none; border-radius: 6px; overflow: hidden; margin-top: 8px;
+            border: 1px solid rgba(255,255,255,0.2);
         }
-        #timer-bar { height: 100%; background: #ff3333; width: 0%; border-radius: 3px; }
+        #timer-bar { height: 100%; background: var(--neon-blue); width: 0%; border-radius: 6px; transition: width 0.1s linear;}
         
         #swipe-hint {
-            position: absolute;
-            bottom: 30px;
-            color: var(--gold);
-            opacity: 0.6;
-            font-size: 0.8rem;
-            display: none;
-            pointer-events: none;
-            animation: pulse 2s infinite;
+            position: absolute; bottom: 30px; color: var(--neon-blue);
+            opacity: 0.8; font-size: 1rem; display: none; pointer-events: none;
+            animation: pulse 2s infinite; font-weight: bold; text-shadow: 0 0 10px #000;
         }
-        @keyframes pulse { 0% { opacity: 0.3; } 50% { opacity: 0.8; } 100% { opacity: 0.3; } }
+        @keyframes pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
     </style>
 </head>
 <body>
 
-    <!-- TOP HUD -->
+    <!-- HUD -->
     <div id="ui-layer">
         <div class="hud-main">
             <div>
                 <h1 id="ui-title">MAZE</h1>
-                <span id="level-display" style="font-size: 0.7rem; color: #aaa;"></span>
+                <span id="level-display" style="font-size: 0.8rem; color: #aaa; font-weight: bold;"></span>
             </div>
-            <div style="display: flex; gap: 10px; align-items: center;">
+            <div style="display: flex; gap: 15px; align-items: center;">
                 <div id="currency-display"><span class="coin-icon"></span> <span id="coin-count">0</span></div>
-                <button class="small-btn" style="margin:0; padding: 4px 10px; font-size: 0.7rem;" onclick="showMainMenu()">Exit</button>
+                <button class="small-btn" style="margin:0; padding: 5px 12px; font-size: 0.7rem;" onclick="showMainMenu()">Menu</button>
             </div>
         </div>
         <div id="timer-bar-container"><div id="timer-bar"></div></div>
@@ -209,227 +189,139 @@
     <!-- MAIN MENU -->
     <div id="main-menu" class="menu-screen">
         <h1>MAZE TYCOON</h1>
-        <p>Master the colorful mazes and earn coins.</p>
+        <p>Master the lanes. Survive the pulse.</p>
         <button onclick="startRandom()" class="level-btn">Survival Mode (60s)</button>
-        <button onclick="showLevels()" class="level-btn">Levels</button>
+        <button onclick="startRush()" class="level-btn" style="border-color: #ff3333; color: #ff3333;">Spike Rush (75¢ Prize)</button>
+        <button onclick="showLevels()" class="level-btn">Quest Levels</button>
         <button onclick="showCharacterShop()" class="level-btn">Character Shop</button>
-        <button onclick="showCustomMenu()" class="level-btn">Creator Studio</button>
-        <div style="margin-top: 15px; font-size: 0.8rem; color: #777;">
-            Best Survival: <span id="best-time">--</span>s | Coins: <span id="menu-coin-count">0</span>
+        <div style="margin-top: 15px; font-size: 0.9rem; color: #888;">
+            Balance: <span id="menu-coin-count">0</span>¢
         </div>
     </div>
 
-    <!-- CHARACTER SHOP -->
+    <!-- SHOP -->
     <div id="shop-menu" class="menu-screen" style="display:none;">
-        <h2>Character Shop</h2>
-        
-        <div class="shop-section-title">Standard <span>50¢</span></div>
+        <h2>Store</h2>
+        <div class="shop-section-title">Standard <span>75¢</span></div>
         <div id="char-list-standard" class="char-grid"></div>
-        
-        <div class="shop-section-title premium-text">Premium <span>200¢</span></div>
+        <div class="shop-section-title" style="color:var(--premium)">Premium <span>200¢</span></div>
         <div id="char-list-premium" class="char-grid"></div>
-
-        <button class="level-btn" style="border-color: #888; color: #888; margin-top:10px;" onclick="showMainMenu()">Back</button>
+        <button class="level-btn" style="border-color: #888; color: #888; margin-top:20px;" onclick="showMainMenu()">Back</button>
     </div>
 
-    <!-- LEVELS MENU -->
+    <!-- LEVELS -->
     <div id="levels-menu" class="menu-screen" style="display:none;">
-        <h2>Select Difficulty</h2>
-        <button class="level-btn" onclick="startLevel(1)">1 - Rookie (5¢)</button>
-        <button class="level-btn" onclick="startLevel(2)">2 - Skilled (15¢)</button>
-        <button class="level-btn" onclick="startLevel(3)">3 - Pro (30¢)</button>
-        <button class="level-btn" onclick="startLevel(4)">4 - Master (60¢)</button>
-        <button class="level-btn" onclick="startLevel(5)">5 - Legend (150¢)</button>
+        <h2>Quest List</h2>
+        <button class="level-btn" onclick="startLevel(1)">1 - Rookie (50¢)</button>
+        <button class="level-btn" onclick="startLevel(2)">2 - Skilled (150¢)</button>
+        <button class="level-btn" onclick="startLevel(3)">3 - Pro (400¢)</button>
+        <button class="level-btn" onclick="startLevel(4)">4 - Master (800¢)</button>
+        <button class="level-btn" onclick="startLevel(5)">5 - Legend (2000¢)</button>
         <button class="level-btn" style="border-color: #888; color: #888;" onclick="showMainMenu()">Back</button>
     </div>
 
-    <!-- CUSTOM MAZE MENU -->
-    <div id="custom-menu" class="menu-screen" style="display:none;">
-        <h2>Creator Studio</h2>
-        <div class="custom-row">
-            <label>Size: <span id="size-val">15</span></label>
-            <input type="range" id="custom-size" min="5" max="40" value="15" oninput="updateCustomSize(this.value)">
-        </div>
-        <div class="custom-row"><label>Wall:</label> <input type="color" id="c-wall" value="#FFD700"></div>
-        <div class="custom-row"><label>Path:</label> <input type="color" id="c-path" value="#1a1500"></div>
-        <div class="custom-row"><label>Goal:</label> <input type="color" id="c-goal" value="#FFA500"></div>
-        <button class="level-btn" onclick="startCustom()">Test Creation</button>
-        <button class="level-btn" style="border-color: #888; color: #888;" onclick="showMainMenu()">Back</button>
-    </div>
-
-    <!-- GAME CANVAS -->
     <canvas id="mazeCanvas" width="600" height="600"></canvas>
-    <div id="swipe-hint">Swipe Screen to Move</div>
-
-    <!-- OVERLAYS -->
+    <div id="swipe-hint">Swipe to Move</div>
     <div id="death-wall"></div>
 
+    <!-- OVERLAYS -->
     <div id="win-screen" class="menu-screen" style="display:none;">
-        <h2 id="win-header">ESCAPED!</h2>
-        <p id="win-text">You found the exit.</p>
-        <div id="reward-box" style="margin-bottom: 20px; font-size: 1.5rem; color: var(--gold); font-weight: bold;">
-            +<span id="reward-amt">0</span> Coins
+        <h2 id="win-header">VICTORY!</h2>
+        <div id="reward-box" style="margin-bottom: 20px; font-size: 2rem; color: var(--gold); font-weight: bold;">
+            +<span id="reward-amt">0</span>¢
         </div>
         <div id="win-buttons"></div>
     </div>
 
     <div id="lose-screen" class="menu-screen" style="display:none; border-color: #ff0000;">
-        <h2 style="color: #ff0000;">CONSUMED</h2>
-        <p>The wall caught up to you.</p>
-        <button onclick="startRandom()" style="border-color: #ff0000; color: #ff0000;">Try Again</button>
-        <button style="border-color: #888; color: #888;" onclick="showMainMenu()">Main Menu</button>
+        <h2 style="color: #ff0000;" id="lose-header">TERMINATED</h2>
+        <p id="lose-text">Caught by the spikes.</p>
+        <button onclick="retryGame()" style="border-color: #ff0000; color: #ff0000;">Try Again</button>
+        <button style="border-color: #888; color: #888;" onclick="showMainMenu()">Quit</button>
     </div>
 
     <script>
-        // --- AUDIO ENGINE ---
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        
-        function playTone(freq, type, duration, startTime, volume = 0.1) {
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = type;
-            osc.frequency.setValueAtTime(freq, startTime);
-            gain.gain.setValueAtTime(volume, startTime);
-            gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start(startTime);
-            osc.stop(startTime + duration);
+        function playTone(f, t, d, s, v = 0.1) {
+            const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
+            o.type = t; o.frequency.setValueAtTime(f, s); g.gain.setValueAtTime(v, s);
+            g.gain.exponentialRampToValueAtTime(0.0001, s + d);
+            o.connect(g); g.connect(audioCtx.destination); o.start(s); o.stop(s + d);
         }
 
-        function playEmojiSound(emoji) {
+        function playEmojiSound(e) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
             const now = audioCtx.currentTime;
-            if ("🦄🌈✨🌟🔮🪄🧚🧜🎠💎💠🔱⚜️🏵️💮".includes(emoji)) {
-                playTone(1200, 'sine', 0.05, now, 0.05);
-                playTone(1500, 'sine', 0.05, now + 0.02, 0.03);
-            } 
-            else if ("🐱🐶🦊🐯🐸🐵🐧🐤🦉🐝🦋🐢🐙🐋🦖🦋🐌🐞🦒🦓🦘🐘🐆🦁🐉🐲🦜🦢🦚".includes(emoji)) {
-                if (emoji === "🦄") {
-                    playTone(600, 'sawtooth', 0.1, now, 0.05);
-                    playTone(800, 'sawtooth', 0.05, now + 0.05, 0.05);
-                } else {
-                    playTone(400, 'sine', 0.08, now, 0.05);
-                }
-            }
-            else if ("🚀🛸🛰️🪐🌓☄️🌋🌀⚡❄️👾🤖🖥️🕹️💾📡🧿".includes(emoji)) {
-                playTone(1000, 'square', 0.03, now, 0.04);
-            }
-            else {
-                playTone(800, 'sine', 0.05, now, 0.05);
-            }
+            if ("🦄🌈✨🌟🔮🪄🧚🧜🎠💎💠🔱⚜️🏵️💮👑🌌🌠".includes(e)) { playTone(1300, 'sine', 0.1, now, 0.05); } 
+            else if ("🐱🐶🦊🐯🐸🐵🐧🐤🦉🐝🦋🐢🐙🐋🦖🦒🦓🦘🐘🐆🦁🐉🐲🦜🦢🦚".includes(e)) { playTone(450, 'triangle', 0.1, now, 0.05); }
+            else { playTone(850, 'sine', 0.05, now, 0.05); }
         }
 
-        function playWinSound() {
-            const now = audioCtx.currentTime;
-            playTone(400, 'square', 0.2, now);
-            playTone(500, 'square', 0.2, now + 0.1);
-            playTone(600, 'square', 0.2, now + 0.2);
-            playTone(800, 'square', 0.5, now + 0.3);
-        }
-
-        function playLoseSound() {
-            const now = audioCtx.currentTime;
-            playTone(200, 'sawtooth', 0.2, now, 0.1);
-            playTone(180, 'sawtooth', 0.2, now + 0.15, 0.1);
-            playTone(160, 'sawtooth', 0.2, now + 0.3, 0.1);
-            playTone(120, 'sawtooth', 0.6, now + 0.45, 0.15);
-        }
-
-        function playClickSound() {
-            playTone(300, 'sine', 0.05, audioCtx.currentTime, 0.05);
-        }
-
-        // --- GAME LOGIC ---
         const canvas = document.getElementById('mazeCanvas');
         const ctx = canvas.getContext('2d');
         const winScreen = document.getElementById('win-screen');
         const loseScreen = document.getElementById('lose-screen');
-        const levelDisplay = document.getElementById('level-display');
         const mainMenu = document.getElementById('main-menu');
         const shopMenu = document.getElementById('shop-menu');
-        const standardCharList = document.getElementById('char-list-standard');
-        const premiumCharList = document.getElementById('char-list-premium');
         const levelsMenu = document.getElementById('levels-menu');
-        const customMenu = document.getElementById('custom-menu');
         const uiLayer = document.getElementById('ui-layer');
         const uiTitle = document.getElementById('ui-title');
+        const levelDisplay = document.getElementById('level-display');
         const deathWallOverlay = document.getElementById('death-wall');
         const timerBar = document.getElementById('timer-bar');
         const timerContainer = document.getElementById('timer-bar-container');
         const coinDisplay = document.getElementById('coin-count');
         const menuCoinDisplay = document.getElementById('menu-coin-count');
-        const bestTimeDisplay = document.getElementById('best-time');
         const swipeHint = document.getElementById('swipe-hint');
+        const standardCharList = document.getElementById('char-list-standard');
+        const premiumCharList = document.getElementById('char-list-premium');
 
-        // Persistent State
         let coins = parseInt(localStorage.getItem('mz_coins')) || 0;
-        let bestSurvivalTime = parseInt(localStorage.getItem('mz_best')) || 0;
         let ownedChars = JSON.parse(localStorage.getItem('mz_owned')) || ['🚀'];
         let selectedChar = localStorage.getItem('mz_current') || '🚀';
 
-        const STANDARD_EMOJIS = [
-            "🚀","🛸","🛰️","🪐","🌓","☄️","🌋","🌀","⚡","❄️","👾","🤖",
-            "🐱","🐶","🦊","🐯","🐸","🐵","🐧","🐤","🦉","🐝","🦋","🐢",
-            "🍄","🌻","🍀","🍁","🍒","🍓","🍍","🥥","🥑","🥨","🥯","🍣",
-            "⚽","🏀","🎾","🎱","🎳","♟️","🏹","🪁","🥊","🏂","🧗","🚴",
-            "🏰","⛩️","🗽","🗼","🏔️","🏜️","🧭","⏰","🔋","🧿","🧬","🧪","🧱","🧲","💣","🛡️","🗝️","🎁","🎊","🎈"
-        ];
-
-        const PREMIUM_EMOJIS = [
-            "💎","👑","🔱","⚜️","💠","🌀","🏮","🏺","🧿","🔮","🧬","🧪","🪐","🛰️","🛸",
-            "🦖","🐉","🐲","🦄","🦚","🦜","🦢","🦋","🏵️","💮"
-        ];
+        const STANDARD_EMOJIS = ["🚀","🛸","🛰️","🪐","🌓","☄️","🌋","🌀","⚡","❄️","👾","🤖","🐱","🐶","🦊","🐯","🐸","🐵","🐧","🐤","🦉","🐝","🦋","🐢","🍄","🌻","🍀","🍁","🍒","🍓","🍍","🥥","🥑","🥨","🥯","🍣","⚽","🏀","🎾","🎱","🎳","♟️","🏹","🪁","🥊","🏂","🧗","🚴","🏰","⛩️","🗽","🗼","🏔️","🏜️","🧭","⏰","🔋","🧿","🧬","🧪","🧱","🧲","💣","🛡️","🗝️","🎁","🎊","🎈"];
+        const PREMIUM_EMOJIS = ["💎","👑","🔱","⚜️","💠","🌌","🌠","🏮","🏺","🔮","🦖","🐉","🐲","🦄","🦚","🦜","🦢","🏵️","💮","🦁","🔥","🌊","🌪️","👹","👺","🧛","🧞","🧟","🧚","👽"];
 
         let cols, rows, w; 
         let grid = [];
-        let player, goal;
+        let player = { c: 0, r: 0, x: 300 }; 
+        let goal = { c: 0, r: 0 };
         let gameMode = 'MENU'; 
-        let survivalDifficulty = 'easy'; // Tier for mixed survival
+        let activeModeType = ''; 
+        let survivalDifficulty = 'easy';
         let currentLevel = 1;
         let startTime = 0;
         let deathWallScreenX = 0;
-        const SURVIVAL_TIME = 60000; 
-        let themeWall, themePlayer, themeGoal, themePath;
+        let themeWall, themeGoal, themePath;
 
-        const THEMES = [
-            { wall: '#FFD700', goal: '#FFA500', path: '#1a1500', name: "GOLDEN" },
-            { wall: '#00FFFF', goal: '#00FF00', path: '#001a1a', name: "CYBER" },
-            { wall: '#FF00FF', goal: '#FFFF00', path: '#1a001a', name: "NEON" },
-            { wall: '#00FF00', goal: '#FF0000', path: '#001a00', name: "TOXIC" },
-            { wall: '#FF4500', goal: '#FFD700', path: '#1a0500', name: "LAVA" },
-            { wall: '#8A2BE2', goal: '#FF1493', path: '#0d001a', name: "MAGIC" }
-        ];
+        let rushTick = 0;
+        let rushSpeed = 4.6;
+        let rushObstacles = []; 
 
         function saveState() {
             localStorage.setItem('mz_coins', coins);
-            localStorage.setItem('mz_best', bestSurvivalTime);
             localStorage.setItem('mz_owned', JSON.stringify(ownedChars));
             localStorage.setItem('mz_current', selectedChar);
-            coinDisplay.innerText = coins;
-            menuCoinDisplay.innerText = coins;
-            bestTimeDisplay.innerText = bestSurvivalTime;
+            if(coinDisplay) coinDisplay.innerText = coins;
+            if(menuCoinDisplay) menuCoinDisplay.innerText = coins;
         }
 
-        // --- NAVIGATION ---
         function hideAllScreens() {
-            [mainMenu, levelsMenu, customMenu, shopMenu, winScreen, loseScreen, canvas, uiLayer, deathWallOverlay, timerContainer, swipeHint].forEach(el => el.style.display = 'none');
+            [mainMenu, levelsMenu, shopMenu, winScreen, loseScreen, canvas, uiLayer, deathWallOverlay, timerContainer, swipeHint].forEach(el => { if(el) el.style.display = 'none'; });
         }
 
-        function showMainMenu() {
-            gameMode = 'MENU';
-            hideAllScreens();
-            mainMenu.style.display = 'block';
-            saveState();
-        }
+        function showMainMenu() { gameMode = 'MENU'; hideAllScreens(); mainMenu.style.display = 'block'; saveState(); }
+        function showLevels() { hideAllScreens(); levelsMenu.style.display = 'block'; }
+        function showCharacterShop() { hideAllScreens(); shopMenu.style.display = 'block'; renderShop(); }
 
-        function showLevels() { playClickSound(); hideAllScreens(); levelsMenu.style.display = 'block'; }
-        function showCustomMenu() { playClickSound(); hideAllScreens(); customMenu.style.display = 'block'; }
-        
-        function showCharacterShop() {
-            playClickSound();
-            hideAllScreens();
-            shopMenu.style.display = 'block';
-            renderShop();
+        function renderShop() {
+            standardCharList.innerHTML = ''; premiumCharList.innerHTML = '';
+            STANDARD_EMOJIS.forEach(emoji => createShopItem(emoji, 75, standardCharList));
+            [...new Set(PREMIUM_EMOJIS)].forEach(emoji => {
+                if(!STANDARD_EMOJIS.includes(emoji)) createShopItem(emoji, 200, premiumCharList, true);
+            });
+            document.getElementById('unlocked-count').innerText = ownedChars.length;
         }
 
         function createShopItem(emoji, cost, container, isPremium = false) {
@@ -439,236 +331,279 @@
             div.className = `char-item ${isOwned ? 'owned' : 'locked'} ${isSelected ? 'selected' : ''} ${isPremium ? 'is-premium' : ''}`;
             div.innerText = emoji;
             div.onclick = () => {
-                if (isOwned) {
-                    selectedChar = emoji;
-                    playClickSound();
-                    saveState();
-                    renderShop();
-                } else if (coins >= cost) {
-                    coins -= cost;
-                    ownedChars.push(emoji);
-                    selectedChar = emoji;
-                    playClickSound();
-                    saveState();
-                    renderShop();
-                }
+                if (isOwned) { selectedChar = emoji; saveState(); renderShop(); }
+                else if (coins >= cost) { coins -= cost; ownedChars.push(emoji); selectedChar = emoji; saveState(); renderShop(); }
             };
             container.appendChild(div);
         }
 
-        function renderShop() {
-            standardCharList.innerHTML = '';
-            premiumCharList.innerHTML = '';
-            
-            STANDARD_EMOJIS.forEach(emoji => createShopItem(emoji, 50, standardCharList));
-            PREMIUM_EMOJIS.forEach(emoji => createShopItem(emoji, 200, premiumCharList, true));
-            
-            document.getElementById('unlocked-count').innerText = ownedChars.length;
-        }
-
-        function updateCustomSize(val) { document.getElementById('size-val').innerText = val; }
-
-        // --- THEMES ---
-        function applyDefaultTheme() {
-            let t = THEMES[Math.floor(Math.random() * THEMES.length)];
-            themeWall = t.wall; themeGoal = t.goal; themePath = t.path;
-            uiTitle.innerText = t.name + " MAZE"; uiTitle.style.color = themeWall;
-            canvas.style.borderColor = themeWall;
-        }
-
-        function applyCustomTheme() {
-            themeWall = document.getElementById('c-wall').value; themePath = document.getElementById('c-path').value;
-            themeGoal = document.getElementById('c-goal').value;
-            uiTitle.innerText = "CUSTOM MAZE"; uiTitle.style.color = themeWall;
-            canvas.style.borderColor = themeWall;
-        }
-
-        // --- GAME START ---
+        // --- GAME LOGIC ---
         function startRandom() {
-            audioCtx.resume();
-            gameMode = 'RANDOM'; applyDefaultTheme();
-            startTime = Date.now(); deathWallScreenX = 0;
-            
-            // Randomly choose tier: Easy, Medium, or Hard
-            let rand = Math.random();
-            let randomSize;
-            if (rand < 0.33) {
-                survivalDifficulty = 'easy';
-                randomSize = Math.floor(Math.random() * 4) + 10; // 10-13
-            } else if (rand < 0.66) {
-                survivalDifficulty = 'medium';
-                randomSize = Math.floor(Math.random() * 4) + 16; // 16-19
-            } else {
-                survivalDifficulty = 'hard';
-                randomSize = Math.floor(Math.random() * 5) + 24; // 24-28
+            activeModeType = 'RANDOM';
+            resetEverything();
+            gameMode = 'RANDOM';
+            applyTheme('RANDOM');
+            survivalDifficulty = Math.random() < 0.33 ? 'easy' : (Math.random() < 0.66 ? 'medium' : 'hard');
+            let size = survivalDifficulty === 'easy' ? 12 : (survivalDifficulty === 'medium' ? 18 : 28);
+            setupGame(size, size, `Survival: ${survivalDifficulty.toUpperCase()}`);
+            deathWallOverlay.style.display = 'block'; timerContainer.style.display = 'block';
+        }
+
+        function startRush() {
+            activeModeType = 'RUSH';
+            resetEverything();
+            gameMode = 'RUSH';
+            applyTheme('RUSH');
+            for (let i = 1; i < 90; i++) {
+                rushObstacles.push({ dist: i * 420, opening: Math.floor(Math.random() * 3) });
             }
-            
-            setupGame(randomSize, randomSize, `Survival: ${survivalDifficulty.toUpperCase()}`);
-            deathWallOverlay.style.display = 'block'; 
+            setupGame(10, 3, "Rush Mode");
+            player = { c: 5, r: 1, x: 300 }; 
+            swipeHint.style.display = 'block';
             timerContainer.style.display = 'block';
         }
 
         function startLevel(lvl) {
-            audioCtx.resume();
-            gameMode = 'CAMPAIGN'; applyDefaultTheme(); currentLevel = lvl;
-            let size = [0, 10, 15, 22, 32, 45][lvl];
-            setupGame(size, size, `Level ${lvl}`);
+            activeModeType = 'CAMPAIGN';
+            currentLevel = lvl;
+            resetEverything();
+            gameMode = 'CAMPAIGN';
+            applyTheme('LEVEL');
+            setupGame([0, 10, 15, 22, 32, 45][lvl], [0, 10, 15, 22, 32, 45][lvl], `Level ${lvl}`);
         }
 
-        function startCustom() {
-            audioCtx.resume();
-            gameMode = 'CUSTOM'; applyCustomTheme();
-            let size = parseInt(document.getElementById('custom-size').value);
-            setupGame(size, size, "Custom");
+        function resetEverything() {
+            startTime = Date.now();
+            rushTick = 0;
+            rushObstacles = [];
+            deathWallScreenX = 0;
+            deathWallOverlay.style.width = '0px';
+            deathWallOverlay.style.display = 'none';
+            timerBar.style.width = '0%';
+            if (audioCtx.state === 'suspended') audioCtx.resume();
         }
 
         function setupGame(c, r, titleText) {
-            hideAllScreens();
-            canvas.style.display = 'block'; uiLayer.style.display = 'flex';
-            swipeHint.style.display = 'block';
-            levelDisplay.innerText = titleText; coinDisplay.innerText = coins;
-            cols = c; rows = r; w = canvas.width / cols;
+            hideAllScreens(); 
+            canvas.style.display = 'block'; 
+            uiLayer.style.display = 'flex';
+            levelDisplay.innerText = titleText; 
+            cols = c; rows = r; 
+            w = canvas.width / (gameMode === 'RUSH' ? 10 : cols);
             grid = [];
-            for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) grid.push(new Cell(x, y));
-            generateMaze();
-            player = { c: 0, r: 0 }; goal = { c: cols - 1, r: rows - 1 };
-        }
-
-        class Cell {
-            constructor(c, r) { this.c = c; this.r = r; this.walls = [true, true, true, true]; this.visited = false; }
-            checkNeighbors() {
-                let neighbors = [];
-                let t = grid[index(this.c, this.r-1)], r = grid[index(this.c+1, this.r)], b = grid[index(this.c, this.r+1)], l = grid[index(this.c-1, this.r)];
-                if (t && !t.visited) neighbors.push(t); if (r && !r.visited) neighbors.push(r); if (b && !b.visited) neighbors.push(b); if (l && !l.visited) neighbors.push(l);
-                return neighbors.length > 0 ? neighbors[Math.floor(Math.random() * neighbors.length)] : undefined;
+            for (let y = 0; y < rows; y++) {
+                for (let x = 0; x < cols; x++) {
+                    grid.push({ c: x, r: y, walls: [true, true, true, true], visited: false });
+                }
+            }
+            if (gameMode !== 'RUSH') {
+                generateMaze();
+                player = { c: 0, r: 0, x: w/2 }; 
+                goal = { c: cols - 1, r: rows - 1 };
             }
         }
 
-        function index(c, r) { return (c < 0 || r < 0 || c >= cols || r >= rows) ? -1 : c + r * cols; }
-        function removeWalls(a, b) {
-            let x = a.c - b.c, y = a.r - b.r;
-            if (x === 1) { a.walls[3] = false; b.walls[1] = false; } else if (x === -1) { a.walls[1] = false; b.walls[3] = false; }
-            if (y === 1) { a.walls[0] = false; b.walls[2] = false; } else if (y === -1) { a.walls[2] = false; b.walls[0] = false; }
+        function applyTheme(mode) {
+            const THEMES = [
+                { wall: '#FFFFFF', goal: '#00f2ff', path: '#000', name: "NEON" },
+                { wall: '#FFFFFF', goal: '#FFD700', path: '#000', name: "PRO" }
+            ];
+            let t = THEMES[Math.floor(Math.random() * THEMES.length)];
+            themeWall = t.wall; themeGoal = t.goal; themePath = t.path;
+            uiTitle.innerText = mode === 'RUSH' ? "SPIKE RUSH" : (t.name + " MAZE");
+            uiTitle.style.color = "#00f2ff";
+            canvas.style.borderColor = "#00f2ff";
         }
 
         function generateMaze() {
             let stack = []; let current = grid[0]; current.visited = true;
             while(true) {
-                let next = current.checkNeighbors();
-                if (next) { next.visited = true; stack.push(current); removeWalls(current, next); current = next; }
-                else if (stack.length > 0) { current = stack.pop(); } else break;
+                let neighbors = [];
+                let t = grid[index(current.c, current.r-1)], r = grid[index(current.c+1, current.r)], b = grid[index(current.c, current.r+1)], l = grid[index(current.c-1, current.r)];
+                if (t && !t.visited) neighbors.push(t); if (r && !r.visited) neighbors.push(r); if (b && !b.visited) neighbors.push(b); if (l && !l.visited) neighbors.push(l);
+                if (neighbors.length > 0) {
+                    let next = neighbors[Math.floor(Math.random() * neighbors.length)];
+                    next.visited = true; stack.push(current);
+                    let dx = current.c - next.c, dy = current.r - next.r;
+                    if(dx===1){current.walls[3]=false;next.walls[1]=false;}else if(dx===-1){current.walls[1]=false;next.walls[3]=false;}
+                    if(dy===1){current.walls[0]=false;next.walls[2]=false;}else if(dy===-1){current.walls[2]=false;next.walls[0]=false;}
+                    current = next;
+                } else if (stack.length > 0) current = stack.pop(); else break;
             }
         }
 
-        // --- RENDER ---
+        function index(c, r) { return (c < 0 || r < 0 || c >= cols || r >= rows) ? -1 : c + r * cols; }
+
         function gameLoop() {
-            if (['RANDOM', 'CAMPAIGN', 'CUSTOM'].includes(gameMode)) {
-                drawGame();
-                if (gameMode === 'RANDOM') {
-                    let elapsed = Date.now() - startTime;
-                    let progress = Math.min(elapsed / SURVIVAL_TIME, 1);
+            if (['RANDOM', 'CAMPAIGN', 'RUSH'].includes(gameMode)) {
+                let elapsed = Date.now() - startTime;
+                let progress = Math.min(elapsed / 60000, 1);
+                timerBar.style.width = (progress * 100) + '%';
+
+                if (gameMode === 'RUSH') {
+                    rushTick += rushSpeed;
+                    player.x -= 2.0; 
+                    if (player.x < 50) { 
+                        loseGame("SPIKED", "The grid consumed you."); 
+                    } else {
+                        rushObstacles.forEach(obs => {
+                            let ox = obs.dist - rushTick;
+                            // Instant death if touching the laser wall (wrong lane)
+                            if (player.x > ox - 30 && player.x < ox + 20 && player.r !== obs.opening) {
+                                loseGame("CRASHED", "You hit a laser wall!");
+                            }
+                        });
+                        if (progress >= 1) winGame(75);
+                    }
+                } else if (gameMode === 'RANDOM') {
                     deathWallScreenX = progress * window.innerWidth;
                     deathWallOverlay.style.width = deathWallScreenX + 'px';
-                    timerBar.style.width = (progress * 100) + '%';
-                    checkDeath();
+                    let rect = canvas.getBoundingClientRect();
+                    if (deathWallScreenX >= (rect.left + (player.c * w))) loseGame("CAUGHT", "The pulse reached you.");
                 }
+                draw();
             }
             requestAnimationFrame(gameLoop);
         }
 
-        function drawGame() {
+        function draw() {
             ctx.fillStyle = themePath; ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.strokeStyle = themeWall; ctx.lineWidth = cols < 20 ? 4 : 2; ctx.lineCap = 'round';
-            ctx.beginPath();
-            grid.forEach(cell => {
-                let x = cell.c * w, y = cell.r * w;
-                if (cell.walls[0]) { ctx.moveTo(x, y); ctx.lineTo(x + w, y); }
-                if (cell.walls[1]) { ctx.moveTo(x + w, y); ctx.lineTo(x + w, y + w); }
-                if (cell.walls[2]) { ctx.moveTo(x + w, y + w); ctx.lineTo(x, y + w); }
-                if (cell.walls[3]) { ctx.moveTo(x, y + w); ctx.lineTo(x, y); }
-            });
-            ctx.stroke();
-            let pad = w * 0.2;
-            ctx.fillStyle = themeGoal; ctx.fillRect(goal.c * w + pad, goal.r * w + pad, w - pad * 2, w - pad * 2);
             
-            // Draw Emoji Player
-            ctx.font = `${w * 0.8}px sans-serif`;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(selectedChar, player.c * w + w/2, player.r * w + w/2 + 2);
+            if (gameMode === 'RUSH') {
+                ctx.fillStyle = "#ff0000";
+                for(let i=0; i<canvas.height; i+=30) { ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(50, i+15); ctx.lineTo(0, i+30); ctx.fill(); }
+                
+                ctx.strokeStyle = "rgba(0,242,255,0.1)";
+                ctx.lineWidth = 4;
+                for(let i=1; i<3; i++) {
+                    ctx.beginPath(); ctx.moveTo(0, i*(canvas.height/3)); ctx.lineTo(canvas.width, i*(canvas.height/3)); ctx.stroke();
+                }
+
+                ctx.lineWidth = 14;
+                ctx.shadowBlur = 20;
+                rushObstacles.forEach(obs => {
+                    let ox = obs.dist - rushTick;
+                    if (ox < -100 || ox > canvas.width + 100) return;
+                    ctx.strokeStyle = "#fff";
+                    ctx.shadowColor = "#00f2ff";
+                    ctx.beginPath();
+                    for(let i=0; i<3; i++) {
+                        if (i !== obs.opening) {
+                            ctx.moveTo(ox, i*(canvas.height/3) + 5);
+                            ctx.lineTo(ox, (i+1)*(canvas.height/3) - 5);
+                        }
+                    }
+                    ctx.stroke();
+                });
+                ctx.shadowBlur = 0;
+            } else {
+                ctx.strokeStyle = "#fff"; 
+                ctx.lineWidth = cols < 15 ? 10 : 6;
+                ctx.lineCap = 'round';
+                ctx.shadowBlur = 15; 
+                ctx.shadowColor = "#00f2ff";
+                
+                ctx.beginPath();
+                grid.forEach(cell => {
+                    let x = cell.c * w, y = cell.r * w;
+                    if (cell.walls[0]) { ctx.moveTo(x, y); ctx.lineTo(x + w, y); }
+                    if (cell.walls[1]) { ctx.moveTo(x + w, y); ctx.lineTo(x + w, y + w); }
+                    if (cell.walls[2]) { ctx.moveTo(x + w, y + w); ctx.lineTo(x, y + w); }
+                    if (cell.walls[3]) { ctx.moveTo(x, y + w); ctx.lineTo(x, y); }
+                });
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+                ctx.fillStyle = themeGoal; 
+                ctx.fillRect(goal.c * w + w*0.2, goal.r * w + w*0.2, w*0.6, w*0.6);
+            }
+            
+            ctx.font = `${(gameMode==='RUSH'?canvas.height/4.2:w*0.85)}px sans-serif`;
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            let px = gameMode === 'RUSH' ? player.x : player.c * w + w/2;
+            let py = gameMode === 'RUSH' ? player.r * (canvas.height/3) + (canvas.height/6) : player.r * w + w/2;
+            ctx.fillText(selectedChar, px, py);
         }
 
-        // --- MOVE LOGIC ---
         function handleMove(dir) {
-            if (!['RANDOM', 'CAMPAIGN', 'CUSTOM'].includes(gameMode)) return;
-            let currentCell = grid[index(player.c, player.r)];
-            let moved = false;
-            if (dir === 'up' && !currentCell.walls[0]) { player.r--; moved = true; }
-            if (dir === 'right' && !currentCell.walls[1]) { player.c++; moved = true; }
-            if (dir === 'down' && !currentCell.walls[2]) { player.r++; moved = true; }
-            if (dir === 'left' && !currentCell.walls[3]) { player.c--; moved = true; }
+            if (!['RANDOM', 'CAMPAIGN', 'RUSH'].includes(gameMode)) return;
             
-            if (moved) {
-                playEmojiSound(selectedChar);
-                checkWin();
+            if (gameMode === 'RUSH') {
+                if (dir === 'up' && player.r > 0) player.r--;
+                if (dir === 'down' && player.r < 2) player.r++;
+                if (dir === 'right') {
+                    let blocked = false;
+                    rushObstacles.forEach(obs => {
+                        let ox = obs.dist - rushTick;
+                        if (ox > player.x && ox < player.x + 80 && player.r !== obs.opening) blocked = true;
+                    });
+                    if (!blocked) {
+                        player.x += 80;
+                    } else {
+                        // Crash if you try to dash forward into a wall
+                        loseGame("CRASHED", "You dashed into a laser wall!");
+                    }
+                }
+            } else {
+                let c = grid[index(player.c, player.r)];
+                if (dir === 'up' && !c.walls[0]) player.r--;
+                if (dir === 'right' && !c.walls[1]) player.c++;
+                if (dir === 'down' && !c.walls[2]) player.r++;
+                if (dir === 'left' && !c.walls[3]) player.c--;
+                if (player.c === goal.c && player.r === goal.r) winGame();
             }
+            playEmojiSound(selectedChar);
         }
 
-        // GESTURE DETECTION
-        let touchStartX = 0, touchStartY = 0;
-        window.addEventListener('touchstart', e => { 
-            touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY; 
-        }, {passive: false});
-        
-        window.addEventListener('touchend', e => {
-            let diffX = e.changedTouches[0].clientX - touchStartX;
-            let diffY = e.changedTouches[0].clientY - touchStartY;
-            if (Math.abs(diffX) > 20 || Math.abs(diffY) > 20) {
-                if (Math.abs(diffX) > Math.abs(diffY)) handleMove(diffX > 0 ? 'right' : 'left');
-                else handleMove(diffY > 0 ? 'down' : 'up');
-            }
-        }, false);
+        function winGame(rushReward) {
+            let r = rushReward || (gameMode === 'RANDOM' ? {easy:25, medium:50, hard:500}[survivalDifficulty] : [0,50,150,400,800,2000][currentLevel]);
+            coins += r; 
+            gameMode = 'WON';
+            hideAllScreens(); saveState();
+            winScreen.style.display = 'block'; 
+            document.getElementById('reward-amt').innerText = r;
+            document.getElementById('win-buttons').innerHTML = (activeModeType === 'CAMPAIGN' && currentLevel < 5) ? `<button onclick="startLevel(${currentLevel+1})">Next Level</button>` : `<button onclick="showMainMenu()">Store</button>`;
+            [400, 600, 800].forEach((f, i) => playTone(f, 'square', 0.2, audioCtx.currentTime + i * 0.1));
+        }
 
+        function loseGame(h, t) {
+            gameMode = 'LOST'; hideAllScreens();
+            document.getElementById('lose-header').innerText = h;
+            document.getElementById('lose-text').innerText = t;
+            loseScreen.style.display = 'block';
+            [200, 150, 100].forEach((f, i) => playTone(f, 'sawtooth', 0.2, audioCtx.currentTime + i * 0.15));
+        }
+
+        function retryGame() {
+            if (activeModeType === 'RANDOM') startRandom(); 
+            else if (activeModeType === 'RUSH') startRush(); 
+            else startLevel(currentLevel);
+        }
+
+        let tX = 0, tY = 0;
+        window.addEventListener('touchstart', e => { tX = e.touches[0].clientX; tY = e.touches[0].clientY; }, {passive: false});
+        
+        // Prevent screen scrolling and pull-to-refresh on mobile devices
+        window.addEventListener('touchmove', e => {
+            if (['RANDOM', 'CAMPAIGN', 'RUSH'].includes(gameMode)) {
+                e.preventDefault();
+            }
+        }, {passive: false});
+
+        window.addEventListener('touchend', e => {
+            let dx = e.changedTouches[0].clientX - tX, dy = e.changedTouches[0].clientY - tY;
+            // Perfected swipe threshold 
+            if (Math.abs(dx) > 30 || Math.abs(dy) > 30) {
+                if (Math.abs(dx) > Math.abs(dy)) handleMove(dx > 0 ? 'right' : 'left');
+                else handleMove(dy > 0 ? 'down' : 'up');
+            }
+        });
         window.addEventListener('keydown', e => {
+            if (e.key.includes('Arrow') || 'wasd'.includes(e.key.toLowerCase())) e.preventDefault();
             if (e.key === 'ArrowUp' || e.key === 'w') handleMove('up');
             if (e.key === 'ArrowRight' || e.key === 'd') handleMove('right');
             if (e.key === 'ArrowDown' || e.key === 's') handleMove('down');
             if (e.key === 'ArrowLeft' || e.key === 'a') handleMove('left');
-            if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) e.preventDefault();
         });
-
-        // --- WIN/LOSE ---
-        function checkWin() {
-            if (player.c === goal.c && player.r === goal.r) {
-                playWinSound();
-                let reward = 0;
-                
-                if (gameMode === 'RANDOM') {
-                    if (survivalDifficulty === 'easy') reward = 25;
-                    else if (survivalDifficulty === 'medium') reward = 50;
-                    else if (survivalDifficulty === 'hard') reward = 500;
-                    
-                    let sec = Math.floor((Date.now() - startTime)/1000);
-                    if (sec > bestSurvivalTime) bestSurvivalTime = sec;
-                } else if (gameMode === 'CAMPAIGN') {
-                    reward = [0, 5, 15, 30, 60, 150][currentLevel];
-                }
-                
-                coins += reward; hideAllScreens();
-                saveState();
-                winScreen.style.display = 'block'; document.getElementById('reward-amt').innerText = reward;
-                document.getElementById('win-buttons').innerHTML = (gameMode === 'CAMPAIGN' && currentLevel < 5) ? `<button onclick="startLevel(${currentLevel+1})">Next Level</button>` : `<button onclick="showMainMenu()">Menu</button>`;
-                gameMode = 'WON';
-            }
-        }
-
-        function checkDeath() {
-            let rect = canvas.getBoundingClientRect();
-            if (deathWallScreenX >= (rect.left + (player.c * w) + (w * 0.2))) {
-                playLoseSound();
-                gameMode = 'LOST'; hideAllScreens(); loseScreen.style.display = 'block';
-            }
-        }
 
         saveState();
         requestAnimationFrame(gameLoop);

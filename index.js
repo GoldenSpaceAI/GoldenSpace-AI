@@ -489,7 +489,8 @@ const FEATURE_PRICES = {
   your_space: 4,
   learn_physics: 4,
   create_planet: 4,
-  search_lessons: 20,   // FIXED: was 10 â†’ now 20
+  search_lessons: 20,
+  quiz_me: 10,          // NEW: Quiz Me feature
 };
 
 // ---------------------------------------------
@@ -1123,6 +1124,88 @@ app.post("/search-lessons", requireFeature("search_lessons"), async (req, res) =
   } catch (error) {
     console.error("Search lessons error:", error);
     res.status(500).json({ error: error.message });
+  }
+});
+
+// ---------------------------------------------------------
+// QUIZ ME (10G / month) - Interactive multiple choice quizzes
+// ---------------------------------------------------------
+app.post("/api/generate-quiz", requireFeature("quiz_me"), async (req, res) => {
+  try {
+    const { topic, difficulty = "medium" } = req.body;
+
+    if (!topic || !topic.trim()) {
+      return res.status(400).json({ error: "Topic is required" });
+    }
+
+    let questionCount = 10;
+    let difficultyText = "medium difficulty";
+
+    if (difficulty === "easy") {
+      questionCount = 5;
+      difficultyText = "easy difficulty, simple and clear questions suitable for beginners";
+    } else if (difficulty === "hard") {
+      questionCount = 15;
+      difficultyText = "hard difficulty, challenging and advanced questions";
+    }
+
+    const prompt = `Create a multiple-choice quiz about "${topic}".
+Difficulty: ${difficultyText}.
+Number of questions: ${questionCount}.
+
+Rules:
+- Each question must have exactly 4 options
+- Only one correct answer per question
+- Return ONLY valid JSON, no extra text or markdown
+- Use this exact format:
+
+{
+  "topic": "${topic}",
+  "difficulty": "${difficulty}",
+  "questions": [
+    {
+      "question": "Question text here?",
+      "options": ["Option A", "Option B", "Option C", "Option D"],
+      "correctIndex": 0
+    }
+  ]
+}
+
+correctIndex is the zero-based index of the correct option (0, 1, 2, or 3).`;
+
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "system", content: "You are a quiz generator. Always return pure valid JSON only. No markdown, no explanations." },
+        { role: "user", content: prompt }
+      ],
+      temperature: 0.7,
+      max_tokens: 3500
+    });
+
+    let content = completion.choices[0]?.message?.content || "";
+    content = content.replace(/```json/gi, "").replace(/```/g, "").trim();
+
+    let quizData;
+    try {
+      quizData = JSON.parse(content);
+    } catch (e) {
+      console.error("Failed to parse quiz JSON:", content.substring(0, 300));
+      return res.status(500).json({ error: "Failed to generate valid quiz. Please try again." });
+    }
+
+    if (!quizData.questions || !Array.isArray(quizData.questions) || quizData.questions.length === 0) {
+      return res.status(500).json({ error: "Invalid quiz format received" });
+    }
+
+    res.json({
+      success: true,
+      quiz: quizData
+    });
+
+  } catch (error) {
+    console.error("Quiz generation error:", error);
+    res.status(500).json({ error: error.message || "Failed to generate quiz" });
   }
 });
 

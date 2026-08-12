@@ -1,362 +1,831 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>GoldenSpaceAI • Learn Physics</title>
-
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+  <title>GoldenSpaceAI â€¢ Learn Physics</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    :root{
-      --bg:#0a0e15; --panel:#121827; --panel2:#0c1220;
-      --border:#1f2a40; --gold:#f6c64a; --gold2:#eb8b36;
-      --text:#e6f0ff; --muted:#99a3b5; --ok:#9cff9c; --err:#ff9a9a;
-      --shadow:0 18px 60px rgba(0,0,0,.45);
+    :root {
+      --bg-deep: #0b0f19;
+      --bg-main: #111827;
+      --bg-card: #1e293b;
+      --bg-hover: #334155;
+      --border: rgba(255,255,255,0.08);
+      --border-strong: rgba(255,255,255,0.12);
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --accent: #6366f1;
+      --accent-hover: #4f46e5;
+      --golden: #f59e0b;
+      --golden-soft: rgba(245, 158, 11, 0.15);
+      --success: #10b981;
+      --danger: #ef4444;
+      --radius: 16px;
     }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0;color:var(--text);
-      font:15px/1.55 ui-sans-serif,system-ui,-apple-system,Segoe UI,Inter,Roboto,Arial,sans-serif;
-      background:
-        radial-gradient(1200px 520px at 85% -10%, rgba(246,198,74,.12), transparent 60%),
-        radial-gradient(900px 480px at -10% 0%, rgba(246,198,74,.08), transparent 60%),
-        var(--bg);
-      min-height:100svh;
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      height: 100%;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-deep);
+      color: var(--text-primary);
+      -webkit-font-smoothing: antialiased;
     }
-    a{color:inherit;text-decoration:none}
 
-    /* Topbar */
-    .top{position:sticky;top:0;z-index:20;padding:14px 18px 10px;
-      background:linear-gradient(180deg,rgba(10,14,21,.92),rgba(10,14,21,.65) 60%,transparent);
-      border-bottom:1px solid var(--border);backdrop-filter:blur(8px);
-      display:flex;align-items:center;gap:12px}
-    .back{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;font-weight:900;font-size:14px;
-      background:linear-gradient(180deg,var(--gold),var(--gold2));color:#1b1300;border:1px solid rgba(0,0,0,.18);
-      box-shadow:0 10px 26px rgba(246,198,74,.25);transition:.2s}
-    .back:hover{transform:translateY(-1px);filter:saturate(1.05)}
-    .title{font-weight:900;letter-spacing:.3px;color:var(--gold);font-size:clamp(22px,2.6vw,28px);text-shadow:0 0 18px rgba(246,198,74,.25)}
-    .spacer{flex:1}
-    .balance{font-weight:800;color:var(--muted);border:1px solid var(--border);padding:6px 10px;border-radius:10px;background:#0d1420}
+    body {
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+    }
 
-    /* Layout */
-    .wrap{max-width:1200px;margin:26px auto;padding:0 18px;display:grid;gap:18px;grid-template-columns:1.4fr .9fr}
-    @media (max-width:1100px){.wrap{grid-template-columns:1fr}}
-    .panel{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--border);border-radius:16px;padding:18px;box-shadow:var(--shadow)}
-    .panel h2{margin:0 0 10px;font-size:18px;color:var(--gold);font-weight:900}
-    .sub{margin:6px 0 14px;color:var(--muted);font-size:14px}
+    /* ===== TOP ===== */
+    .top {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      background: rgba(11, 15, 25, 0.92);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .back {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: #1a1200;
+      font-size: 13px;
+      font-weight: 700;
+      text-decoration: none;
+      transition: transform 0.15s;
+    }
+
+    .back:hover { transform: translateY(-1px); }
+
+    .title {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--golden);
+    }
+
+    .spacer { flex: 1; }
+
+    .balance {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 6px 12px;
+      border-radius: 999px;
+    }
+
+    .balance span {
+      color: var(--golden);
+      font-weight: 700;
+    }
+
+    /* ===== MAIN ===== */
+    .wrap {
+      flex: 1;
+      max-width: 1100px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 20px 16px 40px;
+      display: grid;
+      grid-template-columns: 1.3fr 1fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 900px) {
+      .wrap {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 20px;
+    }
+
+    .panel h2 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: var(--text-primary);
+    }
+
+    .sub {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
 
     /* Topics */
-    .topics{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
-    .card{background:#0d1420;border:1px solid var(--border);border-radius:14px;padding:14px;cursor:pointer;transition:.12s}
-    .card:hover{transform:translateY(-2px);box-shadow:0 14px 30px rgba(0,0,0,.25)}
-    .card h3{margin:0 0 6px;font-size:16px;display:flex;align-items:center;gap:8px}
-    .pill{display:inline-block;padding:3px 8px;border-radius:999px;font-size:12px;font-weight:800;color:#1b1300;background:linear-gradient(180deg,#f8d772,#e7b72f)}
-    .tiny{font-size:12px;color:var(--muted)}
-    .formula{font-family:ui-monospace,Menlo,Consolas,monospace;color:#ffe08a}
+    .topics {
+      display: grid;
+      gap: 12px;
+    }
 
-    details{margin-top:8px;border:1px solid var(--border);border-radius:12px;overflow:hidden}
-    summary{cursor:pointer;padding:10px 12px;background:#0f1725;list-style:none;font-weight:800}
-    summary::-webkit-details-marker{display:none}
-    details .content{padding:12px;background:#0b111c}
+    .topic-card {
+      background: var(--bg-main);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .topic-card:hover {
+      border-color: rgba(99, 102, 241, 0.35);
+      background: rgba(30, 41, 59, 0.8);
+    }
+
+    .topic-card.active {
+      border-color: var(--accent);
+      background: rgba(99, 102, 241, 0.1);
+    }
+
+    .topic-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 4px;
+    }
+
+    .topic-title {
+      font-size: 15px;
+      font-weight: 650;
+    }
+
+    .topic-pill {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: var(--golden-soft);
+      color: var(--golden);
+      white-space: nowrap;
+    }
+
+    .topic-desc {
+      font-size: 12.5px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .formulas {
+      margin-top: 8px;
+      border-top: 1px solid var(--border);
+      padding-top: 10px;
+    }
+
+    .formulas summary {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      cursor: pointer;
+      list-style: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .formulas summary::-webkit-details-marker { display: none; }
+
+    .formulas .content {
+      margin-top: 8px;
+      font-size: 13px;
+      color: #fcd34d;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      line-height: 1.6;
+    }
 
     /* Tutor */
-    .chat{height:320px;overflow:auto;display:flex;flex-direction:column;gap:10px;padding:10px;background:#0b1219;border:1px solid var(--border);border-radius:12px}
-    .bubble{padding:10px 12px;border-radius:12px;border:1px solid #22304a;background:#0e1622}
-    .me{align-self:flex-end;background:#121b29;border-color:#3a2a00}
-    .assistant{align-self:flex-start}
-    .controls{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:start;margin-top:10px}
-    textarea,input{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:#0b1219;color:var(--text)}
-    .btn{border-radius:12px;padding:10px 14px;font-weight:900;cursor:pointer;background:linear-gradient(180deg,var(--gold),var(--gold2));color:#1b1300;border:1px solid rgba(0,0,0,.18);box-shadow:0 10px 26px rgba(246,198,74,.28);transition:.2s}
-    .btn:hover{transform:translateY(-1px);filter:saturate(1.05)}
-    .modes{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 6px}
-    .tag{font-size:11px;border:1px solid var(--border);padding:4px 8px;border-radius:999px;color:var(--muted);cursor:pointer}
-    .tag.active{color:#000;background:linear-gradient(180deg,#f8d772,#e7b72f);border-color:#3b2a00}
-    .status{margin-top:6px;font-size:12px;color:var(--muted)}
+    .modes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-bottom: 12px;
+    }
 
-    /* 4G Lock Overlay */
-    .golden-overlay{position:fixed;inset:0;background:rgba(11,16,32,.96);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;z-index:10000}
-    .golden-unlock{background:linear-gradient(135deg,#0f1624,#0b1320);border:2px solid var(--gold);border-radius:20px;padding:26px;text-align:center;max-width:420px;width:92%}
-    .golden-unlock h2{color:var(--gold);margin:0 0 8px}
-    .golden-unlock .desc{color:var(--muted);margin:0 0 10px}
-    .price{font-size:36px;font-weight:900;color:var(--gold);margin:10px 0}
-    .price span{font-size:14px;color:var(--muted)}
-    .balance-info{color:var(--muted);margin:8px 0}
-    .unlock-btn{width:100%;margin-top:10px;border-radius:12px;padding:12px 16px;font-weight:900;cursor:pointer;background:linear-gradient(180deg,var(--gold),var(--gold2));color:#1a1300;border:none}
-    .links{margin-top:14px}
-    .links a{color:var(--gold);margin:0 10px}
-    #statusMessage{margin-top:8px;min-height:20px}
+    .mode-tag {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 11px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.18s;
+    }
+
+    .mode-tag:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+
+    .mode-tag.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+    }
+
+    .chat {
+      height: 340px;
+      overflow-y: auto;
+      background: var(--bg-main);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 12px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--bg-hover) transparent;
+    }
+
+    .bubble {
+      max-width: 92%;
+      padding: 10px 13px;
+      border-radius: 14px;
+      font-size: 13.5px;
+      line-height: 1.55;
+      white-space: pre-wrap;
+    }
+
+    .bubble.user {
+      align-self: flex-end;
+      background: var(--accent);
+      color: white;
+      border-bottom-right-radius: 5px;
+    }
+
+    .bubble.assistant {
+      align-self: flex-start;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      border-bottom-left-radius: 5px;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+    }
+
+    textarea {
+      flex: 1;
+      background: var(--bg-main);
+      border: 1px solid var(--border-strong);
+      border-radius: 12px;
+      padding: 11px 13px;
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 14px;
+      resize: none;
+      min-height: 46px;
+      max-height: 120px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    textarea:focus {
+      border-color: var(--accent);
+    }
+
+    textarea::placeholder {
+      color: var(--text-muted);
+    }
+
+    .send-btn {
+      padding: 12px 18px;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: #1a1200;
+      font-weight: 700;
+      font-size: 13.5px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: transform 0.15s, box-shadow 0.2s;
+    }
+
+    .send-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(245, 158, 11, 0.3);
+    }
+
+    .send-btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .ai-status {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 8px;
+      min-height: 16px;
+    }
+
+    /* ===== LOCK ===== */
+    .lock-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      background: rgba(11, 15, 25, 0.94);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .lock-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-strong);
+      border-radius: 20px;
+      padding: 28px 24px;
+      max-width: 380px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+    }
+
+    .lock-icon {
+      width: 58px;
+      height: 58px;
+      margin: 0 auto 14px;
+      background: var(--golden-soft);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+    }
+
+    .lock-box h2 {
+      font-size: 19px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .lock-box p {
+      color: var(--text-secondary);
+      font-size: 13.5px;
+      line-height: 1.5;
+      margin-bottom: 16px;
+    }
+
+    .price {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--golden);
+      margin-bottom: 4px;
+    }
+
+    .price-sub {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+    }
+
+    .balance-line {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: 18px;
+    }
+
+    .balance-line span {
+      color: var(--golden);
+      font-weight: 700;
+    }
+
+    .unlock-btn {
+      width: 100%;
+      padding: 13px;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: #1a1200;
+      font-size: 14.5px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.2s;
+    }
+
+    .unlock-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(245, 158, 11, 0.35);
+    }
+
+    .unlock-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .lock-status {
+      margin-top: 12px;
+      font-size: 13px;
+      min-height: 18px;
+    }
+
+    .lock-status.success { color: var(--success); }
+    .lock-status.error { color: var(--danger); }
+
+    .lock-links {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 14px;
+      font-size: 13px;
+    }
+
+    .lock-links a {
+      color: var(--golden);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    /* Mobile tweaks */
+    @media (max-width: 600px) {
+      .panel { padding: 16px; }
+      .chat { height: 300px; }
+      .topic-title { font-size: 14.5px; }
+    }
   </style>
 </head>
 <body>
-  <!-- ==================== TOP ==================== -->
+
+  <!-- TOP -->
   <div class="top">
-    <a class="back" href="/">Home</a>
+    <a class="back" href="/">â† Home</a>
     <div class="title">Learn Physics</div>
     <div class="spacer"></div>
     <div class="balance">Balance: <span id="uiBalance">0</span> G</div>
   </div>
 
-  <!-- ==================== 4G LOCK OVERLAY ==================== -->
-  <div id="goldenOverlay" class="golden-overlay" hidden>
-    <div class="golden-unlock">
-      <div style="font-size:54px;margin-bottom:8px">🔒</div>
-      <h2>Unlock This Feature</h2>
-      <p class="desc">Access <strong>Learn Physics</strong> for 30 days</p>
-      <div class="price">4G <span>per month</span></div>
-      <div class="balance-info">Your balance: <span id="userBalance">0</span> G</div>
-      <button class="unlock-btn" id="unlockBtn">UNLOCK FOR 4G</button>
-      <div id="statusMessage"></div>
-      <div class="links">
-        <a href="/buy-golden.html">Need Golden? Buy here</a>
+  <!-- LOCK -->
+  <div class="lock-overlay" id="lockOverlay">
+    <div class="lock-box">
+      <div class="lock-icon">ðŸ”’</div>
+      <h2>Learn Physics Locked</h2>
+      <p>Unlock interactive physics topics + AI tutor for 30 days.</p>
+      <div class="price">4 G</div>
+      <div class="price-sub">per month</div>
+      <div class="balance-line">Your Balance: <span id="userBalance">0</span> G</div>
+      <button class="unlock-btn" id="unlockBtn">UNLOCK FOR 4 G</button>
+      <div class="lock-status" id="lockStatus"></div>
+      <div class="lock-links">
+        <a href="/buy-golden.html">Buy More Golden</a>
         <a href="/">Back to Home</a>
       </div>
     </div>
   </div>
 
-  <!-- ==================== MAIN ==================== -->
-  <main class="wrap" id="pageContent" style="visibility:hidden">
-    <!-- LEFT: topics -->
+  <!-- MAIN -->
+  <div class="wrap" id="pageContent" style="visibility:hidden">
+
+    <!-- Topics -->
     <section class="panel">
       <h2>Core Topics</h2>
-      <p class="sub">Tap a topic to focus; expand formulas to revise quickly.</p>
+      <p class="sub">Tap a topic to focus the AI tutor. Expand formulas to revise quickly.</p>
 
-      <div id="topics" class="topics">
-        <!-- (Kept compact but polished) -->
-        <div class="card" data-topic="Mechanics">
-          <h3>Mechanics <span class="pill">Kinematics & Dynamics</span></h3>
-          <div class="tiny">Forces, motion, energy, momentum.</div>
-          <details><summary>Key formulas</summary>
+      <div class="topics" id="topics">
+        <div class="topic-card active" data-topic="Mechanics">
+          <div class="topic-header">
+            <div class="topic-title">Mechanics</div>
+            <div class="topic-pill">Kinematics</div>
+          </div>
+          <div class="topic-desc">Forces, motion, energy, momentum</div>
+          <details class="formulas">
+            <summary>Key formulas</summary>
             <div class="content">
-              <p><span class="formula">v = u + at</span> • <span class="formula">s = ut + ½at²</span> • <span class="formula">v² = u² + 2as</span></p>
-              <p><span class="formula">F = ma</span> • <span class="formula">W = Fs</span> • <span class="formula">P = W/t</span></p>
+              v = u + at<br>
+              s = ut + Â½atÂ²<br>
+              vÂ² = uÂ² + 2as<br>
+              F = ma â€¢ W = Fs â€¢ P = W/t
             </div>
           </details>
         </div>
 
-        <div class="card" data-topic="Rotational Dynamics">
-          <h3>Rotational Dynamics <span class="pill">Torque</span></h3>
-          <div class="tiny">Angular motion, inertia, rolling.</div>
-          <details><summary>Key formulas</summary>
+        <div class="topic-card" data-topic="Rotational Dynamics">
+          <div class="topic-header">
+            <div class="topic-title">Rotational Dynamics</div>
+            <div class="topic-pill">Torque</div>
+          </div>
+          <div class="topic-desc">Angular motion, inertia, rolling</div>
+          <details class="formulas">
+            <summary>Key formulas</summary>
             <div class="content">
-              <p><span class="formula">τ = Iα</span> • <span class="formula">L = Iω</span> • <span class="formula">K₍rot₎ = ½Iω²</span></p>
+              Ï„ = IÎ±<br>
+              L = IÏ‰<br>
+              K<sub>rot</sub> = Â½IÏ‰Â²
             </div>
           </details>
         </div>
 
-        <div class="card" data-topic="Thermodynamics">
-          <h3>Thermodynamics <span class="pill">Laws</span></h3>
-          <div class="tiny">First/second law; PV diagrams; engines.</div>
-          <details><summary>Key formulas</summary>
+        <div class="topic-card" data-topic="Thermodynamics">
+          <div class="topic-header">
+            <div class="topic-title">Thermodynamics</div>
+            <div class="topic-pill">Laws</div>
+          </div>
+          <div class="topic-desc">First & second law, engines, PV diagrams</div>
+          <details class="formulas">
+            <summary>Key formulas</summary>
             <div class="content">
-              <p><span class="formula">ΔU = Q - W</span> • <span class="formula">PV = nRT</span> • <span class="formula">η = 1 - T<sub>c</sub>/T<sub>h</sub></span></p>
+              Î”U = Q âˆ’ W<br>
+              PV = nRT<br>
+              Î· = 1 âˆ’ T<sub>c</sub>/T<sub>h</sub>
             </div>
           </details>
         </div>
 
-        <div class="card" data-topic="Electricity">
-          <h3>Electricity <span class="pill">DC Circuits</span></h3>
-          <div class="tiny">Ohm’s law; series/parallel; power.</div>
-          <details><summary>Key formulas</summary>
+        <div class="topic-card" data-topic="Electricity">
+          <div class="topic-header">
+            <div class="topic-title">Electricity</div>
+            <div class="topic-pill">DC Circuits</div>
+          </div>
+          <div class="topic-desc">Ohmâ€™s law, series/parallel, power</div>
+          <details class="formulas">
+            <summary>Key formulas</summary>
             <div class="content">
-              <p><span class="formula">V = IR</span> • <span class="formula">P = VI = I²R = V²/R</span></p>
+              V = IR<br>
+              P = VI = IÂ²R = VÂ²/R
             </div>
           </details>
         </div>
 
-        <div class="card" data-topic="Waves & Optics">
-          <h3>Waves & Optics <span class="pill">Interference</span></h3>
-          <div class="tiny">Wave equation, diffraction, lenses.</div>
-          <details><summary>Key formulas</summary>
+        <div class="topic-card" data-topic="Waves & Optics">
+          <div class="topic-header">
+            <div class="topic-title">Waves & Optics</div>
+            <div class="topic-pill">Interference</div>
+          </div>
+          <div class="topic-desc">Wave equation, diffraction, lenses</div>
+          <details class="formulas">
+            <summary>Key formulas</summary>
             <div class="content">
-              <p><span class="formula">v = fλ</span> • <span class="formula">Δy = λL/d</span> • <span class="formula">1/f = 1/u + 1/v</span></p>
+              v = fÎ»<br>
+              Î”y = Î»L/d<br>
+              1/f = 1/u + 1/v
             </div>
           </details>
         </div>
 
-        <div class="card" data-topic="Modern Physics">
-          <h3>Modern Physics <span class="pill">Photoelectric</span></h3>
-          <div class="tiny">Photons, Bohr model, Compton.</div>
-          <details><summary>Key formulas</summary>
+        <div class="topic-card" data-topic="Modern Physics">
+          <div class="topic-header">
+            <div class="topic-title">Modern Physics</div>
+            <div class="topic-pill">Photoelectric</div>
+          </div>
+          <div class="topic-desc">Photons, Bohr model, Compton effect</div>
+          <details class="formulas">
+            <summary>Key formulas</summary>
             <div class="content">
-              <p><span class="formula">E = hf = hc/λ</span> • <span class="formula">K<sub>max</sub> = hf - Φ</span></p>
+              E = hf = hc/Î»<br>
+              K<sub>max</sub> = hf âˆ’ Î¦
             </div>
           </details>
         </div>
       </div>
     </section>
 
-    <!-- RIGHT: AI Tutor -->
+    <!-- Tutor -->
     <aside class="panel">
-      <h2>Physics Tutor (GPT-4)</h2>
-      <div class="sub">Choose a mode, then ask. Answers adapt to the topic you select.</div>
+      <h2>Physics Tutor</h2>
+      <p class="sub">Choose a mode, then ask anything related to the selected topic.</p>
 
-      <div class="modes">
-        <div class="tag active" data-mode="Socratic">💡 Explain</div>
-        <div class="tag" data-mode="Steps">🪜 Step-by-Step</div>
-        <div class="tag" data-mode="Practice">🧪 Quiz Me</div>
-        <div class="tag" data-mode="Check">✅ Check My Work</div>
+      <div class="modes" id="modes">
+        <button class="mode-tag active" data-mode="Socratic">Explain</button>
+        <button class="mode-tag" data-mode="Steps">Step-by-Step</button>
+        <button class="mode-tag" data-mode="Practice">Quiz Me</button>
+        <button class="mode-tag" data-mode="Check">Check My Work</button>
       </div>
 
-      <div class="chat" id="chat"></div>
-
-      <div class="controls">
-        <textarea id="ask" rows="2" placeholder="Ask a physics question…"></textarea>
-        <button id="send" class="btn">Ask Tutor →</button>
+      <div class="chat" id="chat">
+        <div class="bubble assistant">Hi! Select a topic on the left and ask me any physics question. Iâ€™ll adapt my answers to the topic and mode you choose.</div>
       </div>
-      <div class="status" id="aiStatus"></div>
+
+      <div class="input-row">
+        <textarea id="ask" rows="1" placeholder="Ask a physics questionâ€¦"></textarea>
+        <button class="send-btn" id="send">Ask</button>
+      </div>
+      <div class="ai-status" id="aiStatus"></div>
     </aside>
-  </main>
+  </div>
 
-  <script>
-    // -------- Feature constants --------
-    const FEATURE = 'learn_physics'; // backend key
-    const OVERLAY = document.getElementById('goldenOverlay');
-    const UI_BAL = document.getElementById('uiBalance');
-    const USER_BAL = document.getElementById('userBalance');
-    const STATUS = document.getElementById('statusMessage');
-    const UNLOCK_BTN = document.getElementById('unlockBtn');
-    const PAGE = document.getElementById('pageContent');
+<script>
+  const FEATURE = "learn_physics";
+  const COST = 4;
 
-    // -------- Helper: toast --------
-    function toast(msg){
-      const el = document.createElement('div');
-      el.textContent = msg;
-      Object.assign(el.style,{
-        position:'fixed',bottom:'18px',left:'50%',transform:'translateX(-50%)',
-        padding:'8px 12px',border:'1px solid var(--border)',background:'#0d1420',
-        color:'var(--gold)',borderRadius:'999px',boxShadow:'var(--shadow)',zIndex:9999
-      });
-      document.body.appendChild(el); setTimeout(()=>el.remove(),1400);
-    }
+  let CURRENT_TOPIC = "Mechanics";
+  let MODE = "Socratic";
 
-    // -------- Auth + gating --------
-    async function loadMe(){
-      const me = await fetch('/api/me',{credentials:'include'}).then(r=>r.json()).catch(()=>({loggedIn:false}));
-      if(!me.loggedIn){ window.location.href='/login-signup.html'; return null; }
-      UI_BAL.textContent = me.balance ?? 0;
-      USER_BAL.textContent = me.balance ?? 0;
+  const lockOverlay = document.getElementById("lockOverlay");
+  const pageContent = document.getElementById("pageContent");
+  const uiBalance = document.getElementById("uiBalance");
+  const userBalance = document.getElementById("userBalance");
+  const lockStatus = document.getElementById("lockStatus");
+  const unlockBtn = document.getElementById("unlockBtn");
+  const chat = document.getElementById("chat");
+  const ask = document.getElementById("ask");
+  const sendBtn = document.getElementById("send");
+  const aiStatus = document.getElementById("aiStatus");
+
+  // ---------- Auth & Lock ----------
+  async function loadMe() {
+    try {
+      const me = await fetch("/api/me", { credentials: "include" }).then(r => r.json());
+      if (!me.loggedIn) {
+        window.location.href = "/login-signup.html";
+        return null;
+      }
+      uiBalance.textContent = me.balance ?? 0;
+      userBalance.textContent = me.balance ?? 0;
       return me;
+    } catch {
+      return null;
     }
+  }
 
-    async function checkAccess(){
-      try{
-        const r = await fetch(`/api/feature-status?feature=${FEATURE}`,{credentials:'include'});
-        if(!r.ok){ throw new Error('Feature status fetch failed'); }
-        const data = await r.json();
-        if(data.unlocked){
-          OVERLAY.hidden = true;
-          PAGE.style.visibility = 'visible';
-        }else{
-          OVERLAY.hidden = false;
-          PAGE.style.visibility = 'hidden';
-        }
-      }catch(e){
-        console.error(e);
-        OVERLAY.hidden = false;
-        STATUS.textContent = 'Network error. Please retry.'; STATUS.style.color = 'var(--err)';
+  async function checkAccess() {
+    try {
+      const r = await fetch(`/api/feature-status?feature=${FEATURE}`, { credentials: "include" });
+      const data = await r.json();
+      if (data.unlocked) {
+        lockOverlay.style.display = "none";
+        pageContent.style.visibility = "visible";
+      } else {
+        lockOverlay.style.display = "flex";
+        pageContent.style.visibility = "hidden";
       }
+    } catch {
+      lockOverlay.style.display = "flex";
+      pageContent.style.visibility = "hidden";
     }
+  }
 
-    UNLOCK_BTN?.addEventListener('click', async ()=>{
-      UNLOCK_BTN.disabled = true; UNLOCK_BTN.textContent = 'Processing…';
-      STATUS.textContent = '';
-      try{
-        const res = await fetch('/api/unlock-feature',{
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          credentials:'include',
-          body:JSON.stringify({ feature: FEATURE, cost: 4 })
-        });
-        const data = await res.json();
-        if(data.success){
-          STATUS.textContent = '✅ Unlocked! Loading…'; STATUS.style.color = 'var(--ok)';
-          const bal = Number(USER_BAL.textContent||0) - 4; USER_BAL.textContent = Math.max(0,bal);
-          setTimeout(()=>{ OVERLAY.hidden = true; PAGE.style.visibility='visible'; }, 700);
-        }else{
-          STATUS.textContent = '❌ ' + (data.error || 'Could not unlock'); STATUS.style.color = 'var(--err)';
-          UNLOCK_BTN.disabled = false; UNLOCK_BTN.textContent = 'UNLOCK FOR 4G';
-        }
-      }catch(e){
-        STATUS.textContent = '❌ Network error'; STATUS.style.color = 'var(--err)';
-        UNLOCK_BTN.disabled = false; UNLOCK_BTN.textContent = 'UNLOCK FOR 4G';
+  unlockBtn.addEventListener("click", async () => {
+    unlockBtn.disabled = true;
+    unlockBtn.textContent = "Processingâ€¦";
+    lockStatus.textContent = "";
+    lockStatus.className = "lock-status";
+
+    try {
+      const res = await fetch("/api/unlock-feature", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ feature: FEATURE, cost: COST })
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        lockStatus.textContent = "Unlocked successfully!";
+        lockStatus.className = "lock-status success";
+        userBalance.textContent = data.newBalance ?? Math.max(0, Number(userBalance.textContent) - COST);
+        uiBalance.textContent = userBalance.textContent;
+        setTimeout(() => {
+          lockOverlay.style.display = "none";
+          pageContent.style.visibility = "visible";
+        }, 700);
+      } else {
+        lockStatus.textContent = data.error || "Could not unlock";
+        lockStatus.className = "lock-status error";
+        unlockBtn.disabled = false;
+        unlockBtn.textContent = "UNLOCK FOR 4 G";
       }
-    });
+    } catch {
+      lockStatus.textContent = "Network error";
+      lockStatus.className = "lock-status error";
+      unlockBtn.disabled = false;
+      unlockBtn.textContent = "UNLOCK FOR 4 G";
+    }
+  });
 
-    // -------- Topics selection (sets CURRENT_TOPIC) --------
-    let CURRENT_TOPIC = 'Mechanics';
-    document.querySelectorAll('#topics .card[data-topic]').forEach(card=>{
-      card.addEventListener('click', ()=>{
-        CURRENT_TOPIC = card.getAttribute('data-topic');
-        toast(`Topic set: ${CURRENT_TOPIC}`);
+  // ---------- Topics ----------
+  document.querySelectorAll(".topic-card").forEach(card => {
+    card.addEventListener("click", (e) => {
+      // Don't trigger when opening formulas
+      if (e.target.closest("details")) return;
+
+      document.querySelectorAll(".topic-card").forEach(c => c.classList.remove("active"));
+      card.classList.add("active");
+      CURRENT_TOPIC = card.dataset.topic;
+    });
+  });
+
+  // ---------- Modes ----------
+  document.querySelectorAll(".mode-tag").forEach(tag => {
+    tag.addEventListener("click", () => {
+      document.querySelectorAll(".mode-tag").forEach(t => t.classList.remove("active"));
+      tag.classList.add("active");
+      MODE = tag.dataset.mode;
+    });
+  });
+
+  // ---------- Chat ----------
+  function addBubble(role, text) {
+    const b = document.createElement("div");
+    b.className = `bubble ${role}`;
+    b.textContent = text;
+    chat.appendChild(b);
+    chat.scrollTop = chat.scrollHeight;
+    return b;
+  }
+
+  function cleanMarkdown(text) {
+    return text
+      .replace(/^#{1,6}\s+/gm, "")
+      .replace(/\*\*(.*?)\*\*/g, "$1")
+      .replace(/\*(.*?)\*/g, "$1")
+      .replace(/`{1,3}(.*?)`{1,3}/g, "$1")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
+  }
+
+  async function sendTutor() {
+    const text = (ask.value || "").trim();
+    if (!text) return;
+
+    addBubble("user", text);
+    ask.value = "";
+    ask.style.height = "auto";
+
+    const thinking = addBubble("assistant", "Thinkingâ€¦");
+    aiStatus.textContent = "Contacting tutorâ€¦";
+    sendBtn.disabled = true;
+
+    try {
+      const res = await fetch("/api/physics-tutor", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          question: text,
+          topic: CURRENT_TOPIC,
+          mode: MODE
+        })
       });
-    });
 
-    // -------- Modes selection --------
-    let MODE = 'Socratic';
-    const modeTags = Array.from(document.querySelectorAll('.tag'));
-    modeTags.forEach(t=>{
-      t.addEventListener('click', ()=>{
-        modeTags.forEach(x=>x.classList.remove('active'));
-        t.classList.add('active');
-        MODE = t.dataset.mode || 'Socratic';
-        toast(`Mode: ${MODE}`);
-      });
-    });
+      const data = await res.json();
 
-    // -------- Tutor Chat --------
-    const chat = document.getElementById('chat');
-    const ask  = document.getElementById('ask');
-    const send = document.getElementById('send');
-    const aiStatus = document.getElementById('aiStatus');
-
-    function bubble(role, html){
-      const b = document.createElement('div');
-      b.className = `bubble ${role==='user'?'me':'assistant'}`;
-      b.innerHTML = html;
-      chat.appendChild(b);
+      if (res.ok && (data.reply || data.text)) {
+        thinking.textContent = cleanMarkdown(data.reply || data.text);
+        aiStatus.textContent = "";
+      } else {
+        thinking.textContent = "Sorry, I couldnâ€™t generate a reply. Please try again.";
+        aiStatus.textContent = "";
+      }
+    } catch {
+      thinking.textContent = "Network error. Please try again.";
+      aiStatus.textContent = "";
+    } finally {
+      sendBtn.disabled = false;
       chat.scrollTop = chat.scrollHeight;
-      return b;
     }
+  }
 
-    async function sendTutor(){
-      const text = (ask.value||'').trim();
-      if(!text) return;
-      bubble('user', text.replace(/\n/g,'<br>'));
-      ask.value = '';
-
-      const thinking = bubble('assistant','<span class="tiny">Thinking…</span>');
-      aiStatus.textContent = 'Contacting tutor…';
-
-      try{
-        const res = await fetch('/api/physics-tutor',{
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({ question: text, topic: CURRENT_TOPIC, mode: MODE })
-        });
-        const data = await res.json();
-        if(res.ok && data.reply){
-          thinking.innerHTML = data.reply.replace(/\n/g,'<br>');
-          aiStatus.textContent = '';
-        }else{
-          thinking.innerHTML = `<span style="color:var(--err)">No reply.</span>`;
-          aiStatus.textContent = 'Tutor returned no content.';
-        }
-      }catch(e){
-        thinking.innerHTML = `<span style="color:var(--err)">Error connecting to AI.</span>`;
-        aiStatus.textContent = 'Network error.';
-      }
+  sendBtn.addEventListener("click", sendTutor);
+  ask.addEventListener("keydown", e => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendTutor();
     }
+  });
 
-    send.addEventListener('click', sendTutor);
-    ask.addEventListener('keydown', e=>{
-      if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendTutor(); }
-    });
+  // Auto-resize textarea
+  ask.addEventListener("input", () => {
+    ask.style.height = "auto";
+    ask.style.height = Math.min(ask.scrollHeight, 120) + "px";
+  });
 
-    // -------- Boot --------
-    (async ()=>{
-      const me = await loadMe(); if(!me) return;
-      await checkAccess();
-    })();
-  </script>
+  // ---------- Boot ----------
+  (async () => {
+    const me = await loadMe();
+    if (!me) return;
+    await checkAccess();
+  })();
+</script>
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
-  <title>GoldenSpaceAI • Buy Golden</title>
+  <title>GoldenSpaceAI â€¢ Buy Golden</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -304,7 +304,7 @@
     }
 
     .rules li::before {
-      content: "•";
+      content: "â€¢";
       position: absolute;
       left: 0;
       color: var(--golden);
@@ -472,7 +472,7 @@
     <div class="section-title">2. Choose Payment Method</div>
     <div class="methods" id="methods">
       <div class="method" data-method="syriatel">
-        <div class="method-icon">📱</div>
+        <div class="method-icon">ðŸ“±</div>
         <div class="method-info">
           <div class="method-name">Syriatel Cash</div>
           <div class="method-desc">Send to 0933 668 634</div>
@@ -481,7 +481,7 @@
       </div>
 
       <div class="method" data-method="mtn">
-        <div class="method-icon">📱</div>
+        <div class="method-icon">ðŸ“±</div>
         <div class="method-info">
           <div class="method-name">MTN Cash</div>
           <div class="method-desc">Send to 0962 060 530</div>
@@ -490,7 +490,7 @@
       </div>
 
       <div class="method" data-method="usdt">
-        <div class="method-icon">₮</div>
+        <div class="method-icon">â‚®</div>
         <div class="method-info">
           <div class="method-name">USDT (TRC20)</div>
           <div class="method-desc">Crypto payment</div>
@@ -503,15 +503,15 @@
     <div class="summary" id="summary">
       <div class="summary-row">
         <span>Package</span>
-        <span id="sumPackage">—</span>
+        <span id="sumPackage">â€”</span>
       </div>
       <div class="summary-row">
         <span>Payment</span>
-        <span id="sumMethod">—</span>
+        <span id="sumMethod">â€”</span>
       </div>
       <div class="summary-row">
         <span>Total</span>
-        <span id="sumTotal">—</span>
+        <span id="sumTotal">â€”</span>
       </div>
     </div>
 
@@ -537,7 +537,7 @@
 
     <p class="note">
       You will be redirected to WhatsApp to complete the payment with our team.<br>
-      WhatsApp: +963 620 605 30
+      WhatsApp: +963 962 060 530
     </p>
   </div>
 
@@ -601,7 +601,7 @@
     }
   }
 
-  // Checkout → WhatsApp
+  // Checkout â†’ WhatsApp
   checkoutBtn.addEventListener('click', () => {
     if (!selectedPackage || !selectedMethod) return;
 
@@ -611,15 +611,15 @@
 
     const methodText = methodNames[selectedMethod];
 
-    let message = `Hello GoldenSpaceAI team 👋\n\n`;
+    let message = `Hello GoldenSpaceAI team ðŸ‘‹\n\n`;
     message += `I want to buy Golden:\n`;
-    message += `• Package: ${selectedPackage.name} (${selectedPackage.golden} Golden)\n`;
-    message += `• Payment method: ${methodText}\n`;
-    message += `• Amount: ${priceText}\n\n`;
+    message += `â€¢ Package: ${selectedPackage.name} (${selectedPackage.golden} Golden)\n`;
+    message += `â€¢ Payment method: ${methodText}\n`;
+    message += `â€¢ Amount: ${priceText}\n\n`;
     message += `Please help me complete the payment.`;
 
     const encoded = encodeURIComponent(message);
-    const whatsappUrl = `https://wa.me/96362060530?text=${encoded}`;
+    const whatsappUrl = `https://wa.me/963962060530?text=${encoded}`;
 
     window.open(whatsappUrl, '_blank');
   });

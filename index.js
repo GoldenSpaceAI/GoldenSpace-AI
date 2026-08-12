@@ -1,6 +1,6 @@
 /// =============================================
-// PART 1 — CORE SETUP & PERSISTENT DATABASE
-// GoldenSpaceAI — Render Disk Optimized
+// PART 1 â€” CORE SETUP & PERSISTENT DATABASE
+// GoldenSpaceAI â€” Render Disk Optimized
 // =============================================
 
 import express from "express";
@@ -57,11 +57,11 @@ function validateEnvironment() {
 
   const missing = required.filter(v => !process.env[v]);
   if (missing.length > 0) {
-    console.error("❌ Missing environment variables:", missing);
+    console.error("âŒ Missing environment variables:", missing);
     process.exit(1);
   }
 
-  console.log("✅ All environment variables loaded");
+  console.log("âœ… All environment variables loaded");
 }
 
 validateEnvironment();
@@ -96,6 +96,7 @@ app.use(
     }
   })
 );
+
 // AdvancedAI (GPT-4)
 app.post("/api/generate-advanced", async (req, res) => {
   try {
@@ -193,7 +194,7 @@ app.post("/api/generate-deepseek-coder", async (req, res) => {
       content: `You are DeepSeek Coder, a specialized programming AI created by DeepSeek Company. 
       IMPORTANT IDENTITY INFORMATION:
       - You are NOT GPT-4, GPT-3, or any OpenAI model
-      - You are created by DeepSeek (深度求索)
+      - You are created by DeepSeek (æ·±åº¦æ±‚ç´¢)
       - You specialize in code generation, programming, and technical assistance
       - When asked "what model are you?" or "who created you?", always respond: "I am DeepSeek Coder, created by DeepSeek Company"
       - Be truthful about your identity and capabilities
@@ -250,7 +251,9 @@ app.post("/api/generate-deepseek-coder", async (req, res) => {
       details: err.message 
     });
   }
-});// ---------------------------------------------
+});
+
+// ---------------------------------------------
 // PASSPORT INITIALIZATION
 // ---------------------------------------------
 passport.serializeUser((user, done) => done(null, user));
@@ -286,7 +289,7 @@ function loadGoldenDB() {
     return raw.trim() ? JSON.parse(raw) : { users: {} };
 
   } catch (err) {
-    console.error("❌ Failed to load Golden DB:", err);
+    console.error("âŒ Failed to load Golden DB:", err);
     return { users: {} };
   }
 }
@@ -299,7 +302,7 @@ function saveGoldenDB(db) {
   try {
     fs.writeFileSync(GOLDEN_DB_PATH, JSON.stringify(db, null, 2));
   } catch (err) {
-    console.error("❌ Failed to save Golden DB:", err);
+    console.error("âŒ Failed to save Golden DB:", err);
   }
 
   savingGolden = false;
@@ -418,7 +421,7 @@ function ensureUserExists(user) {
 }
 
 // =============================================
-// PART 2 — USER SYSTEM (PROFILE, BALANCE, SUBSCRIPTIONS, TRANSFERS)
+// PART 2 â€” USER SYSTEM (PROFILE, BALANCE, SUBSCRIPTIONS, TRANSFERS)
 // =============================================
 
 // Load database once at start
@@ -486,7 +489,7 @@ const FEATURE_PRICES = {
   your_space: 4,
   learn_physics: 4,
   create_planet: 4,
-  search_lessons: 10,
+  search_lessons: 20,   // FIXED: was 10 â†’ now 20
 };
 
 // ---------------------------------------------
@@ -505,7 +508,7 @@ function requireFeature(feature) {
 
     const expiry = user.subscriptions?.[feature];
 
-    // If subscription exists and not expired → allow access
+    // If subscription exists and not expired â†’ allow access
     if (expiry && new Date(expiry) > new Date()) {
       return next();
     }
@@ -548,7 +551,7 @@ app.post("/api/unlock-feature", authUser, (req, res) => {
   // -----------------------------
   let expiry = new Date();
 
-  // If feature is already active → extend from old expiry
+  // If feature is already active â†’ extend from old expiry
   if (user.subscriptions && user.subscriptions[feature]) {
     const oldExpiry = new Date(user.subscriptions[feature]);
 
@@ -587,7 +590,36 @@ app.post("/api/unlock-feature", authUser, (req, res) => {
   });
 });
 
-//--------UNlimate ai --------------------------------------------------------
+// =============================================
+// GENERAL FEATURE STATUS (FIXED â€” was missing)
+// This is the endpoint all locked pages call
+// =============================================
+app.get("/api/feature-status", authUser, (req, res) => {
+  const feature = req.query.feature;
+
+  if (!feature) {
+    return res.status(400).json({ error: "Missing feature parameter" });
+  }
+
+  const db = loadGoldenDB();
+  const id = getUserIdentifier(req);
+  const user = db.users[id];
+
+  if (!user) {
+    return res.status(404).json({ error: "User not found" });
+  }
+
+  const expiry = user.subscriptions?.[feature];
+  const unlocked = !!(expiry && new Date(expiry) > new Date());
+
+  res.json({
+    unlocked,
+    expires: expiry || null,
+    feature
+  });
+});
+
+//--------Unlimited ai --------------------------------------------------------
 
 // 1. Route to serve the new Frontend file
 app.get('/chataiadvanced', (req, res) => {
@@ -608,7 +640,7 @@ app.post('/api/unlimited-chat', upload.single("image"), async (req, res) => {
     // --- INTELLIGENT MODEL SWITCHING LOGIC ---
     if (file) {
       // IMAGE MODE: Switch to Vision capable model (GPT-4o)
-      console.log("📸 Image detected. Switching to Vision Model...");
+      console.log("ðŸ“¸ Image detected. Switching to Vision Model...");
       activeModel = "gpt-4o"; 
 
       // Convert file to base64 for OpenAI
@@ -631,7 +663,7 @@ app.post('/api/unlimited-chat', upload.single("image"), async (req, res) => {
 
     } else {
       // TEXT MODE
-      console.log("📝 Text only. Using standard model...");
+      console.log("ðŸ“ Text only. Using standard model...");
       if(modelPreference) activeModel = modelPreference;
       
       messages = [
@@ -661,7 +693,8 @@ app.post('/api/unlimited-chat', upload.single("image"), async (req, res) => {
   }
 });
 
-//----------------------------------------------------------------------------// ---------------------------------------------
+//----------------------------------------------------------------------------
+// ---------------------------------------------
 // ADVANCED AI SUBSCRIPTION (20G / 30 days)
 // ---------------------------------------------
 const ADVANCED_AI_PRICE = 20;
@@ -714,6 +747,7 @@ app.post("/api/subscribe-advanced-ai", authUser, (req, res) => {
     expires: expiry.toISOString(),
   });
 });
+
 // =============================================
 // GET ALL USER SUBSCRIPTIONS (for subscriptions.html)
 // =============================================
@@ -752,6 +786,7 @@ app.get("/api/subscriptions", authUser, (req, res) => {
     subscriptions: subs
   });
 });
+
 // =============================================
 // CANCEL SUBSCRIPTION (stop auto-renew)
 // =============================================
@@ -841,8 +876,9 @@ app.post("/api/transfer-golden", authUser, (req, res) => {
     newBalance: sender.golden_balance,
   });
 });
+
 // =============================================
-// PART 3 — AI SYSTEM (FREE, ADVANCED, IMAGE, HOMEWORK, LIVE, LESSONS)
+// PART 3 â€” AI SYSTEM (FREE, ADVANCED, IMAGE, HOMEWORK, LIVE, LESSONS)
 // =============================================
 
 // ---------------------------------------------
@@ -873,7 +909,7 @@ app.post("/chat-free-ai", async (req, res) => {
 });
 
 // ---------------------------------------------------------
-// ADVANCED AI ROUTES — 3 MODEL MODES (pro, flash, thinking)
+// ADVANCED AI ROUTES â€” 3 MODEL MODES (pro, flash, thinking)
 // ---------------------------------------------------------
 
 const modelRoutes = [
@@ -958,7 +994,7 @@ app.post("/chat-advancedai", requireFeature("chat_advancedai"), upload.single("i
 });
 
 // ---------------------------------------------------------
-// IMAGE GENERATION (DALL·E 3)
+// IMAGE GENERATION (DALLÂ·E 3)
 // ---------------------------------------------------------
 app.post("/api/generate-image", authUser, async (req, res) => {
   try {
@@ -1124,8 +1160,9 @@ app.post("/live-chat-process", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
 // =============================================
-// PART 4 — STATIC PAGES, ROUTING & HEALTH CHECKS (REWRITTEN)
+// PART 4 â€” STATIC PAGES, ROUTING & HEALTH CHECKS (REWRITTEN)
 // =============================================
 // FUNCTION TO JOIN PATHS SAFELY
 function pagePath(file) {
@@ -1226,17 +1263,17 @@ app.get("/health", (_req, res) => {
 // 404 JSON HANDLER FOR UNKNOWN ROUTES
 // ---------------------------------------------
 app.use((req, res) => {
-  // If API → JSON
+  // If API â†’ JSON
   if (req.path.startsWith("/api/")) {
     return res.status(404).json({ error: "API endpoint not found" });
   }
 
-  // Otherwise → normal 404
+  // Otherwise â†’ normal 404
   return res.status(404).send("Page not found");
 });
 
 // =============================================
-// PART 5 — FULL AUTOMATIC BLOCKCHAIN PAYMENT ENGINE (FIXED + ALWAYS SCANNING)
+// PART 5 â€” FULL AUTOMATIC BLOCKCHAIN PAYMENT ENGINE (FIXED + ALWAYS SCANNING)
 // =============================================
 
 // ---------------------------------------------
@@ -1267,7 +1304,7 @@ function loadPaymentDB() {
     return raw.trim() ? JSON.parse(raw) : { payments: [] };
 
   } catch (err) {
-    console.error("❌ Payment DB load error:", err);
+    console.error("âŒ Payment DB load error:", err);
     return { payments: [] };
   }
 }
@@ -1276,7 +1313,7 @@ function savePaymentDB(db) {
   try {
     fs.writeFileSync(PAYMENT_DB_PATH, JSON.stringify(db, null, 2));
   } catch (err) {
-    console.error("❌ Payment DB save error:", err);
+    console.error("âŒ Payment DB save error:", err);
   }
 }
 
@@ -1320,13 +1357,13 @@ app.post("/api/create-payment", authUser, (req, res) => {
     res.json({ success: true, paymentId: payment.id });
 
   } catch (err) {
-    console.error("❌ create-payment error:", err);
+    console.error("âŒ create-payment error:", err);
     res.status(500).json({ error: "Failed to create payment" });
   }
 });
 
 // =============================================
-// BLOCKCYPHER — GET TRANSACTIONS
+// BLOCKCYPHER â€” GET TRANSACTIONS
 // =============================================
 async function getAddressTxs(crypto, address) {
   try {
@@ -1347,10 +1384,11 @@ async function getAddressTxs(crypto, address) {
     return data.txrefs || data.unconfirmed_txrefs || [];
 
   } catch (err) {
-    console.error("⚠ BlockCypher API error:", err.message);
+    console.error("âš  BlockCypher API error:", err.message);
     return null;
   }
 }
+
 // =============================================
 // PAYMENT STATUS ENDPOINT (For plans.html)
 // Shows: status, txHash, timestamp, USD value
@@ -1397,6 +1435,7 @@ app.get("/api/payment-status", authUser, (req, res) => {
     usdValue: payment.expectedUSD
   });
 });
+
 // =============================================
 // ADD GOLDEN AFTER CONFIRMATION
 // =============================================
@@ -1423,7 +1462,7 @@ function addGolden(payment) {
 
   saveGoldenDB(usersDB);
 
-  console.log(`💰 ${amount}G added to ${user.email}`);
+  console.log(`ðŸ’° ${amount}G added to ${user.email}`);
 }
 
 // =============================================
@@ -1458,7 +1497,7 @@ async function checkPayment(payment) {
 // BACKGROUND PAYMENT SCANNER (EVERY 20 SEC)
 // =============================================
 setInterval(async () => {
-  console.log("🔁 Payment scanner running...");
+  console.log("ðŸ” Payment scanner running...");
 
   const db = loadPaymentDB();
   const pending = db.payments.filter(p => p.status === "pending");
@@ -1470,11 +1509,12 @@ setInterval(async () => {
   }
 
 }, 20000);  // 20 seconds
+
 // =============================================
-// SERVER START — REQUIRED FOR RENDER
+// SERVER START â€” REQUIRED FOR RENDER
 // =============================================
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`🚀 GoldenSpaceAI running on port ${PORT}`);
+  console.log(`ðŸš€ GoldenSpaceAI running on port ${PORT}`);
 });
